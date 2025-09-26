@@ -318,6 +318,50 @@
                 animation: none !important
             }
         }
+
+        /* Inputs im TAOMA Look */
+        #contactForm label {
+            display: block;
+            margin-bottom: .9rem;
+        }
+
+        #contactForm input,
+        #contactForm textarea {
+            width: 100%;
+            margin-top: .35rem;
+            padding: .75rem .85rem;
+            border-radius: 12px;
+            border: 1px solid #ffffff26;
+            background: var(--bg-soft);
+            color: var(--ink);
+            outline: none;
+        }
+
+        #contactForm input:focus,
+        #contactForm textarea:focus {
+            border-color: #ffffff3a;
+            box-shadow: 0 0 0 6px var(--ring);
+        }
+
+        .grid2 {
+            display: grid;
+            gap: .9rem;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        @media (max-width: 700px) {
+            .grid2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hp {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+            height: 0;
+            width: 0;
+        }
     </style>
 </head>
 
@@ -364,6 +408,40 @@
                 <div class="card" style="padding:1.25rem">
                     <p class="muted" style="margin-top:0">Want to collaborate or just say hi? I’m open to interesting
                         projects and ideas.</p>
+                    <div class="card" style="padding:1.25rem; margin-bottom:1rem">
+                        <form id="contactForm" novalidate>
+                            <div class="grid2">
+                                <label>
+                                    <span class="muted">Name</span>
+                                    <input name="name" type="text" required placeholder="Your name">
+                                </label>
+                                <label>
+                                    <span class="muted">Email</span>
+                                    <input name="email" type="email" required placeholder="you@example.com">
+                                </label>
+                            </div>
+
+                            <label>
+                                <span class="muted">Subject</span>
+                                <input name="subject" type="text" required placeholder="What’s up?">
+                            </label>
+
+                            <label>
+                                <span class="muted">Message</span>
+                                <textarea name="message" rows="6" required
+                                    placeholder="Tell me about your project…"></textarea>
+                            </label>
+
+                            <!-- Honeypot (für Menschen unsichtbar) -->
+                            <input class="hp" type="text" name="website" autocomplete="off" tabindex="-1"
+                                aria-hidden="true">
+
+                            <div class="cta" style="justify-content:flex-start">
+                                <button id="sendBtn" class="btn" type="submit">Send</button>
+                                <span id="formMsg" class="muted" style="margin-left:.75rem;"></span>
+                            </div>
+                        </form>
+                    </div>
                     <div class="cta">
                         <a class="btn" href="mailto:Taoma.M@proton.me" aria-label="Email">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -442,6 +520,37 @@
         // current year
         document.getElementById('year').textContent = new Date().getFullYear();
 
+        const form = document.getElementById('contactForm');
+        const btn = document.getElementById('sendBtn');
+        const msg = document.getElementById('formMsg');
+
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.textContent = "";
+            btn.disabled = true;
+            const orig = btn.textContent;
+            btn.textContent = "Sending…";
+
+            // FormData -> plain object
+            const data = Object.fromEntries(new FormData(form).entries());
+
+            try {
+                const res = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error(await res.text());
+
+                form.reset();
+                msg.textContent = "Thanks! I’ll get back to you soon.";
+            } catch (err) {
+                msg.textContent = "Oops, delivery failed. Try again later.";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = orig;
+            }
+        });
     </script>
 </body>
 
