@@ -48,4 +48,4 @@ def about():
 
 @app.get("/contact")
 def contact():
-    return FileResponse(contact.html)
+    return FileResponse("contact.html")
