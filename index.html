@@ -10,13 +10,7 @@
     <meta property="og:title" content="TAOMA™ — Portfolio" />
     <meta property="og:description" content="Projects, skills, and contact." />
     <meta name="theme-color" content="#0f1223" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/appIcon-32.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/appIcon-192.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/appIcon-180.png">
-    <link rel="icon" href="/appIcon.png" type="image/png">
-    <meta name="color-scheme" content="dark light">
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f8ff">
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1223">
+    <link rel="icon" type="image/png" href="appIcon.png" />
     <style>
         /* --- CSS Reset / Base --- */
         *,
@@ -177,13 +171,6 @@
             border-radius: 8px;
             background: conic-gradient(from 140deg, #5b7bff, #65ffd7, #5b7bff);
             box-shadow: inset 0 0 0 2px #00000033
-        }
-
-        .brand .logo {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            display: block;
         }
 
         .links {
@@ -402,7 +389,7 @@
     <header>
         <div class="container nav" role="navigation" aria-label="Primary">
             <div class="brand">
-                <img class="logo" src="/appIcon-32.png" alt="TAOMA logo" width="28" height="28" decoding="async">
+                <div class="logo" aria-hidden="true"></div>
                 <span>TAOMA™</span>
             </div>
             <button class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu" aria-expanded="false"
