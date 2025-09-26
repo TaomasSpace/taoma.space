@@ -239,7 +239,7 @@
 
         /* --- Hero --- */
         .hero {
-            padding-block: clamp(48px, 8vw, 120px);
+            padding-block: clamp(48px, 8vw, 120px) clamp(16px, 3vw, 28px);
             text-align: center
         }
 
@@ -304,6 +304,7 @@
         }
 
         .project {
+            padding-top: clamp(16px, 3vw, 28px);
             padding: 1.1rem
         }
 
@@ -402,7 +403,8 @@
 
         .timer {
             padding: 1rem 1.25rem;
-            display: inline-block
+            display: inline-block;
+            margin-bottom: 0;
         }
 
         .digits {
