@@ -6,9 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 app = FastAPI(title="Anime GIF API", version="0.1.0")
-DATABASE_URL = os.getenv("DATABASE_URL")  # von Render
-
-ADMIN_PASSWORD = os.getenv("GIFAPI_ADMIN_PASSWORD", "")
 
 ALLOWED_ORIGINS = [
     o.strip()
