@@ -422,9 +422,9 @@
         }
 
         .since {
-            text-align: center;
-            padding-block: clamp(48px, 8vw, 120px);
+            padding-block: clamp(24px, 5vw, 64px);
         }
+
 
         .since .kicker {
             margin: 0 0 .75rem;
@@ -438,6 +438,7 @@
             border-radius: var(--radius);
             background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 6%), var(--card));
             box-shadow: var(--shadow);
+            max-width: 100%;
         }
 
         .big-counter .cell {
@@ -464,6 +465,59 @@
             color: color-mix(in oklab, var(--ink) 70%, transparent);
             transform: translateY(-6%);
         }
+
+        @media (max-width: 560px) {
+            .since {
+                padding-block: clamp(12px, 6vw, 28px);
+            }
+
+            .big-counter {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+                padding: 12px 14px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .big-counter .sep {
+                display: none;
+            }
+
+            .big-counter .cell {
+                min-width: 0;
+                /* kein Mindestbreiten-Zwang */
+                text-align: center;
+            }
+
+            .big-counter .num {
+                font-weight: 800;
+                font-size: clamp(24px, 8vw, 36px);
+                /* deutlich kleiner auf Mobile */
+                line-height: 1;
+                letter-spacing: .5px;
+            }
+
+            .big-counter .lbl {
+                margin-top: .35rem;
+                font-size: 11px;
+                font-weight: 600;
+            }
+        }
+
+        @media (min-width: 561px) and (max-width: 860px) {
+            .big-counter .cell {
+                min-width: 0;
+            }
+
+            .big-counter .num {
+                font-size: clamp(32px, 6vw, 56px);
+            }
+
+            .big-counter .lbl {
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 
@@ -473,6 +527,8 @@
             <div class="brand">
                 <a href="/">
                     <img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28">
+                </a>
+                <a href="/">
                     <span>TAOMA™</span>
                 </a>
             </div>
@@ -575,8 +631,6 @@
                 </div>
             </section>
         </section>
-
-        </div>
         <!-- Projects -->
         <section id="projects">
             <h2 class="section-title">Featured Projects</h2>
