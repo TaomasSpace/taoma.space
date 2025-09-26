@@ -59,12 +59,29 @@
             margin: 0;
             font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
             color: var(--ink);
-            background:
-                radial-gradient(1200px 800px at 10% -10%, #1b1f45 0%, transparent 60%),
-                radial-gradient(1000px 700px at 100% 0%, #0b4ea8 0%, transparent 55%),
-                linear-gradient(160deg, var(--bg) 0%, #0f1531 60%);
+            background: var(--bg);
+            position: relative;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            /* bleibt beim Scrollen stehen */
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+
+            /* sanftere Stops + ein zusätzlicher Bottom-Glow */
+            background:
+                radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
+                radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
+                radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
+                linear-gradient(160deg, #0f1531 0%, #0e1020 72%);
+            will-change: transform;
+            /* günstiger fürs Compositing */
         }
 
         a {
@@ -169,9 +186,9 @@
             width: 28px;
             height: 28px;
             border-radius: 8px;
-            background: conic-gradient(from 140deg, #5b7bff, #65ffd7, #5b7bff);
-            box-shadow: inset 0 0 0 2px #00000033
+            display: block;
         }
+
 
         .links {
             display: flex;
@@ -389,11 +406,11 @@
     <header>
         <div class="container nav" role="navigation" aria-label="Primary">
             <div class="brand">
-                <div class="logo" aria-hidden="true"></div>
+                <img class="logo" src="/appIcon.png" alt="TAOMA logo" width="28" height="28" decoding="async">
                 <span>TAOMA™</span>
             </div>
-            <button class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu" aria-expanded="false"
-                aria-label="Toggle menu">
+            <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu"
+                aria-expanded="false" aria-label="Toggle menu">
                 <!-- menu icon -->
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true">
@@ -539,7 +556,7 @@
                         <span class="chip">SQLite / Postgres</span>
                         <span class="chip">Node & Express</span>
                         <span class="chip">Discord Bots</span>
-                        <span class="chip">Word press</span>
+                        <span class="chip">WordPress</span>
                     </div>
                 </article>
             </div>
