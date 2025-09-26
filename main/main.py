@@ -34,3 +34,18 @@ def home():
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
     return FileResponse("static/icon.png")
+
+
+@app.get("/projects", include_in_schema=False)
+def projects():
+    return FileResponse("projects.html")
+
+
+@app.get("/about")
+def about():
+    return FileResponse("about.html")
+
+
+@app.get("/contact")
+def contact():
+    return FileResponse(contact.html)
