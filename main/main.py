@@ -1,11 +1,13 @@
 from fastapi import FastAPI
-from pathlib import Path
 import os
 from fastapi import Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse
+
 
 app = FastAPI(title="Anime GIF API", version="0.1.0")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 ALLOWED_ORIGINS = [
     o.strip()
@@ -24,7 +26,11 @@ app.add_middleware(
 )
 
 
-@app.get("/", response_class=HTMLResponse)
-def root():
-    path = Path(__file__).resolve().parents[1] / "index.html"
-    return path.read_text(encoding="utf-8")
+@app.get("/", include_in_schema=False)
+def home():
+    return FileResponse("index.html")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse("static/icon.png")
