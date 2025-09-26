@@ -416,6 +416,50 @@
             color: var(--muted);
             font-weight: 500
         }
+
+        .since {
+            text-align: center;
+            padding-block: clamp(48px, 8vw, 120px);
+        }
+
+        .since .kicker {
+            margin: 0 0 .75rem;
+        }
+
+        .big-counter {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: clamp(12px, 2.8vw, 28px);
+            padding: clamp(16px, 3vw, 28px) clamp(18px, 4vw, 36px);
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 6%), var(--card));
+            box-shadow: var(--shadow);
+        }
+
+        .big-counter .cell {
+            min-width: clamp(72px, 12vw, 160px);
+        }
+
+        .big-counter .num {
+            font: 800 clamp(40px, 10vw, 96px)/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 1px;
+        }
+
+        .big-counter .lbl {
+            margin-top: .5rem;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: clamp(12px, 2.2vw, 14px);
+        }
+
+        .big-counter .sep {
+            font-weight: 800;
+            font-size: clamp(36px, 10vw, 84px);
+            line-height: 0.8;
+            color: color-mix(in oklab, var(--ink) 70%, transparent);
+            transform: translateY(-6%);
+        }
     </style>
 </head>
 
@@ -494,16 +538,37 @@
             </div>
         </section>
         <!-- Timer -->
-        <div class="card timer" aria-live="polite">
-            <div class="muted" style="margin-bottom:.35rem">
-                Developer Since: <time id="timer-start"></time>
+        <section id="since" class="since">
+            <p class="muted kicker">This Websites exists since: </p>
+
+            <div class="card big-counter" aria-live="polite">
+                <div class="cell">
+                    <div id="cu-days" class="num">0</div>
+                    <div class="lbl">Days</div>
+                </div>
+
+                <span class="sep" aria-hidden="true">:</span>
+
+                <div class="cell">
+                    <div id="cu-hours" class="num">00</div>
+                    <div class="lbl">Hours</div>
+                </div>
+
+                <span class="sep" aria-hidden="true">:</span>
+
+                <div class="cell">
+                    <div id="cu-mins" class="num">00</div>
+                    <div class="lbl">Minutes</div>
+                </div>
+
+                <span class="sep" aria-hidden="true">:</span>
+
+                <div class="cell">
+                    <div id="cu-secs" class="num">00</div>
+                    <div class="lbl">Seconds</div>
+                </div>
             </div>
-            <div class="digits">
-                <span id="cu-days">0</span><span class="unit">d</span>
-                <span id="cu-hours">00</span><span class="unit">h</span>
-                <span id="cu-mins">00</span><span class="unit">m</span>
-                <span id="cu-secs">00</span><span class="unit">s</span>
-            </div>
+        </section>
         </div>
         <!-- Projects -->
         <section id="projects">
@@ -670,12 +735,8 @@
         // current year
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        const START_ISO = "2023-08-01T12:00:00Z";  // Start date
+        const START_ISO = "2025-09-26T16:07:00Z";  // Timer Start date
         const start = new Date(START_ISO);
-
-        // Shows start time
-        const startEl = document.getElementById("timer-start");
-        if (startEl) startEl.textContent = start.toLocaleString();
 
         const el = {
             d: document.getElementById("cu-days"),
