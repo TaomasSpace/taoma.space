@@ -1,18 +1,12 @@
-from fastapi import FastAPI, HTTPException, Query, Header, Depends
-from pydantic import BaseModel, HttpUrl, Field
-from typing import List, Optional
+from fastapi import FastAPI
 from pathlib import Path
-from pydantic import BaseModel
 import os
 from fastapi import Depends, Header
-
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi import Response
-
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 app = FastAPI(title="Anime GIF API", version="0.1.0")
 DATABASE_URL = os.getenv("DATABASE_URL")  # von Render
-from fastapi.middleware.cors import CORSMiddleware
 
 ADMIN_PASSWORD = os.getenv("GIFAPI_ADMIN_PASSWORD", "")
 
