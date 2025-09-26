@@ -4,15 +4,15 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TAOMA™ — Portfolio</title>
+    <title>TAOMA™ — About</title>
     <meta name="description"
-        content="TAOMA™ (シャドウ ストーム) — Apprentice software developer. Projects, about, and contact." />
-    <meta property="og:title" content="TAOMA™ — Portfolio" />
-    <meta property="og:description" content="Projects, skills, and contact." />
+        content="About TAOMA™ — 18-year-old Swiss developer who loves building useful websites, APIs and tools." />
+    <meta property="og:title" content="TAOMA™ — About" />
+    <meta property="og:description" content="Who I am, what I do, skills, values and how to work with me." />
     <meta name="theme-color" content="#0f1223" />
-    <link rel="icon" type="image/png" href="/static/icon.png">
+    <link rel="icon" type="image/png" href="/static/icon.png" />
     <style>
-        /* --- CSS Reset / Base --- */
+        /* --- CSS Reset / Base (same tokens as other pages) --- */
         *,
         *::before,
         *::after {
@@ -36,20 +36,6 @@
             --container: 1100px;
         }
 
-        @media (prefers-color-scheme: light) {
-            :root {
-                --bg: #0e1020;
-                --bg-soft: #141735;
-                --card: #171b3b;
-                --ink: #e9ebff;
-                --muted: #a2a9c8;
-                --acc: #85a3ff;
-                --acc-2: #5b7bff;
-                --ring: #85a3ff55;
-                --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .25);
-            }
-        }
-
         html,
         body {
             height: 100%
@@ -69,19 +55,14 @@
         body::before {
             content: "";
             position: fixed;
-            /* bleibt beim Scrollen stehen */
             inset: 0;
             z-index: -1;
             pointer-events: none;
-
-            /* sanftere Stops + ein zusätzlicher Bottom-Glow */
             background:
                 radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
                 radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
                 radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
                 linear-gradient(160deg, #0f1531 0%, #0e1020 72%);
-            will-change: transform;
-            /* günstiger fürs Compositing */
         }
 
         a {
@@ -89,15 +70,10 @@
             text-decoration: none
         }
 
-        img {
-            max-width: 100%;
-            display: block
-        }
-
         .container {
             max-width: var(--container);
             margin: 0 auto;
-            padding-inline: calc(var(--space));
+            padding-inline: var(--space)
         }
 
         .btn {
@@ -107,11 +83,11 @@
             padding: .75rem 1rem;
             border-radius: 12px;
             background: var(--acc);
-            color: white;
+            color: #fff;
             font-weight: 600;
             box-shadow: var(--shadow);
             border: 1px solid #ffffff1a;
-            transition: .2s ease;
+            transition: .2s ease
         }
 
         .btn:hover {
@@ -148,16 +124,6 @@
             color: var(--muted)
         }
 
-        .visually-hidden {
-            position: absolute !important;
-            height: 1px;
-            width: 1px;
-            overflow: hidden;
-            clip: rect(1px, 1px, 1px, 1px);
-            white-space: nowrap
-        }
-
-        /* --- Header --- */
         header {
             position: sticky;
             top: 0;
@@ -186,9 +152,8 @@
             width: 28px;
             height: 28px;
             border-radius: 8px;
-            display: block;
+            display: block
         }
-
 
         .links {
             display: flex;
@@ -243,26 +208,17 @@
             text-align: center
         }
 
-        .hero .title {
+        .title {
             font-size: clamp(28px, 6vw, 56px);
             line-height: 1.1;
             margin: 0 0 .6rem 0
         }
 
-        .hero .subtitle {
+        .subtitle {
             font-size: clamp(16px, 2.6vw, 20px);
             margin: .25rem 0 1.5rem;
             color: var(--muted)
         }
-
-        .cta {
-            display: flex;
-            gap: .75rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 1.2rem
-        }
-
 
         /* --- Sections --- */
         section {
@@ -274,26 +230,43 @@
             margin: 0 0 1rem 0
         }
 
-
-
-        /* --- About --- */
-        .about {
+        /* Layout helpers */
+        .stack {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem
+            gap: clamp(14px, 2vw, 18px)
         }
 
-        .about .card {
+        .grid-2 {
+            display: grid;
+            gap: clamp(14px, 2vw, 18px);
+            grid-template-columns: 1.2fr .8fr
+        }
+
+        @media (max-width:900px) {
+            .grid-2 {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .card.padded {
             padding: 1.25rem
         }
 
-        .skills {
+        .list {
+            margin: 0;
+            padding-left: 1.2rem
+        }
+
+        .list li {
+            margin: .35rem 0
+        }
+
+        .pillz {
             display: flex;
             flex-wrap: wrap;
             gap: .5rem
         }
 
-        /* --- Footer --- */
         footer {
             border-top: 1px solid #ffffff14;
             padding-block: 24px;
@@ -323,20 +296,6 @@
             border-radius: 12px;
             border: 1px solid #ffffff26
         }
-
-        /* --- Focus / Motion --- */
-        :focus-visible {
-            outline: 2px solid var(--acc);
-            outline-offset: 2px;
-            box-shadow: 0 0 0 6px var(--ring)
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                transition: none !important;
-                animation: none !important
-            }
-        }
     </style>
 </head>
 
@@ -344,23 +303,18 @@
     <header>
         <div class="container nav" role="navigation" aria-label="Primary">
             <div class="brand">
-                <a href="/">
-                    <img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28">
-                </a>
-                <a href="/">
-                    <span>TAOMA™</span>
-                </a>
+                <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28" /></a>
+                <a href="/"><span>TAOMA™</span></a>
             </div>
             <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu"
                 aria-expanded="false" aria-label="Toggle menu">
-                <!-- menu icon -->
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true">
                     <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
             </button>
             <nav id="primary-menu" class="links" aria-label="Site">
-                <a href="#home">Home</a>
+                <a href="/">Home</a>
                 <a href="/projects">Projects</a>
                 <a href="/about">About</a>
                 <a href="/contact">Contact</a>
@@ -368,34 +322,97 @@
         </div>
     </header>
 
-    <main id="home" class="container">
+    <main class="container">
         <!-- Hero -->
         <section class="hero">
             <h1 class="title">About Me</h1>
-            <p class="subtitle">
-                I like a lot of beautiful things. So here is some stuff about me.
-            </p>
+            <p class="subtitle">I’m <strong>TAOMA™</strong>, an 18‑year‑old developer from Switzerland. I love building
+                useful <strong>websites</strong>, <strong>APIs</strong> and small <strong>tools</strong>—shipping fast,
+                learning faster.</p>
+            <div class="pillz" style="justify-content:center; margin-top:.75rem">
+                <span class="chip">Switzerland</span>
+                <span class="chip">Apprentice (EFZ Application Dev)</span>
+                <span class="chip">English & German</span>
+                <span class="chip">Backend‑leaning</span>
+            </div>
         </section>
-        <!-- About -->
+
+        <!-- Main content -->
         <section id="about">
-            <h2 class="section-title">About</h2>
-            <div class="about">
-                <article class="card">
-                    <p class="muted" style="margin-top:0">I’m a Swiss apprentice (Informatiker EFZ — application
-                        development). I focus on practical, maintainable software and ship fast iterations. Interests:
-                        game dev, bots, and APIs. Everything that contains a Backend.</p>
-                    <div class="skills" aria-label="Skills">
-                        <span class="chip">Java</span>
-                        <span class="chip">JavaScript / TypeScript</span>
-                        <span class="chip">Python</span>
-                        <span class="chip">FastAPI</span>
-                        <span class="chip">React Native / Expo</span>
-                        <span class="chip">SQLite / Postgres</span>
-                        <span class="chip">Node & Express</span>
-                        <span class="chip">Discord Bots</span>
-                        <span class="chip">WordPress</span>
-                    </div>
-                </article>
+            <div class="grid-2">
+                <!-- Left column -->
+                <div class="stack">
+                    <article class="card padded">
+                        <h2 class="section-title">Who I am</h2>
+                        <p class="muted" style="margin-top:0">Gaming and school pulled me into code. I wanted to
+                            understand how things work—so I started building my own. Today I focus on <strong>practical,
+                                maintainable software</strong> and iterate quickly to get real stuff into people’s
+                            hands.</p>
+                        <ul class="list">
+                            <li>Currently in my <strong>3rd year</strong> (of 4) of the Swiss EFZ apprenticeship in
+                                application development.</li>
+                            <li>Comfortable with <strong>Java (Spring Boot)</strong> and <strong>Python</strong>; some
+                                <strong>JavaFX</strong>.
+                            </li>
+                            <li>Best at <strong>designing and shipping APIs</strong>. Also build clean, simple websites.
+                                Stronger in <strong>backend</strong> than frontend.</li>
+                        </ul>
+                    </article>
+
+                    <article class="card padded">
+                        <h2 class="section-title">Values</h2>
+                        <ul class="list">
+                            <li><strong>Well‑structured code</strong> over clever hacks.</li>
+                            <li><strong>Good planning</strong> → faster shipping and fewer surprises.</li>
+                            <li><strong>Privacy by default</strong>—collect less, protect more.</li>
+                        </ul>
+                    </article>
+
+                    <article class="card padded">
+                        <h2 class="section-title">Personal</h2>
+                        <p class="muted">When I’m not coding, I’m probably watching <strong>anime</strong>, reading
+                            about <strong>geography</strong>, or doing <strong>sports</strong>.</p>
+                    </article>
+                </div>
+
+                <!-- Right column -->
+                <div class="stack">
+                    <article class="card padded">
+                        <h2 class="section-title">Skills</h2>
+                        <div class="pillz" aria-label="Skills">
+                            <span class="chip">Java</span>
+                            <span class="chip">Spring Boot</span>
+                            <span class="chip">Python</span>
+                            <span class="chip">APIs</span>
+                            <span class="chip">SQLite / Postgres</span>
+                            <span class="chip">Basic Frontend</span>
+                            <span class="chip">JavaFX</span>
+                        </div>
+                    </article>
+
+                    <article class="card padded">
+                        <h2 class="section-title">Highlights</h2>
+                        <ul class="list">
+                            <li>My Discord bot is listed on <a class="muted"
+                                    href="https://top.gg/bot/1401961800504971316" target="_blank"
+                                    rel="noreferrer">Top.gg</a>.</li>
+                            <li>Building and maintaining small tools & APIs that people actually use.</li>
+                        </ul>
+                        <p class="muted" style="margin:.6rem 0 0">More examples live on the <a
+                                href="/projects">Projects</a> page.</p>
+                    </article>
+
+                    <article class="card padded">
+                        <h2 class="section-title">Availability & Pricing</h2>
+                        <p class="muted">I’m open for small websites, bots, and backend work. I keep costs low: you
+                            cover domain & hosting. The final price depends on the scope and is negotiable.
+                        </p>
+                        <div class="cta" style="margin-top:.6rem">
+                            <a class="btn" href="/contact#contactForm">Contact me</a>
+                            <a class="btn ghost" href="/contact">More ways to reach me</a>
+                        </div>
+                    </article>
+                </div>
             </div>
         </section>
     </main>
@@ -436,7 +453,6 @@
             const open = menu.classList.toggle('open');
             toggle.setAttribute('aria-expanded', String(open));
         });
-
         // current year
         document.getElementById('year').textContent = new Date().getFullYear();
     </script>
