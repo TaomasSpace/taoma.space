@@ -1,82 +1,259 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taoma space</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        header {
-            background-color: #333;
-            color: white;
-            padding: 1rem;
-        }
-
-        nav ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        nav ul li {
-            display: inline;
-            margin-right: 1rem;
-        }
-
-        nav ul li a {
-            color: white;
-            text-decoration: none;
-        }
-
-        main {
-            flex: 1;
-            padding: 2rem;
-        }
-
-        footer {
-            background-color: #333;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        footer a {
-            color: white;
-            margin: 0 0.5rem;
-        }
-    </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TAOMA™ — Portfolio</title>
+    <meta name="description"
+        content="TAOMA™ (シャドウ ストーム) — Apprentice software developer. Projects, about, and contact." />
+    <meta property="og:title" content="TAOMA™ — Portfolio" />
+    <meta property="og:description" content="Projects, skills, and contact." />
+    <meta name="theme-color" content="#0f1223" />
+    <link rel="stylesheet" href="index.css">
+    <link rel="icon" type="image/png" href="appIcon.png" />
 </head>
 
 <body>
     <header>
-        <nav>
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">Projekte</a></li>
-                <li><a href="#">Über mich</a></li>
-                <li><a href="#">Kontakt</a></li>
-            </ul>
-        </nav>
+        <div class="container nav" role="navigation" aria-label="Primary">
+            <div class="brand">
+                <div class="logo" aria-hidden="true"></div>
+                <span>TAOMA™</span>
+            </div>
+            <button class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu" aria-expanded="false"
+                aria-label="Toggle menu">
+                <!-- menu icon -->
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
+                    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+            <nav id="primary-menu" class="links" aria-label="Site">
+                <a href="#home">Home</a>
+                <a href="#projects">Projects</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </nav>
+        </div>
     </header>
 
-    <main>
-        <h1>Willkommen auf der Website von Taoma</h1>
-        <p>Ein 18-jähriger Entwickler</p>
+    <main id="home" class="container">
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-badges">
+                <span class="chip" title="Role">
+                    <!-- user icon -->
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true">
+                        <path
+                            d="M12 12c2.761 0 5-2.686 5-6s-2.239-6-5-6-5 2.686-5 6 2.239 6 5 6Zm0 3c-4.418 0-8 2.239-8 5v2h16v-2c0-2.761-3.582-5-8-5Z"
+                            fill="currentColor" />
+                    </svg>
+                    Apprentice Software Developer
+                </span>
+                <span class="chip" title="Location">
+                    <!-- map pin icon -->
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true">
+                        <path
+                            d="M12 2C7.582 2 4 5.582 4 10c0 5.25 6.272 11.33 7.039 12.055a1.4 1.4 0 0 0 1.923 0C13.728 21.33 20 15.25 20 10c0-4.418-3.582-8-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
+                            fill="currentColor" />
+                    </svg>
+                    Switzerland
+                </span>
+            </div>
+            <h1 class="title">Hi, I’m TAOMA™ (シャドウ ストーム)</h1>
+            <p class="subtitle">I build useful things for the web and Discord — from APIs and bots to desktop tools. I
+                love clean code, fast UIs, and shipping.
+            </p>
+            <div class="cta">
+                <a class="btn" href="#projects">
+                    <!-- rocket icon -->
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true">
+                        <path d="M14 4l6 6-6 6-2-2-3 1 1-3-2-2 6-6Z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    View Projects
+                </a>
+                <a class="btn ghost" href="#contact">
+                    <!-- mail icon -->
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true">
+                        <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm16 0-8 7L4 6"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Contact
+                </a>
+            </div>
+        </section>
+
+        <!-- Projects -->
+        <section id="projects">
+            <h2 class="section-title">Featured Projects</h2>
+            <div class="grid cols-3">
+                <!-- Project 1 -->
+                <article class="card project">
+                    <div class="head">
+                        <div class="icon" aria-hidden="true">
+                            <!-- code icon -->
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 17L3 12l5-5M16 7l5 5-5 5M14 4l-4 16" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <h3>Clubhall Discord Bot</h3>
+                    </div>
+                    <p class="muted">Modular bot with economy, booster perks, anti‑raid, and rich logging. Built with
+                        Java/JS + cloud hosting.</p>
+                    <div class="actions">
+                        <a class="btn ghost" href="#" aria-label="Open docs">
+                            <!-- external link icon -->
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14 3h7v7M10 14 21 3M21 13v7a2 2 0 0 1-2 2h-7" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Docs
+                        </a>
+                    </div>
+                </article>
+                <!-- Project 2 -->
+                <article class="card project">
+                    <div class="head">
+                        <div class="icon" aria-hidden="true">
+                            <!-- db icon -->
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <ellipse cx="12" cy="5" rx="8" ry="3" stroke="currentColor" stroke-width="2" />
+                                <path
+                                    d="M4 5v6c0 1.657 3.582 3 8 3s8-1.343 8-3V5M4 11v6c0 1.657 3.582 3 8 3s8-1.343 8-3v-6"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                        </div>
+                        <h3>Anime GIF API</h3>
+                    </div>
+                    <p class="muted">A simple REST API with normalized schema and tags/characters search. FastAPI +
+                        SQLite/Postgres.</p>
+                    <div class="actions">
+                        <a class="btn ghost" href="#" aria-label="Open API explorer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14 3h7v7M10 14 21 3M21 13v7a2 2 0 0 1-2 2h-7" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Explore
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- About -->
+        <section id="about">
+            <h2 class="section-title">About</h2>
+            <div class="about">
+                <article class="card">
+                    <p class="muted" style="margin-top:0">I’m a Swiss apprentice (Informatiker EFZ — application
+                        development). I focus on practical, maintainable software and ship fast iterations. Interests:
+                        game dev, bots, and APIs.</p>
+                    <div class="skills" aria-label="Skills">
+                        <span class="chip">Java</span>
+                        <span class="chip">JavaScript / TypeScript</span>
+                        <span class="chip">Python</span>
+                        <span class="chip">FastAPI</span>
+                        <span class="chip">React Native / Expo</span>
+                        <span class="chip">SQLite / Postgres</span>
+                        <span class="chip">Node & Express</span>
+                        <span class="chip">Discord Bots</span>
+                        <span class="chip">Word press</span>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- Contact -->
+        <section id="contact">
+            <h2 class="section-title">Contact</h2>
+            <div class="card" style="padding:1.25rem">
+                <p class="muted" style="margin-top:0">Want to collaborate or just say hi? I’m open to interesting
+                    projects and ideas.</p>
+                <div class="cta">
+                    <a class="btn" href="mailto:Taoma.M@proton.me" aria-label="Email">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm16 0-8 7L4 6"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Email me
+                    </a>
+                    <a class="btn ghost" href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer"
+                        aria-label="GitHub profile">
+                        <!-- github icon -->
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z"
+                                fill="currentColor" />
+                        </svg>
+                        GitHub
+                    </a>
+                    <a class="btn ghost" href="https://discord.gg/H3NDg7e3vD" target="_blank" rel="noreferrer"
+                        aria-label="Discord server">
+                        <!-- discord icon -->
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z"
+                                fill="currentColor" />
+                        </svg>
+                        Discord
+                    </a>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer>
-        <a href="https://github.com/IhrGithubName" target="_blank">GitHub</a>
-        <a href="https://discord.com/users/IhrDiscordName" target="_blank">Discord</a>
-        <a href="mailto:ihre@email.com">E-Mail</a>
+        <div class="container foot">
+            <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved.</small>
+            <div class="social">
+                <a href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer" aria-label="GitHub">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z"
+                            fill="currentColor" />
+                    </svg>
+                </a>
+                <a href="mailto:Taoma.M@proton.me" aria-label="Email">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm16 0-8 7L4 6"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </a>
+                <a href="https://discord.gg/H3NDg7e3vD" target="_blank" rel="noreferrer" aria-label="Discord">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z"
+                            fill="currentColor" />
+                    </svg>
+                </a>
+            </div>
+        </div>
     </footer>
+
+    <script>
+        // mobile menu
+        const toggle = document.getElementById('mobileToggle');
+        const menu = document.getElementById('primary-menu');
+        toggle?.addEventListener('click', () => {
+            const open = menu.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', String(open));
+        });
+
+        // current year
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
 </body>
 
 </html>
