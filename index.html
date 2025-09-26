@@ -399,6 +399,23 @@
                 animation: none !important
             }
         }
+
+        .timer {
+            padding: 1rem 1.25rem;
+            display: inline-block
+        }
+
+        .digits {
+            font: 600 clamp(18px, 3.2vw, 24px)/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: .5px;
+        }
+
+        .digits .unit {
+            margin: 0 .3rem 0 .25rem;
+            color: var(--muted);
+            font-weight: 500
+        }
     </style>
 </head>
 
@@ -476,7 +493,18 @@
                 </a>
             </div>
         </section>
-
+        <!-- Timer -->
+        <div class="card timer" aria-live="polite">
+            <div class="muted" style="margin-bottom:.35rem">
+                Developer Since: <time id="timer-start"></time>
+            </div>
+            <div class="digits">
+                <span id="cu-days">0</span><span class="unit">d</span>
+                <span id="cu-hours">00</span><span class="unit">h</span>
+                <span id="cu-mins">00</span><span class="unit">m</span>
+                <span id="cu-secs">00</span><span class="unit">s</span>
+            </div>
+        </div>
         <!-- Projects -->
         <section id="projects">
             <h2 class="section-title">Featured Projects</h2>
@@ -523,7 +551,7 @@
                         </div>
                         <h3>Anime GIF API</h3>
                     </div>
-                    <p class="muted">A simple REST API with normalized schema and tags/characters search. FastAPI +
+                    <p class="muted">A simple API with normalized schema and tags/characters search. FastAPI +
                         SQLite/Postgres.</p>
                     <div class="actions">
                         <a class="btn ghost" href="https://gifapi-tqh4.onrender.com/" aria-label="Open API explorer">
@@ -641,6 +669,42 @@
 
         // current year
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        const START_ISO = "2023-08-01T12:00:00Z";  // Start date
+        const start = new Date(START_ISO);
+
+        // Shows start time
+        const startEl = document.getElementById("timer-start");
+        if (startEl) startEl.textContent = start.toLocaleString();
+
+        const el = {
+            d: document.getElementById("cu-days"),
+            h: document.getElementById("cu-hours"),
+            m: document.getElementById("cu-mins"),
+            s: document.getElementById("cu-secs"),
+        };
+
+        function pad2(n) { return String(n).padStart(2, "0"); }
+
+        function tick() {
+            const now = new Date();
+            let diff = now - start;
+            if (diff < 0) diff = 0; // If start is in the future
+
+            const SEC = 1000, MIN = 60 * SEC, HOUR = 60 * MIN, DAY = 24 * HOUR;
+            const days = Math.floor(diff / DAY);
+            const hours = Math.floor((diff % DAY) / HOUR);
+            const mins = Math.floor((diff % HOUR) / MIN);
+            const secs = Math.floor((diff % MIN) / SEC);
+
+            if (el.d) el.d.textContent = days;
+            if (el.h) el.h.textContent = pad2(hours);
+            if (el.m) el.m.textContent = pad2(mins);
+            if (el.s) el.s.textContent = pad2(secs);
+        }
+
+        tick();
+        setInterval(tick, 1000);     // every second
     </script>
 </body>
 
