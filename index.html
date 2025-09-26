@@ -1,9 +1,82 @@
 <!DOCTYPE html>
+<html lang="de">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taoma space</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        nav ul li {
+            display: inline;
+            margin-right: 1rem;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        footer a {
+            color: white;
+            margin: 0 0.5rem;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Welcome on the website of Taoma. A 18 year old developer</h1>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Projekte</a></li>
+                <li><a href="#">Über mich</a></li>
+                <li><a href="#">Kontakt</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Willkommen auf der Website von Taoma</h1>
+        <p>Ein 18-jähriger Entwickler</p>
+    </main>
+
+    <footer>
+        <a href="https://github.com/IhrGithubName" target="_blank">GitHub</a>
+        <a href="https://discord.com/users/IhrDiscordName" target="_blank">Discord</a>
+        <a href="mailto:ihre@email.com">E-Mail</a>
+    </footer>
 </body>
+
+</html>
