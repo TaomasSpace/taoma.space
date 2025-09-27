@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TAOMA™ — Skills</title>
+  <meta name="description" content="Back-end skills by TAOMA™ — live demos and specialties." />
+  <link rel="icon" type="image/png" href="/static/icon.png" />
+  <style>
+    /* reuse your existing base variables + components (copy from other pages) */
+    *,*::before,*::after{box-sizing:border-box}
+    :root{--bg:#0e1020;--bg-soft:#141735;--card:#171b3b;--ink:#e9ebff;--muted:#a2a9c8;--acc:#85a3ff;--ring:#85a3ff55;--radius:16px;--space:clamp(16px,2vw,24px);--container:1100px;--shadow:0 10px 30px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.25)}
+    body{margin:0;font:15px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;color:var(--ink);background:var(--bg);min-height:100dvh;display:flex;flex-direction:column;position:relative}
+    body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+      radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
+      radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
+      radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
+      linear-gradient(160deg,#0f1531 0%,#0e1020 72%)}
+    a{text-decoration:none;color:inherit}
+    img{max-width:100%;display:block}
+    .container{max-width:var(--container);margin:0 auto;padding-inline:var(--space)}
+    header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(1.1) blur(10px);background:linear-gradient(180deg,#0c0f24cc 0%, #0c0f2400 100%);border-bottom:1px solid #ffffff14}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+    .brand{display:flex;align-items:center;gap:.75rem;font-weight:800;letter-spacing:.4px}
+    .brand .logo{width:28px;height:28px;border-radius:8px}
+    .links{display:flex;gap:1rem;align-items:center}
+    .links a{padding:.45rem .7rem;border-radius:10px;border:1px solid transparent}
+    .links a:hover{border-color:#ffffff1f;background:#ffffff0f}
+    .btn{display:inline-flex;align-items:center;gap:.6rem;padding:.75rem 1rem;border-radius:12px;background:var(--acc);color:#fff;font-weight:600;border:1px solid #ffffff1a;box-shadow:var(--shadow)}
+    .btn.ghost{background:transparent;color:var(--ink);border:1px solid #ffffff26;box-shadow:none}
+    .card{background:linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));border:1px solid #ffffff1a;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .chip{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .6rem;border-radius:999px;background:color-mix(in oklab,var(--acc) 15%, transparent);border:1px solid #ffffff1a;font-size:.85rem}
+    .muted{color:var(--muted)}
+    .hero{padding-block:clamp(48px,8vw,120px) clamp(16px,3vw,28px);text-align:center}
+    .hero .title{font-size:clamp(28px,6vw,56px);line-height:1.1;margin:0 0 .6rem}
+    .hero .subtitle{font-size:clamp(16px,2.6vw,20px);color:var(--muted);margin:0}
+    .grid{display:grid;gap:clamp(14px,2vw,20px)}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    @media (max-width:950px){.grid.cols-3{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:640px){.grid.cols-3{grid-template-columns:1fr}}
+    .card.pad{padding:1.1rem}
+    .row{display:flex;flex-wrap:wrap;gap:.5rem}
+    .skills{display:flex;flex-wrap:wrap;gap:.5rem}
+    /* progress */
+    .progress{height:10px;border-radius:999px;background:#ffffff14;overflow:hidden;border:1px solid #ffffff1a}
+    .progress > span{display:block;height:100%;width:0%;background:var(--acc);transition:width .3s ease}
+    footer{border-top:1px solid #ffffff14;padding-block:24px;margin-top:auto}
+    .foot{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .social{display:flex;gap:.6rem}
+    .social a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:1px solid #ffffff26}
+    :focus-visible{outline:2px solid var(--acc);outline-offset:2px;box-shadow:0 0 0 6px var(--ring)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav" role="navigation">
+      <div class="brand">
+        <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo"></a>
+        <a href="/"><span>TAOMA™</span></a>
+      </div>
+      <nav id="primary-menu" class="links">
+        <a href="/">Home</a>
+        <a href="/projects">Projects</a>
+        <a href="/skills" aria-current="page">Skills</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1 class="title">What I’m good at</h1>
+      <p class="subtitle">Back-end first. Fast APIs, clean schemas, simple ops. Try the live demos below 👇</p>
+    </section>
+
+    <!-- Skill chips -->
+    <section>
+      <h2 class="section-title">Specialties</h2>
+      <div class="card pad">
+        <div class="skills" aria-label="Skills">
+          <span class="chip">FastAPI</span>
+          <span class="chip">REST design</span>
+          <span class="chip">Async / Background jobs</span>
+          <span class="chip">Pydantic validation</span>
+          <span class="chip">Postgres / SQLite</span>
+          <span class="chip">Auth basics (tokens)</span>
+          <span class="chip">CI/CD (Render/Oracle)</span>
+          <span class="chip">Monitoring basics</span>
+          <span class="chip">Discord Bots</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive demos -->
+    <section>
+      <h2 class="section-title">Interactive Back-end Demos</h2>
+      <div class="grid cols-3">
+
+        <!-- Ping -->
+        <article class="card pad">
+          <h3>API Ping / Latency</h3>
+          <p class="muted">Round-trip time and server UTC timestamp.</p>
+          <div class="row">
+            <button id="btnPing" class="btn">Run ping</button>
+            <span id="pingOut" class="muted"></span>
+          </div>
+          <div class="progress" style="margin-top:.75rem"><span id="pingBar"></span></div>
+        </article>
+
+        <!-- Echo -->
+        <article class="card pad">
+          <h3>Input Validation (Echo)</h3>
+          <p class="muted">Pydantic validates your input; server returns sanitized JSON.</p>
+          <textarea id="echoIn" rows="6" style="width:100%;border-radius:12px;border:1px solid #ffffff26;background:var(--bg-soft);color:var(--ink);padding:.75rem" placeholder='{"message":"Hello","meta":{"source":"skills-page"}}'></textarea>
+          <div class="row" style="margin-top:.6rem">
+            <button id="btnEcho" class="btn">POST /api/echo</button>
+            <span id="echoOut" class="muted"></span>
+          </div>
+        </article>
+
+        <!-- Job -->
+        <article class="card pad">
+          <h3>Background Job</h3>
+          <p class="muted">Create a job, then watch progress from the server.</p>
+          <div class="row">
+            <input id="jobSeconds" type="number" min="1" max="20" value="5" style="width:90px;border-radius:12px;border:1px solid #ffffff26;background:var(--bg-soft);color:var(--ink);padding:.5rem .7rem" />
+            <button id="btnJob" class="btn">Create job</button>
+            <span id="jobOut" class="muted"></span>
+          </div>
+          <div class="progress" style="margin-top:.75rem"><span id="jobBar"></span></div>
+        </article>
+
+      </div>
+    </section>
+
+    <section style="margin-top:1rem">
+      <div class="card pad">
+        <p style="margin:0" class="muted">
+          Like what you see? I build fast, maintainable APIs and back-end tools. 
+        </p>
+        <div class="row" style="margin-top:.6rem">
+          <a class="btn" href="/contact">Let’s work together</a>
+          <a class="btn ghost" href="/projects">See projects</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container foot">
+      <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved.</small>
+      <div class="social">
+        <a href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer" aria-label="GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z" fill="currentColor"/></svg>
+        </a>
+        <a href="mailto:Taoma.M@proton.me" aria-label="Email">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm16 0-8 7L4 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="https://discord.gg/H3NDg7e3vD" target="_blank" rel="noreferrer" aria-label="Discord">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z" fill="currentColor"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Ping demo
+    const btnPing = document.getElementById('btnPing');
+    const pingOut = document.getElementById('pingOut');
+    const pingBar = document.getElementById('pingBar');
+    btnPing?.addEventListener('click', async () => {
+      pingOut.textContent = "Running…";
+      pingBar.style.width = "0%";
+      const t0 = performance.now();
+      try {
+        const r = await fetch('/api/ping', { cache: 'no-store' });
+        const data = await r.json();
+        const ms = Math.round(performance.now() - t0);
+        pingOut.textContent = `~${ms}ms • server: ${new Date(data.server_time).toUTCString()}`;
+        pingBar.style.width = Math.min(100, Math.max(5, ms)) + "%";
+      } catch (e) {
+        pingOut.textContent = "Failed.";
+      }
+    });
+
+    // Echo demo
+    const btnEcho = document.getElementById('btnEcho');
+    const echoIn = document.getElementById('echoIn');
+    const echoOut = document.getElementById('echoOut');
+    btnEcho?.addEventListener('click', async () => {
+      echoOut.textContent = "Sending…";
+      let body;
+      try {
+        body = JSON.parse(echoIn.value);
+      } catch {
+        echoOut.textContent = "Invalid JSON.";
+        return;
+      }
+      try {
+        const r = await fetch('/api/echo', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(body)
+        });
+        const data = await r.json();
+        echoOut.textContent = r.ok ? JSON.stringify(data.data) : "Validation failed.";
+      } catch {
+        echoOut.textContent = "Request failed.";
+      }
+    });
+
+    // Job demo
+    const btnJob = document.getElementById('btnJob');
+    const jobSec = document.getElementById('jobSeconds');
+    const jobOut = document.getElementById('jobOut');
+    const jobBar = document.getElementById('jobBar');
+    btnJob?.addEventListener('click', async () => {
+      jobOut.textContent = "Queueing…";
+      jobBar.style.width = "0%";
+      try {
+        const r = await fetch('/api/job', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ seconds: Number(jobSec.value) || 3 })
+        });
+        const { job_id } = await r.json();
+        if (!job_id) { jobOut.textContent = "Failed to create job."; return; }
+        jobOut.textContent = `Job ${job_id.slice(0,8)}… running`;
+        const t = setInterval(async () => {
+          const st = await fetch(`/api/job/${job_id}`, { cache:'no-store' }).then(x => x.json());
+          if (!st.ok) { jobOut.textContent = "Job not found."; clearInterval(t); return; }
+          jobBar.style.width = (st.progress || 0) + "%";
+          if (st.status === "done") { jobOut.textContent = "Done ✔"; clearInterval(t); }
+        }, 700);
+      } catch {
+        jobOut.textContent = "Failed.";
+      }
+    });
+  </script>
+</body>
+</html>

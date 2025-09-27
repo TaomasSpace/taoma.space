@@ -7,6 +7,11 @@ import os, httpx
 from dotenv import load_dotenv
 import logging
 
+from datetime import datetime, timezone
+from fastapi import BackgroundTasks
+import asyncio, uuid
+from pydantic import BaseModel, Field
+
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -30,7 +35,11 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-Auth-Token"],
 )
 
-
+class Echo(BaseModel):
+    message: str = Field(..., min_length=1, max_length=500)
+    meta: dict | None = None
+class JobIn(BaseModel):
+    seconds: int = Field(3, ge=1, le=20)
 class Contact(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     email: EmailStr
@@ -38,6 +47,7 @@ class Contact(BaseModel):
     message: str = Field(..., min_length=10, max_length=5000)
     website: str | None = None  # Honeypot
 
+JOB_STORE: dict[str, dict] = {}
 
 @app.get("/", include_in_schema=False)
 def home():
@@ -108,3 +118,45 @@ async def create_contact(
         pass
 
     return {"ok": True}
+
+@app.get("/api/ping")
+async def ping():
+    """Simple health/latency endpoint."""
+    return {
+        "ok": True,
+        "server_time": datetime.now(timezone.utc).isoformat(),
+        "service": "taoma.space",
+    }
+
+@app.post("/api/echo")
+async def echo(payload: Echo):
+    """Validates & echoes structured data back."""
+    return {"ok": True, "data": payload.model_dump()}
+
+@app.post("/api/job")
+async def create_job(job: JobIn, background: BackgroundTasks):
+    """Creates a fake background job and returns a job_id."""
+    job_id = str(uuid.uuid4())
+    JOB_STORE[job_id] = {"status": "queued", "progress": 0}
+
+    async def worker():
+        JOB_STORE[job_id]["status"] = "running"
+        for i in range(job.seconds):
+            await asyncio.sleep(1)
+            JOB_STORE[job_id]["progress"] = int((i + 1) / job.seconds * 100)
+        JOB_STORE[job_id]["status"] = "done"
+
+    background.add_task(worker)
+    return {"ok": True, "job_id": job_id}
+
+@app.get("/api/job/{job_id}")
+async def job_status(job_id: str):
+    data = JOB_STORE.get(job_id)
+    if not data:
+        return {"ok": False, "error": "not_found"}
+    return {"ok": True, **data}
+
+
+@app.get("/skills", include_in_schema=False)
+def skills():
+    return FileResponse("skills.html")
