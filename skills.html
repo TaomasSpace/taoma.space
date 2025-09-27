@@ -271,6 +271,13 @@
   </footer>
 
   <script>
+            // mobile menu
+        const toggle = document.getElementById('mobileToggle');
+        const menu = document.getElementById('primary-menu');
+        toggle?.addEventListener('click', () => {
+            const open = menu.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', String(open));
+        });
     // year
     document.getElementById('year').textContent = new Date().getFullYear();
 
