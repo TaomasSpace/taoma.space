@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}TAOMA™ — About{% endblock %}
+{% block meta_description %}About TAOMA™ — 18-year-old Swiss developer who loves building useful websites, APIs and tools.{% endblock %}
+{% block og_title %}TAOMA™ — About{% endblock %}
+{% block og_description %}Who I am, what I do, skills, values and how to work with me.{% endblock %}
+
+{% block content %}
+  <!-- Hero -->
+  <section class="hero">
+    <h1 class="title">About Me</h1>
+    <p class="subtitle">
+      I’m <strong>TAOMA™</strong>, an 18-year-old developer from Switzerland. I love building
+      useful <strong>websites</strong>, <strong>APIs</strong> and small <strong>tools</strong>—shipping fast,
+      learning faster.
+    </p>
+    <div class="pillz" style="justify-content:center; margin-top:.75rem">
+      <span class="chip">Switzerland</span>
+      <span class="chip">Apprentice (EFZ Application Dev)</span>
+      <span class="chip">English & German</span>
+      <span class="chip">Backend-leaning</span>
+    </div>
+  </section>
+
+  <!-- Main content -->
+  <section id="about">
+    <div class="grid-2">
+      <!-- Left column -->
+      <div class="stack">
+        <article class="card padded">
+          <h2 class="section-title">Who I am</h2>
+          <p class="muted" style="margin-top:0">
+            Gaming and school pulled me into code. I wanted to understand how things work—so I started building my own.
+            Today I focus on <strong>practical, maintainable software</strong> and iterate quickly to get real stuff
+            into people’s hands.
+          </p>
+          <ul class="list">
+            <li>Currently in my <strong>3rd year</strong> (of 4) of the Swiss EFZ apprenticeship in application development.</li>
+            <li>Comfortable with <strong>Java (Spring Boot)</strong> and <strong>Python</strong>; some <strong>JavaFX</strong>.</li>
+            <li>Best at <strong>designing and shipping APIs</strong>. Also build clean, simple websites. Stronger in <strong>backend</strong> than frontend.</li>
+          </ul>
+        </article>
+
+        <article class="card padded">
+          <h2 class="section-title">Values</h2>
+          <ul class="list">
+            <li><strong>Well-structured code</strong> over clever hacks.</li>
+            <li><strong>Good planning</strong> → faster shipping and fewer surprises.</li>
+            <li><strong>Privacy by default</strong>—collect less, protect more.</li>
+          </ul>
+        </article>
+
+        <article class="card padded">
+          <h2 class="section-title">Personal</h2>
+          <p class="muted">When I’m not coding, I’m probably watching <strong>anime</strong>, reading about <strong>geography</strong>, or doing <strong>sports</strong>.</p>
+        </article>
+      </div>
+
+      <!-- Right column -->
+      <div class="stack">
+        <article class="card padded">
+          <h2 class="section-title">Skills</h2>
+          <div class="pillz" aria-label="Skills">
+            <span class="chip">Java</span>
+            <span class="chip">Spring Boot</span>
+            <span class="chip">Python</span>
+            <span class="chip">APIs</span>
+            <span class="chip">SQLite / Postgres</span>
+            <span class="chip">Basic Frontend</span>
+            <span class="chip">JavaFX</span>
+          </div>
+        </article>
+
+        <article class="card padded">
+          <h2 class="section-title">Highlights</h2>
+          <ul class="list">
+            <li>My Discord bot is listed on
+              <a class="muted" href="https://top.gg/bot/1401961800504971316" target="_blank" rel="noreferrer">Top.gg</a>.
+            </li>
+            <li>Building and maintaining small tools & APIs that people actually use.</li>
+          </ul>
+          <p class="muted" style="margin:.6rem 0 0">More examples live on the <a href="/projects">Projects</a> page.</p>
+        </article>
+
+        <article class="card padded">
+          <h2 class="section-title">Availability & Pricing</h2>
+          <p class="muted">
+            I’m open for small websites, bots, and backend work. I keep costs low: you cover domain & hosting.
+            The final price depends on the scope and is negotiable.
+          </p>
+          <div class="cta" style="margin-top:.6rem">
+            <a class="btn" href="/contact">Contact me</a>
+            <a class="btn ghost" href="/#contact">More ways to reach me</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+{% endblock %}

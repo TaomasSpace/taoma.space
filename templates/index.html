@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}TAOMA™ — Portfolio{% endblock %}
+{% block meta_description %}TAOMA™ (シャドウ ストーム) — Apprentice software developer. Projects, about, and contact.{% endblock %}
+{% block og_title %}TAOMA™ — Portfolio{% endblock %}
+{% block og_description %}Projects, skills, and contact.{% endblock %}
+
+{% block content %}
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badges">
+      <span class="chip" title="Role">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 12c2.761 0 5-2.686 5-6s-2.239-6-5-6-5 2.686-5 6 2.239 6 5 6Zm0 3c-4.418 0-8 2.239-8 5v2h16v-2c0-2.761-3.582-5-8-5Z" fill="currentColor"/>
+        </svg>
+        Apprentice Software Developer
+      </span>
+      <span class="chip" title="Location">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2C7.582 2 4 5.582 4 10c0 5.25 6.272 11.33 7.039 12.055a1.4 1.4 0 0 0 1.923 0C13.728 21.33 20 15.25 20 10c0-4.418-3.582-8-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" fill="currentColor"/>
+        </svg>
+        Switzerland
+      </span>
+    </div>
+    <h1 class="title">Hi, I’m TAOMA™</h1>
+    <p class="subtitle">I build useful things for the web and Discord — from APIs and bots to desktop tools. I love clean code, fast UIs, and shipping.</p>
+    <div class="cta">
+      <a class="btn" href="/projects">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M14 4l6 6-6 6-2-2-3 1 1-3-2-2 6-6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        View Projects
+      </a>
+      <a class="btn ghost" href="/contact">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm16 0-8 7L4 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Contact
+      </a>
+    </div>
+
+    <!-- Timer -->
+    <section id="since" class="since">
+      <p class="muted kicker">This Website exists since:</p>
+      <div class="card big-counter" aria-live="polite">
+        <div class="cell">
+          <div id="cu-days" class="num">0</div>
+          <div class="lbl">Days</div>
+        </div>
+        <span class="sep" aria-hidden="true">:</span>
+        <div class="cell">
+          <div id="cu-hours" class="num">00</div>
+          <div class="lbl">Hours</div>
+        </div>
+        <span class="sep" aria-hidden="true">:</span>
+        <div class="cell">
+          <div id="cu-mins" class="num">00</div>
+          <div class="lbl">Minutes</div>
+        </div>
+        <span class="sep" aria-hidden="true">:</span>
+        <div class="cell">
+          <div id="cu-secs" class="num">00</div>
+          <div class="lbl">Seconds</div>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <!-- Projects -->
+  <section id="projects">
+    <h2 class="section-title">Featured Projects</h2>
+    <div class="grid cols-3">
+      <article class="card project">
+        <div class="head">
+          <div class="icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M8 17L3 12l5-5M16 7l5 5-5 5M14 4l-4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Clubhall Discord Bot</h3>
+        </div>
+        <p class="muted">Modular bot with economy, booster perks, anti-raid, and rich logging. Built with Python + cloud hosting.</p>
+        <div class="actions">
+          <a class="btn ghost" href="https://top.gg/bot/1401961800504971316">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 3h7v7M10 14 21 3M21 13v7a2 2 0 0 1-2 2h-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Top.gg
+          </a>
+        </div>
+      </article>
+
+      <article class="card project">
+        <div class="head">
+          <div class="icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <ellipse cx="12" cy="5" rx="8" ry="3" stroke="currentColor" stroke-width="2"/>
+              <path d="M4 5v6c0 1.657 3.582 3 8 3s8-1.343 8-3V5M4 11v6c0 1.657 3.582 3 8 3s8-1.343 8-3v-6" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3>Anime GIF API</h3>
+        </div>
+        <p class="muted">A simple API with normalized schema and tags/characters search. FastAPI + SQLite/Postgres.</p>
+        <div class="actions">
+          <a class="btn ghost" href="https://gifapi-tqh4.onrender.com/">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 3h7v7M10 14 21 3M21 13v7a2 2 0 0 1-2 2h-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Visit
+          </a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about">
+    <h2 class="section-title">About</h2>
+    <div class="about">
+      <article class="card">
+        <p class="muted" style="margin-top:0">
+          I’m a Swiss apprentice (Informatiker EFZ — application development). I focus on practical, maintainable software and ship fast iterations. Interests: game dev, bots, and APIs. Everything that contains a Backend.
+        </p>
+        <div class="skills" aria-label="Skills">
+          <span class="chip">Java</span><span class="chip">JavaScript / TypeScript</span><span class="chip">Python</span>
+          <span class="chip">FastAPI</span><span class="chip">React Native / Expo</span><span class="chip">SQLite / Postgres</span>
+          <span class="chip">Node & Express</span><span class="chip">Discord Bots</span><span class="chip">WordPress</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact">
+    <h2 class="section-title">Contact</h2>
+    <div class="card" style="padding:1.25rem">
+      <p class="muted" style="margin-top:0">Want to collaborate or just say hi? I’m open to interesting projects and ideas.</p>
+      <div class="cta">
+        <a class="btn" href="mailto:Taoma.M@proton.me" aria-label="Email">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm16 0-8 7L4 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Email me
+        </a>
+        <a class="btn ghost" href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer" aria-label="GitHub profile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z" fill="currentColor"/></svg>
+          GitHub
+        </a>
+        <a class="btn ghost" href="https://discord.gg/H3NDg7e3vD" target="_blank" rel="noreferrer" aria-label="Discord server">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z" fill="currentColor"/></svg>
+          Discord
+        </a>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const START_ISO = "2025-09-26T16:07:00Z";  // Timer Start date
+  const start = new Date(START_ISO);
+  const el = {
+    d: document.getElementById("cu-days"),
+    h: document.getElementById("cu-hours"),
+    m: document.getElementById("cu-mins"),
+    s: document.getElementById("cu-secs"),
+  };
+  const pad2 = n => String(n).padStart(2,"0");
+  function tick(){
+    const now = new Date();
+    let diff = now - start;
+    if (diff < 0) diff = 0;
+    const SEC=1000, MIN=60*SEC, HOUR=60*MIN, DAY=24*HOUR;
+    const days = Math.floor(diff / DAY);
+    const hours = Math.floor((diff % DAY) / HOUR);
+    const mins = Math.floor((diff % HOUR) / MIN);
+    const secs = Math.floor((diff % MIN) / SEC);
+    if (el.d) el.d.textContent = days;
+    if (el.h) el.h.textContent = pad2(hours);
+    if (el.m) el.m.textContent = pad2(mins);
+    if (el.s) el.s.textContent = pad2(secs);
+  }
+  tick();
+  setInterval(tick, 1000);
+</script>
+{% endblock %}

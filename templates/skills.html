@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}TAOMA™ — Skills{% endblock %}
+{% block meta_description %}Back-end skills by TAOMA™ — live demos and specialties.{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* page-only */
+  .hero{padding-block:clamp(48px,8vw,120px) clamp(16px,3vw,28px);text-align:center}
+  .hero .title{font-size:clamp(28px,6vw,56px);line-height:1.1;margin:0 0 .6rem}
+  .hero .subtitle{font-size:clamp(16px,2.6vw,20px);color:var(--muted);margin:0}
+
+  .grid{display:grid;gap:clamp(14px,2vw,20px)}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+  @media (max-width:950px){.grid.cols-3{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:640px){.grid.cols-3{grid-template-columns:1fr}}
+
+  .card.pad{padding:1.1rem}
+  .row{display:flex;flex-wrap:wrap;gap:.5rem}
+  .skills{display:flex;flex-wrap:wrap;gap:.5rem}
+
+  /* progress bars */
+  .progress{height:10px;border-radius:999px;background:#ffffff14;overflow:hidden;border:1px solid #ffffff1a}
+  .progress > span{display:block;height:100%;width:0%;background:var(--acc);transition:width .3s ease}
+</style>
+{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <h1 class="title">What I’m good at</h1>
+    <p class="subtitle">Back-end first. Fast APIs, clean schemas, simple ops. Try the live demos below 👇</p>
+  </section>
+
+  <!-- Skill chips -->
+  <section>
+    <h2 class="section-title">Specialties</h2>
+    <div class="card pad">
+      <div class="skills" aria-label="Skills">
+        <span class="chip">FastAPI</span>
+        <span class="chip">REST design</span>
+        <span class="chip">Async / Background jobs</span>
+        <span class="chip">Pydantic validation</span>
+        <span class="chip">Postgres / SQLite</span>
+        <span class="chip">Auth basics (tokens)</span>
+        <span class="chip">CI/CD (Render/Oracle)</span>
+        <span class="chip">Monitoring basics</span>
+        <span class="chip">Discord Bots</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive demos -->
+  <section>
+    <h2 class="section-title">Interactive Back-end Demos</h2>
+    <div class="grid cols-3">
+      <!-- Ping -->
+      <article class="card pad">
+        <h3>API Ping / Latency</h3>
+        <p class="muted">Round-trip time and server UTC timestamp.</p>
+        <div class="row">
+          <button id="btnPing" class="btn">Run ping</button>
+          <span id="pingOut" class="muted" aria-live="polite"></span>
+        </div>
+        <div class="progress" style="margin-top:.75rem"><span id="pingBar"></span></div>
+      </article>
+
+      <!-- Echo -->
+      <article class="card pad">
+        <h3>Input Validation (Echo)</h3>
+        <p class="muted">Pydantic validates your input; server returns sanitized JSON.</p>
+        <textarea id="echoIn" rows="6"
+          style="width:100%;border-radius:12px;border:1px solid #ffffff26;background:var(--bg-soft);color:var(--ink);padding:.75rem"
+          placeholder='{"message":"Hello","meta":{"source":"skills-page"}}'></textarea>
+        <div class="row" style="margin-top:.6rem">
+          <button id="btnEcho" class="btn">POST /api/echo</button>
+          <span id="echoOut" class="muted" aria-live="polite"></span>
+        </div>
+      </article>
+
+      <!-- Job -->
+      <article class="card pad">
+        <h3>Background Job</h3>
+        <p class="muted">Create a job, then watch progress from the server.</p>
+        <div class="row">
+          <input id="jobSeconds" type="number" min="1" max="20" value="5"
+            style="width:90px;border-radius:12px;border:1px solid #ffffff26;background:var(--bg-soft);color:var(--ink);padding:.5rem .7rem" />
+          <button id="btnJob" class="btn">Create job</button>
+          <span id="jobOut" class="muted" aria-live="polite"></span>
+        </div>
+        <div class="progress" style="margin-top:.75rem"><span id="jobBar"></span></div>
+      </article>
+    </div>
+  </section>
+
+  <section style="margin-top:1rem">
+    <div class="card pad">
+      <p style="margin:0" class="muted">
+        Like what you see? I build fast, maintainable APIs and back-end tools.
+      </p>
+      <div class="row" style="margin-top:.6rem">
+        <a class="btn" href="/contact">Let’s work together</a>
+        <a class="btn ghost" href="/projects">See projects</a>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Ping demo
+  const btnPing = document.getElementById('btnPing');
+  const pingOut = document.getElementById('pingOut');
+  const pingBar = document.getElementById('pingBar');
+  btnPing?.addEventListener('click', async () => {
+    pingOut.textContent = "Running…";
+    pingBar.style.width = "0%";
+    const t0 = performance.now();
+    try {
+      const r = await fetch('/api/ping', { cache: 'no-store' });
+      const data = await r.json();
+      const ms = Math.round(performance.now() - t0);
+      pingOut.textContent = `~${ms}ms • server: ${new Date(data.server_time).toUTCString()}`;
+      pingBar.style.width = Math.min(100, Math.max(5, ms)) + "%";
+    } catch (e) {
+      pingOut.textContent = "Failed.";
+    }
+  });
+
+  // Echo demo
+  const btnEcho = document.getElementById('btnEcho');
+  const echoIn = document.getElementById('echoIn');
+  const echoOut = document.getElementById('echoOut');
+  btnEcho?.addEventListener('click', async () => {
+    echoOut.textContent = "Sending…";
+    let body;
+    try {
+      body = JSON.parse(echoIn.value);
+    } catch {
+      echoOut.textContent = "Invalid JSON.";
+      return;
+    }
+    try {
+      const r = await fetch('/api/echo', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await r.json();
+      echoOut.textContent = r.ok ? JSON.stringify(data.data) : "Validation failed.";
+    } catch {
+      echoOut.textContent = "Request failed.";
+    }
+  });
+
+  // Job demo
+  const btnJob = document.getElementById('btnJob');
+  const jobSec = document.getElementById('jobSeconds');
+  const jobOut = document.getElementById('jobOut');
+  const jobBar = document.getElementById('jobBar');
+  btnJob?.addEventListener('click', async () => {
+    jobOut.textContent = "Queueing…";
+    jobBar.style.width = "0%";
+    try {
+      const r = await fetch('/api/job', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ seconds: Number(jobSec.value) || 3 })
+      });
+      const { job_id } = await r.json();
+      if (!job_id) { jobOut.textContent = "Failed to create job."; return; }
+      jobOut.textContent = `Job ${job_id.slice(0,8)}… running`;
+      const t = setInterval(async () => {
+        try {
+          const st = await fetch(`/api/job/${job_id}`, { cache:'no-store' }).then(x => x.json());
+          if (!st.ok) { jobOut.textContent = "Job not found."; clearInterval(t); return; }
+          jobBar.style.width = (st.progress || 0) + "%";
+          if (st.status === "done") { jobOut.textContent = "Done ✔"; clearInterval(t); }
+        } catch {
+          jobOut.textContent = "Polling failed.";
+          clearInterval(t);
+        }
+      }, 700);
+    } catch {
+      jobOut.textContent = "Failed.";
+    }
+  });
+</script>
+{% endblock %}

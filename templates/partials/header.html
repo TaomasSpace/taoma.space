@@ -1,0 +1,29 @@
+<header>
+  <div class="container nav" role="navigation" aria-label="Primary">
+    <div class="brand">
+      <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
+      <a href="/"><span>TAOMA™</span></a>
+    </div>
+    <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu"
+      aria-expanded="false" aria-label="Toggle menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <nav id="primary-menu" class="links" aria-label="Site">
+      <a href="/">Home</a>
+      <a href="/projects">Projects</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const toggle = document.getElementById('mobileToggle');
+  const menu = document.getElementById('primary-menu');
+  toggle?.addEventListener('click', () => {
+    const open = menu.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+</script>

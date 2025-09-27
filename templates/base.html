@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{% block title %}TAOMA™ — Portfolio{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}TAOMA™ (シャドウ ストーム) — Apprentice software developer. Projects, about, and contact.{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}TAOMA™ — Portfolio{% endblock %}"/>
+  <meta property="og:description" content="{% block og_description %}Projects, skills, and contact.{% endblock %}"/>
+  <meta name="theme-color" content="#0f1223"/>
+  <link rel="icon" type="image/png" href="/static/icon.png"/>
+
+  {% block extra_head %}{% endblock %}
+
+  <style>
+    /* --- Reset / Tokens / Layout (aus deiner alten index.html) --- */
+    *,*::before,*::after{box-sizing:border-box}
+    :root{
+      --bg:#0e1020;--bg-soft:#141735;--card:#171b3b;--ink:#e9ebff;--muted:#a2a9c8;
+      --acc:#85a3ff;--acc-2:#5b7bff;--ok:#35d79c;--danger:#ff5a6a;--ring:#85a3ff55;
+      --shadow:0 10px 30px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.25);
+      --radius:16px;--space:clamp(16px,2vw,24px);--container:1100px;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;font:15px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
+      color:var(--ink);background:var(--bg);position:relative;min-height:100dvh;display:flex;flex-direction:column;
+    }
+    body::before{
+      content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+      background:
+        radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
+        radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
+        radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
+        linear-gradient(160deg,#0f1531 0%,#0e1020 72%);
+      will-change: transform;
+    }
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .container{max-width:var(--container);margin:0 auto;padding-inline:calc(var(--space))}
+    .btn{display:inline-flex;align-items:center;gap:.6rem;padding:.75rem 1rem;border-radius:12px;background:var(--acc);color:#fff;font-weight:600;box-shadow:var(--shadow);border:1px solid #ffffff1a;transition:.2s ease}
+    .btn:hover{transform:translateY(-1px);filter:saturate(1.1)}
+    .btn.ghost{background:transparent;color:var(--ink);border:1px solid #ffffff26;box-shadow:none}
+    .chip{display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .65rem;border-radius:999px;background:color-mix(in oklab,var(--acc) 15%,transparent);border:1px solid #ffffff1a;font-size:.9rem}
+    .card{background:linear-gradient(180deg,color-mix(in oklab,var(--card),transparent 8%),var(--card));border:1px solid #ffffff1a;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .muted{color:var(--muted)}
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+    :focus-visible{outline:2px solid var(--acc);outline-offset:2px;box-shadow:0 0 0 6px var(--ring)}
+
+    /* Header/Nav (aus deinem header-Styleblock) */
+    header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(1.1) blur(10px);background:linear-gradient(180deg,#0c0f24cc 0%,#0c0f2400 100%);border-bottom:1px solid #ffffff14}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+    .brand{display:flex;align-items:center;gap:.75rem;font-weight:800;letter-spacing:.4px}
+    .brand .logo{width:28px;height:28px;border-radius:8px;display:block}
+    .links{display:flex;gap:1rem;align-items:center}
+    .links a{padding:.45rem .7rem;border-radius:10px;border:1px solid transparent}
+    .links a:hover{border-color:#ffffff1f;background:#ffffff0f}
+    .mobile-toggle{display:none}
+    @media (max-width:800px){
+      .mobile-toggle{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid #ffffff26;background:transparent}
+      .links{position:fixed;inset:64px 0 auto 0;background:linear-gradient(180deg,#0b0f29,#0b0f2945);padding:1rem;display:none;flex-direction:column}
+      .links.open{display:flex}
+    }
+
+    /* Footer/Social (aus deinem footer-Styleblock) */
+    footer{border-top:1px solid #ffffff14;padding-block:24px;margin-top:auto}
+    .foot{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .social{display:flex;align-items:center;gap:.6rem}
+    .social a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:1px solid #ffffff26}
+
+    /* Hero/Sections/Projects/About/Counter (aus deiner alten Datei) */
+    .hero{padding-block:clamp(48px,8vw,120px) clamp(16px,3vw,28px);text-align:center}
+    .hero .title{font-size:clamp(28px,6vw,56px);line-height:1.1;margin:0 0 .6rem 0}
+    .hero .subtitle{font-size:clamp(16px,2.6vw,20px);margin:.25rem 0 1.5rem;color:var(--muted)}
+    .cta{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.2rem}
+    .hero-badges{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+    section{padding-block:clamp(40px,6vw,80px)}
+    .section-title{font-size:clamp(22px,3vw,28px);margin:0 0 1rem 0}
+    .grid{display:grid;gap:clamp(14px,2vw,22px)}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    @media (max-width:950px){.grid.cols-3{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:640px){.grid.cols-3{grid-template-columns:1fr}}
+    .project{padding:1.1rem;padding-top:clamp(16px,3vw,28px)}
+    .project .head{display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem}
+    .project .icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#ffffff12;border:1px solid #ffffff22}
+    .project h3{margin:.2rem 0 .25rem;font-size:1.05rem}
+    .project p{margin:.25rem 0 .75rem}
+    .project .actions{display:flex;gap:.5rem}
+    .about{display:grid;grid-template-columns:1fr;gap:1rem}
+    .about .card{padding:1.25rem}
+    .skills{display:flex;flex-wrap:wrap;gap:.5rem}
+    .since{padding-block:clamp(24px,5vw,64px)}
+    .timer{padding:1rem 1.25rem;display:inline-block;margin-bottom:0}
+    .digits{font:600 clamp(18px,3.2vw,24px)/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+    .digits .unit{margin:0 .3rem 0 .25rem;color:var(--muted);font-weight:500}
+    .big-counter{display:inline-flex;align-items:flex-end;gap:clamp(12px,2.8vw,28px);padding:clamp(16px,3vw,28px) clamp(18px,4vw,36px);border-radius:var(--radius);background:linear-gradient(180deg,color-mix(in oklab,var(--card),transparent 6%),var(--card));box-shadow:var(--shadow);max-width:100%}
+    .big-counter .cell{min-width:clamp(72px,12vw,160px)}
+    .big-counter .num{font:800 clamp(40px,10vw,96px)/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;letter-spacing:1px}
+    .big-counter .lbl{margin-top:.5rem;color:var(--muted);font-weight:600;font-size:clamp(12px,2.2vw,14px)}
+    .big-counter .sep{font-weight:800;font-size:clamp(36px,10vw,84px);line-height:.8;color:color-mix(in oklab,var(--ink) 70%, transparent);transform:translateY(-6%)}
+    @media (max-width:560px){
+      .since{padding-block:clamp(12px,6vw,28px)}
+      .big-counter{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px 14px;width:100%;box-sizing:border-box}
+      .big-counter .sep{display:none}
+      .big-counter .cell{text-align:center;min-width:0}
+      .big-counter .num{font-weight:800;font-size:clamp(24px,8vw,36px);line-height:1;letter-spacing:.5px}
+      .big-counter .lbl{margin-top:.35rem;font-size:11px;font-weight:600}
+    }
+    @media (min-width:561px) and (max-width:860px){
+      .big-counter .cell{min-width:0}
+      .big-counter .num{font-size:clamp(32px,6vw,56px)}
+      .big-counter .lbl{font-size:12px}
+    }
+    @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+  {% include "partials/header.html" %}
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include "partials/footer.html" %}
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
