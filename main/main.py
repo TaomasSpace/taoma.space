@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from fastapi import BackgroundTasks
 import asyncio, uuid
 from pydantic import BaseModel, Field
+from typing import Any
 
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
@@ -35,9 +36,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-Auth-Token"],
 )
 
-class Echo(BaseModel):
-    message: str = Field(..., min_length=1, max_length=500)
-    meta: dict | None = None
+
 class JobIn(BaseModel):
     seconds: int = Field(3, ge=1, le=20)
 class Contact(BaseModel):
@@ -129,7 +128,7 @@ async def ping():
     }
 
 @app.post("/api/echo")
-async def echo(payload: Echo):
+async def echo(payload: dict[str, Any]):
     data = payload.model_dump()
     parts = []
     for key, value in data.items():
