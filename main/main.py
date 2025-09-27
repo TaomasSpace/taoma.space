@@ -51,27 +51,27 @@ JOB_STORE: dict[str, dict] = {}
 
 @app.get("/", include_in_schema=False)
 def home():
-    return FileResponse("templates/index.html")
+    return FileResponse("index.html")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
-    return FileResponse("templates/static/icon.png")
+    return FileResponse("static/icon.png")
 
 
 @app.get("/projects", include_in_schema=False)
 def projects():
-    return FileResponse("templates/projects.html")
+    return FileResponse("projects.html")
 
 
 @app.get("/about", include_in_schema=False)
 def about():
-    return FileResponse("templates/about.html")
+    return FileResponse("about.html")
 
 
 @app.get("/contact", include_in_schema=False)
 def contact():
-    return FileResponse("templates/contact.html")
+    return FileResponse("contact.html")
 
 
 async def notify_discord(p: Contact) -> bool:
@@ -159,4 +159,4 @@ async def job_status(job_id: str):
 
 @app.get("/skills", include_in_schema=False)
 def skills():
-    return FileResponse("templates/skills.html")
+    return FileResponse("skills.html")
