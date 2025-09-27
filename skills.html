@@ -57,7 +57,13 @@
   border: 1px solid #ffffff1a; 
   overflow:auto;
 }
-
+#echoOut p { margin: .25rem 0; }
+#echoOut code {
+  background: #0b0f29;
+  padding: .1rem .35rem;
+  border-radius: 6px;
+  border: 1px solid #ffffff1a;
+}
   </style>
 </head>
 <body>
@@ -198,30 +204,35 @@
 
     // Echo demo
     const btnEcho = document.getElementById('btnEcho');
-    const echoIn = document.getElementById('echoIn');
-    const echoOut = document.getElementById('echoOut');
+    const echoIn  = document.getElementById('echoIn');
+    const echoOut = document.getElementById('echoOut'); 
+
     btnEcho?.addEventListener('click', async () => {
-      echoOut.textContent = "Sending…";
-      let body;
-      try {
+    echoOut.textContent = "Sending…";
+    let body;
+    try {
         body = JSON.parse(echoIn.value);
-      } catch {
+    } catch {
         echoOut.textContent = "Invalid JSON.";
         return;
-      }
-      try {
+    }
+
+    try {
         const r = await fetch('/api/echo', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify(body)
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
         });
-        const data = await r.json();
-        echoOut.textContent = r.ok 
-        ? JSON.stringify(data.data, null, 2)
-        : "Validation failed.";
-        } catch {
+        const res = await r.json();
+
+        if (r.ok && res?.data) {
+        echoOut.innerHTML = res.data;
+        } else {
+        echoOut.textContent = "Validation failed.";
+        }
+    } catch {
         echoOut.textContent = "Request failed.";
-      }
+    }
     });
 
     // Job demo

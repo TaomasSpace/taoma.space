@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, Field
 import os, httpx
 from dotenv import load_dotenv
 import logging
-
+import json, html
 from datetime import datetime, timezone
 from fastapi import BackgroundTasks
 import asyncio, uuid
@@ -86,7 +86,7 @@ async def notify_discord(p: Contact) -> bool:
     try:
         async with httpx.AsyncClient(timeout=10) as c:
             r = await c.post(DISCORD_WEBHOOK_URL, json={"content": content})
-            r.raise_for_status()  # wirft bei 4xx/5xx
+            r.raise_for_status()
         logger.info("Discord-Webhook OK (%s)", r.status_code)
         return True
     except httpx.HTTPStatusError as e:
@@ -130,8 +130,14 @@ async def ping():
 
 @app.post("/api/echo")
 async def echo(payload: Echo):
-    """Validates & echoes structured data back."""
-    return {"ok": True, "data": payload.model_dump()}
+    data = payload.model_dump()
+    parts = []
+    for key, value in data.items():
+        key_safe = html.escape(str(key))
+        value_safe = html.escape(json.dumps(value, ensure_ascii=False))
+        parts.append(f'<p><strong>{key_safe}</strong> = <code>{value_safe}</code></p>')
+    html_out = "\n".join(parts)
+    return {"ok": True, "data": html_out}
 
 @app.post("/api/job")
 async def create_job(job: JobIn, background: BackgroundTasks):
