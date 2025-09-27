@@ -129,7 +129,7 @@ async def ping():
 
 @app.post("/api/echo")
 async def echo(payload: dict[str, Any]):
-    data = payload.model_dump()
+    data = payload  # <-- dict, kein model_dump()
     parts = []
     for key, value in data.items():
         key_safe = html.escape(str(key))
