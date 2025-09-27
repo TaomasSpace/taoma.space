@@ -16,13 +16,12 @@ from fastapi import FastAPI, HTTPException, Query, Header, Depends
 from pydantic import BaseModel, HttpUrl, Field
 from typing import List, Optional
 from db.db_helper import GifDB
-from pathlib import Path
 from pydantic import BaseModel
 import os
 from fastapi import Depends, Header
 from db.db_helper import GifDB as SqliteGifDB
 from db.pg_helper import PgGifDB  # <— neu
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from fastapi import Response
 from fastapi.middleware.cors import CORSMiddleware
 
