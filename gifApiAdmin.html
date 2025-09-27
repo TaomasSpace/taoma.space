@@ -220,10 +220,10 @@
         <div class="card">
             <form id="gifForm">
                 <label for="apiBase" data-i18n="label.base">API Base URL</label>
-                <input type="url" id="apiBase" value="https://gifapi-tqh4.onrender.com/" data-i18n-placeholder="ph.base"
+                <input type="url" id="apiBase" value="https://taoma.space" data-i18n-placeholder="ph.base"
                     required />
                 <span class="muted"><span data-i18n="admin.example">Beispiel:</span>
-                    <code>https://gifapi-tqh4.onrender.com/</code></span>
+                    <code>https://taoma.space</code></span>
 
                 <div class="row">
                     <div>
@@ -457,19 +457,19 @@
         $('#btnLogin').onclick = async () => {
             const base = $('#apiBase').value.replace(/\/$/, ''); const pw = $('#adminPw').value;
             try {
-                const r = await fetch(base + '/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+                const r = await fetch(base + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
                 const j = await r.json(); if (!r.ok) throw new Error(j.detail || 'Login failed');
                 AUTH_TOKEN = j.token; localStorage.setItem('gifapi_token', AUTH_TOKEN);
                 $('#authMsg').textContent = (getLang() === 'de' ? 'Login ok. Token gespeichert.' : 'Login ok. Token stored.'); $('#authMsg').className = 'status ok';
             } catch (err) { $('#authMsg').textContent = (getLang() === 'de' ? 'Login fehlgeschlagen: ' : 'Login failed: ') + err.message; $('#authMsg').className = 'status err'; }
         };
-        $('#btnLogout').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); try { if (AUTH_TOKEN) { await fetch(base + '/auth/logout', { method: 'POST', headers: authHeaders() }); } } finally { AUTH_TOKEN = null; localStorage.removeItem('gifapi_token'); $('#authMsg').textContent = (getLang() === 'de' ? 'Ausgeloggt.' : 'Logged out.'); $('#authMsg').className = 'status'; } };
+        $('#btnLogout').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); try { if (AUTH_TOKEN) { await fetch(base + '/api/auth/logout', { method: 'POST', headers: authHeaders() }); } } finally { AUTH_TOKEN = null; localStorage.removeItem('gifapi_token'); $('#authMsg').textContent = (getLang() === 'de' ? 'Ausgeloggt.' : 'Logged out.'); $('#authMsg').className = 'status'; } };
         $('#gifForm').onsubmit = async (e) => {
             e.preventDefault(); if (!requireTokenOrAsk()) return;
             const base = $('#apiBase').value.replace(/\/$/, ''); const payload = buildPayload();
             if (!payload.title || !payload.url) { $('#status').textContent = (getLang() === 'de' ? 'Title und URL sind Pflichtfelder.' : 'Title and URL are required.'); $('#status').className = 'status err'; return; }
             try {
-                const res = await fetch(base + '/gifs', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(payload) });
+                const res = await fetch(base + '/api/gifs', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(payload) });
                 if (res.status === 401) { $('#loginModal').style.display = 'block'; throw new Error(getLang() === 'de' ? 'Nicht autorisiert. Bitte einloggen.' : 'Unauthorized. Please log in.'); }
                 const data = await res.json(); if (!res.ok) throw new Error(data.detail || res.statusText);
                 $('#status').textContent = (getLang() === 'de' ? 'Gespeichert ✅ (ID ' : 'Saved ✅ (ID ') + data.id + ')'; $('#status').className = 'status ok';
@@ -481,7 +481,7 @@
         function setWhoAmI(text) { $('#whoami').textContent = text || ''; }
         async function verifyToken() {
             const base = $('#apiBase').value.replace(/\/$/, ''); if (!AUTH_TOKEN) return false;
-            try { const r = await fetch(base + '/auth/verify', { headers: authHeaders() }); if (!r.ok) return false; const j = await r.json(); setWhoAmI((getLang() === 'de' ? 'Eingeloggt. Token gültig' : 'Logged in. Token valid') + (j.expires_at ? ` (${getLang() === 'de' ? 'bis' : 'until'} ${j.expires_at})` : '')); return true; } catch { return false; }
+            try { const r = await fetch(base + '/api/auth/verify', { headers: authHeaders() }); if (!r.ok) return false; const j = await r.json(); setWhoAmI((getLang() === 'de' ? 'Eingeloggt. Token gültig' : 'Logged in. Token valid') + (j.expires_at ? ` (${getLang() === 'de' ? 'bis' : 'until'} ${j.expires_at})` : '')); return true; } catch { return false; }
         }
         async function ensureAuthUI() { const ok = await verifyToken(); if (!ok) { $('#loginModal').style.display = 'block'; setWhoAmI(getLang() === 'de' ? 'Nicht eingeloggt.' : 'Not logged in.'); } }
         let ADMIN_OFFSET = 0; const PAGE_SIZE = 25;
@@ -526,12 +526,12 @@
         async function loadAdminList(append = false) {
             if (!AUTH_TOKEN) { $('#loginModal').style.display = 'block'; return; }
             const base = $('#apiBase').value.replace(/\/$/, ''); const q = encodeURIComponent($('#q').value.trim()); const nsfw = $('#nsfwList').value;
-            const url = `${base}/admin/gifs?q=${q}&nsfw=${nsfw}&limit=${PAGE_SIZE}&offset=${ADMIN_OFFSET}`;
+            const url = `${base}/api/admin/gifs?q=${q}&nsfw=${nsfw}&limit=${PAGE_SIZE}&offset=${ADMIN_OFFSET}`;
             const r = await fetch(url, { headers: authHeaders() }); if (!r.ok) { $('#tableWrap').textContent = (getLang() === 'de' ? 'Fehler beim Laden: ' : 'Load error: ') + r.statusText; return; }
             const rows = await r.json(); renderTable(rows, append);
         }
         async function deleteGif(id) {
-            const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/gifs/' + id, { method: 'DELETE', headers: authHeaders() });
+            const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/api/gifs/' + id, { method: 'DELETE', headers: authHeaders() });
             if (!r.ok && r.status !== 204) { const j = await r.json().catch(() => ({ detail: r.statusText })); alert((getLang() === 'de' ? 'Löschen fehlgeschlagen: ' : 'Delete failed: ') + (j.detail || r.statusText)); }
         }
         $('#btnReload').onclick = async () => { ADMIN_OFFSET = 0; await loadAdminList(false); };
@@ -540,8 +540,8 @@
         $('#btnLogin').onclick = async (e) => { await origLogin(e); if (AUTH_TOKEN) { $('#loginModal').style.display = 'none'; ADMIN_OFFSET = 0; await loadAdminList(false); await verifyToken(); } };
         window.addEventListener('load', async () => { await ensureAuthUI(); if (AUTH_TOKEN) { ADMIN_OFFSET = 0; await loadAdminList(false); } });
         // quick test
-        $('#btnRandom').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/gifs'); const j = await r.json(); $('#quickOut').textContent = JSON.stringify(j, null, 2); };
-        $('#btnTags').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/gifs?list=tags'); const j = await r.json(); $('#quickOut').textContent = JSON.stringify(j, null, 2); };
+        $('#btnRandom').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/api/gifs'); const j = await r.json(); $('#quickOut').textContent = JSON.stringify(j, null, 2); };
+        $('#btnTags').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/api/gifs?list=tags'); const j = await r.json(); $('#quickOut').textContent = JSON.stringify(j, null, 2); };
     </script>
 </body>
 

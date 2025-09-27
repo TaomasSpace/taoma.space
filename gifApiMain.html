@@ -274,7 +274,7 @@
             <div class="row cols-3">
                 <div>
                     <label for="base" data-i18n="label.base">API-Basis-URL</label>
-                    <input id="base" type="url" value="https://gifapi-tqh4.onrender.com" data-i18n-placeholder="ph.base"
+                    <input id="base" type="url" value="https://taoma.space" data-i18n-placeholder="ph.base"
                         placeholder="https://deine-api.tld" required>
                     <div class="hint" data-i18n="hint.base">Deine deployte Instanz. Kein Slash am Ende nötig.</div>
                 </div>
@@ -556,7 +556,7 @@
             const sp = new URLSearchParams();
             Object.entries(p).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== '') sp.set(k, String(v)) });
             const s = sp.toString();
-            return s ? '/gifs?' + s : '/gifs?';
+            return s ? '/api/gifs?' + s : '/api/gifs?';
         }
         function renderUrlAndCode() {
             const p = buildParams();
@@ -572,11 +572,11 @@
 
 BASE = "${cleanBase(base.value)}"
 params = ${JSON.stringify(p, null, 2) || "{}"}
-r = requests.get(f"{BASE}/gifs", params=(params or None), timeout=10)
+r = requests.get(f"{BASE}/api/gifs", params=(params or None), timeout=10)
 r.raise_for_status()
 print(r.json())`;
 
-            const curl = `curl -sS "${cleanBase(base.value)}/gifs${Object.keys(p).length ? ('?' + new URLSearchParams(p).toString()) : ''}"`;
+            const curl = `curl -sS "${cleanBase(base.value)}/api/gifs${Object.keys(p).length ? ('?' + new URLSearchParams(p).toString()) : ''}"`;
 
             codeBox.textContent = (activeTab === 'py') ? py : curl;
         }
@@ -611,7 +611,7 @@ print(r.json())`;
 
         async function loadTags() {
             try {
-                const url = cleanBase(base.value) + '/gifs?list=tags';
+                const url = cleanBase(base.value) + '/api/gifs?list=tags';
                 const r = await fetch(url);
                 if (!r.ok) throw new Error(await r.text());
                 const tagsList = await r.json();
@@ -673,7 +673,7 @@ print(r.json())`;
 
             const baseUrl = cleanBase(base.value);
             const qs = new URLSearchParams(p);
-            const url = baseUrl + '/gifs' + (qs.toString() ? ('?' + qs.toString()) : '');
+            const url = baseUrl + '/api/gifs' + (qs.toString() ? ('?' + qs.toString()) : '');
             outUrl.textContent = url;
 
             try {
