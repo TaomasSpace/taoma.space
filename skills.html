@@ -49,6 +49,15 @@
     .social{display:flex;gap:.6rem}
     .social a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:1px solid #ffffff26}
     :focus-visible{outline:2px solid var(--acc);outline-offset:2px;box-shadow:0 0 0 6px var(--ring)}
+    .code { 
+  white-space: pre; 
+  background: #0b0f29; 
+  padding: .75rem; 
+  border-radius: 12px; 
+  border: 1px solid #ffffff1a; 
+  overflow:auto;
+}
+
   </style>
 </head>
 <body>
@@ -207,8 +216,10 @@
           body: JSON.stringify(body)
         });
         const data = await r.json();
-        echoOut.textContent = r.ok ? JSON.stringify(data.data) : "Validation failed.";
-      } catch {
+        echoOut.textContent = r.ok 
+        ? JSON.stringify(data.data, null, 2)
+        : "Validation failed.";
+        } catch {
         echoOut.textContent = "Request failed.";
       }
     });
