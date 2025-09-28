@@ -24,6 +24,7 @@ from db.pg_helper import PgGifDB  # <— neu
 from fastapi.responses import HTMLResponse
 from fastapi import Response
 from fastapi.middleware.cors import CORSMiddleware
+import threading
 
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
@@ -32,13 +33,14 @@ DATABASE_URL = os.getenv("DATABASE_URL")  # von Render
 db = PgGifDB(DATABASE_URL) if DATABASE_URL else SqliteGifDB("gifs.db")
 
 ADMIN_PASSWORD = os.getenv("GIFAPI_ADMIN_PASSWORD", "")
+lock = threading.Lock()
 
 def require_auth(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")):
     if not x_auth_token or not db.validate_token(x_auth_token):
         raise HTTPException(status_code=401, detail="Unauthorized")
     
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-logger = logging.getLogger("uvicorn.error")  # nutzt Uvicorn-Logger
+logger = logging.getLogger("uvicorn.error") 
 
 ALLOWED_ORIGINS = [
     o.strip()
@@ -55,6 +57,10 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "X-Auth-Token"],
 )
+
+class CounterOut(BaseModel):
+    total: int
+
 class GifIn(BaseModel):
     title: str
     url: HttpUrl
@@ -423,3 +429,14 @@ def delete_gif(gif_id: int):
         raise HTTPException(status_code=404, detail="GIF not found")
     db.delete_gif(gif_id)
     return Response(status_code=204)
+
+
+@app.post("/api/visits/increment", status_code=204)
+def incrementcount():
+    db.incrementCounter()
+    return Response(status_code=204)
+
+@app.get("/api/visits/value", response_model=CounterOut)
+def value():
+    total = db.getCounterValue()
+    return {"total": int(total or 0)} 

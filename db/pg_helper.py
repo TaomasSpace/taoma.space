@@ -44,6 +44,12 @@ CREATE TABLE IF NOT EXISTS sessions (
     expires_at  TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+CREATE TABLE IF NOT EXISTS counter (
+    id    integer PRIMARY KEY CHECK (id = 1),
+    total integer NOT NULL
+);
+INSERT INTO counter (id, total) VALUES (1, 0)
+ON CONFLICT (id) DO NOTHING;
 """
 
 
@@ -445,3 +451,14 @@ class PgGifDB:
                 return None
             exp = row[0]
             return exp.isoformat() if exp is not None else None
+        
+    def incrementCounter(self):
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute("UPDATE counter SET total = total + 1 WHERE id = 1;")
+            conn.commit() 
+    
+    def getCounterValue(self) -> int:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute("SELECT total FROM counter WHERE id = 1;")
+            row = cur.fetchone()
+            return int(row[0]) if row else 0
