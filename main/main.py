@@ -26,9 +26,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import threading
 from psycopg import errors as pg_errors
 import os, base64
-from fastapi import Path
+from fastapi import Path as PathParam
 from fastapi import UploadFile, File
-from pathlib import Path
+import pathlib 
 import io
 from PIL import Image, UnidentifiedImageError
 
@@ -119,7 +119,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "X-Auth-Token"],
 )
-UPLOAD_DIR = Path("static/uploads/avatars")
+UPLOAD_DIR = pathlib.Path("static/uploads/avatars")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2 MB
 ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp", "image/gif"}
@@ -656,7 +656,7 @@ def create_user(payload: UserCreateIn):
 
 @app.patch("/user/{user_id}", response_model=UserOut)
 def update_user(
-    user_id: int = Path(..., ge=1),
+    user_id: int = PathParam(..., ge=1),
     payload: UserUpdateIn = ...,
     current: dict = Depends(require_user),  # liefert dict des eingeloggten Users
 ):
@@ -868,7 +868,7 @@ async def upload_avatar(file: UploadFile = File(...), current: dict = Depends(re
 
 @app.get("/api/avatars")
 def list_avatars():
-    base = Path("static/avatars")
+    base = pathlib.Path("static/avatars")
     if not base.exists():
         # Fallback: leere Liste
         return []
