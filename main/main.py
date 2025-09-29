@@ -750,7 +750,7 @@ def register_page():
 
 
 @app.get("/login", include_in_schema=False)
-def register_page():
+def login_page():
     return FileResponse("login.html")
 
 
@@ -758,3 +758,8 @@ def register_page():
 def grant_admin(user_id: int):
     db.updateUser(user_id, admin=True)
     return {"ok": True}
+
+
+@app.get("/profile", include_in_schema=False)
+def profile_page():
+    return FileResponse("profile.html")
