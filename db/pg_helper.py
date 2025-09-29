@@ -74,50 +74,29 @@ class PgGifDB:
         # Schema beim Start sicherstellen
         with psycopg.connect(self.dsn) as conn:
             with conn.cursor() as cur:
-                # 1) Grundschema
+                # 1) Grundschema (inkl. GIF-Indizes via IF NOT EXISTS)
                 cur.execute(DDL)
 
-                # 2) Nachrüst-Änderungen robust ohne IF NOT EXISTS
-
-                # sessions.user_id Spalte
-                try:
-                    cur.execute(
-                        "ALTER TABLE sessions "
-                        "ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE"
-                    )
-                except psycopg.errors.DuplicateColumn:
-                    pass
-
-                # Index auf sessions(user_id)
-                try:
-                    cur.execute("CREATE INDEX idx_sessions_user ON sessions(user_id)")
-                except psycopg.errors.DuplicateObject:
-                    pass
-
-                # Case-insensitive Unique-Index auf users.username
-                try:
-                    cur.execute(
-                        "CREATE UNIQUE INDEX ux_users_username_ci "
-                        "ON users (lower(username))"
-                    )
-                except psycopg.errors.DuplicateObject:
-                    pass
-
-                # Fallback: falls deine PG-Version "CREATE INDEX IF NOT EXISTS" nicht kann,
-                # legen wir auch die gifs-Indizes hier defensiv an:
-                for name, sql in [
-                    ("idx_gifs_title", "CREATE INDEX idx_gifs_title ON gifs(title)"),
-                    ("idx_gifs_anime", "CREATE INDEX idx_gifs_anime ON gifs(anime)"),
-                    ("idx_gifs_nsfw", "CREATE INDEX idx_gifs_nsfw ON gifs(nsfw)"),
-                    (
-                        "idx_gifs_created_at",
-                        "CREATE INDEX idx_gifs_created_at ON gifs(created_at)",
-                    ),
-                ]:
-                    try:
-                        cur.execute(sql)
-                    except psycopg.errors.DuplicateObject:
-                        pass
+                # 2) Nachrüst-Änderungen idempotent
+                cur.execute(
+                    """
+                    ALTER TABLE sessions
+                    ADD COLUMN IF NOT EXISTS user_id INTEGER
+                    REFERENCES users(id) ON DELETE CASCADE
+                """
+                )
+                cur.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_sessions_user
+                    ON sessions(user_id)
+                """
+                )
+                cur.execute(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS ux_users_username_ci
+                    ON users (lower(username))
+                """
+                )
 
             conn.commit()
 
