@@ -480,23 +480,69 @@
                 <h2 id="settingsTitle" style="margin:0 0 .6rem 0">Account Settings</h2>
                 <div id="msg" class="alert" style="display:none"></div>
 
+                <!-- Username -->
                 <form id="formName" class="field" autocomplete="off">
                     <label for="inName">Username</label>
                     <input id="inName" class="input" name="username" placeholder="Your username">
                     <div class="row">
-                        <button class="btn sm" type="submit">Save Username</button>
-                        <span class="help">This updates your display & login name.</span>
+                    <button class="btn sm" type="submit">Save Username</button>
+                    <span class="help">This updates your display & login name.</span>
                     </div>
                 </form>
 
                 <div class="hr"></div>
 
-                <form id="formPfp" class="field" autocomplete="off">
-                    <label for="inPfp">Profile picture URL</label>
+                <!-- Avatar: Tabs (URL / Upload / Gallery) -->
+                <div class="field">
+                    <label>Profile picture</label>
+
+                    <div class="row" role="tablist" aria-label="Avatar source">
+                    <button type="button" class="btn sm ghost" data-tab="url">URL</button>
+                    <button type="button" class="btn sm ghost" data-tab="upload">Upload</button>
+                    <button type="button" class="btn sm ghost" data-tab="gallery">Gallery</button>
+                    </div>
+
+                    <div id="tab-url" class="grid" style="margin-top:.6rem">
                     <input id="inPfp" class="input" name="profile_picture" placeholder="https://…/avatar.png">
                     <div class="row">
-                        <button class="btn sm" type="submit">Save Picture</button>
+                        <button id="btnPfpSave" class="btn sm" type="button">Save Picture</button>
                         <span class="help">Direct image URL. PNG/JPG/GIF/WebP.</span>
+                    </div>
+                    </div>
+
+                    <div id="tab-upload" class="grid" style="display:none;margin-top:.6rem">
+                    <input id="inFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="input">
+                    <div class="row">
+                        <button id="btnUpload" class="btn sm" type="button">Upload</button>
+                        <span class="help">Max 2 MB. We store it under /static/uploads/avatars/</span>
+                    </div>
+                    </div>
+
+                    <div id="tab-gallery" class="grid" style="display:none;margin-top:.6rem">
+                    <div id="galleryWrap" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px"></div>
+                    <div class="row"><span class="help">Pick one of the preset avatars.</span></div>
+                    </div>
+                </div>
+
+                <div class="hr"></div>
+
+                <!-- Password change -->
+                <form id="formPwd" class="grid" autocomplete="off">
+                    <div class="field">
+                    <label for="curPwd">Current password</label>
+                    <input id="curPwd" class="input" type="password" minlength="8" placeholder="••••••••">
+                    </div>
+                    <div class="field">
+                    <label for="newPwd">New password</label>
+                    <input id="newPwd" class="input" type="password" minlength="8" placeholder="At least 8 characters">
+                    </div>
+                    <div class="field">
+                    <label for="repPwd">Repeat new password</label>
+                    <input id="repPwd" class="input" type="password" minlength="8" placeholder="Repeat new password">
+                    </div>
+                    <div class="row">
+                    <button class="btn sm" type="submit">Change Password</button>
+                    <span class="help">You must enter your current password.</span>
                     </div>
                 </form>
             </section>
@@ -685,18 +731,105 @@
             await updateMe({ username: name });
         });
 
-        document.getElementById('formPfp').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const url = document.getElementById('inPfp').value.trim();
-            if (url && !/^https?:\/\//i.test(url)) { showMsg('Must be a valid http(s) URL', false); return; }
-            await updateMe({ profile_picture: url || null });
-        });
-
         document.getElementById('logoutBtn').addEventListener('click', doLogout, { passive: true });
 
         // boot
         renderAuthHeader();
         loadProfile();
+          // --- Tabs for avatar source
+  const tabs = document.querySelectorAll('[data-tab]');
+  const tabPanels = {
+    url: document.getElementById('tab-url'),
+    upload: document.getElementById('tab-upload'),
+    gallery: document.getElementById('tab-gallery')
+  };
+  let activeTab = 'url';
+  function setTab(name) {
+    activeTab = name;
+    for (const [k, el] of Object.entries(tabPanels)) {
+      el.style.display = (k === name) ? 'grid' : 'none';
+    }
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+
+  // --- Avatar URL save
+  document.getElementById('btnPfpSave').addEventListener('click', async () => {
+    const url = document.getElementById('inPfp').value.trim();
+    if (url && !/^https?:\/\//i.test(url)) return showMsg('Must be a valid http(s) URL', false);
+    await updateMe({ profile_picture: url || null });
+  });
+
+  // --- Avatar upload
+  document.getElementById('btnUpload').addEventListener('click', async () => {
+    const f = document.getElementById('inFile').files?.[0];
+    if (!f) return showMsg('Choose a file first', false);
+    if (!['image/png','image/jpeg','image/webp','image/gif'].includes(f.type)) {
+      return showMsg('Unsupported type', false);
+    }
+    if (f.size > 2 * 1024 * 1024) return showMsg('File too large (max 2MB)', false);
+
+    const token = localStorage.getItem('gifapi_token');
+    if (!token) return showMsg('Not logged in', false);
+
+    const fd = new FormData();
+    fd.append('file', f);
+    try {
+      const r = await fetch('/api/users/me/avatar', {
+        method: 'POST',
+        headers: { 'X-Auth-Token': token },
+        body: fd
+      });
+      if (!r.ok) return showMsg(await r.text(), false);
+      await loadProfile(); // refresh avatar
+      await renderAuthHeader();
+      showMsg('Avatar updated', true);
+    } catch (e) {
+      showMsg('Upload failed', false);
+    }
+  });
+
+  // --- Avatar gallery
+  async function loadGallery() {
+    try {
+      const r = await fetch('/api/avatars');
+      const items = r.ok ? await r.json() : [];
+      const wrap = document.getElementById('galleryWrap');
+      wrap.innerHTML = '';
+      items.forEach(url => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn ghost';
+        b.style.padding = 0;
+        b.style.borderRadius = '12px';
+        b.style.overflow = 'hidden';
+        b.innerHTML = `<img src="${url}" alt="" style="display:block;width:72px;height:72px;object-fit:cover">`;
+        b.addEventListener('click', async () => {
+          await updateMe({ profile_picture: url });
+        });
+        wrap.appendChild(b);
+      });
+    } catch {}
+  }
+
+  // --- Password change
+  document.getElementById('formPwd').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const cur = document.getElementById('curPwd').value;
+    const n1  = document.getElementById('newPwd').value;
+    const n2  = document.getElementById('repPwd').value;
+    if (!cur || !n1 || !n2) return showMsg('Fill all password fields', false);
+    if (n1.length < 8) return showMsg('New password too short', false);
+    if (n1 !== n2) return showMsg('Passwords do not match', false);
+    const ok = await updateMe({ current_password: cur, new_password: n1 });
+    if (ok) {
+      document.getElementById('curPwd').value = '';
+      document.getElementById('newPwd').value = '';
+      document.getElementById('repPwd').value = '';
+    }
+  });
+
+  // call gallery once on boot
+  loadGallery();
     </script>
 </body>
 

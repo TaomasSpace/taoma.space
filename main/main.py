@@ -28,6 +28,9 @@ from psycopg import errors as pg_errors
 import os, hmac, base64, hashlib
 from typing import Tuple
 from fastapi import Path
+import imghdr
+from fastapi import UploadFile, File
+from pathlib import Path
 
 
 load_dotenv()
@@ -117,6 +120,17 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "X-Auth-Token"],
 )
+UPLOAD_DIR = Path("static/uploads/avatars")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2 MB
+ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp", "image/gif"}
+
+class MeUpdateIn(BaseModel):
+    username: Optional[str] = Field(None, min_length=3, max_length=32)
+    profile_picture: Optional[str] = None
+    linktree_id: Optional[int] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = Field(None, min_length=8)
 
 
 class CounterOut(BaseModel):
@@ -763,3 +777,92 @@ def grant_admin(user_id: int):
 @app.get("/profile", include_in_schema=False)
 def profile_page():
     return FileResponse("profile.html")
+
+@app.patch("/api/users/me", response_model=UserOut)
+def update_me(payload: MeUpdateIn, current: dict = Depends(require_user)):
+    # Passwortwechsel: nur wenn new_password gesetzt ist → current_password nötig
+    if payload.new_password is not None:
+        if not payload.current_password:
+            raise HTTPException(400, "current_password required to set new_password")
+        u = db.getUser(current["id"])
+        if not u or not CheckPassword(u["password"], payload.current_password):
+            raise HTTPException(401, "Current password incorrect")
+        # NEU: gleiches Passwort verhindern
+        if CheckPassword(u["password"], payload.new_password):
+            raise HTTPException(400, "New password must differ from current password")
+
+    # Username-Kollisionsschutz (case-insensitiv) nur wenn er sich ändert
+    if payload.username is not None:
+        other = db.getUserByUsername(payload.username.strip())
+        if other and other["id"] != current["id"]:
+            raise HTTPException(409, "username already exists")
+
+    try:
+        db.updateUser(
+            current["id"],
+            username=payload.username.strip() if payload.username is not None else None,
+            password=(hashPassword(payload.new_password) 
+                      if payload.new_password is not None else None),
+            linktree_id=payload.linktree_id,
+            profile_picture=payload.profile_picture,
+            admin=None,  # niemals über /me
+        )
+    except Exception as e:
+        raise HTTPException(502, f"Failed to update: {e}")
+
+    row = db.getUser(current["id"])
+    row["admin"] = bool(row.get("admin", False))
+    for k in ("created_at", "updated_at"):
+        if isinstance(row.get(k), datetime):
+            row[k] = row[k].isoformat()
+    return row
+
+def _safe_image_bytes(b: bytes) -> str:
+    # zusätzliche Magic-Check (imghdr ist simpel, aber reicht als Basis)
+    kind = imghdr.what(None, h=b)
+    return kind or ""
+
+@app.post("/api/users/me/avatar", response_model=UserOut)
+async def upload_avatar(file: UploadFile = File(...), current: dict = Depends(require_user)):
+    if file.content_type not in ALLOWED_MIME:
+        raise HTTPException(415, "Unsupported media type")
+    data = await file.read()
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "File too large (max 2MB)")
+    if not _safe_image_bytes(data):
+        raise HTTPException(400, "File is not a valid image")
+
+    # Dateiendung nach MIME
+    ext = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
+        "image/gif": "gif",
+    }[file.content_type]
+
+    fname = f"user{current['id']}_{uuid.uuid4().hex}.{ext}"
+    out_path = UPLOAD_DIR / fname
+    out_path.write_bytes(data)
+
+    url = f"/static/uploads/avatars/{fname}"
+    db.updateUser(current["id"], profile_picture=url)
+
+    row = db.getUser(current["id"])
+    row["admin"] = bool(row.get("admin", False))
+    for k in ("created_at", "updated_at"):
+        if isinstance(row.get(k), datetime):
+            row[k] = row[k].isoformat()
+    return row
+
+@app.get("/api/avatars")
+def list_avatars():
+    base = Path("static/avatars")
+    if not base.exists():
+        # Fallback: leere Liste
+        return []
+    # nur übliche Endungen
+    items = []
+    for p in sorted(base.glob("*")):
+        if p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif"} and p.is_file():
+            items.append(f"/static/avatars/{p.name}")
+    return items
