@@ -45,6 +45,10 @@ ALG = "pbkdf2_sha256"
 ITER = 200_000
 SALT_LEN = 16
 
+UPLOAD_DIR = pathlib.Path(os.getenv("UPLOAD_DIR", "/var/data/avatars"))
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+MEDIA_ROOT = UPLOAD_DIR.parent  # -> /var/data
+app.mount("/media", StaticFiles(directory=str(MEDIA_ROOT)), name="media")
 
 def _b64e(b: bytes) -> str:
     return base64.b64encode(b).decode("ascii")
@@ -119,8 +123,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "X-Auth-Token"],
 )
-UPLOAD_DIR = pathlib.Path("static/uploads/avatars")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2 MB
 ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp", "image/gif"}
 
@@ -856,7 +859,7 @@ async def upload_avatar(file: UploadFile = File(...), current: dict = Depends(re
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
 
-    url = f"/static/uploads/avatars/{fname}"
+    url = f"/media/{UPLOAD_DIR.name}/{fname}"  # -> /media/avatars/<file>
     db.updateUser(current["id"], profile_picture=url)
 
     row = db.getUser(current["id"])
