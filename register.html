@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TAOMA™ — Register</title>
+    <meta name="theme-color" content="#0f1223" />
+    <link rel="icon" type="image/png" href="/static/icon.png">
+    <style>
+        /* identische Tokens/Styles wie Login (gekürzt) */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0e1020;
+            --card: #171b3b;
+            --ink: #e9ebff;
+            --muted: #a2a9c8;
+            --acc: #85a3ff;
+            --ring: #85a3ff55;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .25);
+            --radius: 16px;
+            --space: clamp(16px, 2vw, 24px);
+            --container: 1100px
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
+                radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
+                radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
+                linear-gradient(160deg, #0f1531 0%, #0e1020 72%)
+        }
+
+        .container {
+            max-width: var(--container);
+            margin: 0 auto;
+            padding-inline: var(--space)
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+            border-bottom: 1px solid #ffffff14;
+            backdrop-filter: saturate(1.1) blur(10px)
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            font-weight: 800
+        }
+
+        .brand .logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px
+        }
+
+        .links a {
+            padding: .45rem .7rem;
+            border-radius: 10px;
+            border: 1px solid transparent
+        }
+
+        .links a:hover {
+            border-color: #ffffff1f;
+            background: #ffffff0f
+        }
+
+        .card {
+            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+            border: 1px solid #ffffff1a;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow)
+        }
+
+        .form {
+            max-width: 540px;
+            margin: clamp(48px, 8vw, 120px) auto;
+            padding: clamp(18px, 3vw, 26px);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: .45rem
+        }
+
+        .control {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            background: #0f1331;
+            border: 1px solid #ffffff22;
+            border-radius: 12px;
+            padding: .65rem .75rem
+        }
+
+        .control:focus-within {
+            border-color: var(--acc);
+            box-shadow: 0 0 0 6px var(--ring)
+        }
+
+        .control input {
+            flex: 1;
+            background: transparent;
+            color: var(--ink);
+            border: 0;
+            outline: 0;
+            font: 600 15px/1.4 Inter
+        }
+
+        .btn {
+            display: inline-flex;
+            gap: .6rem;
+            align-items: center;
+            padding: .75rem 1rem;
+            border-radius: 12px;
+            background: var(--acc);
+            color: #fff;
+            border: 1px solid #ffffff1a
+        }
+
+        .row {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        .error,
+        .success {
+            display: none;
+            border-radius: 12px;
+            padding: .75rem .9rem
+        }
+
+        .error {
+            border: 1px solid #ff5a6a55;
+            background: #ff5a6a2e
+        }
+
+        .success {
+            border: 1px solid #35d79c55;
+            background: #35d79c2e
+        }
+
+        .show {
+            display: block
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container nav">
+            <div class="brand">
+                <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
+                <a href="/"><span>TAOMA™</span></a>
+            </div>
+            <nav class="links"><a href="/">Home</a><a href="/projects">Projects</a><a href="/about">About</a><a
+                    href="/contact">Contact</a><a href="/skills">Skills</a></nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="card form" aria-labelledby="reg-title">
+            <div>
+                <h1 id="reg-title">Create account</h1>
+                <p class="muted">Public signup (you won’t be admin). You can ask the owner to grant admin later.</p>
+            </div>
+
+            <div class="error" id="err"></div>
+            <div class="success" id="ok"></div>
+
+            <div class="field">
+                <label>Username</label>
+                <div class="control"><input id="username" type="text" minlength="3" maxlength="32"
+                        placeholder="yourname" required></div>
+            </div>
+
+            <div class="field">
+                <label>Password</label>
+                <div class="control"><input id="password" type="password" minlength="8" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Confirm password</label>
+                <div class="control"><input id="confirm" type="password" minlength="8" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <button class="btn" id="submitBtn" type="button">Register</button>
+                <a class="btn" style="background:transparent;border:1px solid #ffffff26;color:inherit"
+                    href="/login">Back to Login</a>
+            </div>
+
+            <p class="muted">We’ll log you in automatically after successful registration.</p>
+        </section>
+    </main>
+
+    <script>
+        const u = document.getElementById('username');
+        const p = document.getElementById('password');
+        const c = document.getElementById('confirm');
+        const btn = document.getElementById('submitBtn');
+        const err = document.getElementById('err');
+        const ok = document.getElementById('ok');
+
+        function showErr(m) { err.textContent = m; err.classList.add('show'); ok.classList.remove('show'); }
+        function showOk(m) { ok.textContent = m; ok.classList.add('show'); err.classList.remove('show'); }
+
+        [u, p, c].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); }));
+
+        btn.addEventListener('click', async () => {
+            const username = u.value.trim();
+            const pw = p.value.trim();
+            const cf = c.value.trim();
+            if (!username) { showErr("Please enter a username."); u.focus(); return; }
+            if (pw.length < 8) { showErr("Password must be at least 8 characters."); p.focus(); return; }
+            if (pw !== cf) { showErr("Passwords do not match."); c.focus(); return; }
+
+            btn.disabled = true; btn.style.opacity = .7;
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password: pw })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showErr(data?.detail || 'Registration failed');
+                    return;
+                }
+                if (!data?.token) { showErr("No token returned by server."); return; }
+                localStorage.setItem('gifapi_token', data.token);
+                if (data.expires_at) localStorage.setItem('gifapi_token_expires', data.expires_at);
+                showOk("Account created. Redirecting…");
+                setTimeout(() => { window.location.href = '/' }, 400);
+            } catch (e) {
+                showErr("Network error: " + (e?.message || e));
+            } finally {
+                btn.disabled = false; btn.style.opacity = 1;
+            }
+        });
+    </script>
+</body>
+
+</html>

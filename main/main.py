@@ -15,16 +15,20 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Query, Header, Depends
 from pydantic import BaseModel, HttpUrl, Field
 from typing import List, Optional
-from db.db_helper import GifDB
 from pydantic import BaseModel
 import os
 from fastapi import Depends, Header
 from db.db_helper import GifDB as SqliteGifDB
-from db.pg_helper import PgGifDB  # <— neu
+from db.pg_helper import PgGifDB
 from fastapi.responses import HTMLResponse
 from fastapi import Response
 from fastapi.middleware.cors import CORSMiddleware
 import threading
+from psycopg import errors as pg_errors
+import os, hmac, base64, hashlib
+from typing import Tuple
+from fastapi import Path
+
 
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
@@ -35,12 +39,68 @@ db = PgGifDB(DATABASE_URL) if DATABASE_URL else SqliteGifDB("gifs.db")
 ADMIN_PASSWORD = os.getenv("GIFAPI_ADMIN_PASSWORD", "")
 lock = threading.Lock()
 
-def require_auth(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")):
+ALG = "pbkdf2_sha256"
+ITER = 200_000
+SALT_LEN = 16
+
+
+def _b64e(b: bytes) -> str:
+    return base64.b64encode(b).decode("ascii")
+
+
+def _b64d(s: str) -> bytes:
+    return base64.b64decode(s.encode("ascii"))
+
+
+def require_token(x_auth_token: str | None = Header(None, alias="X-Auth-Token")):
     if not x_auth_token or not db.validate_token(x_auth_token):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
+        raise HTTPException(401, "Unauthorized")
+    return x_auth_token
+
+
+def require_user(x_auth_token: str = Depends(require_token)):
+    user = db.get_token_user(x_auth_token)
+    if not user:
+        raise HTTPException(401, "Unauthorized")
+    return user
+
+
+def require_admin(user: dict = Depends(require_user)):
+    if not bool(user.get("admin", False)):
+        raise HTTPException(403, "Forbidden: admin only")
+    return user
+
+
+def hashPassword(password: str) -> str:
+    if not isinstance(password, str) or len(password) < 8:
+        raise ValueError("password must be a string with length >= 8")
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
+
+
+def decodePassword(hashedPassword: str) -> str:
+    # Nicht möglich: Hashes sind one-way. Wir lassen das bewusst scheitern:
+    raise NotImplementedError(
+        "Passwords cannot be decoded; compare with CheckPassword()."
+    )
+
+
+def CheckPassword(hashedPassword: str, unhashedPassword: str) -> bool:
+    if not hashedPassword or not unhashedPassword:
+        return False
+    try:
+        return bcrypt.checkpw(
+            unhashedPassword.encode("utf-8"), hashedPassword.encode("utf-8")
+        )
+    except Exception:
+        return False
+
+
+import bcrypt
+from psycopg.rows import dict_row
+
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-logger = logging.getLogger("uvicorn.error") 
+logger = logging.getLogger("uvicorn.error")
 
 ALLOWED_ORIGINS = [
     o.strip()
@@ -58,8 +118,10 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-Auth-Token"],
 )
 
+
 class CounterOut(BaseModel):
     total: int
+
 
 class GifIn(BaseModel):
     title: str
@@ -98,8 +160,11 @@ class LoginOut(BaseModel):
     token: str
     expires_at: str | None = None
 
+
 class JobIn(BaseModel):
     seconds: int = Field(3, ge=1, le=20)
+
+
 class Contact(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     email: EmailStr
@@ -107,15 +172,62 @@ class Contact(BaseModel):
     message: str = Field(..., min_length=10, max_length=5000)
     website: str | None = None  # Honeypot
 
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+    linktree_id: Optional[int] = None
+    profile_picture: Optional[str] = None
+    admin: bool
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class UserCreateIn(BaseModel):
+    username: str = Field(..., min_length=3, max_length=32)
+    password: str = Field(..., min_length=8)
+    linktree_id: Optional[int] = None
+    profile_picture: Optional[str] = None
+
+
+class UserUpdateIn(BaseModel):
+    username: Optional[str] = Field(None, min_length=3, max_length=32)
+    password: Optional[str] = Field(None, min_length=8)
+    linktree_id: Optional[int] = None
+    profile_picture: Optional[str] = None
+    admin: Optional[bool] = None
+
+
 JOB_STORE: dict[str, dict] = {}
+
+
+class LoginUserIn(BaseModel):
+    username: str
+    password: str
+
+
+class RegisterIn(BaseModel):
+    username: str = Field(..., min_length=3, max_length=32)
+    password: str = Field(..., min_length=8)
+    linktree_id: Optional[int] = None
+    profile_picture: Optional[str] = None
+
+
+class RegisterOut(BaseModel):
+    token: str
+    expires_at: Optional[str] = None
+    user: UserOut
+
 
 @app.get("/", include_in_schema=False)
 def home():
     return FileResponse("index.html")
 
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
 
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
@@ -182,6 +294,7 @@ async def create_contact(
 
     return {"ok": True}
 
+
 @app.get("/api/ping")
 async def ping():
     """Simple health/latency endpoint."""
@@ -191,6 +304,7 @@ async def ping():
         "service": "taoma.space",
     }
 
+
 @app.post("/api/echo")
 async def echo(payload: dict[str, Any]):
     data = payload  # <-- dict, kein model_dump()
@@ -198,9 +312,10 @@ async def echo(payload: dict[str, Any]):
     for key, value in data.items():
         key_safe = html.escape(str(key))
         value_safe = html.escape(json.dumps(value, ensure_ascii=False))
-        parts.append(f'<p><strong>{key_safe}</strong> = <code>{value_safe}</code></p>')
+        parts.append(f"<p><strong>{key_safe}</strong> = <code>{value_safe}</code></p>")
     html_out = "\n".join(parts)
     return {"ok": True, "data": html_out}
+
 
 @app.post("/api/job")
 async def create_job(job: JobIn, background: BackgroundTasks):
@@ -217,6 +332,7 @@ async def create_job(job: JobIn, background: BackgroundTasks):
 
     background.add_task(worker)
     return {"ok": True, "job_id": job_id}
+
 
 @app.get("/api/job/{job_id}")
 async def job_status(job_id: str):
@@ -236,22 +352,52 @@ def skills():
 def verify(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")):
     if not x_auth_token or not db.validate_token(x_auth_token):
         raise HTTPException(status_code=401, detail="Unauthorized")
-    exp = None
+    user = None
     try:
-        exp = db.get_token_expiry(x_auth_token)
+        user = db.get_token_user(x_auth_token)
     except AttributeError:
-        pass
-    return {"ok": True, "expires_at": exp}
+        user = None
+    # mask sensible Felder
+    if user:
+        user_out = {
+            "id": user["id"],
+            "username": user["username"],
+            "admin": bool(user.get("admin", False)),
+            "linktree_id": user.get("linktree_id"),
+            "profile_picture": user.get("profile_picture"),
+            "created_at": (
+                user.get("created_at").isoformat()
+                if isinstance(user.get("created_at"), datetime)
+                else user.get("created_at")
+            ),
+            "updated_at": (
+                user.get("updated_at").isoformat()
+                if isinstance(user.get("updated_at"), datetime)
+                else user.get("updated_at")
+            ),
+        }
+    else:
+        user_out = None
+    return {
+        "ok": True,
+        "expires_at": db.get_token_expiry(x_auth_token),
+        "user": user_out,
+    }
 
-@app.get("/api/admin", response_class=HTMLResponse)
+
+@app.get(
+    "/api/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
+)
 def admin_page():
     return FileResponse("gifApiAdmin.html")
+
 
 @app.get("/api", response_class=HTMLResponse)
 def root():
     return FileResponse("gifApiMain.html")
 
-@app.get("/api/admin/gifs", dependencies=[Depends(require_auth)])
+
+@app.get("/api/admin/gifs", dependencies=[Depends(require_admin)])
 def admin_list_gifs(
     q: Optional[str] = Query("", description="Titel-Contains, leer = alle"),
     nsfw: str = Query("true", description="false|true|only"),
@@ -260,22 +406,23 @@ def admin_list_gifs(
 ):
     return db.search_by_title(q or "", nsfw_mode=nsfw, limit=limit, offset=offset)
 
+
 @app.post("/api/auth/login", response_model=LoginOut)
 def login(payload: LoginIn):
     if not ADMIN_PASSWORD:
         raise HTTPException(500, "Server not configured: GIFAPI_ADMIN_PASSWORD missing")
-
     if payload.password != ADMIN_PASSWORD:
         raise HTTPException(401, "Invalid password")
 
-    token = db.create_token(hours_valid=24)
-    expires = None
-    try:
-        expires = db.get_token_expiry(token)
-    except AttributeError:
-        expires = None
+    admin = db.getUserByUsername(os.getenv("DEFAULT_ADMIN_USERNAME", "")) or None
 
+    if not admin or not bool(admin.get("admin", False)):
+        raise HTTPException(500, "No admin user to bind the session to")
+
+    token = db.create_token(hours_valid=24, user_id=admin["id"])
+    expires = db.get_token_expiry(token)
     return {"token": token, "expires_at": expires}
+
 
 @app.post("/api/auth/logout")
 def logout(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")):
@@ -284,7 +431,8 @@ def logout(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")
     db.revoke_token(x_auth_token)
     return {"ok": True}
 
-@app.get("/api/gifs")  
+
+@app.get("/api/gifs")
 def unified_get_gifs(
     q: Optional[str] = Query(None, description="Title contains (case-insensitive)"),
     tag: Optional[str] = Query(None, description="Pick random by tag"),
@@ -355,12 +503,13 @@ def unified_get_gifs(
         return db.get_random(nsfw_mode=nsfw_mode)
     except KeyError:
         raise HTTPException(status_code=404, detail="no gifs in database")
-    
+
+
 @app.post(
     "/api/gifs",
     response_model=GifOut,
     status_code=201,
-    dependencies=[Depends(require_auth)],
+    dependencies=[Depends(require_user)],
 )
 def create_or_update_gif(payload: GifIn):
     try:
@@ -393,7 +542,8 @@ def create_or_update_gif(payload: GifIn):
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
+
+
 @app.get("/api/gifs/{gif_id}", response_model=GifOut)
 def read_gif(gif_id: int):
     try:
@@ -401,8 +551,9 @@ def read_gif(gif_id: int):
     except KeyError:
         raise HTTPException(status_code=404, detail="GIF not found")
 
+
 @app.patch(
-    "/api/gifs/{gif_id}", response_model=GifOut, dependencies=[Depends(require_auth)]
+    "/api/gifs/{gif_id}", response_model=GifOut, dependencies=[Depends(require_user)]
 )
 def update_gif(gif_id: int, payload: GifUpdate):
     try:
@@ -421,7 +572,8 @@ def update_gif(gif_id: int, payload: GifUpdate):
     )
     return db.get_gif(gif_id)
 
-@app.delete("/api/gifs/{gif_id}", status_code=204, dependencies=[Depends(require_auth)])
+
+@app.delete("/api/gifs/{gif_id}", status_code=204, dependencies=[Depends(require_user)])
 def delete_gif(gif_id: int):
     try:
         _ = db.get_gif(gif_id)  # 404, falls nicht vorhanden
@@ -436,7 +588,168 @@ def incrementcount():
     db.incrementCounter()
     return Response(status_code=204)
 
+
 @app.get("/api/visits/value", response_model=CounterOut)
 def value():
     total = db.getCounterValue()
-    return {"total": int(total or 0)} 
+    return {"total": int(total or 0)}
+
+
+@app.get("/user/{user_id}", response_model=UserOut)
+def get_user(user_id: int, current: dict = Depends(require_user)):
+    row = db.getUser(user_id)
+    if not row:
+        raise HTTPException(404, "User not found")
+    if current["id"] != user_id and not bool(current.get("admin", False)):
+        raise HTTPException(403, "Forbidden")
+    row["admin"] = row.get("admin", False)
+    for k in ("created_at", "updated_at"):
+        if isinstance(row.get(k), datetime):
+            row[k] = row[k].isoformat()
+    return row
+
+
+@app.post(
+    "/user",
+    response_model=UserOut,
+    status_code=201,
+    dependencies=[Depends(require_admin)],
+)
+def create_user(payload: UserCreateIn):
+    try:
+        new_id = db.createUser(
+            username=payload.username.strip(),
+            hashed_password=hashPassword(payload.password),
+            linktree_id=payload.linktree_id,
+            profile_picture=payload.profile_picture,
+            admin=False,  # ← hart
+        )
+    except pg_errors.UniqueViolation:
+        # Case-insensitive Unique-Index auf username → 409
+        raise HTTPException(status_code=409, detail="username already exists")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to create user: {e}")
+
+    row = db.getUser(new_id)
+    # defensive postprocess
+    if not row:
+        raise HTTPException(status_code=500, detail="User created but not found")
+    row["admin"] = row.get("admin", False)
+    for k in ("created_at", "updated_at"):
+        if isinstance(row.get(k), datetime):
+            row[k] = row[k].isoformat()
+    return row
+
+
+@app.patch("/user/{user_id}", response_model=UserOut)
+def update_user(
+    user_id: int = Path(..., ge=1),
+    payload: UserUpdateIn = ...,
+    current: dict = Depends(require_user),  # liefert dict des eingeloggten Users
+):
+    target = db.getUser(user_id)
+    if not target:
+        raise HTTPException(404, "User not found")
+
+    is_admin = bool(current.get("admin", False))
+    is_self = current["id"] == user_id
+
+    # Nicht-Admin darf nur sich selbst ändern und admin-Feld wird ignoriert
+    if not is_admin and not is_self:
+        raise HTTPException(403, "Forbidden")
+    admin_value = payload.admin if is_admin else None
+
+    try:
+        db.updateUser(
+            user_id,
+            username=payload.username.strip() if payload.username is not None else None,
+            password=(
+                hashPassword(payload.password) if payload.password is not None else None
+            ),
+            linktree_id=payload.linktree_id,
+            profile_picture=payload.profile_picture,
+            admin=admin_value,  # nur Admin kann das setzen
+        )
+    except pg_errors.UniqueViolation:
+        raise HTTPException(status_code=409, detail="username already exists")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to update user: {e}")
+
+    row = db.getUser(user_id)
+    row["admin"] = row.get("admin", False)
+    for k in ("created_at", "updated_at"):
+        if isinstance(row.get(k), datetime):
+            row[k] = row[k].isoformat()
+    return row
+
+
+@app.post("/api/auth/login_user", response_model=LoginOut)
+def login_user(payload: LoginUserIn):
+    user = db.getUserByUsername(payload.username.strip())
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if not CheckPassword(user["password"], payload.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = db.create_token(hours_valid=24, user_id=user["id"])
+    expires = db.get_token_expiry(token)
+    return {"token": token, "expires_at": expires}
+
+
+@app.post("/api/auth/register", response_model=RegisterOut)
+def register(payload: RegisterIn):
+    uname = payload.username.strip()
+    if db.getUserByUsername(uname):
+        raise HTTPException(status_code=409, detail="username already exists")
+
+    # hash
+    hashed = hashPassword(payload.password)
+
+    try:
+        new_id = db.createUser(
+            username=uname,
+            hashed_password=hashed,
+            linktree_id=payload.linktree_id,
+            profile_picture=payload.profile_picture,
+            admin=False,  # public signup → niemals admin
+        )
+    except pg_errors.UniqueViolation:
+        raise HTTPException(status_code=409, detail="username already exists")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to create user: {e}")
+
+    # auto-login
+    token = db.create_token(hours_valid=24, user_id=new_id)
+    exp = db.get_token_expiry(token)
+
+    row = db.getUser(new_id)
+    user_out = {
+        "id": row["id"],
+        "username": row["username"],
+        "admin": bool(row.get("admin", False)),
+        "linktree_id": row.get("linktree_id"),
+        "profile_picture": row.get("profile_picture"),
+        "created_at": (
+            row.get("created_at").isoformat()
+            if isinstance(row.get("created_at"), datetime)
+            else row.get("created_at")
+        ),
+        "updated_at": (
+            row.get("updated_at").isoformat()
+            if isinstance(row.get("updated_at"), datetime)
+            else row.get("updated_at")
+        ),
+    }
+    return {"token": token, "expires_at": exp, "user": user_out}
+
+
+@app.get("/register", include_in_schema=False)
+def register_page():
+    return FileResponse("register.html")
+
+
+@app.post("/admin/users/{user_id}/grant", dependencies=[Depends(require_admin)])
+def grant_admin(user_id: int):
+    db.updateUser(user_id, admin=True)
+    return {"ok": True}

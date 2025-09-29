@@ -2,265 +2,570 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TAOMA™ — Projects</title>
-  <meta name="description" content="Selected projects by TAOMA™ — Discord bot, Anime GIF API, and more." />
-  <meta name="theme-color" content="#0f1223" />
-  <link rel="icon" type="image/png" href="/static/icon.png">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TAOMA™ — Projects</title>
+    <meta name="description" content="Selected projects by TAOMA™ — Discord bot, Anime GIF API, and more." />
+    <meta name="theme-color" content="#0f1223" />
+    <link rel="icon" type="image/png" href="/static/icon.png">
 
-  <style>
-    /* ===== your global palette / base (same as other pages) ===== */
-    *,*::before,*::after{box-sizing:border-box}
-    :root{
-      --bg:#0e1020;--bg-soft:#141735;--card:#171b3b;--ink:#e9ebff;--muted:#a2a9c8;
-      --acc:#85a3ff;--acc-2:#5b7bff;--ok:#35d79c;--danger:#ff5a6a;--ring:#85a3ff55;
-      --shadow:0 10px 30px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.25);
-      --radius:16px;--space:clamp(16px,2vw,24px);--container:1100px;
-    }
-    html,body{height:100%}
-    body{
-      margin:0; font:15px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
-      color:var(--ink); background:var(--bg); min-height:100dvh; display:flex; flex-direction:column; position:relative;
-    }
-    body::before{
-      content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
-      background:
-        radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
-        radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
-        radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
-        linear-gradient(160deg,#0f1531 0%,#0e1020 72%);
-    }
-    a{color:inherit;text-decoration:none}
-    img{max-width:100%;display:block}
-    .container{max-width:var(--container);margin:0 auto;padding-inline:var(--space)}
-    .btn{display:inline-flex;align-items:center;gap:.6rem;padding:.75rem 1rem;border-radius:12px;background:var(--acc);color:#fff;font-weight:600;box-shadow:var(--shadow);border:1px solid #ffffff1a;transition:.2s}
-    .btn:hover{transform:translateY(-1px);filter:saturate(1.08)}
-    .btn.ghost{background:transparent;color:var(--ink);border:1px solid #ffffff26;box-shadow:none}
-    .chip{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .6rem;border-radius:999px;background:color-mix(in oklab,var(--acc) 15%,transparent);border:1px solid #ffffff1a;font-size:.85rem}
-    .card{background:linear-gradient(180deg,color-mix(in oklab,var(--card),transparent 8%),var(--card));border:1px solid #ffffff1a;border-radius:var(--radius);box-shadow:var(--shadow)}
-    .muted{color:var(--muted)}
-    header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(1.1) blur(10px);background:linear-gradient(180deg,#0c0f24cc 0%,#0c0f2400 100%);border-bottom:1px solid #ffffff14}
-    .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
-    .brand{display:flex;align-items:center;gap:.75rem;font-weight:800;letter-spacing:.4px}
-    .brand .logo{width:28px;height:28px;border-radius:8px}
-    .links{display:flex;gap:1rem;align-items:center}
-    .links a{padding:.45rem .7rem;border-radius:10px;border:1px solid transparent}
-    .links a:hover{border-color:#ffffff1f;background:#ffffff0f}
-    .mobile-toggle{display:none}
-    @media (max-width:800px){
-      .mobile-toggle{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid #ffffff26;background:transparent}
-      .links{position:fixed;inset:64px 0 auto 0;background:linear-gradient(180deg,#0b0f29,#0b0f2945);padding:1rem;display:none;flex-direction:column}
-      .links.open{display:flex}
-    }
+    <style>
+        /* ===== your global palette / base (same as other pages) ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box
+        }
 
-    /* ===== page ===== */
-    .hero{padding-block:clamp(48px,8vw,120px) clamp(16px,3vw,28px);text-align:center}
-    .hero .title{font-size:clamp(28px,6vw,56px);line-height:1.1;margin:0 0 .6rem}
-    .hero .subtitle{font-size:clamp(16px,2.6vw,20px);margin:.25rem 0 1.5rem;color:var(--muted)}
+        :root {
+            --bg: #0e1020;
+            --bg-soft: #141735;
+            --card: #171b3b;
+            --ink: #e9ebff;
+            --muted: #a2a9c8;
+            --acc: #85a3ff;
+            --acc-2: #5b7bff;
+            --ok: #35d79c;
+            --danger: #ff5a6a;
+            --ring: #85a3ff55;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .25);
+            --radius: 16px;
+            --space: clamp(16px, 2vw, 24px);
+            --container: 1100px;
+        }
 
-    .section-title{font-size:clamp(22px,3vw,28px);margin:0 0 1rem}
+        html,
+        body {
+            height: 100%
+        }
 
-    /* ===== accordion cards ===== */
-    .accordion{display:grid;gap:clamp(14px,2vw,18px)}
-    details.proj{border-radius:var(--radius);overflow:hidden}
-    details.proj summary{
-      list-style:none;cursor:pointer;display:flex;align-items:center;gap:.9rem;padding:1rem 1.1rem;
-      background:linear-gradient(180deg,color-mix(in oklab,var(--card),transparent 6%),var(--card));
-      border-bottom:1px solid #ffffff14; position:relative;
-    }
-    details.proj summary::-webkit-details-marker{display:none}
-    .caret{transition:transform .2s ease;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;background:#ffffff10;border:1px solid #ffffff1a}
-    details[open] .caret{transform:rotate(90deg)}
-    .summary-main{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center}
-    .summary-main h3{margin:0;font-size:1.05rem}
-    .badges{display:flex;gap:.4rem;flex-wrap:wrap;margin-left:auto}
-    .body{padding:1rem 1.1rem;display:grid;gap:1rem}
-    .body .cols{display:grid;grid-template-columns:1.2fr .8fr;gap:1rem}
-    @media (max-width:900px){.body .cols{grid-template-columns:1fr}}
-    .meta{display:grid;gap:.6rem}
-    .meta .row{display:flex;flex-wrap:wrap;gap:.4rem .6rem}
-    .key{color:var(--muted);min-width:100px}
-    .links-row{display:flex;flex-wrap:wrap;gap:.5rem}
-    .shots{display:grid;gap:.6rem}
-    .shots .frame{border-radius:12px;overflow:hidden;border:1px solid #ffffff1a;background:#0b0f29}
-    .shots .hint{font-size:.85rem;color:var(--muted)}
-    .cta-bottom{margin-top:clamp(24px,4vw,36px);display:flex;justify-content:center}
-    footer{border-top:1px solid #ffffff14;padding-block:24px;margin-top:auto}
-    .foot{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .social{display:flex;gap:.6rem}
-    .social a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:1px solid #ffffff26}
+        body {
+            margin: 0;
+            font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+            color: var(--ink);
+            background: var(--bg);
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-    :focus-visible{outline:2px solid var(--acc);outline-offset:2px;box-shadow:0 0 0 6px var(--ring)}
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
+                radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
+                radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
+                linear-gradient(160deg, #0f1531 0%, #0e1020 72%);
+        }
 
-            .visitor-counter {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font: 600 15px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
-  color: var(--ink);
-  padding: 0.25rem 0.6rem;
-  border-radius: 8px;
-  background: color-mix(in oklab, var(--card) 35%, transparent);
-  border: 1px solid #ffffff1a;
-}
+        a {
+            color: inherit;
+            text-decoration: none
+        }
 
-.visitor-counter svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  color: var(--muted);
-}
-  </style>
+        img {
+            max-width: 100%;
+            display: block
+        }
+
+        .container {
+            max-width: var(--container);
+            margin: 0 auto;
+            padding-inline: var(--space)
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .75rem 1rem;
+            border-radius: 12px;
+            background: var(--acc);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            border: 1px solid #ffffff1a;
+            transition: .2s
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            filter: saturate(1.08)
+        }
+
+        .btn.ghost {
+            background: transparent;
+            color: var(--ink);
+            border: 1px solid #ffffff26;
+            box-shadow: none
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .35rem .6rem;
+            border-radius: 999px;
+            background: color-mix(in oklab, var(--acc) 15%, transparent);
+            border: 1px solid #ffffff1a;
+            font-size: .85rem
+        }
+
+        .card {
+            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+            border: 1px solid #ffffff1a;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow)
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: saturate(1.1) blur(10px);
+            background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+            border-bottom: 1px solid #ffffff14
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            font-weight: 800;
+            letter-spacing: .4px
+        }
+
+        .brand .logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px
+        }
+
+        .links {
+            display: flex;
+            gap: 1rem;
+            align-items: center
+        }
+
+        .links a {
+            padding: .45rem .7rem;
+            border-radius: 10px;
+            border: 1px solid transparent
+        }
+
+        .links a:hover {
+            border-color: #ffffff1f;
+            background: #ffffff0f
+        }
+
+        .mobile-toggle {
+            display: none
+        }
+
+        @media (max-width:800px) {
+            .mobile-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                border: 1px solid #ffffff26;
+                background: transparent
+            }
+
+            .links {
+                position: fixed;
+                inset: 64px 0 auto 0;
+                background: linear-gradient(180deg, #0b0f29, #0b0f2945);
+                padding: 1rem;
+                display: none;
+                flex-direction: column
+            }
+
+            .links.open {
+                display: flex
+            }
+        }
+
+        /* ===== page ===== */
+        .hero {
+            padding-block: clamp(48px, 8vw, 120px) clamp(16px, 3vw, 28px);
+            text-align: center
+        }
+
+        .hero .title {
+            font-size: clamp(28px, 6vw, 56px);
+            line-height: 1.1;
+            margin: 0 0 .6rem
+        }
+
+        .hero .subtitle {
+            font-size: clamp(16px, 2.6vw, 20px);
+            margin: .25rem 0 1.5rem;
+            color: var(--muted)
+        }
+
+        .section-title {
+            font-size: clamp(22px, 3vw, 28px);
+            margin: 0 0 1rem
+        }
+
+        /* ===== accordion cards ===== */
+        .accordion {
+            display: grid;
+            gap: clamp(14px, 2vw, 18px)
+        }
+
+        details.proj {
+            border-radius: var(--radius);
+            overflow: hidden
+        }
+
+        details.proj summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            padding: 1rem 1.1rem;
+            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 6%), var(--card));
+            border-bottom: 1px solid #ffffff14;
+            position: relative;
+        }
+
+        details.proj summary::-webkit-details-marker {
+            display: none
+        }
+
+        .caret {
+            transition: transform .2s ease;
+            display: inline-grid;
+            place-items: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            background: #ffffff10;
+            border: 1px solid #ffffff1a
+        }
+
+        details[open] .caret {
+            transform: rotate(90deg)
+        }
+
+        .summary-main {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem 1rem;
+            align-items: center
+        }
+
+        .summary-main h3 {
+            margin: 0;
+            font-size: 1.05rem
+        }
+
+        .badges {
+            display: flex;
+            gap: .4rem;
+            flex-wrap: wrap;
+            margin-left: auto
+        }
+
+        .body {
+            padding: 1rem 1.1rem;
+            display: grid;
+            gap: 1rem
+        }
+
+        .body .cols {
+            display: grid;
+            grid-template-columns: 1.2fr .8fr;
+            gap: 1rem
+        }
+
+        @media (max-width:900px) {
+            .body .cols {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .meta {
+            display: grid;
+            gap: .6rem
+        }
+
+        .meta .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4rem .6rem
+        }
+
+        .key {
+            color: var(--muted);
+            min-width: 100px
+        }
+
+        .links-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem
+        }
+
+        .shots {
+            display: grid;
+            gap: .6rem
+        }
+
+        .shots .frame {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #ffffff1a;
+            background: #0b0f29
+        }
+
+        .shots .hint {
+            font-size: .85rem;
+            color: var(--muted)
+        }
+
+        .cta-bottom {
+            margin-top: clamp(24px, 4vw, 36px);
+            display: flex;
+            justify-content: center
+        }
+
+        footer {
+            border-top: 1px solid #ffffff14;
+            padding-block: 24px;
+            margin-top: auto
+        }
+
+        .foot {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap
+        }
+
+        .social {
+            display: flex;
+            gap: .6rem
+        }
+
+        .social a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid #ffffff26
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--acc);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 6px var(--ring)
+        }
+
+        .visitor-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font: 600 15px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+            color: var(--ink);
+            padding: 0.25rem 0.6rem;
+            border-radius: 8px;
+            background: color-mix(in oklab, var(--card) 35%, transparent);
+            border: 1px solid #ffffff1a;
+        }
+
+        .visitor-counter svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            color: var(--muted);
+        }
+    </style>
 </head>
 
 <body>
-  <header>
-    <div class="container nav" role="navigation" aria-label="Primary">
-      <div class="brand">
-        <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
-        <a href="/"><span>TAOMA™</span></a>
-      </div>
-      <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu" aria-expanded="false" aria-label="Toggle menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
-      <nav id="primary-menu" class="links" aria-label="Site">
-        <a href="/">Home</a>
-        <a href="/projects" aria-current="page">Projects</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-        <a href="/skills">Skills</a>
-      </nav>
-    </div>
-  </header>
-
-  <main class="container">
-    <!-- Hero -->
-    <section class="hero">
-      <h1 class="title">Featured Projects</h1>
-      <p class="subtitle">Newest first. Click a project to see details.</p>
-    </section>
-
-    <!-- Accordion -->
-    <section aria-label="Projects" class="accordion">
-
-      <!-- Anime GIF API (slug: anime-gif-api) -->
-      <details class="proj card" id="anime-gif-api" open>
-        <summary>
-          <span class="caret" aria-hidden="true">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <div class="summary-main">
-            <h3>Anime GIF API</h3>
-            <span class="muted">REST API with searchable anime GIFs</span>
-          </div>
-          <div class="badges">
-            <span class="chip">Open Source</span>
-            <span class="chip">Live</span>
-          </div>
-        </summary>
-
-        <div class="body">
-          <div class="cols">
-            <div class="meta">
-              <p class="muted" style="margin:0">
-                A simple REST API to fetch anime GIFs with powerful filters. Includes a built-in explorer, live docs and copy-pasteable client snippets.
-              </p>
-
-              <div class="row">
-                <span class="key">Tech stack</span>
-                <span>HTML 60.7% · Python 39.3% · FastAPI · SQLite/Postgres</span>
-              </div>
-
-              <div class="row">
-                <span class="key">Role</span>
-                <span>Solo — everything (others can contribute GIFs)</span>
-              </div>
-
-              <div class="row">
-                <span class="key">Status</span>
-                <span>Active content additions only; no heavy dev right now</span>
-              </div>
-
-              <div class="row links-row">
-                <a class="btn" href="https://taoma.space/api" target="_blank" rel="noreferrer">Open API</a>
-                <a class="btn ghost" href="https://github.com/TaomasSpace/gifAPI" target="_blank" rel="noreferrer">GitHub</a>
-              </div>
+    <header>
+        <div class="container nav" role="navigation" aria-label="Primary">
+            <div class="brand">
+                <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
+                <a href="/"><span>TAOMA™</span></a>
             </div>
-          </div>
+            <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu"
+                aria-expanded="false" aria-label="Toggle menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+            <nav id="primary-menu" class="links" aria-label="Site">
+                <a href="/">Home</a>
+                <a href="/projects" aria-current="page">Projects</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+                <a href="/skills">Skills</a>
+            </nav>
         </div>
-      </details>
+    </header>
 
-      <!-- Clubhall Discord Bot (slug: clubhall-discord-bot) -->
-      <details class="proj card" id="clubhall-discord-bot">
-        <summary>
-          <span class="caret" aria-hidden="true">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <div class="summary-main">
-            <h3>Clubhall Discord Bot</h3>
-            <span class="muted">All-in-one bot: anti-nuke, economy, games & utilities</span>
-          </div>
-          <div class="badges">
-            <span class="chip">Open Source</span>
-            <span class="chip">Live</span>
-          </div>
-        </summary>
+    <main class="container">
+        <!-- Hero -->
+        <section class="hero">
+            <h1 class="title">Featured Projects</h1>
+            <p class="subtitle">Newest first. Click a project to see details.</p>
+        </section>
 
-        <div class="body">
-          <div class="cols">
-            <div class="meta">
-              <p class="muted" style="margin:0">
-                A versatile Discord bot: protects servers (anti-nuke), helps staff (reaction roles), and entertains users
-                (poker, duel, blackjack, leveling). Built to be practical and fun.
-              </p>
+        <!-- Accordion -->
+        <section aria-label="Projects" class="accordion">
 
-              <div class="row">
-                <span class="key">Tech stack</span>
-                <span>Python 99.3% · JS 0.7% · Hosted on Oracle Free</span>
-              </div>
+            <!-- Anime GIF API (slug: anime-gif-api) -->
+            <details class="proj card" id="anime-gif-api" open>
+                <summary>
+                    <span class="caret" aria-hidden="true">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                    <div class="summary-main">
+                        <h3>Anime GIF API</h3>
+                        <span class="muted">REST API with searchable anime GIFs</span>
+                    </div>
+                    <div class="badges">
+                        <span class="chip">Open Source</span>
+                        <span class="chip">Live</span>
+                    </div>
+                </summary>
 
-              <div class="row">
-                <span class="key">Role</span>
-                <span>Solo dev</span>
-              </div>
+                <div class="body">
+                    <div class="cols">
+                        <div class="meta">
+                            <p class="muted" style="margin:0">
+                                A simple REST API to fetch anime GIFs with powerful filters. Includes a built-in
+                                explorer, live docs and copy-pasteable client snippets.
+                            </p>
 
-              <div class="row">
-                <span class="key">Status</span>
-                <span>Maintained casually; not the main focus right now</span>
-              </div>
+                            <div class="row">
+                                <span class="key">Tech stack</span>
+                                <span>HTML 60.7% · Python 39.3% · FastAPI · SQLite/Postgres</span>
+                            </div>
 
-              <div class="row links-row">
-                <a class="btn" href="https://top.gg/de/bot/1401961800504971316" target="_blank" rel="noreferrer">Top.gg</a>
-                <a class="btn ghost" href="https://github.com/TaomasSpace/publishedClubhallBot" target="_blank" rel="noreferrer">GitHub</a>
-              </div>
-            </div>
-          </div>
+                            <div class="row">
+                                <span class="key">Role</span>
+                                <span>Solo — everything (others can contribute GIFs)</span>
+                            </div>
+
+                            <div class="row">
+                                <span class="key">Status</span>
+                                <span>Active content additions only; no heavy dev right now</span>
+                            </div>
+
+                            <div class="row links-row">
+                                <a class="btn" href="https://taoma.space/api" target="_blank" rel="noreferrer">Open
+                                    API</a>
+                                <a class="btn ghost" href="https://github.com/TaomasSpace/gifAPI" target="_blank"
+                                    rel="noreferrer">GitHub</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Clubhall Discord Bot (slug: clubhall-discord-bot) -->
+            <details class="proj card" id="clubhall-discord-bot">
+                <summary>
+                    <span class="caret" aria-hidden="true">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                    <div class="summary-main">
+                        <h3>Clubhall Discord Bot</h3>
+                        <span class="muted">All-in-one bot: anti-nuke, economy, games & utilities</span>
+                    </div>
+                    <div class="badges">
+                        <span class="chip">Open Source</span>
+                        <span class="chip">Live</span>
+                    </div>
+                </summary>
+
+                <div class="body">
+                    <div class="cols">
+                        <div class="meta">
+                            <p class="muted" style="margin:0">
+                                A versatile Discord bot: protects servers (anti-nuke), helps staff (reaction roles), and
+                                entertains users
+                                (poker, duel, blackjack, leveling). Built to be practical and fun.
+                            </p>
+
+                            <div class="row">
+                                <span class="key">Tech stack</span>
+                                <span>Python 99.3% · JS 0.7% · Hosted on Oracle Free</span>
+                            </div>
+
+                            <div class="row">
+                                <span class="key">Role</span>
+                                <span>Solo dev</span>
+                            </div>
+
+                            <div class="row">
+                                <span class="key">Status</span>
+                                <span>Maintained casually; not the main focus right now</span>
+                            </div>
+
+                            <div class="row links-row">
+                                <a class="btn" href="https://top.gg/de/bot/1401961800504971316" target="_blank"
+                                    rel="noreferrer">Top.gg</a>
+                                <a class="btn ghost" href="https://github.com/TaomasSpace/publishedClubhallBot"
+                                    target="_blank" rel="noreferrer">GitHub</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+        </section>
+
+        <div class="cta-bottom">
+            <a class="btn" href="/contact">
+                <!-- rocket icon -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M14 4l6 6-6 6-2-2-3 1 1-3-2-2 6-6Z" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Have an idea? Let’s build it.
+            </a>
         </div>
-      </details>
-
-    </section>
-
-    <div class="cta-bottom">
-      <a class="btn" href="/contact">
-        <!-- rocket icon -->
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M14 4l6 6-6 6-2-2-3 1 1-3-2-2 6-6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Have an idea? Let’s build it.
-      </a>
-    </div>
-    <br>
-  </main>
+        <br>
+    </main>
 
     <footer>
         <div class="container foot">
             <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved.</small>
-                <div class="visitor-counter">
+            <div class="visitor-counter">
                 <!-- Eye Icon -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -269,12 +574,14 @@
                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
                 <span id="visitor-count">0</span>
-                </div> 
-           <div class="social">
+            </div>
+            <div class="social">
                 <a href="https://guns.lol/taoma" target="_blank" rel="noreferrer" aria-label="guns.lol">
-                    <svg width="18" height="18" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                    <svg width="18" height="18" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
+                        fill="currentColor">
                         <!-- Beispiel: Platzhalter Pistolen-Icon -->
-                        <path d="M256 32C132 32 32 132 32 256s100 224 224 224 224-100 224-224S380 32 256 32Zm80 160h32v32h-32v32h-32v-32h-32v-32h32v-32h32v32Z"/>
+                        <path
+                            d="M256 32C132 32 32 132 32 256s100 224 224 224 224-100 224-224S380 32 256 32Zm80 160h32v32h-32v32h-32v-32h-32v-32h32v-32h32v32Z" />
                     </svg>
                 </a>
                 <a href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer" aria-label="GitHub">
@@ -301,35 +608,36 @@
         </div>
     </footer>
 
-  <script>
+    <script>
 
-            //visitor counter
-          (async () => {
-    const KEY = "taoma_last_counted_at";
-    const DAY = 24 * 60 * 60 * 1000;
-    const now = Date.now();
-    const last = parseInt(localStorage.getItem(KEY) || "0", 10);
-    const shouldCount = !last || (now - last) > DAY;
+        //visitor counter
+        (async () => {
+            const KEY = "taoma_last_counted_at";
+            const DAY = 24 * 60 * 60 * 1000;
+            const now = Date.now();
+            const last = parseInt(localStorage.getItem(KEY) || "0", 10);
+            const shouldCount = !last || (now - last) > DAY;
 
-    if (shouldCount) {
-      navigator.sendBeacon("/api/visits/increment"); 
-      localStorage.setItem(KEY, String(now));
-    }
+            if (shouldCount) {
+                navigator.sendBeacon("/api/visits/increment");
+                localStorage.setItem(KEY, String(now));
+            }
 
-    const res = await fetch("/api/visits/value");
-    const { total } = await res.json();
-    document.getElementById("visitor-count").textContent = total ?? "0";
-  })();
-    // mobile menu toggle
-    const toggle = document.getElementById('mobileToggle');
-    const menu = document.getElementById('primary-menu');
-    toggle?.addEventListener('click', () => {
-      const open = menu.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-    });
+            const res = await fetch("/api/visits/value");
+            const { total } = await res.json();
+            document.getElementById("visitor-count").textContent = total ?? "0";
+        })();
+        // mobile menu toggle
+        const toggle = document.getElementById('mobileToggle');
+        const menu = document.getElementById('primary-menu');
+        toggle?.addEventListener('click', () => {
+            const open = menu.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', String(open));
+        });
 
-    // year
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
+        // year
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
 </body>
+
 </html>
