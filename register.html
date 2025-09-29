@@ -217,13 +217,21 @@
 
             <div class="field">
                 <label>Password</label>
-                <div class="control"><input id="password" type="password" minlength="8" placeholder="••••••••" required>
+                <div class="control">
+                    <input id="password" type="password" minlength="8" placeholder="••••••••" required
+                        autocomplete="new-password" />
+                    <button class="toggle-eye" type="button" id="togglePwReg"
+                        aria-label="Show/Hide password">👁️</button>
                 </div>
+                <span class="caps" id="capsWarnReg" role="alert">Caps Lock is ON</span>
             </div>
-
             <div class="field">
                 <label>Confirm password</label>
-                <div class="control"><input id="confirm" type="password" minlength="8" placeholder="••••••••" required>
+                <div class="control">
+                    <input id="confirm" type="password" minlength="8" placeholder="••••••••" required
+                        autocomplete="new-password" />
+                    <button class="toggle-eye" type="button" id="togglePwReg2"
+                        aria-label="Show/Hide password">👁️</button>
                 </div>
             </div>
 
@@ -262,7 +270,7 @@
             try {
                 const res = await fetch('/api/auth/register', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({ username, password: pw })
                 });
                 const data = await res.json().catch(() => ({}));
@@ -281,6 +289,13 @@
                 btn.disabled = false; btn.style.opacity = 1;
             }
         });
+        const togglePwReg = document.getElementById('togglePwReg');
+        const togglePwReg2 = document.getElementById('togglePwReg2');
+        const capsWarnReg = document.getElementById('capsWarnReg');
+        function handleCaps(e) { try { const on = e.getModifierState && e.getModifierState('CapsLock'); capsWarnReg.style.display = on ? 'inline' : 'none'; } catch { } }
+        p.addEventListener('keyup', handleCaps); p.addEventListener('keydown', handleCaps);
+        togglePwReg.addEventListener('click', () => { p.type = p.type === 'password' ? 'text' : 'password'; p.focus(); });
+        togglePwReg2.addEventListener('click', () => { c.type = c.type === 'password' ? 'text' : 'password'; c.focus(); });
     </script>
 </body>
 
