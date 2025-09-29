@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS gifs (
     anime       TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Falls deine PG-Version "CREATE INDEX IF NOT EXISTS" nicht kennt,
+-- werden wir die Indizes weiter unten per try/except anlegen.
 CREATE INDEX IF NOT EXISTS idx_gifs_title       ON gifs(title);
 CREATE INDEX IF NOT EXISTS idx_gifs_anime       ON gifs(anime);
 CREATE INDEX IF NOT EXISTS idx_gifs_nsfw        ON gifs(nsfw);
@@ -45,12 +47,14 @@ CREATE TABLE IF NOT EXISTS sessions (
     expires_at  TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+
 CREATE TABLE IF NOT EXISTS counter (
     id    integer PRIMARY KEY CHECK (id = 1),
     total integer NOT NULL
 );
 INSERT INTO counter (id, total) VALUES (1, 0)
 ON CONFLICT (id) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS users (
     id                SERIAL PRIMARY KEY,
     username          TEXT NOT NULL,
@@ -60,11 +64,7 @@ CREATE TABLE IF NOT EXISTS users (
     Admin             BOOLEAN NOT NULL DEFAULT FALSE,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at        TIMESTAMPTZ
-)
-CREATE UNIQUE INDEX IF NOT EXISTS ux_users_username_ci ON users (lower(username));
-ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_id INTEGER
-  REFERENCES users(id) ON DELETE CASCADE;
-CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+);
 """
 
 
@@ -74,16 +74,51 @@ class PgGifDB:
         # Schema beim Start sicherstellen
         with psycopg.connect(self.dsn) as conn:
             with conn.cursor() as cur:
+                # 1) Grundschema
                 cur.execute(DDL)
-                cur.execute(
-                    """
-                ALTER TABLE sessions
-                    ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
-                """
-                )
-                cur.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)"
-                )
+
+                # 2) Nachrüst-Änderungen robust ohne IF NOT EXISTS
+
+                # sessions.user_id Spalte
+                try:
+                    cur.execute(
+                        "ALTER TABLE sessions "
+                        "ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE"
+                    )
+                except psycopg.errors.DuplicateColumn:
+                    pass
+
+                # Index auf sessions(user_id)
+                try:
+                    cur.execute("CREATE INDEX idx_sessions_user ON sessions(user_id)")
+                except psycopg.errors.DuplicateObject:
+                    pass
+
+                # Case-insensitive Unique-Index auf users.username
+                try:
+                    cur.execute(
+                        "CREATE UNIQUE INDEX ux_users_username_ci "
+                        "ON users (lower(username))"
+                    )
+                except psycopg.errors.DuplicateObject:
+                    pass
+
+                # Fallback: falls deine PG-Version "CREATE INDEX IF NOT EXISTS" nicht kann,
+                # legen wir auch die gifs-Indizes hier defensiv an:
+                for name, sql in [
+                    ("idx_gifs_title", "CREATE INDEX idx_gifs_title ON gifs(title)"),
+                    ("idx_gifs_anime", "CREATE INDEX idx_gifs_anime ON gifs(anime)"),
+                    ("idx_gifs_nsfw", "CREATE INDEX idx_gifs_nsfw ON gifs(nsfw)"),
+                    (
+                        "idx_gifs_created_at",
+                        "CREATE INDEX idx_gifs_created_at ON gifs(created_at)",
+                    ),
+                ]:
+                    try:
+                        cur.execute(sql)
+                    except psycopg.errors.DuplicateObject:
+                        pass
+
             conn.commit()
 
     # ---------- intern ----------
@@ -282,13 +317,11 @@ class PgGifDB:
         if query:
             where.append("title ILIKE %s")
             params.append(f"%{query}%")
-        # NSFW-Filter
         m = (nsfw_mode or "false").lower()
         if m == "only":
             where.append("nsfw = TRUE")
         elif m == "false":
             where.append("nsfw = FALSE")
-        # TRUE => kein extra Filter
 
         sql = "SELECT id,title,url,nsfw,anime,created_at FROM gifs"
         if where:
