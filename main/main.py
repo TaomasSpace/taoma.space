@@ -31,7 +31,8 @@ from fastapi import Path
 import imghdr
 from fastapi import UploadFile, File
 from pathlib import Path
-
+import io
+from PIL import Image, UnidentifiedImageError
 
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
@@ -818,9 +819,20 @@ def update_me(payload: MeUpdateIn, current: dict = Depends(require_user)):
     return row
 
 def _safe_image_bytes(b: bytes) -> str:
-    # zusätzliche Magic-Check (imghdr ist simpel, aber reicht als Basis)
-    kind = imghdr.what(None, h=b)
-    return kind or ""
+    """
+    Validiert, dass b ein echtes Bild ist und gibt das ermittelte Format zurück
+    (z.B. 'PNG', 'JPEG', 'WEBP', 'GIF'). Wir re-encoden NICHT, um Animationen
+    (GIF/WEBP) zu erhalten – nur Validierung.
+    """
+    try:
+        with Image.open(io.BytesIO(b)) as img:
+            img.verify()  # prüft Header & Konsistenz
+            fmt = (img.format or "").upper()
+            return fmt
+    except UnidentifiedImageError:
+        return ""
+    except Exception:
+        return ""
 
 @app.post("/api/users/me/avatar", response_model=UserOut)
 async def upload_avatar(file: UploadFile = File(...), current: dict = Depends(require_user)):
@@ -829,10 +841,12 @@ async def upload_avatar(file: UploadFile = File(...), current: dict = Depends(re
     data = await file.read()
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "File too large (max 2MB)")
-    if not _safe_image_bytes(data):
+
+    detected = _safe_image_bytes(data)
+    if not detected:
         raise HTTPException(400, "File is not a valid image")
 
-    # Dateiendung nach MIME
+    # Dateiendung nach MIME (beibehalten)
     ext = {
         "image/png": "png",
         "image/jpeg": "jpg",
