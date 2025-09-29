@@ -25,10 +25,8 @@ from fastapi import Response
 from fastapi.middleware.cors import CORSMiddleware
 import threading
 from psycopg import errors as pg_errors
-import os, hmac, base64, hashlib
-from typing import Tuple
+import os, base64
 from fastapi import Path
-import imghdr
 from fastapi import UploadFile, File
 from pathlib import Path
 import io
