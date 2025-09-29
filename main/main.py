@@ -749,6 +749,11 @@ def register_page():
     return FileResponse("register.html")
 
 
+@app.get("/login", include_in_schema=False)
+def register_page():
+    return FileResponse("login.html")
+
+
 @app.post("/admin/users/{user_id}/grant", dependencies=[Depends(require_admin)])
 def grant_admin(user_id: int):
     db.updateUser(user_id, admin=True)

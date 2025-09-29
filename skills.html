@@ -382,6 +382,89 @@
       flex-shrink: 0;
       color: var(--muted);
     }
+
+    .auth {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .auth .btn.small {
+      padding: .5rem .7rem;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid #ffffff26;
+      box-shadow: none;
+      font-weight: 600;
+    }
+
+    .avatar-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .35rem .55rem;
+      border-radius: 999px;
+      background: #ffffff10;
+      border: 1px solid #ffffff26;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      background: #0f1331;
+    }
+
+    .avatar-fallback {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font: 700 12px/1 Inter, ui-sans-serif;
+      background: #25306a;
+      color: #e9ebff;
+    }
+
+    .menu {
+      position: absolute;
+      margin-top: .4rem;
+      right: 0;
+      min-width: 160px;
+      z-index: 60;
+      background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+      border: 1px solid #ffffff22;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: .35rem;
+      display: none;
+    }
+
+    .menu.open {
+      display: block;
+    }
+
+    .menu a,
+    .menu button {
+      width: 100%;
+      text-align: left;
+      display: block;
+      background: transparent;
+      color: var(--ink);
+      padding: .55rem .65rem;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .menu a:hover,
+    .menu button:hover {
+      background: #ffffff12;
+    }
   </style>
 </head>
 
@@ -389,28 +472,26 @@
   <header>
     <div class="container nav" role="navigation" aria-label="Primary">
       <div class="brand">
-        <a href="/">
-          <img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28">
-        </a>
-        <a href="/">
-          <span>TAOMA™</span>
-        </a>
+        <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
+        <a href="/"><span>TAOMA™</span></a>
       </div>
+
       <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu" aria-expanded="false"
         aria-label="Toggle menu">
-        <!-- menu icon -->
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         </svg>
       </button>
+
       <nav id="primary-menu" class="links" aria-label="Site">
         <a href="/">Home</a>
         <a href="/projects">Projects</a>
         <a href="/about">About</a>
         <a href="/contact">Contact</a>
-        <a href="/skills" aria-current="page">Skills</a>
+        <a href="/skills">Skills</a>
       </nav>
+
+      <div id="authSlot" class="auth"></div>
     </div>
   </header>
   <main class="container">
@@ -648,6 +729,96 @@
       const { total } = await res.json();
       document.getElementById("visitor-count").textContent = total ?? "0";
     })();
+    // === Auth header renderer ===
+    async function renderAuthHeader() {
+      const slot = document.getElementById('authSlot');
+      if (!slot) return;
+
+      const token = localStorage.getItem('gifapi_token');
+      let user = null;
+      let isAdmin = false;
+
+      if (token) {
+        try {
+          const r = await fetch('/api/auth/verify', { headers: { 'X-Auth-Token': token } });
+          if (r.ok) {
+            const data = await r.json();
+            user = data?.user || null;
+            isAdmin = !!(user && user.admin);
+          } else {
+            // Token ungültig → wegräumen
+            localStorage.removeItem('gifapi_token');
+            localStorage.removeItem('gifapi_token_expires');
+          }
+        } catch { }
+      }
+
+      if (!user) {
+        // --- not logged in ---
+        slot.innerHTML = `
+        <a class="btn small" href="/login">Login</a>
+        <a class="btn small" href="/register">Register</a>
+      `;
+        return;
+      }
+
+      // --- logged in ---
+      const uname = user.username || 'User';
+      const initials = uname.trim().slice(0, 2).toUpperCase();
+      const pfp = user.profile_picture && String(user.profile_picture).trim();
+
+      slot.innerHTML = `
+      <div class="auth-box" style="position:relative">
+        <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
+          ${pfp ? `<img class="avatar" src="${pfp}" alt="${uname}'s profile picture">`
+          : `<span class="avatar-fallback" aria-hidden="true">${initials}</span>`}
+          <span class="uname" style="font-weight:700;font-size:.95rem">${uname}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="menu" id="userMenu" role="menu" aria-label="User menu">
+          <a href="/profile" role="menuitem">Profile</a>
+          ${isAdmin ? `<a href="/api/admin" role="menuitem">Admin</a>` : ``}
+          <button id="logoutBtn" role="menuitem">Logout</button>
+        </div>
+      </div>
+    `;
+
+      const btn = slot.querySelector('#avatarBtn');
+      const menu = slot.querySelector('#userMenu');
+      const logoutBtn = slot.querySelector('#logoutBtn');
+
+      function closeMenu() {
+        menu.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = menu.classList.toggle('open');
+        btn.setAttribute('aria-expanded', String(open));
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && !btn.contains(e.target)) closeMenu();
+      });
+
+      logoutBtn.addEventListener('click', async () => {
+        try {
+          const t = localStorage.getItem('gifapi_token');
+          if (t) {
+            await fetch('/api/auth/logout', { method: 'POST', headers: { 'X-Auth-Token': t } }).catch(() => { });
+          }
+        } catch { }
+        localStorage.removeItem('gifapi_token');
+        localStorage.removeItem('gifapi_token_expires');
+        window.location.href = '/';
+      }, { passive: true });
+    }
+
+    // Render bei Load
+    renderAuthHeader();
   </script>
 </body>
 
