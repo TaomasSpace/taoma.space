@@ -825,10 +825,8 @@ def login_user(payload: LoginUserIn):
     user = db.getUserByUsername(payload.username.strip())
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-
     if not CheckPassword(user["password"], payload.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-
     token = db.create_token(hours_valid=24, user_id=user["id"])
     expires = db.get_token_expiry(token)
     return {"token": token, "expires_at": expires}
