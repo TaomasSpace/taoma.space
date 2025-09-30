@@ -672,24 +672,30 @@ class PgGifDB:
             )
             return cur.fetchone()
 
-    def getUserByUsername(self, username: str):
-        with self.conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
-            cur.execute(
-                """
-                SELECT
-                    u.id, u.username, u.email, u.admin,
-                    u.profile_picture, u.password_hash,
-                    u.created_at, u.updated_at,
-                    u.linktree_id,
-                    l.slug AS linktree_slug
-                FROM users AS u
-                LEFT JOIN linktrees AS l ON l.id = u.linktree_id
-                WHERE LOWER(u.username) = LOWER(%s)
-                LIMIT 1
-                """,
-                (username,),
-            )
-            return cur.fetchone()
+def getUserByUsername(self, username: str) -> dict | None:
+    if not username:
+        return None
+    with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT
+                u.id,
+                u.username,
+                u.password,          -- bcrypt Hash
+                u.admin,
+                u.profile_picture,
+                u.linktree_id,
+                u.created_at,
+                u.updated_at,
+                l.slug AS linktree_slug
+            FROM users AS u
+            LEFT JOIN linktrees AS l ON l.id = u.linktree_id
+            WHERE LOWER(u.username) = LOWER(%s)
+            LIMIT 1
+            """,
+            (username,),
+        )
+        return cur.fetchone()
 
 # ---------------- Linktrees ----------------
 
