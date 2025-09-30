@@ -28,7 +28,8 @@ from psycopg import errors as pg_errors
 import os, hmac, base64, hashlib
 from typing import Tuple
 from fastapi import Path
-
+from typing import Literal
+import psycopg
 
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
@@ -217,6 +218,122 @@ class RegisterOut(BaseModel):
     token: str
     expires_at: Optional[str] = None
     user: UserOut
+
+
+EffectName = Literal["none", "glow", "neon", "rainbow"]
+BgEffectName = Literal["none", "night", "rain", "snow"]
+
+
+class LinkOut(BaseModel):
+    id: int
+    url: HttpUrl
+    label: Optional[str] = None
+    icon_url: Optional[str] = None
+    position: int
+    is_active: bool
+
+
+class IconOut(BaseModel):
+    id: int
+    code: str
+    image_url: str
+    description: Optional[str] = None
+    displayed: Optional[bool] = None
+    acquired_at: Optional[str] = None
+
+
+class LinktreeCreateIn(BaseModel):
+    slug: str = Field(..., min_length=2, max_length=48, regex=r"^[a-zA-Z0-9_-]+$")
+    location: Optional[str] = None
+    quote: Optional[str] = None
+    song_url: Optional[str] = None
+    background_url: Optional[str] = None
+    background_is_video: bool = False
+    transparency: int = Field(0, ge=0, le=100)
+    name_effect: EffectName = "none"
+    background_effect: BgEffectName = "none"
+
+
+class LinktreeUpdateIn(BaseModel):
+    slug: Optional[str] = Field(
+        None, min_length=2, max_length=48, regex=r"^[a-zA-Z0-9_-]+$"
+    )
+    location: Optional[str] = None
+    quote: Optional[str] = None
+    song_url: Optional[str] = None
+    background_url: Optional[str] = None
+    background_is_video: Optional[bool] = None
+    transparency: Optional[int] = Field(None, ge=0, le=100)
+    name_effect: Optional[EffectName] = None
+    background_effect: Optional[BgEffectName] = None
+
+
+class LinkCreateIn(BaseModel):
+    url: HttpUrl
+    label: Optional[str] = None
+    icon_url: Optional[str] = None  # erlaubt benutzerhochgeladenes Icon
+    position: Optional[int] = None  # None = append
+    is_active: bool = True
+
+
+class LinkUpdateIn(BaseModel):
+    url: Optional[HttpUrl] = None
+    label: Optional[str] = None
+    icon_url: Optional[str] = None
+    position: Optional[int] = None
+    is_active: Optional[bool] = None
+
+
+class LinktreeOut(BaseModel):
+    id: int
+    user_id: int
+    slug: str
+    location: Optional[str] = None
+    quote: Optional[str] = None
+    song_url: Optional[str] = None
+    background_url: Optional[str] = None
+    background_is_video: bool
+    transparency: int
+    name_effect: EffectName
+    background_effect: BgEffectName
+    links: List[LinkOut]
+    icons: List[IconOut]
+
+
+class IconUpsertIn(BaseModel):
+    code: str = Field(..., min_length=2, max_length=64, regex=r"^[a-z0-9_\-]+$")
+    image_url: str
+    description: Optional[str] = None
+
+
+class GrantIconIn(BaseModel):
+    displayed: bool = False
+
+
+class ToggleDisplayedIn(BaseModel):
+    displayed: bool
+
+
+def _ensure_pg():
+    if not isinstance(db, PgGifDB):
+        raise HTTPException(501, "Linktree features require PostgreSQL.")
+
+
+def _get_linktree_owner(linktree_id: int) -> int:
+    # minimaler Read nur für Owner-Check
+    _ensure_pg()
+    with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+        cur.execute("SELECT user_id FROM linktrees WHERE id=%s", (linktree_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, "Linktree not found")
+        return int(row[0])
+
+
+def _require_tree_owner_or_admin(linktree_id: int, user: dict):
+    owner_id = _get_linktree_owner(linktree_id)
+    if not (user.get("admin") or user["id"] == owner_id):
+        raise HTTPException(403, "Forbidden (owner or admin only)")
 
 
 @app.get("/", include_in_schema=False)
@@ -763,3 +880,260 @@ def grant_admin(user_id: int):
 @app.get("/profile", include_in_schema=False)
 def profile_page():
     return FileResponse("profile.html")
+
+
+# ---------- Linktree: public read ----------
+
+
+@app.get("/api/linktrees/{slug}", response_model=LinktreeOut)
+def get_linktree(slug: str):
+    _ensure_pg()
+    lt = db.get_linktree_by_slug(slug)
+    if not lt:
+        raise HTTPException(404, "Linktree not found")
+
+    # Nur **angezeigte** Icons nach außen geben
+    icons = [
+        {
+            "id": i["id"],
+            "code": i["code"],
+            "image_url": i["image_url"],
+            "description": i.get("description"),
+            "displayed": i.get("displayed", False),
+            "acquired_at": (
+                i["acquired_at"].isoformat() if i.get("acquired_at") else None
+            ),
+        }
+        for i in lt["icons"]
+        if i.get("displayed")
+    ]
+
+    links = [
+        {
+            "id": r["id"],
+            "url": r["url"],
+            "label": r.get("label"),
+            "icon_url": r.get("icon_url"),
+            "position": r.get("position", 0),
+            "is_active": r.get("is_active", True),
+        }
+        for r in lt["links"]
+        if r.get("is_active", True)
+    ]
+
+    return {
+        "id": lt["id"],
+        "user_id": lt["user_id"],
+        "slug": lt["slug"],
+        "location": lt.get("location"),
+        "quote": lt.get("quote"),
+        "song_url": lt.get("song_url"),
+        "background_url": lt.get("background_url"),
+        "background_is_video": lt.get("background_is_video", False),
+        "transparency": lt.get("transparency", 0),
+        "name_effect": lt.get("name_effect", "none"),
+        "background_effect": lt.get("background_effect", "none"),
+        "links": links,
+        "icons": icons,
+    }
+
+
+# Optional: HTML-Seite (statisches Template, das o.g. API nutzt)
+@app.get("/tree/{slug}", include_in_schema=False)
+def linktree_page(slug: str):
+    return FileResponse("linktree.html")
+
+
+# ---------- Linktree: create/update (owner/admin) ----------
+
+
+@app.post(
+    "/api/linktrees", response_model=LinktreeOut, dependencies=[Depends(require_user)]
+)
+def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_user)):
+    _ensure_pg()
+    # Ein Tree pro User – DB hat UNIQUE(user_id), aber wir geben eine saubere 409
+    existing = db.get_linktree_by_slug(payload.slug)
+    if existing and existing["user_id"] == user["id"]:
+        raise HTTPException(409, "You already have a linktree with this slug")
+    try:
+        linktree_id = db.create_linktree(
+            user_id=user["id"],
+            slug=payload.slug,
+            location=payload.location,
+            quote=payload.quote,
+            song_url=payload.song_url,
+            background_url=payload.background_url,
+            background_is_video=payload.background_is_video,
+            transparency=payload.transparency,
+            name_effect=payload.name_effect,
+            background_effect=payload.background_effect,
+        )
+    except pg_errors.UniqueViolation:
+        raise HTTPException(409, "Slug already in use")
+    lt = db.get_linktree_by_slug(payload.slug)
+    # public shaping wie oben:
+    return get_linktree(payload.slug)
+
+
+@app.patch("/api/linktrees/{linktree_id}", response_model=dict)
+def update_linktree_ep(
+    linktree_id: int, payload: LinktreeUpdateIn, user: dict = Depends(require_user)
+):
+    _ensure_pg()
+    _require_tree_owner_or_admin(linktree_id, user)
+    try:
+        db.update_linktree(
+            linktree_id,
+            **{k: v for k, v in payload.model_dump(exclude_unset=True).items()},
+        )
+    except pg_errors.UniqueViolation:
+        raise HTTPException(409, "Slug already in use")
+    return {"ok": True}
+
+
+# ---------- Links: add/update/delete (owner/admin) ----------
+
+
+@app.post("/api/linktrees/{linktree_id}/links", response_model=LinkOut)
+def add_link_ep(
+    linktree_id: int, payload: LinkCreateIn, user: dict = Depends(require_user)
+):
+    _ensure_pg()
+    _require_tree_owner_or_admin(linktree_id, user)
+    link_id = db.add_link(
+        linktree_id,
+        url=str(payload.url),
+        label=payload.label,
+        icon_url=payload.icon_url,
+        position=payload.position,
+        is_active=payload.is_active,
+    )
+    # kleine Readback-Query:
+    lt = db.get_linktree_by_slug(
+        db.get_linktree_by_slug.__self__.slug if False else db.get_linktree_by_slug
+    )  # no-op trick
+    with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT id, url, label, icon_url, position, is_active FROM linktree_links WHERE id=%s",
+            (link_id,),
+        )
+        r = cur.fetchone()
+    return {
+        "id": r["id"],
+        "url": r["url"],
+        "label": r["label"],
+        "icon_url": r["icon_url"],
+        "position": r["position"],
+        "is_active": r["is_active"],
+    }
+
+
+@app.patch("/api/links/{link_id}", response_model=dict)
+def update_link_ep(
+    link_id: int, payload: LinkUpdateIn, user: dict = Depends(require_user)
+):
+    _ensure_pg()
+    # Owner ermitteln via Join
+    with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT lt.user_id, l.linktree_id
+              FROM linktree_links l
+              JOIN linktrees lt ON lt.id = l.linktree_id
+             WHERE l.id = %s
+        """,
+            (link_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, "Link not found")
+        owner_id, linktree_id = int(row[0]), int(row[1])
+    if not (user.get("admin") or user["id"] == owner_id):
+        raise HTTPException(403, "Forbidden (owner or admin only)")
+
+    db.update_link(
+        link_id, **{k: v for k, v in payload.model_dump(exclude_unset=True).items()}
+    )
+    return {"ok": True}
+
+
+@app.delete("/api/links/{link_id}", status_code=204)
+def delete_link_ep(link_id: int, user: dict = Depends(require_user)):
+    _ensure_pg()
+    with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT lt.user_id
+              FROM linktree_links l
+              JOIN linktrees lt ON lt.id = l.linktree_id
+             WHERE l.id = %s
+        """,
+            (link_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, "Link not found")
+        owner_id = int(row[0])
+    if not (user.get("admin") or user["id"] == owner_id):
+        raise HTTPException(403, "Forbidden (owner or admin only)")
+    db.delete_link(link_id)
+    return Response(status_code=204)
+
+
+# ---------- Icon-Katalog & Besitz ----------
+
+
+@app.get("/api/icons", response_model=List[IconOut])
+def list_icons():
+    _ensure_pg()
+    with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute("SELECT id, code, image_url, description FROM icons ORDER BY code")
+        rows = cur.fetchall()
+    return [
+        {
+            "id": r["id"],
+            "code": r["code"],
+            "image_url": r["image_url"],
+            "description": r.get("description"),
+        }
+        for r in rows
+    ]
+
+
+@app.post("/api/icons", dependencies=[Depends(require_admin)], response_model=IconOut)
+def upsert_icon_ep(payload: IconUpsertIn):
+    _ensure_pg()
+    icon_id = db.upsert_icon(payload.code, payload.image_url, payload.description)
+    with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT id, code, image_url, description FROM icons WHERE id=%s", (icon_id,)
+        )
+        r = cur.fetchone()
+    return {
+        "id": r["id"],
+        "code": r["code"],
+        "image_url": r["image_url"],
+        "description": r.get("description"),
+    }
+
+
+@app.post("/api/users/{user_id}/icons/{code}", dependencies=[Depends(require_admin)])
+def grant_icon_ep(user_id: int, code: str, body: GrantIconIn):
+    _ensure_pg()
+    db.grant_icon(user_id, code, displayed=body.displayed)
+    return {"ok": True}
+
+
+@app.patch("/api/users/me/icons/{code}")
+def toggle_my_icon_displayed(
+    code: str, body: ToggleDisplayedIn, me: dict = Depends(require_user)
+):
+    _ensure_pg()
+    db.set_icon_displayed(me["id"], code, body.displayed)
+    return {"ok": True}
+
+
+@app.get("/linktree/config", include_in_schema=False)
+def linktree_config_page():
+    return FileResponse("linktree_config.html")

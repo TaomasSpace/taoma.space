@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TAOMA™ — Linktree</title>
+    <meta name="theme-color" content="#0f1223" />
+    <link rel="icon" type="image/png" href="/static/icon.png" />
+    <style>
+        :root {
+            --bg: #0e1020;
+            --ink: #e9ebff;
+            --muted: #a2a9c8;
+            --acc: #85a3ff;
+            --card: #171b3b;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+            --radius: 16px;
+        }
+
+        body {
+            margin: 0;
+            font: 15px/1.6 Inter, ui-sans-serif, system-ui;
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            overflow-x: hidden;
+        }
+
+        /* Background video/image */
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg img,
+        .bg video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .pfp {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid #fff3;
+            box-shadow: var(--shadow);
+            object-fit: cover;
+        }
+
+        .name {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 1rem 0 0.5rem;
+        }
+
+        .location {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            justify-content: center;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+
+        .quote {
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            max-width: 600px;
+        }
+
+        .badges {
+            display: flex;
+            gap: .4rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+            background: #ffffff1a;
+            border-radius: 999px;
+            padding: .35rem .7rem;
+            font-size: .9rem;
+        }
+
+        .links {
+            display: grid;
+            gap: 12px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .link {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            padding: 0.9rem 1.2rem;
+            border-radius: var(--radius);
+            background: var(--card);
+            border: 1px solid #ffffff22;
+            box-shadow: var(--shadow);
+            transition: .2s;
+        }
+
+        .link:hover {
+            transform: translateY(-2px);
+            background: color-mix(in oklab, var(--card), white 4%);
+        }
+
+        .link img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+        }
+
+        footer {
+            padding: 1rem;
+            text-align: center;
+            font-size: .85rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg" id="bg"></div>
+
+    <main>
+        <img id="pfp" class="pfp" src="/static/icon.png" alt="Profile picture" />
+        <div id="name" class="name">User</div>
+        <div id="quote" class="quote">—</div>
+        <div class="location" id="loc"></div>
+        <div class="badges" id="badges"></div>
+
+        <div class="links" id="links"></div>
+    </main>
+
+    <footer>
+        © <span id="year"></span> TAOMA™
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        async function loadTree() {
+            const slug = location.pathname.split("/").pop();
+            const r = await fetch(`/api/linktrees/${slug}`);
+            if (!r.ok) return;
+            const data = await r.json();
+
+            // Background
+            const bgEl = document.getElementById("bg");
+            if (data.background_url) {
+                if (data.background_is_video) {
+                    bgEl.innerHTML = `<video src="${data.background_url}" autoplay muted loop></video>`;
+                } else {
+                    bgEl.innerHTML = `<img src="${data.background_url}" alt="Background">`;
+                }
+            }
+
+            // Profile
+            document.getElementById("pfp").src = data.profile_picture || "/static/icon.png";
+            document.getElementById("name").textContent = data.slug;
+            document.getElementById("quote").textContent = data.quote || "";
+            if (data.location) {
+                document.getElementById("loc").innerHTML =
+                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg> ${data.location}`;
+            }
+
+            // Icons
+            const badgesEl = document.getElementById("badges");
+            data.icons?.forEach(ic => {
+                if (ic.displayed) {
+                    const el = document.createElement("span");
+                    el.className = "badge";
+                    el.innerHTML = `<img src="${ic.image_url}" alt="${ic.code}" style="width:16px;height:16px"> ${ic.code}`;
+                    badgesEl.appendChild(el);
+                }
+            });
+
+            // Links
+            const linksEl = document.getElementById("links");
+            data.links?.forEach(l => {
+                if (!l.is_active) return;
+                const el = document.createElement("a");
+                el.className = "link";
+                el.href = l.url;
+                el.target = "_blank";
+                el.innerHTML = `${l.icon_url ? `<img src="${l.icon_url}">` : ''} <span>${l.label || l.url}</span>`;
+                linksEl.appendChild(el);
+            });
+        }
+
+        loadTree();
+    </script>
+</body>
+
+</html>

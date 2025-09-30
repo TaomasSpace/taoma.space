@@ -65,6 +65,73 @@ CREATE TABLE IF NOT EXISTS users (
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at        TIMESTAMPTZ
 );
+
+CREATE TABLE IF NOT EXISTS linktrees (
+    id                  SERIAL PRIMARY KEY,
+    user_id             INTEGER NOT NULL UNIQUE
+                        REFERENCES users(id) ON DELETE CASCADE,
+    slug                TEXT NOT NULL UNIQUE,     -- wird zu /tree/{slug}
+    location            TEXT,
+    quote               TEXT,
+    song_url            TEXT,                     -- Audio-URL
+    background_url      TEXT,                     -- Bild/GIF/Video
+    background_is_video BOOLEAN NOT NULL DEFAULT FALSE,
+    transparency        SMALLINT NOT NULL DEFAULT 0
+                        CHECK (transparency BETWEEN 0 AND 100),
+    name_effect         TEXT NOT NULL DEFAULT 'none'
+                        CHECK (name_effect IN ('none','glow','neon','rainbow')),
+    background_effect   TEXT NOT NULL DEFAULT 'none'
+                        CHECK (background_effect IN ('none','night','rain','snow')),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ
+);
+
+-- Einzelne Links im Linktree mit optional eigenem Icon (Upload)
+CREATE TABLE IF NOT EXISTS linktree_links (
+    id           SERIAL PRIMARY KEY,
+    linktree_id  INTEGER NOT NULL REFERENCES linktrees(id) ON DELETE CASCADE,
+    url          TEXT NOT NULL,
+    label        TEXT,                 -- Anzeige-Text / Name des Links
+    icon_url     TEXT,                 -- optional: benutzerhochgeladenes Icon
+    position     INTEGER NOT NULL DEFAULT 0,
+    is_active    BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at   TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_ltree_links_tree_pos
+    ON linktree_links(linktree_id, position);
+
+-- Verdienbare / freischaltbare Icons (Katalog)
+CREATE TABLE IF NOT EXISTS icons (
+    id          SERIAL PRIMARY KEY,
+    code        TEXT NOT NULL UNIQUE,    -- z.B. 'veteran', 'founder'
+    image_url   TEXT NOT NULL,
+    description TEXT
+);
+
+-- Welche Icons ein User hat und ob sie angezeigt werden
+CREATE TABLE IF NOT EXISTS user_icons (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    icon_id     INTEGER NOT NULL REFERENCES icons(id) ON DELETE CASCADE,
+    displayed   BOOLEAN NOT NULL DEFAULT FALSE,
+    acquired_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (user_id, icon_id)
+);
+
+-- Saubere FK für users.linktree_id -> linktrees.id
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'fk_users_linktree_id'
+    ) THEN
+        ALTER TABLE users
+        ADD CONSTRAINT fk_users_linktree_id
+        FOREIGN KEY (linktree_id) REFERENCES linktrees(id)
+        ON DELETE SET NULL;
+    END IF;
+END$$;
 """
 
 
@@ -95,6 +162,16 @@ class PgGifDB:
                     """
                     CREATE UNIQUE INDEX IF NOT EXISTS ux_users_username_ci
                     ON users (lower(username))
+                """
+                )
+                cur.execute(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS ux_linktrees_slug ON linktrees (lower(slug));
+                """
+                )
+                cur.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_user_icons_user ON user_icons(user_id);
                 """
                 )
 
@@ -595,3 +672,221 @@ class PgGifDB:
                 "SELECT * FROM users WHERE lower(username) = lower(%s)", (username,)
             )
             return cur.fetchone()
+
+
+# ---------------- Linktrees ----------------
+
+
+def create_linktree(
+    self,
+    user_id: int,
+    slug: str,
+    *,
+    location: str | None = None,
+    quote: str | None = None,
+    song_url: str | None = None,
+    background_url: str | None = None,
+    background_is_video: bool = False,
+    transparency: int = 0,
+    name_effect: str = "none",
+    background_effect: str = "none",
+) -> int:
+    with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO linktrees (user_id, slug, location, quote, song_url,
+                                   background_url, background_is_video,
+                                   transparency, name_effect, background_effect)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """,
+            (
+                user_id,
+                slug,
+                location,
+                quote,
+                song_url,
+                background_url,
+                background_is_video,
+                transparency,
+                name_effect,
+                background_effect,
+            ),
+        )
+        linktree_id = cur.fetchone()[0]
+        # Optional: users.linktree_id für schnellen Join setzen
+        cur.execute(
+            "UPDATE users SET linktree_id = %s, updated_at = now() WHERE id = %s",
+            (linktree_id, user_id),
+        )
+        conn.commit()
+        return linktree_id
+
+
+def update_linktree(self, linktree_id: int, **fields) -> None:
+    allowed = {
+        "slug",
+        "location",
+        "quote",
+        "song_url",
+        "background_url",
+        "background_is_video",
+        "transparency",
+        "name_effect",
+        "background_effect",
+    }
+    sets, vals = [], []
+    for k, v in fields.items():
+        if k in allowed:
+            sets.append(f"{k}=%s")
+            vals.append(v)
+    if not sets:
+        return
+    with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+        vals.append(linktree_id)
+        cur.execute(
+            f"UPDATE linktrees SET {', '.join(sets)}, updated_at = now() WHERE id=%s",
+            tuple(vals),
+        )
+        conn.commit()
+
+
+def get_linktree_by_slug(self, slug: str) -> dict | None:
+    with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute("SELECT * FROM linktrees WHERE lower(slug)=lower(%s)", (slug,))
+        lt = cur.fetchone()
+        if not lt:
+            return None
+        cur.execute(
+            """
+            SELECT id, url, label, icon_url, position, is_active
+              FROM linktree_links
+             WHERE linktree_id=%s
+          ORDER BY position, id
+        """,
+            (lt["id"],),
+        )
+        links = cur.fetchall()
+        cur.execute(
+            """
+            SELECT i.id, i.code, i.image_url, i.description, ui.displayed, ui.acquired_at
+              FROM user_icons ui
+              JOIN icons i ON i.id = ui.icon_id
+             WHERE ui.user_id = (SELECT user_id FROM linktrees WHERE id=%s)
+          ORDER BY i.code
+        """,
+            (lt["id"],),
+        )
+        icons = cur.fetchall()
+        lt["links"] = links
+        lt["icons"] = icons
+        return lt
+
+
+# ---------------- Links ----------------
+
+
+def add_link(
+    self,
+    linktree_id: int,
+    url: str,
+    *,
+    label: str | None = None,
+    icon_url: str | None = None,
+    position: int | None = None,
+    is_active: bool = True,
+) -> int:
+    with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+        if position is None:
+            cur.execute(
+                "SELECT COALESCE(MAX(position), -1) + 1 FROM linktree_links WHERE linktree_id=%s",
+                (linktree_id,),
+            )
+            position = cur.fetchone()[0]
+        cur.execute(
+            """
+            INSERT INTO linktree_links(linktree_id, url, label, icon_url, position, is_active)
+            VALUES (%s,%s,%s,%s,%s,%s)
+            RETURNING id
+        """,
+            (linktree_id, url, label, icon_url, position, is_active),
+        )
+        new_id = cur.fetchone()[0]
+        conn.commit()
+        return new_id
+
+
+def update_link(self, link_id: int, **fields) -> None:
+    allowed = {"url", "label", "icon_url", "position", "is_active"}
+    sets, vals = [], []
+    for k, v in fields.items():
+        if k in allowed:
+            sets.append(f"{k}=%s")
+            vals.append(v)
+    if not sets:
+        return
+    with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+        vals.append(link_id)
+        cur.execute(
+            f"UPDATE linktree_links SET {', '.join(sets)}, updated_at=now() WHERE id=%s",
+            tuple(vals),
+        )
+        conn.commit()
+
+
+def delete_link(self, link_id: int) -> None:
+    with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+        cur.execute("DELETE FROM linktree_links WHERE id=%s", (link_id,))
+        conn.commit()
+
+
+# ---------------- Icons (Katalog + Besitz) ----------------
+
+
+def upsert_icon(self, code: str, image_url: str, description: str | None = None) -> int:
+    with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO icons(code, image_url, description)
+            VALUES (%s,%s,%s)
+            ON CONFLICT (code) DO UPDATE SET image_url=EXCLUDED.image_url,
+                                            description=EXCLUDED.description
+            RETURNING id
+        """,
+            (code, image_url, description),
+        )
+        icon_id = cur.fetchone()[0]
+        conn.commit()
+        return icon_id
+
+
+def grant_icon(self, user_id: int, icon_code: str, *, displayed: bool = False) -> None:
+    with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+        cur.execute("SELECT id FROM icons WHERE code=%s", (icon_code,))
+        row = cur.fetchone()
+        if not row:
+            raise KeyError(f"icon '{icon_code}' not found")
+        icon_id = row[0]
+        cur.execute(
+            """
+            INSERT INTO user_icons(user_id, icon_id, displayed)
+            VALUES (%s,%s,%s)
+            ON CONFLICT (user_id, icon_id) DO UPDATE SET displayed=EXCLUDED.displayed
+        """,
+            (user_id, icon_id, displayed),
+        )
+        conn.commit()
+
+
+def set_icon_displayed(self, user_id: int, icon_code: str, displayed: bool) -> None:
+    with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE user_icons ui
+               SET displayed=%s
+              FROM icons i
+             WHERE ui.user_id=%s AND ui.icon_id=i.id AND i.code=%s
+        """,
+            (displayed, user_id, icon_code),
+        )
+        conn.commit()

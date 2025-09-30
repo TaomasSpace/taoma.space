@@ -476,10 +476,12 @@
             </section>
 
             <!-- Right: Settings -->
+            <!-- Right: Settings -->
             <section class="card profile-card" aria-labelledby="settingsTitle">
                 <h2 id="settingsTitle" style="margin:0 0 .6rem 0">Account Settings</h2>
                 <div id="msg" class="alert" style="display:none"></div>
 
+                <!-- Username -->
                 <form id="formName" class="field" autocomplete="off">
                     <label for="inName">Username</label>
                     <input id="inName" class="input" name="username" placeholder="Your username">
@@ -491,6 +493,7 @@
 
                 <div class="hr"></div>
 
+                <!-- Profile picture -->
                 <form id="formPfp" class="field" autocomplete="off">
                     <label for="inPfp">Profile picture URL</label>
                     <input id="inPfp" class="input" name="profile_picture" placeholder="https://…/avatar.png">
@@ -499,6 +502,17 @@
                         <span class="help">Direct image URL. PNG/JPG/GIF/WebP.</span>
                     </div>
                 </form>
+
+                <div class="hr"></div>
+
+                <!-- Linktree -->
+                <div class="field">
+                    <label>Your Linktree</label>
+                    <div id="linktreeSlot" class="row">
+                        <!-- gets filled via JS -->
+                    </div>
+                    <span class="help">Share all your important links in one place.</span>
+                </div>
             </section>
         </div>
     </main>
