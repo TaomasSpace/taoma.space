@@ -176,7 +176,7 @@ class IconOut(BaseModel):
 
 
 class LinktreeCreateIn(BaseModel):
-    slug: str = Field(..., min_length=2, max_length=48, regex=r"^[a-zA-Z0-9_-]+$")
+    slug: str = Field(..., min_length=2, max_length=48, pattern=r"^[a-zA-Z0-9_-]+$")
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
@@ -189,7 +189,7 @@ class LinktreeCreateIn(BaseModel):
 
 class LinktreeUpdateIn(BaseModel):
     slug: Optional[str] = Field(
-        None, min_length=2, max_length=48, regex=r"^[a-zA-Z0-9_-]+$"
+        None, min_length=2, max_length=48, pattern=r"^[a-zA-Z0-9_-]+$"
     )
     location: Optional[str] = None
     quote: Optional[str] = None
@@ -234,7 +234,7 @@ class LinktreeOut(BaseModel):
 
 
 class IconUpsertIn(BaseModel):
-    code: str = Field(..., min_length=2, max_length=64, regex=r"^[a-z0-9_\-]+$")
+    code: str = Field(..., min_length=2, max_length=64, pattern=r"^[a-z0-9_\-]+$")
     image_url: str
     description: Optional[str] = None
 
@@ -313,6 +313,7 @@ class UserOut(BaseModel):
     id: int
     username: str
     linktree_id: Optional[int] = None
+    linktree_slug: Optional[str] = None  # <- add this
     profile_picture: Optional[str] = None
     admin: bool
     created_at: Optional[str] = None
@@ -1147,10 +1148,6 @@ def add_link_ep(
         position=payload.position,
         is_active=payload.is_active,
     )
-    # kleine Readback-Query:
-    lt = db.get_linktree_by_slug(
-        db.get_linktree_by_slug.__self__.slug if False else db.get_linktree_by_slug
-    )  # no-op trick
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
         cur.execute(
             "SELECT id, url, label, icon_url, position, is_active FROM linktree_links WHERE id=%s",
