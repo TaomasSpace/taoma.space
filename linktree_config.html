@@ -905,21 +905,15 @@
         });
 
         async function refreshData() {
-            // Priorität: wenn wir einen Tree haben → mit seinem slug laden
-            const slug = currentTree?.slug || $('inSlug').value.trim();
-            if (!slug) return;
-            const lt = await apiLoadTreeBySlug(slug);
-            if (!lt) { return; }
-            currentTree = lt;
-            linktreeId = lt.id;
-            fillMetaForm(lt);
-            // Links sortiert anzeigen (kommen bereits sortiert aus API)
-            renderLinks(lt.links || []);
-            // Icons (API gibt nur displayed==true public; hier wollen wir ALLE vom User anzeigen)
-            // Workaround: die public API liefert nur displayed Icons – ABER du hast im Backend
-            // get_linktree_by_slug bereits die user_icons-Join drin. Ich gehe davon aus, dass sie
-            // ALLE liefert (inkl. displayed=false). Falls nicht → kleine Backend-Anpassung.
-            renderBadges(lt.icons || []);
+        const slug = currentTree?.slug || $('inSlug').value.trim();
+        if (!slug) return;
+        const lt = await apiLoadTreeBySlug(slug);
+        if (!lt) { currentTree = null; return; }   // <-- ensure null when not found
+        currentTree = lt;
+        linktreeId = lt.id;
+        fillMetaForm(lt);
+        renderLinks(lt.links || []);
+        renderBadges(lt.icons || []);
         }
 
         async function boot() {
@@ -937,9 +931,10 @@
                 document.getElementById('inSlug').value = preferred;
                 document.getElementById('slugPreview').textContent = preferred;
                 document.getElementById('btnOpenPublic').href = `/tree/${encodeURIComponent(preferred)}`;
-
-                if (user.linktree_slug) await refreshData();
-                else showMsg(msgMeta, 'You don’t have a Linktree yet. Fill fields and Save to create it.', false);
+                await refreshData(); // will try preferred slug from the input
+                if (!currentTree) {
+                showMsg(msgMeta, 'You don’t have a Linktree yet. Fill fields and Save to create it.', false);
+                }
             } catch (e) {
                 console.error('boot failed:', e);
                 // Sichtbares Fallback:

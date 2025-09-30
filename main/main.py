@@ -490,32 +490,38 @@ def skills():
 def verify(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")):
     if not x_auth_token or not db.validate_token(x_auth_token):
         raise HTTPException(status_code=401, detail="Unauthorized")
-    user = None
-    try:
-        user = db.get_token_user(x_auth_token)
-    except AttributeError:
-        user = None
-    # mask sensible Felder
-    if user:
-        user_out = {
-            "id": user["id"],
-            "username": user["username"],
-            "admin": bool(user.get("admin", False)),
-            "linktree_id": user.get("linktree_id"),
-            "profile_picture": user.get("profile_picture"),
-            "created_at": (
-                user.get("created_at").isoformat()
-                if isinstance(user.get("created_at"), datetime)
-                else user.get("created_at")
-            ),
-            "updated_at": (
-                user.get("updated_at").isoformat()
-                if isinstance(user.get("updated_at"), datetime)
-                else user.get("updated_at")
-            ),
-        }
-    else:
-        user_out = None
+    user = db.get_token_user(x_auth_token) or {}
+
+    # try to resolve slug if missing
+    linktree_slug = user.get("linktree_slug")
+    if not linktree_slug and user.get("linktree_id") and isinstance(db, PgGifDB):
+        try:
+            with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+                cur.execute("SELECT slug FROM linktrees WHERE id=%s", (user["linktree_id"],))
+                row = cur.fetchone()
+                if row:
+                    linktree_slug = row[0]
+        except Exception:
+            linktree_slug = None
+
+    user_out = {
+        "id": user.get("id"),
+        "username": user.get("username"),
+        "admin": bool(user.get("admin", False)),
+        "linktree_id": user.get("linktree_id"),
+        "linktree_slug": linktree_slug,       # <-- add this
+        "profile_picture": user.get("profile_picture"),
+        "created_at": (
+            user.get("created_at").isoformat()
+            if isinstance(user.get("created_at"), datetime)
+            else user.get("created_at")
+        ),
+        "updated_at": (
+            user.get("updated_at").isoformat()
+            if isinstance(user.get("updated_at"), datetime)
+            else user.get("updated_at")
+        ),
+    }
     return {
         "ok": True,
         "expires_at": db.get_token_expiry(x_auth_token),
