@@ -496,18 +496,18 @@ class PgGifDB:
         return token
 
     def get_token_user(self, token: str) -> dict | None:
-        """Gibt den User (dict) zum Token zurück – oder None."""
         if not token:
             return None
-        with psycopg.connect(
-            self.dsn, row_factory=dict_row
-        ) as conn, conn.cursor() as cur:
+        with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT u.* FROM sessions s
+                SELECT u.*, l.slug AS linktree_slug
+                FROM sessions s
                 JOIN users u ON u.id = s.user_id
-                WHERE s.token = %s AND (s.expires_at IS NULL OR s.expires_at > now())
-            """,
+                LEFT JOIN linktrees l ON l.id = u.linktree_id
+                WHERE s.token = %s
+                AND (s.expires_at IS NULL OR s.expires_at > now())
+                """,
                 (token,),
             )
             return cur.fetchone()

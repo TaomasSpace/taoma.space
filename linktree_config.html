@@ -572,22 +572,52 @@
         toggle?.addEventListener('click', () => { const open = menu.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); });
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        // Visitor counter (wie auf anderen Seiten)
-        (async () => {
-            const KEY = "taoma_last_counted_at", DAY = 86400000, now = Date.now();
-            const last = parseInt(localStorage.getItem(KEY) || "0", 10);
-            if (!last || now - last > DAY) { navigator.sendBeacon("/api/visits/increment"); localStorage.setItem(KEY, String(now)); }
-            try { const r = await fetch("/api/visits/value"); const { total } = await r.json(); document.getElementById("visitor-count")?.textContent = total ?? "0"; } catch { }
-        })();
 
+        async function safe(fn){ try { return await fn(); } catch (e) { console.error(e); return null; } }
+(async () => {
+  const countEl = document.getElementById("visitor-count");
+  try {
+    const KEY="taoma_last_counted_at", DAY=86400000, now=Date.now();
+    const last = Number(localStorage.getItem(KEY) || 0);
+    if (!last || now - last > DAY) {
+      navigator.sendBeacon && navigator.sendBeacon("/api/visits/increment");
+      localStorage.setItem(KEY, String(now));
+    }
+    const r = await fetch("/api/visits/value");
+    if (r.ok) {
+      const { total } = await r.json();
+      if (countEl) countEl.textContent = String(total ?? 0);
+    } else if (countEl) countEl.textContent = '—';
+  } catch {
+    if (countEl) countEl.textContent = '—';
+  }
+})();
         // --- Auth header (wie gehabt) ---
         async function renderAuthHeader() {
-            const slot = document.getElementById('authSlot'); if (!slot) return;
-            const token = localStorage.getItem('gifapi_token'); let user = null, isAdmin = false;
-            if (token) {
-                try { const r = await fetch('/api/auth/verify', { headers: { 'X-Auth-Token': token } }); if (r.ok) { const d = await r.json(); user = d?.user || null; isAdmin = !!(user && user.admin); } else { localStorage.removeItem('gifapi_token'); localStorage.removeItem('gifapi_token_expires'); } } catch { }
+            const slot = document.getElementById('authSlot');
+            if (!slot) return null;
+
+            const t = localStorage.getItem('gifapi_token');
+            let user = null, isAdmin = false;
+
+            if (t) {
+                const r = await safe(() => fetch('/api/auth/verify', { headers: { 'X-Auth-Token': t }}));
+                if (r && r.ok) {
+                const d = await safe(()=>r.json());
+                user = d?.user || null;
+                isAdmin = !!(user && user.admin);
+                } else {
+                localStorage.removeItem('gifapi_token');
+                localStorage.removeItem('gifapi_token_expires');
+                }
             }
-            if (!user) { slot.innerHTML = `<a class="btn sm ghost" href="/login">Login</a><a class="btn sm ghost" href="/register">Register</a>`; return; }
+
+            // immer etwas rendern:
+            if (!user) {
+                slot.innerHTML = `<a class="btn sm ghost" href="/login">Login</a>
+                                <a class="btn sm ghost" href="/register">Register</a>`;
+                return null;
+            }
             const uname = user.username || 'User', initials = uname.trim().slice(0, 2).toUpperCase(), pfp = user.profile_picture && String(user.profile_picture).trim();
             slot.innerHTML = `
       <div class="auth-box" style="position:relative">
@@ -807,32 +837,30 @@
         }
 
         async function boot() {
-            const user = await renderAuthHeader();
-            if (!user) { $('notLogged').style.display = 'block'; return; }
-            currentUser = user;
-            $('cfgWrap').style.display = 'grid';
-
-            // slug heuristic: aus Query oder vom Backend (falls vorhanden)
-            const preferred = slugFromQuery() || user.linktree_slug ||
-                (user.username || '').toLowerCase().replace(/[^a-z0-9_-]/ig, '');
-            $('inSlug').value = preferred;
-            $('slugPreview').textContent = preferred;
-            $('btnOpenPublic').href = `/tree/${encodeURIComponent(preferred)}`;
-
-            // nur versuchen zu laden, wenn der User schon einen Tree hat
-            if (user.linktree_slug) {
-                const lt = await apiLoadTreeBySlug(user.linktree_slug);
-                if (lt) {
-                    currentTree = lt; linktreeId = lt.id;
-                    fillMetaForm(lt);
-                    renderLinks(lt.links || []);
-                    renderBadges(lt.icons || []);
+            try {
+                const user = await renderAuthHeader();
+                if (!user) {
+                document.getElementById('notLogged').style.display = 'block';
+                document.getElementById('cfgWrap').style.display = 'none';
+                return;
                 }
-            } else {
-                // kein Tree vorhanden → User muss neu erstellen
-                showMsg(msgMeta, 'You don’t have a Linktree yet. Fill fields and Save to create it.', false);
+                document.getElementById('cfgWrap').style.display = 'grid';
+
+                const preferred = slugFromQuery() || user.linktree_slug ||
+                (user.username || '').toLowerCase().replace(/[^a-z0-9_-]/ig, '');
+                document.getElementById('inSlug').value = preferred;
+                document.getElementById('slugPreview').textContent = preferred;
+                document.getElementById('btnOpenPublic').href = `/tree/${encodeURIComponent(preferred)}`;
+
+                if (user.linktree_slug) await refreshData();
+                else showMsg(msgMeta, 'You don’t have a Linktree yet. Fill fields and Save to create it.', false);
+            } catch (e) {
+                console.error('boot failed:', e);
+                // Sichtbares Fallback:
+                showMsg(msgMeta, 'Init failed – see console', false);
+                document.getElementById('notLogged').style.display = 'block';
             }
-        }
+            }
         boot();
     </script>
 </body>
