@@ -812,24 +812,27 @@
             currentUser = user;
             $('cfgWrap').style.display = 'grid';
 
-            // slug heuristic: ?slug=.. sonst username
-            const preferred = slugFromQuery() || (user.username || '').toLowerCase().replace(/[^a-z0-9_-]/ig, '');
+            // slug heuristic: aus Query oder vom Backend (falls vorhanden)
+            const preferred = slugFromQuery() || user.linktree_slug ||
+                (user.username || '').toLowerCase().replace(/[^a-z0-9_-]/ig, '');
             $('inSlug').value = preferred;
             $('slugPreview').textContent = preferred;
             $('btnOpenPublic').href = `/tree/${encodeURIComponent(preferred)}`;
-            // try load
-            const lt = await apiLoadTreeBySlug(preferred);
-            if (lt) {
-                currentTree = lt; linktreeId = lt.id;
-                fillMetaForm(lt);
-                renderLinks(lt.links || []);
-                renderBadges(lt.icons || []);
+
+            // nur versuchen zu laden, wenn der User schon einen Tree hat
+            if (user.linktree_slug) {
+                const lt = await apiLoadTreeBySlug(user.linktree_slug);
+                if (lt) {
+                    currentTree = lt; linktreeId = lt.id;
+                    fillMetaForm(lt);
+                    renderLinks(lt.links || []);
+                    renderBadges(lt.icons || []);
+                }
             } else {
-                // Noch nicht vorhanden → Benutzer muss auf "Save" drücken (Create)
-                showMsg(msgMeta, 'No linktree found for this slug. Fill fields and Save to create it.', false);
+                // kein Tree vorhanden → User muss neu erstellen
+                showMsg(msgMeta, 'You don’t have a Linktree yet. Fill fields and Save to create it.', false);
             }
         }
-
         boot();
     </script>
 </body>

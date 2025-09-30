@@ -846,13 +846,13 @@
             const slug = u.linktree_slug;
             if (slug) {
                 ltSlot.innerHTML = `
-      <a href="/tree/${slug}" target="_blank" class="btn sm">View Linktree</a>
-      <a href="/linktree/configure" class="btn sm ghost">Configure</a>
-    `;
+            <a href="/tree/${slug}" target="_blank" class="btn sm">View Linktree</a>
+            <a href="/linktree/config?slug=${slug}" class="btn sm ghost">Configure</a>
+        `;
             } else {
                 ltSlot.innerHTML = `
-      <a href="/linktree/configure" class="btn sm">Create Linktree</a>
-    `;
+            <a href="/linktree/config" class="btn sm">Create Linktree</a>
+        `;
             }
         }
     </script>
