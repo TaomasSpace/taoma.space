@@ -661,7 +661,15 @@ class PgGifDB:
         with psycopg.connect(
             self.dsn, row_factory=dict_row
         ) as conn, conn.cursor() as cur:
-            cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+            cur.execute(
+                """
+                SELECT u.*, l.slug AS linktree_slug
+                FROM users u
+                LEFT JOIN linktrees l ON u.linktree_id = l.id
+                WHERE u.id = %s
+            """,
+                (user_id,),
+            )
             return cur.fetchone()
 
     def getUserByUsername(self, username: str) -> dict | None:
@@ -669,7 +677,12 @@ class PgGifDB:
             self.dsn, row_factory=dict_row
         ) as conn, conn.cursor() as cur:
             cur.execute(
-                "SELECT * FROM users WHERE lower(username) = lower(%s)", (username,)
+                """                
+                    SELECT u.*, l.slug AS linktree_slug
+                    FROM users
+                    LEFT JOIN linktrees l ON u.linktree_id = l.id
+                    WHERE lower(username) = lower(%s)""",
+                (username,),
             )
             return cur.fetchone()
 
