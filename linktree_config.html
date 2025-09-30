@@ -504,14 +504,22 @@
                         <label for="inQuote">Quote</label>
                         <textarea id="inQuote" class="input" placeholder="Write your bio/quote…"></textarea>
                     </div>
+                    <div class="field">
+                    <label for="inSong">Song URL</label>
+                    <input id="inSong" class="input" placeholder="https://…/song.mp3">
+                    </div>
 
                     <div class="field">
-                        <label for="inSong">Song URL</label>
-                        <input id="inSong" class="input" placeholder="https://…/song.mp3">
+                    <label for="inBg">Background URL (img/gif/video)</label>
+                    <input id="inBg" class="input" placeholder="https://…/bg.webp">
                     </div>
                     <div class="field">
-                        <label for="inBg">Background URL (img/gif/video)</label>
-                        <input id="inBg" class="input" placeholder="https://…/bg.webp">
+                    <label for="fileSong">Upload Song</label>
+                    <input type="file" id="fileSong" accept="audio/*">
+                    </div>
+                    <div class="field">
+                    <label for="fileBg">Upload Background</label>
+                    <input type="file" id="fileBg" accept="image/*,video/*">
                     </div>
 
                     <div class="field">
@@ -549,7 +557,6 @@
                         <button type="submit" class="btn sm" id="btnSaveMeta">Save</button>
                         <a class="btn sm ghost" id="btnOpenPublic" href="#" target="_blank" rel="noreferrer">Open
                             /tree/…</a>
-                        <span class="help muted">Erstellt den Tree, falls er noch nicht existiert; sonst Update.</span>
                     </div>
                 </form>
 
@@ -557,8 +564,7 @@
 
                 <h3 style="margin:.2rem 0 .6rem">Badges (earned icons)</h3>
                 <div id="badges" class="grid"></div>
-                <p class="muted" style="margin:.4rem 0 0">Tipp: Du vergibst Icons serverseitig. Hier toggelt der User
-                    nur <em>displayed</em>.</p>
+
             </section>
 
             <!-- Right: Links -->
@@ -576,7 +582,11 @@
                         <input id="inLinkLabel" class="input" placeholder="My Link">
                     </div>
                     <div class="field">
-                        <label for="inLinkIcon">Icon URL (optional)</label>
+                    <label for="fileIcon">Upload Link Icon</label>
+                    <input type="file" id="fileIcon" accept="image/*">
+                    </div>
+                    <div class="field">
+                        <label for="inLinkIcon">Icon URL</label>
                         <input id="inLinkIcon" class="input" placeholder="https://…/icon.png">
                     </div>
                     <div class="field">
@@ -588,15 +598,13 @@
                     </div>
                     <div class="row" style="grid-column:1 / -1">
                         <button class="btn sm" type="submit">Add Link</button>
-                        <span class="help muted">Icons können auch benutzer-hochgeladen sein (direkte URL).</span>
                     </div>
                 </form>
 
                 <div class="hr"></div>
 
                 <div class="links-list" id="linksList" aria-live="polite"></div>
-                <p class="muted" style="margin:.4rem 0 0">Drag-&-Drop kommt später nice-to-have; jetzt sortierst du über
-                    ▲/▼.</p>
+
             </section>
         </div>
     </main>
@@ -940,6 +948,41 @@
             }
             }
         boot();
+        async function uploadFile(inputId, endpoint) {
+  const f = $(inputId).files[0];
+  if (!f) return null;
+  const fd = new FormData();
+  fd.append("file", f);
+  const r = await fetch(endpoint, { method:"POST", headers:{ "X-Auth-Token": token() }, body: fd });
+  if (!r.ok) throw new Error(await r.text());
+  const { url } = await r.json();
+  return url;
+}
+
+$('fileSong').addEventListener('change', async () => {
+  try { 
+    const url = await uploadFile('fileSong', '/api/users/me/song');
+    $('inSong').value = url;
+    showMsg(msgMeta, 'Song uploaded', true);
+  } catch(e){ showMsg(msgMeta, 'Song upload failed', false); }
+});
+
+$('fileBg').addEventListener('change', async () => {
+  try { 
+    const url = await uploadFile('fileBg', '/api/users/me/background');
+    $('inBg').value = url;
+    showMsg(msgMeta, 'Background uploaded', true);
+  } catch(e){ showMsg(msgMeta, 'Background upload failed', false); }
+});
+
+$('fileIcon').addEventListener('change', async () => {
+  try { 
+    const url = await uploadFile('fileIcon', '/api/users/me/linkicon');
+    $('inLinkIcon').value = url;
+    showMsg(msgLinks, 'Icon uploaded', true);
+  } catch(e){ showMsg(msgLinks, 'Icon upload failed', false); }
+});
+
     </script>
 </body>
 

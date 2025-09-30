@@ -52,7 +52,8 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MEDIA_ROOT = UPLOAD_DIR.parent  # -> /var/data
 app.mount("/media", StaticFiles(directory=str(MEDIA_ROOT)), name="media")
 
-
+ALLOWED_AUDIO = {"audio/mpeg", "audio/ogg", "audio/wav"}
+MAX_AUDIO_BYTES = 10 * 1024 * 1024  # 10 MB
 def _ensure_pg():
     if not isinstance(db, PgGifDB):
         raise HTTPException(501, "Linktree features require PostgreSQL.")
@@ -1265,3 +1266,53 @@ def toggle_my_icon_displayed(
     _ensure_pg()
     db.set_icon_displayed(me["id"], code, body.displayed)
     return {"ok": True}
+
+
+@app.post("/api/users/me/song")
+async def upload_song(file: UploadFile = File(...), current: dict = Depends(require_user)):
+    if file.content_type not in ALLOWED_AUDIO:
+        raise HTTPException(415, "Unsupported audio type")
+    data = await file.read()
+    if len(data) > MAX_AUDIO_BYTES:
+        raise HTTPException(413, "File too large (max 10MB)")
+    ext = file.filename.split(".")[-1].lower()
+    fname = f"user{current['id']}_song_{uuid.uuid4().hex}.{ext}"
+    out_path = UPLOAD_DIR / fname
+    out_path.write_bytes(data)
+    url = f"/media/{UPLOAD_DIR.name}/{fname}"
+    db.update_linktree_by_user(current["id"], song_url=url)
+    return {"url": url}
+
+@app.post("/api/users/me/background")
+async def upload_background(file: UploadFile = File(...), current: dict = Depends(require_user)):
+    if file.content_type not in ALLOWED_MIME and not file.content_type.startswith("video/"):
+        raise HTTPException(415, "Unsupported background type")
+    data = await file.read()
+    if len(data) > MAX_UPLOAD_BYTES * 5:
+        raise HTTPException(413, "File too large (max 10MB)")
+    ext = file.filename.split(".")[-1].lower()
+    fname = f"user{current['id']}_bg_{uuid.uuid4().hex}.{ext}"
+    out_path = UPLOAD_DIR / fname
+    out_path.write_bytes(data)
+    url = f"/media/{UPLOAD_DIR.name}/{fname}"
+    db.update_linktree_by_user(current["id"], background_url=url)
+    return {"url": url}
+
+@app.post("/api/users/me/linkicon")
+async def upload_linkicon(file: UploadFile = File(...), current: dict = Depends(require_user)):
+    if file.content_type not in ALLOWED_MIME:
+        raise HTTPException(415, "Unsupported image type")
+    data = await file.read()
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "File too large (max 2MB)")
+    ext = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
+        "image/gif": "gif",
+    }[file.content_type]
+    fname = f"user{current['id']}_icon_{uuid.uuid4().hex}.{ext}"
+    out_path = UPLOAD_DIR / fname
+    out_path.write_bytes(data)
+    url = f"/media/{UPLOAD_DIR.name}/{fname}"
+    return {"url": url}
