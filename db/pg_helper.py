@@ -913,3 +913,24 @@ class PgGifDB:
                 (displayed, user_id, icon_code),
             )
             conn.commit()
+
+    def update_linktree_by_user(self, user_id: int, **fields):
+        """Update the linktree of a given user with provided fields."""
+        if not fields:
+            return
+        sets = [f"{k} = %s" for k in fields.keys()]
+        values = list(fields.values())
+        values.append(user_id)
+
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                f"""
+                UPDATE linktrees
+                SET {", ".join(sets)}, updated_at = now()
+                WHERE id = (
+                    SELECT linktree_id FROM users WHERE id = %s
+                )
+                """,
+                values,
+            )
+            conn.commit()
