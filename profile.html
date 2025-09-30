@@ -701,6 +701,7 @@
                 // Prefill forms
                 document.getElementById('inName').value = u.username || '';
                 document.getElementById('inPfp').value = pfp;
+                renderLinktreeSlot(u);
 
                 // Page visible
                 profileWrap.style.display = 'grid';
@@ -743,7 +744,18 @@
         });
 
         document.getElementById('logoutBtn').addEventListener('click', doLogout, { passive: true });
-
+        function renderLinktreeSlot(user) {
+            const ltSlot = document.getElementById("linktreeSlot");
+            if (!ltSlot) return;
+            const slug = user.linktree_slug;
+            if (slug) {
+                ltSlot.innerHTML = `
+        <a href="/tree/${encodeURIComponent(slug)}" target="_blank" class="btn sm">View Linktree</a>
+        <a href="/linktree/config" class="btn sm ghost">Configure</a>`;
+            } else {
+                ltSlot.innerHTML = `<a href="/linktree/config" class="btn sm">Create Linktree</a>`;
+            }
+        }
         // boot
         renderAuthHeader();
         loadProfile();
