@@ -401,8 +401,6 @@
                 <a class="btn ghost" href="/register" aria-label="Register">Register</a>
             </div>
 
-            <div class="helper muted">Admins will be redirected to <code>/api/admin</code>, others to <code>/</code>.
-            </div>
         </section>
     </main>
 
@@ -508,7 +506,7 @@
                     isAdmin = !!(data && data.user && data.user.admin);
                 }
                 showOk("Login successful. Redirecting…");
-                setTimeout(() => { window.location.href = isAdmin ? '/api/admin' : '/'; }, 350);
+                setTimeout(() => { window.location.href = isAdmin ? '/' : '/'; }, 350);
 
             } catch (e) {
                 showErr("Network error: " + (e?.message || e));
