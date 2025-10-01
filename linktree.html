@@ -101,35 +101,45 @@
             font-size: .9rem;
         }
 
-        .links {
-            display: grid;
-            gap: 12px;
-            width: 100%;
-            max-width: 420px;
-        }
+.links {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;           /* <– zentriert die Liste innerhalb der Karte */
+}
 
-        .link {
-            display: flex;
-            align-items: center;
-            gap: .6rem;
-            padding: 0.9rem 1.2rem;
-            border-radius: var(--radius);
-            background: var(--card);
-            border: 1px solid #ffffff22;
-            box-shadow: var(--shadow);
-            transition: .2s;
-        }
+.link {
+  position: relative;        /* für das absolut positionierte Icon */
+  display: flex;
+  align-items: center;
+  justify-content: center;   /* zentriert den Inhalt */
+  text-align: center;
+  gap: .6rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid #ffffff22;
+  box-shadow: var(--shadow);
+  transition: .2s;
+  width: 100%;               /* volle Breite für schöne Pillenform */
+}
 
         .link:hover {
             transform: translateY(-2px);
             background: color-mix(in oklab, var(--card), white 4%);
         }
 
-        .link img {
-            width: 22px;
-            height: 22px;
-            object-fit: contain;
-        }
+.link img {
+  width: 22px; height: 22px; object-fit: contain;
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.link span {
+  margin: 0 auto;
+}
 
         footer {
             padding: 1rem;
@@ -265,23 +275,23 @@
   }
 
   async function turnSoundOn() {
-    try {
-      if (bgAudio) {
-        bgAudio.muted = false;
-        await bgAudio.play();
-      } else if (bgVideo) {
-        bgVideo.muted = false;
-        await bgVideo.play();
-      } else {
-        return; // nichts zum Spielen
-      }
-      soundOn = true;
-      updateSoundUI();
-      soundBtn.classList.remove('hidden');
-    } catch (_) {
-      // bleibt off; Button bleibt sichtbar
+  try {
+    if (bgAudio) {
+      bgAudio.muted = false;
+      await bgAudio.play().catch(()=>{});
+    } else if (bgVideo) {
+      bgVideo.muted = false;
+      await bgVideo.play().catch(()=>{});
+    } else {
+      return;
     }
+    soundOn = true;
+    updateSoundUI();
+    soundBtn.classList.remove('hidden');
+  } catch (_) {
+    // bleibt off
   }
+}
 
   function turnSoundOff() {
     try {
@@ -414,6 +424,13 @@ if (nameEl) {
     } catch (e) {
       console.error('loadTree failed:', e);
     }
+          soundOn = false;
+      updateSoundUI();
+
+      // Musik standardmäßig an
+      setTimeout(() => {
+        turnSoundOn();
+      }, 300); 
   }
 
   loadTree();
