@@ -7,14 +7,16 @@
   <meta name="theme-color" content="#0f1223"/>
   <link rel="icon" type="image/png" href="/static/icon.png"/>
   <style>
+    /* Tokens im Stil deiner index.html */
     :root{
       --bg:#0e1020;--bg-soft:#141735;--card:#171b3b;--ink:#e9ebff;--muted:#a2a9c8;
-      --acc:#85a3ff;--danger:#ff5a6a;--ok:#35d79c;--ring:#85a3ff55;
+      --acc:#85a3ff;--acc-2:#5b7bff;--danger:#ff5a6a;--ok:#35d79c;--ring:#85a3ff55;
       --shadow:0 10px 30px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.25);
       --radius:16px;--space:clamp(16px,2vw,24px);--container:1100px
     }
     *{box-sizing:border-box}html,body{height:100%}
-    body{margin:0;font:15px/1.6 Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+    body{margin:0;font:15px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
+         color:var(--ink);background:var(--bg);display:flex;flex-direction:column;min-height:100dvh}
     body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
       background:
         radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
@@ -49,6 +51,7 @@
     pre{white-space:pre-wrap;word-break:break-word;background:#0f1331;border:1px solid #ffffff26;border-radius:10px;padding:.6rem}
     .table{width:100%;border-collapse:collapse}
     .table th,.table td{border-bottom:1px solid #ffffff1a;padding:.45rem;text-align:left}
+    .right{justify-content:flex-end}
     .hidden{display:none}
     :focus-visible{outline:2px solid var(--acc);outline-offset:2px;box-shadow:0 0 0 6px var(--ring)}
   </style>
@@ -56,24 +59,36 @@
 <body>
 <header>
   <div class="container nav">
-    <div class="brand">
-      <a href="/"><img src="/static/icon.png" alt="" width="28" height="28" style="border-radius:8px"></a>
-      <span>TAOMA™ — Admin</span>
-    </div>
-    <div class="row">
-      <span id="whoami" class="pill muted">checking…</span>
-      <button id="logoutBtn" class="btn ghost">Logout</button>
+    <div class="brand"><a href="/"><img src="/static/icon.png" alt="" width="28" height="28" style="border-radius:8px"></a>
+      <span>TAOMA™ — Admin</span></div>
+    <div class="row right">
+      <span id="whoami" class="pill muted">Not signed in</span>
+      <button id="logoutBtn" class="btn ghost hidden">Logout</button>
     </div>
   </div>
 </header>
 
 <main class="container" style="padding:18px 0 32px 0">
-  <section id="guard" class="card section hidden">
-    <h3 style="margin:0 0 .4rem">No access</h3>
-    <p class="muted">Du bist nicht angemeldet oder kein Admin. Bitte zuerst normal einloggen, dann diese Seite neu laden.</p>
-    <pre id="guardMsg" class="muted"></pre>
+  <!-- Login Card -->
+  <section id="loginView" class="card section">
+    <h2 style="margin:0 0 .6rem">Admin Login</h2>
+    <p class="muted" style="margin-top:0">Login via Admin-Passwort (bindet Session an deinen Admin-User).</p>
+    <form id="loginForm" class="grid cols-2" onsubmit="return false;">
+      <div class="field">
+        <label for="adminPassword">Password</label>
+        <input id="adminPassword" type="password" autocomplete="current-password" required minlength="8" />
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="btn" id="loginSubmit">Login</button>
+      </div>
+      <div class="field" style="grid-column:1/-1">
+        <pre id="loginMsg" class="muted" style="margin:0"></pre>
+      </div>
+    </form>
   </section>
 
+  <!-- Dashboard -->
   <section id="appView" class="hidden">
     <div class="tabs" id="tabs">
       <button class="tab active" data-tab="overview">Overview</button>
@@ -90,12 +105,16 @@
       <div class="grid cols-2">
         <div>
           <h3 style="margin-top:0">Health</h3>
-          <div class="row"><button class="btn" onclick="ping()">Ping Server</button></div>
+          <div class="row">
+            <button class="btn" onclick="ping()">Ping Server</button>
+          </div>
           <pre id="pingOut" style="margin-top:.6rem"></pre>
         </div>
         <div>
           <h3 style="margin-top:0">Session</h3>
-          <div class="row"><button class="btn ghost" onclick="verify()">Verify</button></div>
+          <div class="row">
+            <button class="btn ghost" onclick="verify()">Verify Token</button>
+          </div>
           <pre id="verifyOut" style="margin-top:.6rem"></pre>
         </div>
       </div>
@@ -105,30 +124,30 @@
     <section id="tab-users" class="card section hidden">
       <h3 style="margin-top:0">Manage Users</h3>
       <div class="grid cols-2">
-        <form onsubmit="return false;">
+        <form id="createUserForm" onsubmit="return false;">
           <div class="field"><label>Username</label><input id="cu-username" required minlength="3" maxlength="32"/></div>
           <div class="field"><label>Password</label><input id="cu-password" type="password" required minlength="8"/></div>
           <div class="row"><button class="btn" onclick="createUser()">Create</button></div>
           <pre id="createUserOut"></pre>
         </form>
-        <form onsubmit="return false;">
+
+        <form id="getUserForm" onsubmit="return false;">
           <div class="field"><label>User ID</label><input id="gu-id" type="number" min="1" required/></div>
           <div class="row"><button class="btn ghost" onclick="getUser()">Get</button></div>
           <pre id="getUserOut"></pre>
         </form>
-        <form class="grid" style="grid-column:1/-1" onsubmit="return false;">
+
+        <form id="patchUserForm" class="grid" style="grid-column:1/-1" onsubmit="return false;">
           <div class="row">
             <div class="field" style="flex:1"><label>User ID</label><input id="pu-id" type="number" min="1"/></div>
-            <div class="field" style="flex:1"><label>New Username (opt.)</label><input id="pu-username"/></div>
+            <div class="field" style="flex:1"><label>New Username (opt.)</label><input id="pu-username" /></div>
             <div class="field" style="flex:1"><label>New Password (opt.)</label><input id="pu-password" type="password"/></div>
             <div class="field" style="flex:1"><label>Admin? (opt.)</label>
               <select id="pu-admin"><option value="">leave</option><option value="true">true</option><option value="false">false</option></select>
             </div>
           </div>
-          <div class="row">
-            <button class="btn" onclick="patchUser()">Update</button>
-            <button class="btn warn" onclick="grantAdmin()">Grant Admin</button>
-          </div>
+          <div class="row"><button class="btn" onclick="patchUser()">Update</button>
+            <button class="btn warn" onclick="grantAdmin()">Grant Admin</button></div>
           <pre id="patchUserOut"></pre>
         </form>
       </div>
@@ -139,12 +158,14 @@
       <h3 style="margin-top:0">Linktrees</h3>
       <div class="grid cols-2">
         <form onsubmit="return false;">
+          <div class="field"><label>User ID (owner)</label><input id="lt-user-id" type="number" min="1" required/></div>
           <div class="field"><label>Slug</label><input id="lt-slug" required minlength="2" maxlength="48"/></div>
           <div class="field"><label>Location (opt.)</label><input id="lt-location"/></div>
           <div class="field"><label>Quote (opt.)</label><input id="lt-quote"/></div>
           <div class="row"><button class="btn" onclick="createLinktree()">Create Linktree</button></div>
           <pre id="lt-create-out"></pre>
         </form>
+
         <form onsubmit="return false;">
           <div class="field"><label>Linktree ID</label><input id="lt-id" type="number" min="1" required/></div>
           <div class="field"><label>Patch JSON</label><textarea id="lt-patch" rows="6" placeholder='{"location":"Bern","display_name_mode":"username"}'></textarea></div>
@@ -163,6 +184,7 @@
           <div class="row"><button class="btn" onclick="addLink()">Add Link</button></div>
           <pre id="lnk-add-out"></pre>
         </form>
+
         <form onsubmit="return false;">
           <div class="field"><label>Link ID</label><input id="lnk-id" type="number" min="1" required/></div>
           <div class="field"><label>Patch JSON</label><textarea id="lnk-patch" rows="6" placeholder='{"label":"GitHub","is_active":true}'></textarea></div>
@@ -237,157 +259,264 @@
         <button class="btn" onclick="mediaGC()">Run GC</button>
       </div>
       <pre id="gcOut" style="margin-top:.6rem"></pre>
-      <p class="muted">Löscht nur unreferenzierte Dateien im Upload-Ordner, älter als die gewählte Sekundenanzahl.</p>
+      <p class="muted">Hinweis: löscht nur unreferenzierte Dateien im Upload-Ordner, älter als die gewählte Sekundenanzahl.</p>
     </section>
   </section>
 </main>
 
 <script>
-  const $ = s => document.querySelector(s);
+  // ===== Helpers =====
+  const $ = sel => document.querySelector(sel);
   const show = el => el.classList.remove('hidden');
   const hide = el => el.classList.add('hidden');
 
-  // Token optional zusätzlich im Header mitsenden (Cookie reicht dank Backend, aber schadet nicht):
-  function getToken(){ try{return localStorage.getItem('taoma_token')||''}catch{return ''} }
+  function setToken(tok){
+    if(tok){ localStorage.setItem('taoma_token', tok); }
+    else{ localStorage.removeItem('taoma_token'); }
+  }
+  function getToken(){ return localStorage.getItem('taoma_token') || ''; }
 
   async function api(path, {method='GET', headers={}, body=null, asText=false} = {}){
     const h = {'Content-Type':'application/json', ...headers};
-    const tok = getToken(); if(tok) h['X-Auth-Token'] = tok;
-    const resp = await fetch(path, {method, headers:h, body, credentials:'include'});
-    if(asText){ return {ok:resp.ok, status:resp.status, data:await resp.text()} }
-    let data = null; try{ data = await resp.json() }catch{}
-    if(!resp.ok){ throw {status:resp.status, data} }
+    const tok = getToken();
+    if(tok){ h['X-Auth-Token'] = tok; } // zusätzlich zum HttpOnly-Cookie
+    const resp = await fetch(path, {
+      method, headers:h, body, credentials:'include'
+    });
+    if(asText){ return {ok: resp.ok, status: resp.status, data: await resp.text()}; }
+    let data = null;
+    try{ data = await resp.json(); }catch(_){}
+    if(!resp.ok){ throw {status:resp.status, data}; }
     return data;
   }
-  function pretty(x){ try{return JSON.stringify(x,null,2)}catch{return String(x)} }
-  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])) }
+  function pretty(x){ try{ return JSON.stringify(x,null,2) }catch{ return String(x) } }
 
-  // ---- Session Guard (kein Frontend-Login) ----
-  async function boot(){
+  // ===== Auth =====
+  async function verify(){
+    try{
+      const data = await api('/api/auth/verify');
+      $('#verifyOut').textContent = pretty(data);
+      const u = data.user || {};
+      $('#whoami').textContent = `${u.username || 'unknown'} ${u.admin?'(admin)':''}`;
+    }catch(e){
+      $('#verifyOut').textContent = `Verify failed (${e.status}): ${pretty(e.data)}`
+    }
+  }
+  async function ping(){
+    try{
+      const data = await api('/api/ping');
+      $('#pingOut').textContent = pretty(data);
+    }catch(e){ $('#pingOut').textContent = `Ping failed: ${pretty(e)}` }
+  }
+  async function doLogin(){
+    $('#loginMsg').textContent = '…logging in';
+    try{
+      const pwd = $('#adminPassword').value;
+      const data = await api('/api/auth/login',{method:'POST', body:JSON.stringify({password: pwd})});
+      setToken(data.token); // zusätzlich zum Cookie
+      $('#loginMsg').textContent = 'Login OK';
+      await postLogin();
+    }catch(e){
+      $('#loginMsg').textContent = `Login failed (${e.status}): ${pretty(e.data)}`
+    }
+  }
+  async function doLogout(){
+    try{ await api('/api/auth/logout',{method:'POST'}); }catch(_){}
+    setToken('');
+    init(); // zurück zur Login-View
+  }
+
+  async function postLogin(){
+    hide($('#loginView'));
+    show($('#appView'));
+    show($('#logoutBtn'));
+    await verify(); await ping();
+  }
+
+  async function init(){
     // Tabs
-    document.querySelectorAll('.tab').forEach(t=>{
-      t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(t => {
+      t.onclick = () => {
         document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
         t.classList.add('active');
         const id = t.dataset.tab;
-        document.querySelectorAll('[id^="tab-"]').forEach(s=>hide(s));
+        document.querySelectorAll('[id^="tab-"]').forEach(s => hide(s));
         show($('#tab-'+id));
-      }
+      };
     });
 
+    $('#loginSubmit').onclick = doLogin;
+    $('#logoutBtn').onclick  = doLogout;
+
+    // try verify
     try{
-      const v = await api('/api/auth/verify');  // nutzt deinen bestehenden Verify-Endpoint
-      $('#whoami').textContent = `${v.user.username} (admin)`;
-      show($('#appView'));
-    }catch(e){
-      $('#whoami').textContent = 'No access';
-      show($('#guard'));
-      $('#guardMsg').textContent = `Verify failed (${e.status}): ${pretty(e.data)}`;
-      hide($('#appView'));  // sicherheitshalber
+      const data = await api('/api/auth/verify');
+      setToken(data?.user ? getToken() : getToken());
+      $('#whoami').textContent = `${data.user.username} ${data.user.admin?'(admin)':''}`;
+      hide($('#loginView')); show($('#appView')); show($('#logoutBtn'));
+    }catch(_){
+      show($('#loginView')); hide($('#appView')); hide($('#logoutBtn'));
+      $('#whoami').textContent = 'Not signed in';
     }
   }
 
-  // ---- Header Actions ----
-  document.addEventListener('DOMContentLoaded', boot);
-  $('#logoutBtn').onclick = async () => { try{ await api('/api/auth/logout',{method:'POST'}) }catch{}; location.reload() };
-
-  // ---- Overview ----
-  async function verify(){ try{ const d = await api('/api/auth/verify'); $('#verifyOut').textContent = pretty(d) }catch(e){ $('#verifyOut').textContent = `Verify failed (${e.status}): ${pretty(e.data)}` } }
-  async function ping(){ try{ const d = await api('/api/ping'); $('#pingOut').textContent = pretty(d) }catch(e){ $('#pingOut').textContent = `Ping failed (${e.status}): ${pretty(e.data)}` } }
-
-  // ---- Users (serverseitig admin-geschützt) ----
+  // ===== Users =====
   async function createUser(){
     const username = $('#cu-username').value.trim();
     const password = $('#cu-password').value;
-    try{ const d = await api('/user',{method:'POST', body:JSON.stringify({username,password})}); $('#createUserOut').textContent = pretty(d) }
-    catch(e){ $('#createUserOut').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+    try{
+      const data = await api('/user',{method:'POST', body:JSON.stringify({username,password})});
+      $('#createUserOut').textContent = pretty(data);
+    }catch(e){ $('#createUserOut').textContent = pretty(e.data) }
   }
   async function getUser(){
-    const id = +$('#gu-id').value;
-    try{ const d = await api(`/user/${id}`); $('#getUserOut').textContent = pretty(d) }
-    catch(e){ $('#getUserOut').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+    const id = parseInt($('#gu-id').value,10);
+    try{
+      const data = await api(`/user/${id}`);
+      $('#getUserOut').textContent = pretty(data);
+    }catch(e){ $('#getUserOut').textContent = `Error ${e.status}: ${pretty(e.data)}` }
   }
   async function patchUser(){
-    const id = +$('#pu-id').value;
-    const payload = {}; const un=$('#pu-username').value.trim(); if(un) payload.username=un;
-    const pw=$('#pu-password').value; if(pw) payload.password=pw;
-    const ad=$('#pu-admin').value; if(ad!=='') payload.admin=(ad==='true');
-    try{ const d = await api(`/user/${id}`,{method:'PATCH', body:JSON.stringify(payload)}); $('#patchUserOut').textContent = pretty(d) }
-    catch(e){ $('#patchUserOut').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+    const id = parseInt($('#pu-id').value,10);
+    const payload = {};
+    const un = $('#pu-username').value.trim(); if(un) payload.username = un;
+    const pw = $('#pu-password').value; if(pw) payload.password = pw;
+    const ad = $('#pu-admin').value; if(ad !== '') payload.admin = (ad === 'true');
+    try{
+      const data = await api(`/user/${id}`,{method:'PATCH', body:JSON.stringify(payload)});
+      $('#patchUserOut').textContent = pretty(data);
+    }catch(e){ $('#patchUserOut').textContent = `Error ${e.status}: ${pretty(e.data)}` }
   }
   async function grantAdmin(){
-    const id = +$('#pu-id').value;
-    try{ const d = await api(`/admin/users/${id}/grant`,{method:'POST'}); $('#patchUserOut').textContent = pretty(d) }
-    catch(e){ $('#patchUserOut').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+    const id = parseInt($('#pu-id').value,10);
+    try{
+      const data = await api(`/admin/users/${id}/grant`,{method:'POST'});
+      $('#patchUserOut').textContent = pretty(data);
+    }catch(e){ $('#patchUserOut').textContent = `Error ${e.status}: ${pretty(e.data)}` }
   }
 
-  // ---- Linktrees & Links ----
+  // ===== Linktrees & Links =====
   async function createLinktree(){
+    // Admin kann den Tree im Namen eines Users erzeugen, aber dein Endpoint bindet
+    // immer an den eingeloggten User. → Hinweis: Owner anpassen ggf. in DB-Helper.
+    // Hier nutzen wir trotzdem /api/linktrees direkt.
     const payload = {
       slug: $('#lt-slug').value.trim(),
       location: $('#lt-location').value.trim() || null,
       quote: $('#lt-quote').value.trim() || null,
       song_url: null, background_url: null, background_is_video: false,
-      transparency: 0, name_effect:'none', background_effect:'none', display_name_mode:'slug'
+      transparency: 0, name_effect: 'none', background_effect: 'none', display_name_mode:'slug'
     };
-    try{ const d = await api('/api/linktrees',{method:'POST', body:JSON.stringify(payload)}); $('#lt-create-out').textContent = pretty(d) }
-    catch(e){ $('#lt-create-out').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+    try{
+      const data = await api('/api/linktrees',{method:'POST', body:JSON.stringify(payload)});
+      $('#lt-create-out').textContent = pretty(data);
+    }catch(e){ $('#lt-create-out').textContent = `Error ${e.status}: ${pretty(e.data)}` }
   }
   async function patchLinktree(){
-    const id = +$('#lt-id').value;
-    let p={}; try{ p = JSON.parse($('#lt-patch').value || '{}') }catch{ return $('#lt-patch-out').textContent='Invalid JSON' }
-    try{ const d = await api(`/api/linktrees/${id}`,{method:'PATCH', body:JSON.stringify(p)}); $('#lt-patch-out').textContent = pretty(d) }
-    catch(e){ $('#lt-patch-out').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+    const id = parseInt($('#lt-id').value,10);
+    let p = {};
+    try{ p = JSON.parse($('#lt-patch').value || '{}'); }catch{ return $('#lt-patch-out').textContent='Invalid JSON'; }
+    try{
+      const data = await api(`/api/linktrees/${id}`,{method:'PATCH', body:JSON.stringify(p)});
+      $('#lt-patch-out').textContent = pretty(data);
+    }catch(e){ $('#lt-patch-out').textContent = `Error ${e.status}: ${pretty(e.data)}` }
   }
   async function addLink(){
-    const treeId = +$('#lnk-tree-id').value;
-    const payload = { url: $('#lnk-url').value.trim(), label: $('#lnk-label').value.trim()||null, icon_url: $('#lnk-icon').value.trim()||null, position:null, is_active:true };
-    try{ const d = await api(`/api/linktrees/${treeId}/links`,{method:'POST', body:JSON.stringify(payload)}); $('#lnk-add-out').textContent = pretty(d) }
-    catch(e){ $('#lnk-add-out').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+    const treeId = parseInt($('#lnk-tree-id').value,10);
+    const payload = {
+      url: $('#lnk-url').value.trim(),
+      label: $('#lnk-label').value.trim() || null,
+      icon_url: $('#lnk-icon').value.trim() || null,
+      position: null, is_active: true
+    };
+    try{
+      const data = await api(`/api/linktrees/${treeId}/links`,{method:'POST', body:JSON.stringify(payload)});
+      $('#lnk-add-out').textContent = pretty(data);
+    }catch(e){ $('#lnk-add-out').textContent = `Error ${e.status}: ${pretty(e.data)}` }
   }
   async function patchLink(){
-    const id = +$('#lnk-id').value;
-    let p={}; try{ p = JSON.parse($('#lnk-patch').value || '{}') }catch{ return $('#lnk-patch-out').textContent='Invalid JSON' }
-    try{ const d = await api(`/api/links/${id}`,{method:'PATCH', body:JSON.stringify(p)}); $('#lnk-patch-out').textContent = pretty(d) }
-    catch(e){ $('#lnk-patch-out').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+    const id = parseInt($('#lnk-id').value,10);
+    let p = {};
+    try{ p = JSON.parse($('#lnk-patch').value || '{}'); }catch{ return $('#lnk-patch-out').textContent='Invalid JSON'; }
+    try{
+      const data = await api(`/api/links/${id}`,{method:'PATCH', body:JSON.stringify(p)});
+      $('#lnk-patch-out').textContent = pretty(data);
+    }catch(e){ $('#lnk-patch-out').textContent = `Error ${e.status}: ${pretty(e.data)}` }
   }
   async function deleteLink(){
-    const id = +$('#lnk-id').value;
-    try{ const res = await fetch(`/api/links/${id}`,{method:'DELETE', credentials:'include', headers:{'X-Auth-Token':getToken()}}); $('#lnk-patch-out').textContent = res.ok ? 'Deleted' : `Failed ${res.status}` }
-    catch(e){ $('#lnk-patch-out').textContent = `Error: ${e}` }
+    const id = parseInt($('#lnk-id').value,10);
+    try{
+      const res = await fetch(`/api/links/${id}`,{method:'DELETE', credentials:'include', headers:{'X-Auth-Token':getToken()}});
+      $('#lnk-patch-out').textContent = res.ok ? 'Deleted' : `Failed ${res.status}`;
+    }catch(e){ $('#lnk-patch-out').textContent = `Error: ${e}` }
   }
 
-  // ---- Icons ----
-  async function listIcons(){ try{ const d = await api('/api/icons'); $('#icons-list').textContent = pretty(d) }catch(e){ $('#icons-list').textContent = `Error ${e.status}: ${pretty(e.data)}` } }
-  async function upsertIcon(){ const p={code:$('#ic-code').value.trim(), image_url:$('#ic-img').value.trim(), description:$('#ic-desc').value.trim()||null};
-    try{ const d = await api('/api/icons',{method:'POST', body:JSON.stringify(p)}); $('#icons-upsert').textContent = pretty(d) }
-    catch(e){ $('#icons-upsert').textContent = `Error ${e.status}: ${pretty(e.data)}` } }
-  async function grantIcon(){ const uid=+$('#gi-user').value, code=$('#gi-code').value.trim(), displayed=$('#gi-displayed').value==='true';
-    try{ const d = await api(`/api/users/${uid}/icons/${encodeURIComponent(code)}`,{method:'POST', body:JSON.stringify({displayed})}); $('#gi-out').textContent = pretty(d) }
-    catch(e){ $('#gi-out').textContent = `Error ${e.status}: ${pretty(e.data)}` } }
+  // ===== Icons =====
+  async function listIcons(){
+    try{
+      const data = await api('/api/icons');
+      $('#icons-list').textContent = pretty(data);
+    }catch(e){ $('#icons-list').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+  }
+  async function upsertIcon(){
+    const payload = {code:$('#ic-code').value.trim(), image_url:$('#ic-img').value.trim(), description:$('#ic-desc').value.trim()||null};
+    try{
+      const data = await api('/api/icons',{method:'POST', body:JSON.stringify(payload)});
+      $('#icons-upsert').textContent = pretty(data);
+    }catch(e){ $('#icons-upsert').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+  }
+  async function grantIcon(){
+    const uid = parseInt($('#gi-user').value,10);
+    const code = $('#gi-code').value.trim();
+    const displayed = $('#gi-displayed').value === 'true';
+    try{
+      const data = await api(`/api/users/${uid}/icons/${encodeURIComponent(code)}`,{method:'POST', body:JSON.stringify({displayed})});
+      $('#gi-out').textContent = pretty(data);
+    }catch(e){ $('#gi-out').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+  }
 
-  // ---- GIFs ----
+  // ===== GIFs =====
   async function listGifs(){
-    const q = encodeURIComponent($('#gifs-q').value.trim()); const nsfw=$('#gifs-nsfw').value;
+    const q = encodeURIComponent($('#gifs-q').value.trim());
+    const nsfw = $('#gifs-nsfw').value;
     try{
       const data = await api(`/api/admin/gifs?q=${q}&nsfw=${nsfw}`);
       const tb = $('#gifs-body'); tb.innerHTML = '';
       for(const g of data){
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${g.id}</td><td>${escapeHtml(g.title)}</td><td>${g.anime||''}</td><td>${g.nsfw}</td><td><a href="${g.url}" target="_blank" rel="noopener">open</a></td>`;
+        tr.innerHTML = `<td>${g.id}</td><td>${escapeHtml(g.title)}</td><td>${g.anime||''}</td><td>${g.nsfw}</td>
+                        <td><a href="${g.url}" target="_blank" rel="noopener">open</a></td>`;
         tb.appendChild(tr);
       }
-    }catch(e){ $('#gifs-body').innerHTML = `<tr><td colspan="5">Error ${e.status}: ${escapeHtml(pretty(e.data))}</td></tr>` }
+    }catch(e){
+      $('#gifs-body').innerHTML = `<tr><td colspan="5">Error ${e.status}: ${escapeHtml(pretty(e.data))}</td></tr>`;
+    }
   }
 
-  // ---- Visits ----
-  async function visitsGet(){ try{ const d = await api('/api/visits/value'); $('#visitsOut').textContent = pretty(d) }catch(e){ $('#visitsOut').textContent = `Error ${e.status}: ${pretty(e.data)}` } }
-  async function visitsInc(){ try{ const r = await fetch('/api/visits/increment',{method:'POST', credentials:'include', headers:{'X-Auth-Token':getToken()}}); $('#visitsOut').textContent = r.ok ? 'Incremented' : `Failed ${r.status}` }catch(e){ $('#visitsOut').textContent = `Error: ${e}` } }
+  // ===== Visits =====
+  async function visitsGet(){
+    try{ const data = await api('/api/visits/value'); $('#visitsOut').textContent = pretty(data); }
+    catch(e){ $('#visitsOut').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+  }
+  async function visitsInc(){
+    try{
+      const res = await fetch('/api/visits/increment',{method:'POST', credentials:'include', headers:{'X-Auth-Token':getToken()}});
+      $('#visitsOut').textContent = res.ok ? 'Incremented' : `Failed ${res.status}`;
+    }catch(e){ $('#visitsOut').textContent = `Error: ${e}` }
+  }
 
-  // ---- Media GC ----
-  async function mediaGC(){ const age = +$('#gc-age').value || 0;
-    try{ const d = await api(`/api/admin/media/gc?min_age_seconds=${age}`,{method:'POST'}); $('#gcOut').textContent = pretty(d) }
-    catch(e){ $('#gcOut').textContent = `Error ${e.status}: ${pretty(e.data)}` } }
+  // ===== Media GC =====
+  async function mediaGC(){
+    const age = parseInt($('#gc-age').value,10) || 0;
+    try{
+      const data = await api(`/api/admin/media/gc?min_age_seconds=${age}`,{method:'POST'});
+      $('#gcOut').textContent = pretty(data);
+    }catch(e){ $('#gcOut').textContent = `Error ${e.status}: ${pretty(e.data)}` }
+  }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])) }
+
+  init();
 </script>
 </body>
 </html>
