@@ -159,6 +159,51 @@
 .sound-toggle.hidden { display: none; }
 .sound-toggle .dot { width:8px; height:8px; border-radius:50%; background:#ff6b6b; }
 .sound-toggle.on .dot { background:#1dd1a1; }
+/* Name Effects */
+.name.glow {
+  text-shadow: 0 0 8px #85a3ff, 0 0 12px #85a3ff, 0 0 16px #85a3ff;
+}
+.name.neon {
+  color: #0ff;
+  text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
+}
+.name.rainbow {
+  background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow 3s linear infinite;
+}
+@keyframes rainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* Background Effects */
+.bg.night::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,50,0.4);
+  mix-blend-mode: multiply;
+}
+.bg.rain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/static/effects/rain.gif");
+  background-size: cover;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.bg.snow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/static/effects/snow.gif");
+  background-size: cover;
+  opacity: 0.5;
+  pointer-events: none;
+}
 
     </style>
 </head>
@@ -264,7 +309,12 @@
           bgEl.innerHTML = `<img src="${data.background_url}" alt="Background">`;
         }
       }
-
+if (bgEl) {
+  bgEl.classList.remove('night','rain','snow');
+  if (data.background_effect && data.background_effect !== 'none') {
+    bgEl.classList.add(data.background_effect);
+  }
+}
       // Audio (Song hat Vorrang vor Video-Ton)
       if (bgAudio) { try { bgAudio.pause(); } catch{} bgAudio.remove(); bgAudio = null; }
       if (data.song_url) {
@@ -288,11 +338,17 @@
       // Profil/Badges/Links wie gehabt
         const pfp = document.getElementById('pfp');
         if (pfp) pfp.src = data.profile_picture || '/static/icon.png';
-        const nameEl = document.getElementById('name');
-        if (nameEl) {
-        const mode = data.display_name_mode || 'slug';
-        nameEl.textContent = (mode === 'username' ? (data.user_username || data.slug) : data.slug) || 'User';
-        }  
+       const nameEl = document.getElementById('name');
+if (nameEl) {
+  const mode = data.display_name_mode || 'slug';
+  nameEl.textContent = (mode === 'username' ? (data.user_username || data.slug) : data.slug) || 'User';
+
+  // Effekt-Klassen setzen
+  nameEl.classList.remove('glow','neon','rainbow');
+  if (data.name_effect && data.name_effect !== 'none') {
+    nameEl.classList.add(data.name_effect);
+  }
+}
     const quoteEl = document.getElementById('quote'); if (quoteEl) quoteEl.textContent = data.quote || '';
       const locEl = document.getElementById('loc');
       if (locEl) {
