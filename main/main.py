@@ -1247,7 +1247,7 @@ def get_linktree(slug: str):
             "id": i["id"], "code": i["code"], "image_url": i["image_url"],
             "description": i.get("description"),
             "displayed": i.get("displayed", False),
-            "acquired_at": (i["acquired_at"].isoformat() if i.get("acquired_at") else None),
+            "acquired_at": i.get("acquired_at"),
         }
         for i in lt["icons"] if i.get("displayed")
     ]
