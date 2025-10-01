@@ -204,7 +204,15 @@
   opacity: 0.5;
   pointer-events: none;
 }
-
+.card {
+  background: rgba(23, 27, 59, var(--card-alpha, 0.8)); /* Default 80% deckend */
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem 2rem;
+  max-width: 600px;
+  width: 100%;
+  backdrop-filter: blur(12px);
+}
     </style>
 </head>
 
@@ -215,6 +223,8 @@
     <span id="soundLabel">Sound off</span>
     </button>
     <main>
+        <div class="card" id="card">
+
         <img id="pfp" class="pfp" src="/static/icon.png" alt="Profile picture" />
         <div id="name" class="name">User</div>
         <div id="quote" class="quote">—</div>
@@ -222,6 +232,8 @@
         <div class="badges" id="badges"></div>
 
         <div class="links" id="links"></div>
+          </div>
+
     </main>
 
     <footer>
@@ -334,7 +346,14 @@ if (bgEl) {
       }
       soundOn = false;
       updateSoundUI();
-
+const cardEl = document.getElementById('card');
+if (cardEl) {
+  // transparency = 0 (undurchsichtig) → alpha = 1
+  // transparency = 100 (voll durchsichtig) → alpha = 0
+  const t = data.transparency ?? 0;
+  const alpha = 1 - (Math.min(Math.max(t, 0), 100) / 100);
+  cardEl.style.setProperty('--card-alpha', alpha.toString());
+}
       // Profil/Badges/Links wie gehabt
         const pfp = document.getElementById('pfp');
         if (pfp) pfp.src = data.profile_picture || '/static/icon.png';
