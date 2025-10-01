@@ -944,16 +944,24 @@
             }
         boot();
         async function uploadFile(inputId, endpoint) {
-  const f = $(inputId).files[0];
-  if (!f) return null;
-  const fd = new FormData();
-  fd.append("file", f);
-  const r = await fetch(endpoint, { method:"POST", headers:{ "X-Auth-Token": token() }, body: fd });
-  if (!r.ok) throw new Error(await r.text());
-  const { url } = await r.json();
-  return url;
-}
-
+    const f = $(inputId).files[0];
+    if (!f) return null;
+    const fd = new FormData();
+    fd.append("file", f);
+    const r = await fetch(endpoint, { method:"POST", headers:{ "X-Auth-Token": token() }, body: fd });
+    if (!r.ok) throw new Error(await r.text());
+    const { url } = await r.json();
+    return url;
+    }
+    async function fetchUpload(inputId, endpoint){
+    const f = $(inputId).files[0];
+    if (!f) return null;
+    const fd = new FormData();
+    fd.append("file", f);
+    const r = await fetch(endpoint, { method:"POST", headers:{ "X-Auth-Token": token() }, body: fd });
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json();
+    }
 $('fileSong').addEventListener('change', async () => {
   try { 
     const url = await uploadFile('fileSong', '/api/users/me/song');
@@ -964,8 +972,9 @@ $('fileSong').addEventListener('change', async () => {
 
 $('fileBg').addEventListener('change', async () => {
   try { 
-    const url = await uploadFile('fileBg', '/api/users/me/background');
-    $('inBg').value = url;
+    const res = await fetchUpload('fileBg', '/api/users/me/background');
+    $('inBg').value = res.url;
+    if (res.is_video) $('inVideo').value = 'true';
     showMsg(msgMeta, 'Background uploaded', true);
   } catch(e){ showMsg(msgMeta, 'Background upload failed', false); }
 });
