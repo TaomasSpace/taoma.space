@@ -157,79 +157,96 @@
         © <span id="year"></span> TAOMA™
     </footer>
 
-    <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
+   <script>
+(() => {
+  'use strict';
 
-        async function loadTree() {
-            const slug = location.pathname.split("/").pop();
-            const r = await fetch(`/api/linktrees/${slug}`);
-            if (!r.ok) return;
-            const data = await r.json();
+  const yearEl = document.getElementById('year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-            // Background
-            if (data.background_url) {
-            if (data.background_is_video) {
-                // render video with the right attributes
-                bgEl.innerHTML = `
-                <video
-                    id="bgvid"
-                    src="${data.background_url}"
-                    autoplay
-                    muted
-                    loop
-                    playsinline
-                    webkit-playsinline
-                    preload="auto"
-                ></video>`;
-                const v = document.getElementById("bgvid");
-                // defensive: ensure muted + try to play
-                v.muted = true;
-                const tryPlay = () => v.play().catch(() => {/* ignored */});
-                // Try immediately
-                tryPlay();
-                // If autoplay got blocked, play on first interaction
-                const resume = () => { tryPlay(); window.removeEventListener("pointerdown", resume, { once:true }); };
-                window.addEventListener("pointerdown", resume, { once:true });
-                // Optional: when visible again
-                document.addEventListener("visibilitychange", () => { if (!document.hidden) tryPlay(); });
-            } else {
-                bgEl.innerHTML = `<img src="${data.background_url}" alt="Background">`;
-            }
-            // Profile
-            document.getElementById("pfp").src = data.profile_picture || "/static/icon.png";
-            document.getElementById("name").textContent = data.slug;
-            document.getElementById("quote").textContent = data.quote || "";
-            if (data.location) {
-                document.getElementById("loc").innerHTML =
-                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg> ${data.location}`;
-            }
+  async function loadTree() {
+    try {
+      const slug = decodeURIComponent(location.pathname.split('/').pop() || '');
+      const r = await fetch(`/api/linktrees/${encodeURIComponent(slug)}`);
+      if (!r.ok) { console.warn('linktree fetch failed', r.status); return; }
+      const data = await r.json();
 
-            // Icons
-            const badgesEl = document.getElementById("badges");
-            data.icons?.forEach(ic => {
-                if (ic.displayed) {
-                    const el = document.createElement("span");
-                    el.className = "badge";
-                    el.innerHTML = `<img src="${ic.image_url}" alt="${ic.code}" style="width:16px;height:16px"> ${ic.code}`;
-                    badgesEl.appendChild(el);
-                }
-            });
-
-            // Links
-            const linksEl = document.getElementById("links");
-            data.links?.forEach(l => {
-                if (!l.is_active) return;
-                const el = document.createElement("a");
-                el.className = "link";
-                el.href = l.url;
-                el.target = "_blank";
-                el.innerHTML = `${l.icon_url ? `<img src="${l.icon_url}">` : ''} <span>${l.label || l.url}</span>`;
-                linksEl.appendChild(el);
-            });
+      // Background
+      const bgEl = document.getElementById('bg');
+      if (bgEl && data.background_url) {
+        if (data.background_is_video) {
+          bgEl.innerHTML = `
+            <video id="bgvid"
+                   src="${data.background_url}"
+                   autoplay muted loop
+                   playsinline webkit-playsinline
+                   preload="auto"></video>`;
+          const v = document.getElementById('bgvid');
+          v.muted = true;
+          const tryPlay = () => v && v.play && v.play().catch(() => {});
+          tryPlay();
+          const resume = () => { tryPlay(); window.removeEventListener('pointerdown', resume, { once:true }); };
+          window.addEventListener('pointerdown', resume, { once:true });
+          document.addEventListener('visibilitychange', () => { if (!document.hidden) tryPlay(); });
+        } else {
+          bgEl.innerHTML = `<img src="${data.background_url}" alt="Background">`;
         }
+      }
 
-        loadTree();
-    </script>
+      // Profile
+      const pfp = document.getElementById('pfp');
+      if (pfp) pfp.src = data.profile_picture || '/static/icon.png';
+      const nameEl = document.getElementById('name');
+      if (nameEl) nameEl.textContent = data.slug || 'User';
+      const quoteEl = document.getElementById('quote');
+      if (quoteEl) quoteEl.textContent = data.quote || '';
+
+      const locEl = document.getElementById('loc');
+      if (locEl) {
+        locEl.innerHTML = '';
+        if (data.location) {
+          locEl.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg> ${data.location}`;
+        }
+      }
+
+      // Badges
+      const badgesEl = document.getElementById('badges');
+      if (badgesEl) {
+        badgesEl.innerHTML = '';
+        (data.icons || []).forEach(ic => {
+          if (ic.displayed) {
+            const el = document.createElement('span');
+            el.className = 'badge';
+            el.innerHTML = `<img src="${ic.image_url}" alt="${ic.code}" style="width:16px;height:16px"> ${ic.code}`;
+            badgesEl.appendChild(el);
+          }
+        });
+      }
+
+      // Links
+      const linksEl = document.getElementById('links');
+      if (linksEl) {
+        linksEl.innerHTML = '';
+        (data.links || []).forEach(l => {
+          if (!l.is_active) return;
+          const a = document.createElement('a');
+          a.className = 'link';
+          a.href = l.url;
+          a.target = '_blank';
+          a.rel = 'noreferrer';
+          a.innerHTML = `${l.icon_url ? `<img src="${l.icon_url}" alt="">` : ''}<span>${l.label || l.url}</span>`;
+          linksEl.appendChild(a);
+        });
+      }
+    } catch (e) {
+      console.error('loadTree failed:', e);
+    }
+  }
+
+  loadTree();
+})();
+</script>
+
 </body>
 
 </html>
