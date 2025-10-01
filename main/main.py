@@ -634,14 +634,15 @@ def verify(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")
 
 
 @app.get(
-    "/api/gifs/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
+    "/api/gif/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
 )
 def admin_page():
     return FileResponse("gifApiAdmin.html")
 
-@app.get("/admin", include_in_schema=False)
-def admin_page(user: dict = Depends(require_admin)):
-    # nur Admins kommen hierhin
+@app.get(
+    "/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
+)
+def admin_page():
     return FileResponse("admin.html")
 
 @app.get("/api", response_class=HTMLResponse)
