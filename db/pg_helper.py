@@ -143,7 +143,9 @@ class PgGifDB:
             with conn.cursor() as cur:
                 # 1) Grundschema (inkl. GIF-Indizes via IF NOT EXISTS)
                 cur.execute(DDL)
-
+                cur.execute("""ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS display_name_mode TEXT NOT NULL DEFAULT 'slug'
+    CHECK (display_name_mode IN ('slug','username'));""")
                 # 2) Nachrüst-Änderungen idempotent
                 cur.execute(
                     """

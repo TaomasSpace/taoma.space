@@ -1096,7 +1096,16 @@ def get_linktree(slug: str):
     if not lt:
         raise HTTPException(404, "Linktree not found")
 
-    # Nur **angezeigte** Icons nach außen geben
+    # User-Daten holen (Username & Avatar)
+    user_username = None
+    user_pfp = None
+    with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+        cur.execute("SELECT username, profile_picture FROM users WHERE id=%s", (lt["user_id"],))
+        row = cur.fetchone()
+        if row:
+            user_username = row[0]
+            user_pfp = row[1]
+
     icons = [
         {
             "id": i["id"],
@@ -1104,9 +1113,7 @@ def get_linktree(slug: str):
             "image_url": i["image_url"],
             "description": i.get("description"),
             "displayed": i.get("displayed", False),
-            "acquired_at": (
-                i["acquired_at"].isoformat() if i.get("acquired_at") else None
-            ),
+            "acquired_at": (i["acquired_at"].isoformat() if i.get("acquired_at") else None),
         }
         for i in lt["icons"]
         if i.get("displayed")
@@ -1137,6 +1144,9 @@ def get_linktree(slug: str):
         "transparency": lt.get("transparency", 0),
         "name_effect": lt.get("name_effect", "none"),
         "background_effect": lt.get("background_effect", "none"),
+        "display_name_mode": lt.get("display_name_mode", "slug"),
+        "profile_picture": user_pfp,          # <-- NEU
+        "user_username": user_username,       # <-- NEU
         "links": links,
         "icons": icons,
     }

@@ -286,9 +286,14 @@
       updateSoundUI();
 
       // Profil/Badges/Links wie gehabt
-      const pfp = document.getElementById('pfp'); if (pfp) pfp.src = data.profile_picture || '/static/icon.png';
-      const nameEl = document.getElementById('name'); if (nameEl) nameEl.textContent = data.slug || 'User';
-      const quoteEl = document.getElementById('quote'); if (quoteEl) quoteEl.textContent = data.quote || '';
+        const pfp = document.getElementById('pfp');
+        if (pfp) pfp.src = data.profile_picture || '/static/icon.png';
+        const nameEl = document.getElementById('name');
+        if (nameEl) {
+        const mode = data.display_name_mode || 'slug';
+        nameEl.textContent = (mode === 'username' ? (data.user_username || data.slug) : data.slug) || 'User';
+        }  
+    const quoteEl = document.getElementById('quote'); if (quoteEl) quoteEl.textContent = data.quote || '';
       const locEl = document.getElementById('loc');
       if (locEl) {
         locEl.innerHTML = data.location

@@ -533,7 +533,13 @@
                         <label for="inTrans">Transparency (0–100)</label>
                         <input id="inTrans" class="input" type="number" min="0" max="100" value="0">
                     </div>
-
+                <div class="field">
+                <label for="inDisplayName">Display Name</label>
+                <select id="inDisplayName" class="select">
+                    <option value="slug">Slug</option>
+                    <option value="username">Username</option>
+                </select>
+                </div>
                     <div class="field">
                         <label for="inNameFx">Name Effect</label>
                         <select id="inNameFx" class="select">
@@ -741,6 +747,7 @@
             $('inSong').value = lt.song_url || '';
             $('inBg').value = lt.background_url || '';
             $('inVideo').value = String(!!lt.background_is_video);
+            $('inDisplayName').value = lt.display_name_mode || 'slug';
             $('inTrans').value = lt.transparency ?? 0;
             $('inNameFx').value = lt.name_effect || 'none';
             $('inBgFx').value = lt.background_effect || 'none';
@@ -833,7 +840,8 @@
                 background_is_video: $('inVideo').value === 'true',
                 transparency: parseInt($('inTrans').value || '0', 10),
                 name_effect: $('inNameFx').value,
-                background_effect: $('inBgFx').value
+                background_effect: $('inBgFx').value,
+                display_name_mode: $('inDisplayName').value, 
             };
             if (!exists) {
                 const r = await fetch('/api/linktrees', { method: 'POST', headers: headers(), body: JSON.stringify(body) });
