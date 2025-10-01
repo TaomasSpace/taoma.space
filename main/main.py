@@ -1301,8 +1301,15 @@ async def upload_background(file: UploadFile = File(...), current: dict = Depend
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
-    db.update_linktree_by_user(current["id"], background_url=url)
-    return {"url": url}
+
+    is_video = file.content_type.startswith("video/")
+
+    # <-- WICHTIG: Flag mitsetzen
+    db.update_linktree_by_user(current["id"],
+                               background_url=url,
+                               background_is_video=is_video)
+
+    return {"url": url, "is_video": is_video}
 
 @app.post("/api/users/me/linkicon")
 async def upload_linkicon(file: UploadFile = File(...), current: dict = Depends(require_user)):

@@ -167,15 +167,34 @@
             const data = await r.json();
 
             // Background
-            const bgEl = document.getElementById("bg");
             if (data.background_url) {
-                if (data.background_is_video) {
-                    bgEl.innerHTML = `<video src="${data.background_url}" autoplay muted loop></video>`;
-                } else {
-                    bgEl.innerHTML = `<img src="${data.background_url}" alt="Background">`;
-                }
+            if (data.background_is_video) {
+                // render video with the right attributes
+                bgEl.innerHTML = `
+                <video
+                    id="bgvid"
+                    src="${data.background_url}"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    webkit-playsinline
+                    preload="auto"
+                ></video>`;
+                const v = document.getElementById("bgvid");
+                // defensive: ensure muted + try to play
+                v.muted = true;
+                const tryPlay = () => v.play().catch(() => {/* ignored */});
+                // Try immediately
+                tryPlay();
+                // If autoplay got blocked, play on first interaction
+                const resume = () => { tryPlay(); window.removeEventListener("pointerdown", resume, { once:true }); };
+                window.addEventListener("pointerdown", resume, { once:true });
+                // Optional: when visible again
+                document.addEventListener("visibilitychange", () => { if (!document.hidden) tryPlay(); });
+            } else {
+                bgEl.innerHTML = `<img src="${data.background_url}" alt="Background">`;
             }
-
             // Profile
             document.getElementById("pfp").src = data.profile_picture || "/static/icon.png";
             document.getElementById("name").textContent = data.slug;
