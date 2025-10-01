@@ -33,6 +33,7 @@ import io
 from PIL import Image, UnidentifiedImageError
 from typing import Literal
 import psycopg
+from urllib.parse import urlparse
 
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
@@ -127,7 +128,61 @@ def CheckPassword(hashedPassword: str, unhashedPassword: str) -> bool:
     except Exception:
         return False
 
+def _is_local_media_url(url: str) -> bool:
+    if not isinstance(url, str) or not url:
+        return False
+    # Erlaube nur genau deinen /media/<dirname>/... Pfad
+    prefix = f"/media/{UPLOAD_DIR.name}/"
+    return url.startswith(prefix)
 
+def _path_from_media_url(url: str) -> pathlib.Path | None:
+    if not _is_local_media_url(url):
+        return None
+    # Mappe /media/<dir>/<file> -> UPLOAD_DIR/<file>
+    name = url.rsplit("/", 1)[-1]
+    p = UPLOAD_DIR / name
+    # Finaler Schutz: Stelle sicher, dass die Datei im Upload-Verzeichnis liegt
+    try:
+        p.resolve().relative_to(UPLOAD_DIR.resolve())
+    except Exception:
+        return None
+    return p
+
+def _count_db_references(url: str) -> int:
+    if not url:
+        return 0
+    if not isinstance(db, PgGifDB):
+        # SQLite-Pfad: implementiere hier ggf. analog, oder immer 0 zurückgeben
+        with db_lock:
+            pass
+    with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+        total = 0
+        cur.execute("SELECT COUNT(*) FROM users WHERE profile_picture = %s", (url,))
+        total += int(cur.fetchone()[0])
+        cur.execute("SELECT COUNT(*) FROM linktrees WHERE song_url = %s", (url,))
+        total += int(cur.fetchone()[0])
+        cur.execute("SELECT COUNT(*) FROM linktrees WHERE background_url = %s", (url,))
+        total += int(cur.fetchone()[0])
+        cur.execute("SELECT COUNT(*) FROM linktree_links WHERE icon_url = %s", (url,))
+        total += int(cur.fetchone()[0])
+        return total
+
+def _delete_if_unreferenced(url: str) -> bool:
+    """Löscht die Datei, wenn lokales Media und DB-Referenzen == 0.
+    Gibt True zurück, wenn gelöscht wurde."""
+    if not _is_local_media_url(url):
+        return False
+    if _count_db_references(url) > 0:
+        return False
+    p = _path_from_media_url(url)
+    if not p or not p.exists():
+        return False
+    try:
+        p.unlink(missing_ok=True)
+        return True
+    except Exception as e:
+        logger.warning("Failed to delete unreferenced media %s: %s", url, e)
+        return False
 import bcrypt
 from psycopg.rows import dict_row
 
@@ -968,9 +1023,7 @@ def _safe_image_bytes(b: bytes) -> str:
 
 
 @app.post("/api/users/me/avatar", response_model=UserOut)
-async def upload_avatar(
-    file: UploadFile = File(...), current: dict = Depends(require_user)
-):
+async def upload_avatar(file: UploadFile = File(...), current: dict = Depends(require_user)):
     if file.content_type not in ALLOWED_MIME:
         raise HTTPException(415, "Unsupported media type")
     data = await file.read()
@@ -981,20 +1034,27 @@ async def upload_avatar(
     if not detected:
         raise HTTPException(400, "File is not a valid image")
 
-    # Dateiendung nach MIME (beibehalten)
-    ext = {
-        "image/png": "png",
-        "image/jpeg": "jpg",
-        "image/webp": "webp",
-        "image/gif": "gif",
-    }[file.content_type]
+    # Altes Bild merken (für Cleanup)
+    old_url = None
+    try:
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            cur.execute("SELECT profile_picture FROM users WHERE id=%s", (current["id"],))
+            row = cur.fetchone()
+            old_url = row[0] if row else None
+    except Exception:
+        old_url = None
 
+    ext = {"image/png":"png","image/jpeg":"jpg","image/webp":"webp","image/gif":"gif"}[file.content_type]
     fname = f"user{current['id']}_{uuid.uuid4().hex}.{ext}"
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
+    url = f"/media/{UPLOAD_DIR.name}/{fname}"
 
-    url = f"/media/{UPLOAD_DIR.name}/{fname}"  # -> /media/avatars/<file>
     db.updateUser(current["id"], profile_picture=url)
+
+    # Cleanup (nach erfolgreichem Update)
+    if old_url and old_url != url:
+        _delete_if_unreferenced(old_url)
 
     row = db.getUser(current["id"])
     row["admin"] = bool(row.get("admin", False))
@@ -1170,31 +1230,32 @@ def add_link_ep(
 
 
 @app.patch("/api/links/{link_id}", response_model=dict)
-def update_link_ep(
-    link_id: int, payload: LinkUpdateIn, user: dict = Depends(require_user)
-):
+def update_link_ep(link_id: int, payload: LinkUpdateIn, user: dict = Depends(require_user)):
     _ensure_pg()
-    # Owner ermitteln via Join
-    with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
-        cur.execute(
-            """
-            SELECT lt.user_id, l.linktree_id
+    with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute("""
+            SELECT lt.user_id, l.linktree_id, l.icon_url
               FROM linktree_links l
               JOIN linktrees lt ON lt.id = l.linktree_id
              WHERE l.id = %s
-        """,
-            (link_id,),
-        )
+        """, (link_id,))
         row = cur.fetchone()
         if not row:
             raise HTTPException(404, "Link not found")
-        owner_id, linktree_id = int(row[0]), int(row[1])
+        owner_id, linktree_id, old_icon = int(row["user_id"]), int(row["linktree_id"]), row["icon_url"]
+
     if not (user.get("admin") or user["id"] == owner_id):
         raise HTTPException(403, "Forbidden (owner or admin only)")
 
-    db.update_link(
-        link_id, **{k: v for k, v in payload.model_dump(exclude_unset=True).items()}
-    )
+    # Werde die neue icon_url gleich aus dem Payload holen
+    new_icon = payload.icon_url if payload.icon_url is not None else old_icon
+
+    db.update_link(link_id, **{k: v for k, v in payload.model_dump(exclude_unset=True).items()})
+
+    # Cleanup, wenn sich icon_url geändert hat
+    if old_icon and old_icon != new_icon:
+        _delete_if_unreferenced(old_icon)
+
     return {"ok": True}
 
 
@@ -1281,13 +1342,34 @@ async def upload_song(file: UploadFile = File(...), current: dict = Depends(requ
     data = await file.read()
     if len(data) > MAX_AUDIO_BYTES:
         raise HTTPException(413, "File too large (max 10MB)")
+
+    old_url = None
+    try:
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            cur.execute("""
+                SELECT lt.song_url
+                  FROM linktrees lt
+                  JOIN users u ON u.linktree_id = lt.id
+                 WHERE u.id = %s
+            """, (current["id"],))
+            row = cur.fetchone()
+            old_url = row[0] if row else None
+    except Exception:
+        old_url = None
+
     ext = file.filename.split(".")[-1].lower()
     fname = f"user{current['id']}_song_{uuid.uuid4().hex}.{ext}"
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
     db.update_linktree_by_user(current["id"], song_url=url)
+
+    # Cleanup
+    if old_url and old_url != url:
+        _delete_if_unreferenced(old_url)
+
     return {"url": url}
+
 
 @app.post("/api/users/me/background")
 async def upload_background(file: UploadFile = File(...), current: dict = Depends(require_user)):
@@ -1296,21 +1378,36 @@ async def upload_background(file: UploadFile = File(...), current: dict = Depend
     data = await file.read()
     if len(data) > MAX_UPLOAD_BYTES * 5:
         raise HTTPException(413, "File too large (max 10MB)")
+
+    # Altes BG merken
+    old_url = None
+    try:
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            cur.execute("""
+                SELECT lt.background_url
+                  FROM linktrees lt
+                  JOIN users u ON u.linktree_id = lt.id
+                 WHERE u.id = %s
+            """, (current["id"],))
+            row = cur.fetchone()
+            old_url = row[0] if row else None
+    except Exception:
+        old_url = None
+
     ext = file.filename.split(".")[-1].lower()
     fname = f"user{current['id']}_bg_{uuid.uuid4().hex}.{ext}"
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
-
     is_video = file.content_type.startswith("video/")
 
-    # <-- WICHTIG: Flag mitsetzen
-    db.update_linktree_by_user(current["id"],
-                               background_url=url,
-                               background_is_video=is_video)
+    db.update_linktree_by_user(current["id"], background_url=url, background_is_video=is_video)
+
+    # Cleanup
+    if old_url and old_url != url:
+        _delete_if_unreferenced(old_url)
 
     return {"url": url, "is_video": is_video}
-
 @app.post("/api/users/me/linkicon")
 async def upload_linkicon(file: UploadFile = File(...), current: dict = Depends(require_user)):
     if file.content_type not in ALLOWED_MIME:
@@ -1329,3 +1426,30 @@ async def upload_linkicon(file: UploadFile = File(...), current: dict = Depends(
     out_path.write_bytes(data)
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
     return {"url": url}
+
+@app.post("/api/admin/media/gc", dependencies=[Depends(require_admin)])
+def media_garbage_collect(min_age_seconds: int = 60):
+    """Löscht unreferenzierte Dateien im Upload-Verzeichnis, die älter als min_age_seconds sind."""
+    deleted = []
+    skipped = []
+    now = datetime.now().timestamp()
+
+    for p in UPLOAD_DIR.iterdir():
+        if not p.is_file():
+            continue
+        url = f"/media/{UPLOAD_DIR.name}/{p.name}"
+        age = now - p.stat().st_mtime
+        if age < min_age_seconds:
+            skipped.append(p.name)  # zu frisch
+            continue
+        try:
+            if _is_local_media_url(url) and _count_db_references(url) == 0:
+                p.unlink(missing_ok=True)
+                deleted.append(p.name)
+            else:
+                skipped.append(p.name)
+        except Exception as e:
+            logger.warning("GC failed for %s: %s", p, e)
+            skipped.append(p.name)
+
+    return {"ok": True, "deleted": deleted, "skipped": skipped}
