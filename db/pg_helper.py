@@ -176,6 +176,24 @@ class PgGifDB:
                     CREATE INDEX IF NOT EXISTS idx_user_icons_user ON user_icons(user_id);
                 """
                 )
+                cur.execute("""ALTER TABLE user_icons ADD COLUMN icon_id integer;
+
+UPDATE user_icons ui
+SET icon_id = i.id
+FROM icons i
+WHERE i.code = ui.icon_code;
+
+ALTER TABLE user_icons
+  ALTER COLUMN icon_id SET NOT NULL,
+  ADD CONSTRAINT user_icons_icon_id_fkey
+    FOREIGN KEY (icon_id) REFERENCES icons(id) ON DELETE CASCADE;
+
+-- optional: alten Code-Spalten entfernen, wenn alles passt
+ALTER TABLE user_icons DROP COLUMN icon_code;
+
+-- sinnvolle Indizes
+CREATE INDEX IF NOT EXISTS user_icons_user_id_idx ON user_icons(user_id);
+CREATE INDEX IF NOT EXISTS user_icons_icon_id_idx ON user_icons(icon_id);""")
 
             conn.commit()
 
@@ -799,8 +817,16 @@ class PgGifDB:
                 WHERE ui.user_id = %s
                 ORDER BY i.code
             """, (lt["user_id"],))
+            rows = cur.fetchall()
 
-            icons = cur.fetchall()
+            icons = [{
+                "id": r["id"],
+                "code": r["code"],
+                "image_url": r["image_url"],
+                "description": r["description"],
+                "displayed": r["displayed"],
+                "acquired_at": (r["acquired_at"].isoformat() if r["acquired_at"] else None),
+            } for r in rows]
             lt["links"] = links
             lt["icons"] = icons
             return lt
