@@ -137,12 +137,38 @@
             font-size: .85rem;
             color: var(--muted);
         }
+        .sound-toggle {
+  position: fixed;
+  right: 14px;
+  bottom: 16px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem .6rem;
+  border-radius: 999px;
+  background: #ffffff1a;
+  color: var(--ink);
+  border: 1px solid #ffffff33;
+  box-shadow: var(--shadow);
+  font-weight: 700;
+  user-select: none;
+  cursor: pointer;
+  backdrop-filter: blur(6px) saturate(1.2);
+}
+.sound-toggle.hidden { display: none; }
+.sound-toggle .dot { width:8px; height:8px; border-radius:50%; background:#ff6b6b; }
+.sound-toggle.on .dot { background:#1dd1a1; }
+
     </style>
 </head>
 
 <body>
     <div class="bg" id="bg"></div>
-
+    <button id="soundBtn" class="sound-toggle hidden" aria-label="Toggle sound">
+    <span class="dot" aria-hidden="true"></span>
+    <span id="soundLabel">Sound off</span>
+    </button>
     <main>
         <img id="pfp" class="pfp" src="/static/icon.png" alt="Profile picture" />
         <div id="name" class="name">User</div>
@@ -157,22 +183,71 @@
         © <span id="year"></span> TAOMA™
     </footer>
 
-   <script>
+<script>
 (() => {
   'use strict';
 
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  const soundBtn = document.getElementById('soundBtn');
+  const soundLabel = document.getElementById('soundLabel');
+  let bgVideo = null;
+  let bgAudio = null;
+  let soundOn = false;
+
+  function updateSoundUI() {
+    if (!soundBtn) return;
+    soundBtn.classList.toggle('on', soundOn);
+    soundLabel.textContent = soundOn ? 'Sound on' : 'Sound off';
+  }
+
+  async function turnSoundOn() {
+    try {
+      if (bgAudio) {
+        bgAudio.muted = false;
+        await bgAudio.play();
+      } else if (bgVideo) {
+        bgVideo.muted = false;
+        await bgVideo.play();
+      } else {
+        return; // nichts zum Spielen
+      }
+      soundOn = true;
+      updateSoundUI();
+      soundBtn.classList.remove('hidden');
+    } catch (_) {
+      // bleibt off; Button bleibt sichtbar
+    }
+  }
+
+  function turnSoundOff() {
+    try {
+      if (bgAudio) { bgAudio.muted = true; }
+      if (bgVideo) { bgVideo.muted = true; }
+      soundOn = false;
+      updateSoundUI();
+    } catch(_) {}
+  }
+
+  soundBtn?.addEventListener('click', () => {
+    if (soundOn) turnSoundOff(); else turnSoundOn();
+  });
+
+  // Ein “erster User-Input” schaltet optional sofort Ton an
+  const firstGesture = () => { turnSoundOn(); window.removeEventListener('pointerdown', firstGesture); };
+  window.addEventListener('pointerdown', firstGesture, { once:true });
+
   async function loadTree() {
     try {
       const slug = decodeURIComponent(location.pathname.split('/').pop() || '');
       const r = await fetch(`/api/linktrees/${encodeURIComponent(slug)}`);
-      if (!r.ok) { console.warn('linktree fetch failed', r.status); return; }
+      if (!r.ok) return;
       const data = await r.json();
 
-      // Background
+      // Background (Video oder Bild)
       const bgEl = document.getElementById('bg');
+      bgVideo = null;
       if (bgEl && data.background_url) {
         if (data.background_is_video) {
           bgEl.innerHTML = `
@@ -181,35 +256,45 @@
                    autoplay muted loop
                    playsinline webkit-playsinline
                    preload="auto"></video>`;
-          const v = document.getElementById('bgvid');
-          v.muted = true;
-          const tryPlay = () => v && v.play && v.play().catch(() => {});
-          tryPlay();
-          const resume = () => { tryPlay(); window.removeEventListener('pointerdown', resume, { once:true }); };
-          window.addEventListener('pointerdown', resume, { once:true });
-          document.addEventListener('visibilitychange', () => { if (!document.hidden) tryPlay(); });
+          bgVideo = document.getElementById('bgvid');
+          bgVideo.muted = true;
+          bgVideo.play().catch(() => {});
+          document.addEventListener('visibilitychange', () => { if (!document.hidden) bgVideo?.play().catch(()=>{}); });
         } else {
           bgEl.innerHTML = `<img src="${data.background_url}" alt="Background">`;
         }
       }
 
-      // Profile
-      const pfp = document.getElementById('pfp');
-      if (pfp) pfp.src = data.profile_picture || '/static/icon.png';
-      const nameEl = document.getElementById('name');
-      if (nameEl) nameEl.textContent = data.slug || 'User';
-      const quoteEl = document.getElementById('quote');
-      if (quoteEl) quoteEl.textContent = data.quote || '';
+      // Audio (Song hat Vorrang vor Video-Ton)
+      if (bgAudio) { try { bgAudio.pause(); } catch{} bgAudio.remove(); bgAudio = null; }
+      if (data.song_url) {
+        bgAudio = document.createElement('audio');
+        bgAudio.src = data.song_url;
+        bgAudio.loop = true;
+        bgAudio.preload = 'auto';
+        bgAudio.muted = true;            // Autoplay-freundlich starten
+        document.body.appendChild(bgAudio);
+        bgAudio.play().catch(()=>{});
+        soundBtn?.classList.remove('hidden'); // Button zeigen – Nutzer kann unmute’n
+      } else if (data.background_is_video && bgVideo) {
+        // Kein Song → Videoton anbieten
+        soundBtn?.classList.remove('hidden');
+      } else {
+        soundBtn?.classList.add('hidden'); // nichts abzuspielen
+      }
+      soundOn = false;
+      updateSoundUI();
 
+      // Profil/Badges/Links wie gehabt
+      const pfp = document.getElementById('pfp'); if (pfp) pfp.src = data.profile_picture || '/static/icon.png';
+      const nameEl = document.getElementById('name'); if (nameEl) nameEl.textContent = data.slug || 'User';
+      const quoteEl = document.getElementById('quote'); if (quoteEl) quoteEl.textContent = data.quote || '';
       const locEl = document.getElementById('loc');
       if (locEl) {
-        locEl.innerHTML = '';
-        if (data.location) {
-          locEl.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg> ${data.location}`;
-        }
+        locEl.innerHTML = data.location
+          ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg> ${data.location}` : '';
       }
 
-      // Badges
       const badgesEl = document.getElementById('badges');
       if (badgesEl) {
         badgesEl.innerHTML = '';
@@ -223,7 +308,6 @@
         });
       }
 
-      // Links
       const linksEl = document.getElementById('links');
       if (linksEl) {
         linksEl.innerHTML = '';
