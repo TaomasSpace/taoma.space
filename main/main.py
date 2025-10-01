@@ -34,6 +34,10 @@ from PIL import Image, UnidentifiedImageError
 from typing import Literal
 import psycopg
 from typing import Literal
+import bcrypt
+from psycopg.rows import dict_row
+from fastapi.responses import JSONResponse
+from fastapi import Request
 
 DisplayNameMode = Literal['slug','username']
 load_dotenv()
@@ -86,10 +90,15 @@ def _b64d(s: str) -> bytes:
     return base64.b64decode(s.encode("ascii"))
 
 
-def require_token(x_auth_token: str | None = Header(None, alias="X-Auth-Token")):
-    if not x_auth_token or not db.validate_token(x_auth_token):
+def require_token(
+    request: Request,
+    x_auth_token: str | None = Header(None, alias="X-Auth-Token"),
+    authorization: str | None = Header(None, alias="Authorization"),
+):
+    token = _extract_token(x_auth_token, authorization, request)
+    if not token or not db.validate_token(token):
         raise HTTPException(401, "Unauthorized")
-    return x_auth_token
+    return token
 
 
 def require_user(x_auth_token: str = Depends(require_token)):
@@ -184,8 +193,42 @@ def _delete_if_unreferenced(url: str) -> bool:
     except Exception as e:
         logger.warning("Failed to delete unreferenced media %s: %s", url, e)
         return False
-import bcrypt
-from psycopg.rows import dict_row
+    
+def _session_response(payload: dict, token: str, max_age: int = 24*3600) -> JSONResponse:
+    resp = JSONResponse(payload)
+    resp.set_cookie(
+        key="taoma_token",
+        value=token,
+        max_age=max_age,
+        httponly=True,     # schützt vor JS-Zugriff
+        secure=True,       # nur über HTTPS
+        samesite="lax"     # Navigation-Links funktionieren
+    )
+    return resp
+    
+def _extract_token(
+    x_auth_token: str | None,
+    authorization: str | None,
+    request: Request
+) -> str | None:
+    # 1) Header X-Auth-Token
+    if x_auth_token:
+        return x_auth_token
+    # 2) Authorization: Bearer <token>
+    if authorization:
+        parts = authorization.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            return parts[1]
+    # 3) Cookie
+    tok = request.cookies.get("taoma_token")
+    if tok:
+        return tok
+    # 4) ?token=... als Queryparam
+    tok = request.query_params.get("token")
+    if tok:
+        return tok
+    return None
+
 
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 logger = logging.getLogger("uvicorn.error")
@@ -626,15 +669,16 @@ def login(payload: LoginIn):
 
     token = db.create_token(hours_valid=24, user_id=admin["id"])
     expires = db.get_token_expiry(token)
-    return {"token": token, "expires_at": expires}
+    return _session_response({"token": token, "expires_at": expires}, token)
 
 
 @app.post("/api/auth/logout")
 def logout(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")):
-    if not x_auth_token:
-        raise HTTPException(400, "Missing token")
-    db.revoke_token(x_auth_token)
-    return {"ok": True}
+    if x_auth_token:
+        db.revoke_token(x_auth_token)
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie("taoma_token")
+    return resp
 
 
 @app.get("/api/gifs")
@@ -897,7 +941,7 @@ def login_user(payload: LoginUserIn):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = db.create_token(hours_valid=24, user_id=user["id"])
     expires = db.get_token_expiry(token)
-    return {"token": token, "expires_at": expires}
+    return _session_response({"token": token, "expires_at": expires}, token)
 
 
 @app.post("/api/auth/register", response_model=RegisterOut)
@@ -925,7 +969,6 @@ def register(payload: RegisterIn):
     # auto-login
     token = db.create_token(hours_valid=24, user_id=new_id)
     exp = db.get_token_expiry(token)
-
     row = db.getUser(new_id)
     user_out = {
         "id": row["id"],
@@ -944,7 +987,7 @@ def register(payload: RegisterIn):
             else row.get("updated_at")
         ),
     }
-    return {"token": token, "expires_at": exp, "user": user_out}
+    return _session_response({"token": token, "expires_at": exp, "user": user_out}, token)
 
 
 @app.get("/register", include_in_schema=False)
