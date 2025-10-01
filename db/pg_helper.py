@@ -813,7 +813,7 @@ class PgGifDB:
                     "displayed": i.get("displayed", False),
                     "acquired_at": _to_iso(i.get("acquired_at")),
                 }
-                for i in lt["icons"] if i.get("displayed")
+                for i in rows
             ]
 
             lt["links"] = links
