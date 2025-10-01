@@ -1483,8 +1483,8 @@ async def upload_linkicon(file: UploadFile = File(...), current: dict = Depends(
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
     return {"url": url}
 
-@app.post("/api/admin/media/gc", dependencies=[Depends(require_admin)])
-def media_garbage_collect(min_age_seconds: int = 60):
+@app.api_route("/api/admin/media/gc", methods=["POST","GET"], dependencies=[Depends(require_admin)])
+def media_garbage_collect(min_age_seconds: int = Query(60, ge=0)):
     """Löscht unreferenzierte Dateien im Upload-Verzeichnis, die älter als min_age_seconds sind."""
     deleted = []
     skipped = []
