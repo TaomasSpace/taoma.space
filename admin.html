@@ -275,6 +275,16 @@
       }
     });
 
+    try{
+      const v = await api('/api/auth/verify');  // nutzt deinen bestehenden Verify-Endpoint
+      $('#whoami').textContent = `${v.user.username} (admin)`;
+      show($('#appView'));
+    }catch(e){
+      $('#whoami').textContent = 'No access';
+      show($('#guard'));
+      $('#guardMsg').textContent = `Verify failed (${e.status}): ${pretty(e.data)}`;
+      hide($('#appView'));  // sicherheitshalber
+    }
   }
 
   // ---- Header Actions ----
