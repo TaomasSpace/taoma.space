@@ -145,7 +145,9 @@
               <option value="true">true</option>
               <option value="false">false</option>
             </select>
-            <button class="btn right" type="submit">Update User</button>
+            <span class="right"></span>
+            <button class="btn ghost" id="btnClearUserLT" type="button" title="PATCH /user/{id} {linktree_id:null}">Clear Linktree</button>
+            <button class="btn" type="submit">Update User</button>
           </div>
         </form>
         <div class="log" id="logUser"></div>
@@ -262,9 +264,12 @@
           </div>
           <div class="actions">
             <button class="btn" type="submit">Update Linktree</button>
+            <button class="btn danger" id="btnDeleteLinktree" type="button" title="DELETE /api/linktrees/{id}">Delete Linktree</button>
           </div>
         </form>
         <div class="log" id="logLT"></div>
+        <hr style="border:0;border-top:1px solid #ffffff1a;margin:.9rem 0">
+        <div class="note muted">Danger Zone: Löscht den gesamten Linktree inkl. Links und entfernt die Zuordnung beim Owner. Medien werden nur gelöscht, wenn sie nirgendwo mehr referenziert sind.</div>
       </article>
 
       <article class="card">
@@ -428,6 +433,18 @@
       }catch(err){ show('#logUser', String(err), false); }
     });
 
+    // --- USERS: clear linktree association ---
+    $('#btnClearUserLT')?.addEventListener('click', async ()=>{
+      const id = Number($('#fGetUser [name=\"user_id\"]').value);
+      if(!id){ show('#logUser', 'Fetch user or enter User ID first', false); return; }
+      if(!confirm('Remove this user\'s linktree association?')) return;
+      try{
+        const r = await apipatch(`/user/${id}`, { linktree_id: null });
+        const t = await r.json();
+        show('#logUser', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logUser', String(err), false); }
+    });
+
     // --- ICONS: list ---
     $('#btnLoadIcons')?.addEventListener('click', async ()=>{
       const tbody = $('#tblIcons tbody');
@@ -517,6 +534,18 @@
       try{
         const r = await apipatch(`/api/linktrees/${id}`, body);
         const t = await r.json();
+        show('#logLT', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logLT', String(err), false); }
+    });
+
+    // --- LINKTREE: delete ---
+    $('#btnDeleteLinktree')?.addEventListener('click', async ()=>{
+      const id = Number($('#fUpdateLinktree [name="id"]').value);
+      if(!id){ show('#logLT','Linktree ID required',false); return; }
+      if(!confirm('Delete linktree '+id+'? This cannot be undone.')) return;
+      try{
+        const r = await fetch(`/api/linktrees/${id}`, { method:'DELETE', headers: headers(false) });
+        const t = await r.json().catch(()=>({}));
         show('#logLT', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
       }catch(err){ show('#logLT', String(err), false); }
     });
