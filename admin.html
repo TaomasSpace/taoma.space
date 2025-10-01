@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TAOMA™ — Admin</title>
+  <meta name="theme-color" content="#0f1223" />
+  <link rel="icon" type="image/png" href="/static/icon.png">
+  <style>
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background: #0e1020;
+      color: #e9ebff;
+    }
+    header, footer {
+      padding: 1rem;
+      background: #141735;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    main {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    .card {
+      background: #171b3b;
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      border: 1px solid #ffffff22;
+    }
+    .err {
+      color: #ff5a6a;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div><a href="/" style="color:#e9ebff;text-decoration:none;font-weight:700;">TAOMA™</a></div>
+    <nav><a href="/logout" style="color:#e9ebff;">Logout</a></nav>
+  </header>
+
+  <main>
+    <h1>Admin Dashboard</h1>
+    <p id="status" class="err"></p>
+
+    <div id="content" style="display:none">
+      <div class="card">
+        <h2>GIF Verwaltung</h2>
+        <p>Hier kannst du GIFs verwalten, löschen oder neue hinzufügen.</p>
+        <!-- Platz für Admin-Tools -->
+      </div>
+      <div class="card">
+        <h2>User Verwaltung</h2>
+        <p>Liste oder Bearbeite Benutzer mit ihren Rechten.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <small>© <span id="year"></span> TAOMA™. Admin Area.</small>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Prüfe ob User Admin ist
+    fetch("/api/auth/verify", {credentials:"include"})
+      .then(r => r.ok ? r.json() : Promise.reject(r))
+      .then(user => {
+        if(user.admin){
+          document.getElementById("content").style.display = "block";
+        } else {
+          document.getElementById("status").textContent = "Zugriff verweigert – keine Admin-Rechte.";
+        }
+      })
+      .catch(() => {
+        document.getElementById("status").textContent = "Nicht eingeloggt oder keine Berechtigung.";
+      });
+  </script>
+</body>
+</html>
