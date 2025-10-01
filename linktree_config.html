@@ -829,7 +829,11 @@
             // NOTE: /api/linktrees/{slug} gibt aktuell keine profile_picture => wir nutzen es nur für Tree/Links/Icons
             return lt;
         }
-
+async function apiLoadTreeOwner(id) {
+  const r = await fetch(`/api/linktrees/${id}/manage`, { headers: headers() });
+  if (!r.ok) return null;
+  return await r.json();
+}
         async function apiEnsureOrUpdateMeta(exists) {
             const body = {
                 slug: $('inSlug').value.trim(),
@@ -912,17 +916,39 @@
             } catch (err) { showMsg(msgLinks, String(err), false); }
         });
 
-        async function refreshData() {
-        const slug = currentTree?.slug || $('inSlug').value.trim();
-        if (!slug) return;
-        const lt = await apiLoadTreeBySlug(slug);
-        if (!lt) { currentTree = null; return; }   // <-- ensure null when not found
-        currentTree = lt;
-        linktreeId = lt.id;
-        fillMetaForm(lt);
-        renderLinks(lt.links || []);
-        renderBadges(lt.icons || []);
-        }
+       async function refreshData() {
+  const slugInput = $('inSlug').value.trim();
+  let lt = null;
+
+  // Wenn wir schon eine ID und ein Token haben → zuerst Owner-Endpoint probieren
+  if (linktreeId && token()) {
+    lt = await apiLoadTreeOwner(linktreeId);
+  }
+
+  // Fallback / First load: public by slug (liefert evtl. nur aktive Links)
+  if (!lt && slugInput) {
+    const pub = await apiLoadTreeBySlug(slugInput);
+    if (pub) {
+      lt = pub;
+      // sobald wir die ID kennen, direkt nochmal owner versuchen (um alle Links zu kriegen)
+      linktreeId = pub.id;
+      if (token()) {
+        const full = await apiLoadTreeOwner(linktreeId);
+        if (full) lt = full;
+      }
+    }
+  }
+
+  if (!lt) { currentTree = null; return; }
+
+  currentTree = lt;
+  linktreeId = lt.id;
+
+  // Diese beiden rendern ohnehin, ohne intern zu filtern:
+  fillMetaForm(lt);
+  renderLinks(lt.links || []);   // enthält jetzt auch is_active=false
+  renderBadges(lt.icons || []);  // alle Badges mit displayed-Checkbox
+}
 
         async function boot() {
             try {

@@ -91,15 +91,23 @@
             margin-bottom: 2rem;
         }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: .25rem;
-            background: #ffffff1a;
-            border-radius: 999px;
-            padding: .35rem .7rem;
-            font-size: .9rem;
-        }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;                 /* kein Platz für Text nötig */
+  background: #ffffff1a;
+  border-radius: 999px;
+  padding: .28rem;        /* nur wenig Innenabstand */
+  border: 1px solid #ffffff26; /* dezente Kante, optional */
+}
+
+.badge img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
 
 .links {
   display: grid;
@@ -394,19 +402,29 @@ if (nameEl) {
           ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg> ${data.location}` : '';
       }
 
-      const badgesEl = document.getElementById('badges');
-      if (badgesEl) {
-        badgesEl.innerHTML = '';
-        (data.icons || []).forEach(ic => {
-          if (ic.displayed) {
-            const el = document.createElement('span');
-            el.className = 'badge';
-            el.innerHTML = `<img src="${ic.image_url}" alt="${ic.code}" style="width:16px;height:16px"> ${ic.code}`;
-            badgesEl.appendChild(el);
-          }
-        });
-      }
+    const badgesEl = document.getElementById('badges');
+    if (badgesEl) {
+      badgesEl.innerHTML = '';
+      (data.icons || []).forEach(ic => {
+        if (!ic.displayed) return;
 
+        const desc = ic.description || ic.code || 'badge';
+        const wrap = document.createElement('span');
+        wrap.className = 'badge';
+        // Tooltip via title (Desktop) + aria-label (AT / Touch-Langdruck zeigt oft auch title)
+        wrap.title = desc;
+        wrap.setAttribute('aria-label', desc);
+
+        const img = document.createElement('img');
+        img.src = ic.image_url;
+        img.alt = desc;
+        img.width = 20;
+        img.height = 20;
+
+        wrap.appendChild(img);
+        badgesEl.appendChild(wrap);
+      });
+    }
       const linksEl = document.getElementById('links');
       if (linksEl) {
         linksEl.innerHTML = '';

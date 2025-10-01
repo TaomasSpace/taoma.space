@@ -632,6 +632,89 @@ def verify(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")
         "user": user_out,
     }
 
+@app.get("/api/linktrees/{linktree_id}/manage", response_model=LinktreeOut)
+def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
+    _ensure_pg()
+    _require_tree_owner_or_admin(linktree_id, user)
+
+    with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        # Linktree-Stammdaten
+        cur.execute("""
+            SELECT id, user_id, slug, location, quote, song_url, background_url,
+                   COALESCE(background_is_video, false) AS background_is_video,
+                   COALESCE(transparency, 0)          AS transparency,
+                   COALESCE(name_effect, 'none')       AS name_effect,
+                   COALESCE(background_effect,'none')  AS background_effect,
+                   COALESCE(display_name_mode,'slug')  AS display_name_mode
+              FROM linktrees
+             WHERE id = %s
+        """, (linktree_id,))
+        lt = cur.fetchone()
+        if not lt:
+            raise HTTPException(404, "Linktree not found")
+
+        # Username + Avatar des Owners
+        cur.execute("SELECT username, profile_picture FROM users WHERE id=%s", (lt["user_id"],))
+        urow = cur.fetchone()
+        user_username = urow["username"] if urow else None
+        user_pfp      = urow["profile_picture"] if urow else None
+
+        # Links (UNGEFILTERT → auch is_active=false)
+        cur.execute("""
+            SELECT id, url, label, icon_url, position, is_active
+              FROM linktree_links
+             WHERE linktree_id = %s
+             ORDER BY COALESCE(position, 0), id
+        """, (linktree_id,))
+        links = cur.fetchall() or []
+
+        # Icons (UNGEFILTERT → displayed kann true/false sein)
+        cur.execute("""
+            SELECT i.id, i.code, i.image_url, i.description,
+                   ui.displayed, ui.acquired_at
+              FROM user_icons ui
+              JOIN icons i ON i.code = ui.icon_code
+             WHERE ui.user_id = %s
+             ORDER BY i.code
+        """, (lt["user_id"],))
+        icons = cur.fetchall() or []
+
+    return {
+        "id": lt["id"],
+        "user_id": lt["user_id"],
+        "slug": lt["slug"],
+        "location": lt.get("location"),
+        "quote": lt.get("quote"),
+        "song_url": lt.get("song_url"),
+        "background_url": lt.get("background_url"),
+        "background_is_video": bool(lt.get("background_is_video")),
+        "transparency": int(lt.get("transparency") or 0),
+        "name_effect": lt.get("name_effect") or "none",
+        "background_effect": lt.get("background_effect") or "none",
+        "display_name_mode": lt.get("display_name_mode") or "slug",
+        "profile_picture": user_pfp,
+        "user_username": user_username,
+        "links": [
+            {
+                "id": r["id"],
+                "url": r["url"],
+                "label": r.get("label"),
+                "icon_url": r.get("icon_url"),
+                "position": r.get("position", 0),
+                "is_active": bool(r.get("is_active", True)),
+            } for r in links
+        ],
+        "icons": [
+            {
+                "id": r["id"],
+                "code": r["code"],
+                "image_url": r["image_url"],
+                "description": r.get("description"),
+                "displayed": bool(r.get("displayed", False)),
+                "acquired_at": (r["acquired_at"].isoformat() if r.get("acquired_at") else None),
+            } for r in icons
+        ],
+    }
 
 @app.get(
     "/api/gif/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
