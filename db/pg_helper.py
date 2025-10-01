@@ -733,7 +733,7 @@ class PgGifDB:
                     user_id, slug, location, quote, song_url,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
-                    display_name_mode,                      # <-- NEU
+                    display_name_mode,
                 ),
             )
             linktree_id = cur.fetchone()[0]
@@ -756,6 +756,7 @@ class PgGifDB:
             "transparency",
             "name_effect",
             "background_effect",
+            "display_name_mode",
         }
         sets, vals = [], []
         for k, v in fields.items():
