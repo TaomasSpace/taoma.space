@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#0f1223" />
   <link rel="icon" type="image/png" href="/static/icon.png">
   <style>
+    /* === Base: identisch zu deinen Seiten (gekürzt wo möglich, gleiche Tokens) === */
     *,*::before,*::after{box-sizing:border-box}
     :root{
       --bg:#0e1020;--bg-soft:#141735;--card:#171b3b;--ink:#e9ebff;--muted:#a2a9c8;
@@ -60,9 +61,8 @@
     .errText{color:var(--danger);font-weight:700}
     footer{border-top:1px solid #ffffff14;padding-block:24px;margin-top:auto}
     .foot{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .menu,.avatar-btn,.visitor-counter,.social{ /* Platzhalter falls du später den Header-Menücode wiederverwendest */ }
     .log{white-space:pre-wrap;background:#0f1331;border:1px solid #ffffff1a;border-radius:12px;padding:.75rem;max-height:240px;overflow:auto}
-    /* kleiner Preview fürs Icon */
-    .thumb{width:42px;height:42px;border-radius:10px;border:1px solid #ffffff22;background:#0f1331;object-fit:cover}
   </style>
 </head>
 <body>
@@ -101,6 +101,8 @@
         <form id="fCreateUser">
           <label>Username</label><input name="username" required minlength="3" maxlength="32">
           <label>Password</label><input name="password" type="password" required minlength="8">
+          <label>Linktree ID (optional)</label><input name="linktree_id" type="number" min="1" placeholder="e.g. 1">
+          <label>Profile Picture URL (optional)</label><input name="profile_picture" placeholder="/media/avatars/…">
           <div class="actions">
             <button class="btn" type="submit">Create User</button>
             <button class="btn ghost" type="reset">Reset</button>
@@ -118,24 +120,40 @@
           <button class="btn" type="submit">Fetch</button>
           <button class="btn ok" id="btnGrantAdmin" type="button" title="POST /admin/users/{id}/grant">Grant Admin</button>
         </form>
+
+        <form id="fUpdateUser" style="margin-top:.75rem">
+          <div class="row">
+            <div style="flex:1 1 240px">
+              <label>Username</label><input name="username" minlength="3" maxlength="32" placeholder="leave empty to keep">
+            </div>
+            <div style="flex:1 1 240px">
+              <label>New Password</label><input name="password" type="password" minlength="8" placeholder="leave empty to keep">
+            </div>
+          </div>
+          <div class="row">
+            <div style="flex:1 1 200px">
+              <label>Linktree ID</label><input name="linktree_id" type="number" min="1" placeholder="leave empty to keep">
+            </div>
+            <div style="flex:1 1 200px">
+              <label>Profile Picture URL</label><input name="profile_picture" placeholder="leave empty to keep">
+            </div>
+          </div>
+          <div class="row" style="align-items:center;margin-top:.25rem">
+            <label style="margin:0">Admin Flag</label>
+            <select name="admin" style="width:auto">
+              <option value="">(no change)</option>
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+            <button class="btn right" type="submit">Update User</button>
+          </div>
+        </form>
         <div class="log" id="logUser"></div>
       </article>
     </section>
 
     <!-- ICONS -->
-    <section class="grid cols-2">
-      <article class="card">
-        <h2>Icons — Catalog</h2>
-        <div class="actions">
-          <button class="btn" id="btnLoadIcons">Load Icons</button>
-        </div>
-        <table class="table" id="tblIcons" aria-live="polite">
-          <thead><tr><th>ID</th><th>Code</th><th>Image</th><th>Description</th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="log" id="logIcons"></div>
-      </article>
-
+   
       <article class="card">
         <h2>Icons — Upsert / Grant to User</h2>
 
@@ -178,6 +196,106 @@
         </form>
         <div class="log" id="logIconOps"></div>
       </article>
+
+    <!-- LINKTREE -->
+    <section class="grid cols-2">
+      <article class="card">
+        <h2>Linktree — Update (owner or admin)</h2>
+        <form id="fUpdateLinktree">
+          <label>Linktree ID</label><input name="id" type="number" min="1" required>
+          <div class="row">
+            <div style="flex:1 1 200px"><label>Slug</label><input name="slug" placeholder="optional"></div>
+            <div style="flex:1 1 200px"><label>Location</label><input name="location" placeholder="optional"></div>
+          </div>
+          <label>Quote</label><input name="quote" placeholder="optional">
+          <div class="row">
+            <div style="flex:1 1 200px"><label>Song URL</label><input name="song_url" placeholder="/media/... optional"></div>
+            <div style="flex:1 1 200px"><label>Background URL</label><input name="background_url" placeholder="/media/... optional"></div>
+          </div>
+          <div class="row">
+            <div style="flex:1 1 160px">
+              <label>Background is video</label>
+              <select name="background_is_video">
+                <option value="">(no change)</option>
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+            <div style="flex:1 1 160px">
+              <label>Transparency (0–100)</label>
+              <input name="transparency" type="number" min="0" max="100" placeholder="">
+            </div>
+          </div>
+          <div class="row">
+            <div style="flex:1 1 160px">
+              <label>Name Effect</label>
+              <select name="name_effect">
+                <option value="">(no change)</option>
+                <option>none</option><option>glow</option><option>neon</option><option>rainbow</option>
+              </select>
+            </div>
+            <div style="flex:1 1 160px">
+              <label>Background Effect</label>
+              <select name="background_effect">
+                <option value="">(no change)</option>
+                <option>none</option><option>night</option><option>rain</option><option>snow</option>
+              </select>
+            </div>
+            <div style="flex:1 1 180px">
+              <label>Display Name Mode</label>
+              <select name="display_name_mode">
+                <option value="">(no change)</option>
+                <option>slug</option><option>username</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn" type="submit">Update Linktree</button>
+          </div>
+        </form>
+        <div class="log" id="logLT"></div>
+      </article>
+
+      <article class="card">
+        <h2>Links — Add / Update / Delete</h2>
+        <form id="fAddLink">
+          <label>Linktree ID</label><input name="linktree_id" type="number" min="1" required>
+          <label>URL</label><input name="url" required>
+          <div class="row">
+            <div style="flex:1 1 160px"><label>Label</label><input name="label"></div>
+            <div style="flex:1 1 160px"><label>Icon URL</label><input name="icon_url" placeholder="/media/..."></div>
+            <div style="flex:1 1 120px"><label>Position</label><input name="position" type="number" min="0" placeholder="auto append"></div>
+          </div>
+          <label>Active</label>
+          <select name="is_active">
+            <option value="true">true</option><option value="false">false</option>
+          </select>
+          <div class="actions"><button class="btn" type="submit">Add Link</button></div>
+        </form>
+
+        <hr style="border:0;border-top:1px solid #ffffff1a;margin:.9rem 0">
+
+        <form id="fUpdateLink">
+          <label>Link ID</label><input name="link_id" type="number" min="1" required>
+          <div class="row">
+            <div style="flex:1 1 160px"><label>URL (opt.)</label><input name="url"></div>
+            <div style="flex:1 1 160px"><label>Label (opt.)</label><input name="label"></div>
+            <div style="flex:1 1 160px"><label>Icon URL (opt.)</label><input name="icon_url"></div>
+            <div style="flex:1 1 120px"><label>Position (opt.)</label><input name="position" type="number" min="0"></div>
+            <div style="flex:1 1 140px">
+              <label>Active (opt.)</label>
+              <select name="is_active">
+                <option value="">(no change)</option><option value="true">true</option><option value="false">false</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn" type="submit">Update Link</button>
+            <button class="btn danger" id="btnDeleteLink" type="button">Delete Link</button>
+          </div>
+        </form>
+        <div class="log" id="logLinks"></div>
+      </article>
     </section>
 
     <!-- MEDIA GC -->
@@ -205,9 +323,12 @@
   </footer>
 
   <script>
+    // Year
     document.getElementById('year').textContent = new Date().getFullYear();
 
+    // --- Helpers ---
     const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     const token = () => localStorage.getItem('gifapi_token');
 
     function headers(json=true){
@@ -217,13 +338,13 @@
       return h;
     }
     const j = (o)=>JSON.stringify(o);
-    const show = (sel,msg,ok=true)=>{$(sel).innerHTML = (ok? '✅ ' : '❌ ') + (typeof msg==='string'? msg : JSON.stringify(msg,null,2));};
+    const show = (id,msg,ok=true)=>{$(id).innerHTML = (ok? '✅ ' : '❌ ') + (typeof msg==='string'? msg : JSON.stringify(msg,null,2));};
     const apiget = async (url)=> (await fetch(url,{headers:headers(false)}));
     const apipost = async (url,body)=> (await fetch(url,{method:'POST',headers:headers(),body:j(body)}));
     const apipatch = async (url,body)=> (await fetch(url,{method:'PATCH',headers:headers(),body:j(body)}));
     const apidelete = async (url)=> (await fetch(url,{method:'DELETE',headers:headers(false)}));
 
-    // Admin gate
+    // --- Gate: must be admin ---
     (async ()=>{
       try{
         const r = await apiget('/api/auth/verify');
@@ -237,13 +358,15 @@
       }catch(e){ location.href='/login'; }
     })();
 
-    // USERS: Create (bereinigt: keine Felder nutzen, die nicht existieren)
-    $('#fCreateUser')?.addEventListener('submit', async (e)=>{
+    // --- USERS: Create ---
+    $('#fCreateUser').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const body = {
         username: f.username.value.trim(),
-        password: f.password.value
+        password: f.password.value,
+        linktree_id: f.linktree_id.value ? Number(f.linktree_id.value) : null,
+        profile_picture: f.profile_picture.value || null
       };
       try{
         const r = await apipost('/user', body);
@@ -252,19 +375,22 @@
       }catch(err){ show('#logCreateUser', String(err), false); }
     });
 
-    // USERS: Fetch + Grant
-    $('#fGetUser')?.addEventListener('submit', async (e)=>{
+    // --- USERS: Fetch + Grant + Update ---
+    let currentUserId = null;
+
+    $('#fGetUser').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const id = Number(e.target.user_id.value);
       if(!id) return;
       try{
         const r = await apiget(`/user/${id}`);
         const t = await r.json();
+        currentUserId = r.ok ? t.id : null;
         show('#logUser', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
       }catch(err){ show('#logUser', String(err), false); }
     });
 
-    $('#btnGrantAdmin')?.addEventListener('click', async ()=>{
+    $('#btnGrantAdmin').addEventListener('click', async ()=>{
       const idInput = $('#fGetUser [name="user_id"]');
       const id = Number(idInput.value);
       if(!id){ show('#logUser', 'User ID required for grant', false); return; }
@@ -275,8 +401,27 @@
       }catch(err){ show('#logUser', String(err), false); }
     });
 
-    // ICONS: list
-    $('#btnLoadIcons')?.addEventListener('click', async ()=>{
+    $('#fUpdateUser').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const id = Number($('#fGetUser [name="user_id"]').value);
+      if(!id){ show('#logUser', 'Fetch user or enter User ID first', false); return; }
+      const f = e.target;
+      const body = {};
+      if(f.username.value.trim()) body.username = f.username.value.trim();
+      if(f.password.value) body.password = f.password.value;
+      if(f.linktree_id.value) body.linktree_id = Number(f.linktree_id.value);
+      if(f.profile_picture.value) body.profile_picture = f.profile_picture.value;
+      if(f.admin.value !== '') body.admin = (f.admin.value === 'true');
+
+      try{
+        const r = await apipatch(`/user/${id}`, body);
+        const t = await r.json();
+        show('#logUser', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logUser', String(err), false); }
+    });
+
+    // --- ICONS: list ---
+    $('#btnLoadIcons').addEventListener('click', async ()=>{
       const tbody = $('#tblIcons tbody');
       tbody.innerHTML = '';
       try{
@@ -285,17 +430,58 @@
         if(!r.ok){ show('#logIcons', list?.detail || JSON.stringify(list), false); return; }
         list.forEach(i=>{
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${i.id}</td><td class="mono">${i.code}</td>
-                          <td><a class="btn ghost" href="${i.image_url}" target="_blank">open</a></td>
-                          <td>${i.description||''}</td>`;
+          tr.innerHTML = `<td>${i.id}</td><td class="mono">${i.code}</td><td><a class="btn ghost" href="${i.image_url}" target="_blank">open</a></td><td>${i.description||''}</td>`;
           tbody.appendChild(tr);
         });
         show('#logIcons', `Loaded ${list.length} icons.`, true);
       }catch(err){ show('#logIcons', String(err), false); }
     });
 
-    // NEU: File-Upload für Icon (setzt die Image-URL + Preview)
-    async function uploadIconFile(inputId){
+    // --- ICONS: upsert ---
+ $('#fUpsertIcon')?.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const f = e.target;
+      const body = { code:f.code.value.trim(), image_url:f.image_url.value.trim(), description:f.description.value||null };
+      try{
+        const r = await apipost('/api/icons', body);
+        const t = await r.json();
+        show('#logIconOps', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logIconOps', String(err), false); }
+    });
+    // --- ICONS: grant to user ---
+    $('#fGrantIcon').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const f = e.target;
+      const uid = Number(f.user_id.value);
+      const code = f.code.value.trim();
+      const displayed = f.displayed.value === 'true';
+      try{
+        const r = await apipost(`/api/users/${uid}/icons/${encodeURIComponent(code)}`, { displayed });
+        const t = await r.json();
+        show('#logIconOps', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logIconOps', String(err), false); }
+    });
+
+    // --- LINKTREE: update ---
+    $('#fUpdateLinktree').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const f = e.target;
+      const id = Number(f.id.value);
+      if(!id){ show('#logLT', 'Linktree ID required', false); return; }
+      const body = {};
+      for(const k of ['slug','location','quote','song_url','background_url','name_effect','background_effect','display_name_mode']){
+        const v = f[k].value.trim(); if(v) body[k]=v;
+      }
+      if(f.background_is_video.value !== '') body.background_is_video = (f.background_is_video.value==='true');
+      if(f.transparency.value!=='') body.transparency = Number(f.transparency.value);
+
+      try{
+        const r = await apipatch(`/api/linktrees/${id}`, body);
+        const t = await r.json();
+        show('#logLT', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logLT', String(err), false); }
+    });
+ async function uploadIconFile(inputId){
       const inp = document.getElementById(inputId);
       const file = inp?.files?.[0];
       if(!file) return null;
@@ -313,50 +499,56 @@
       return url;
     }
 
-    $('#fileIconCatalog')?.addEventListener('change', async ()=>{
-      const logSel = '#logIconOps';
-      try{
-        const url = await uploadIconFile('fileIconCatalog');
-        if(url){
-          const urlInput = document.getElementById('iconImageUrl');
-          urlInput.value = url;
-          const prev = document.getElementById('iconPreview');
-          if(prev){ prev.src = url; prev.alt = 'icon preview'; }
-          show(logSel, 'Icon uploaded ✓ URL inserted.', true);
-        }
-      }catch(e){
-        show(logSel, 'Icon upload failed: ' + (e?.message || e), false);
-      }
-    });
-
-    // ICONS: upsert
-    $('#fUpsertIcon')?.addEventListener('submit', async (e)=>{
+    // --- LINKS: add ---
+    $('#fAddLink').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
-      const body = { code:f.code.value.trim(), image_url:f.image_url.value.trim(), description:f.description.value||null };
+      const body = {
+        url: f.url.value.trim(),
+        label: f.label.value || null,
+        icon_url: f.icon_url.value || null,
+        position: f.position.value ? Number(f.position.value) : null,
+        is_active: f.is_active.value === 'true'
+      };
+      const lt = Number(f.linktree_id.value);
       try{
-        const r = await apipost('/api/icons', body);
+        const r = await apipost(`/api/linktrees/${lt}/links`, body);
         const t = await r.json();
-        show('#logIconOps', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
-      }catch(err){ show('#logIconOps', String(err), false); }
+        show('#logLinks', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logLinks', String(err), false); }
     });
 
-    // ICONS: grant to user
-    $('#fGrantIcon')?.addEventListener('submit', async (e)=>{
+    // --- LINKS: update & delete ---
+    $('#fUpdateLink').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
-      const uid = Number(f.user_id.value);
-      const code = f.code.value.trim();
-      const displayed = f.displayed.value === 'true';
+      const id = Number(f.link_id.value);
+      if(!id){ show('#logLinks','Link ID required',false); return; }
+      const body = {};
+      if(f.url.value.trim()) body.url = f.url.value.trim();
+      if(f.label.value.trim()) body.label = f.label.value.trim();
+      if(f.icon_url.value.trim()) body.icon_url = f.icon_url.value.trim();
+      if(f.position.value) body.position = Number(f.position.value);
+      if(f.is_active.value !== '') body.is_active = (f.is_active.value==='true');
       try{
-        const r = await apipost(`/api/users/${uid}/icons/${encodeURIComponent(code)}`, { displayed });
+        const r = await apipatch(`/api/links/${id}`, body);
         const t = await r.json();
-        show('#logIconOps', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
-      }catch(err){ show('#logIconOps', String(err), false); }
+        show('#logLinks', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logLinks', String(err), false); }
     });
 
-    // MEDIA: GC
-    $('#fGC')?.addEventListener('submit', async (e)=>{
+    $('#btnDeleteLink').addEventListener('click', async ()=>{
+      const id = Number($('#fUpdateLink [name="link_id"]').value);
+      if(!id){ show('#logLinks','Link ID required',false); return; }
+      if(!confirm('Delete link '+id+'?')) return;
+      try{
+        const r = await apidelete(`/api/links/${id}`);
+        show('#logLinks', r.ok? {ok:true} : await r.text(), r.ok);
+      }catch(err){ show('#logLinks', String(err), false); }
+    });
+
+    // --- MEDIA: GC ---
+    $('#fGC').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const age = Number($('#age').value || 0);
       try{
@@ -368,7 +560,7 @@
       }catch(err){ show('#logGC', String(err), false); }
     });
 
-    // Minimaler Auth-Slot
+    // --- Minimal auth header slot (login/logout) ---
     (async function renderAuthHeader(){
       const slot = $('#authSlot'); if(!slot) return;
       try{
