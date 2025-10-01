@@ -634,7 +634,7 @@ def verify(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")
 
 
 @app.get(
-    "/api/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
+    "/api/gif/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
 )
 def admin_page():
     return FileResponse("gifApiAdmin.html")
@@ -1509,3 +1509,9 @@ def media_garbage_collect(min_age_seconds: int = Query(60, ge=0)):
             skipped.append(p.name)
 
     return {"ok": True, "deleted": deleted, "skipped": skipped}
+
+@app.get(
+    "/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
+)
+def admin_page():
+    return FileResponse("admin.html")
