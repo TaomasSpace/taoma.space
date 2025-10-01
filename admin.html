@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0f1223" />
   <link rel="icon" type="image/png" href="/static/icon.png">
   <style>
-    /* === Base: identisch zu deinen Seiten (gekürzt wo möglich, gleiche Tokens) === */
+    /* === Base: consistent with other pages === */
     *,*::before,*::after{box-sizing:border-box}
     :root{
       --bg:#0e1020;--bg-soft:#141735;--card:#171b3b;--ink:#e9ebff;--muted:#a2a9c8;
@@ -26,7 +26,7 @@
     }
     a{color:inherit;text-decoration:none}
     .container{max-width:var(--container);margin:0 auto;padding-inline:var(--space)}
-    .btn{display:inline-flex;align-items:center;gap:.6rem;padding:.6rem .9rem;border-radius:12px;background:var(--acc);color:#fff;font-weight:700;border:1px solid #ffffff1a;box-shadow:var(--shadow);transition:.2s}
+    .btn{display:inline-flex;align-items:center;gap:.6rem;padding:.6rem .9rem;border-radius:12px;background:var(--acc);color:#fff;font-weight:700;border:1px solid #ffffff1a;box-shadow:var(--shadow);transition:.2s;cursor:pointer}
     .btn:hover{transform:translateY(-1px);filter:saturate(1.1)}
     .btn.ghost{background:transparent;color:var(--ink);border:1px solid #ffffff26;box-shadow:none}
     .btn.danger{background:color-mix(in oklab, var(--danger) 80%, #000)}
@@ -61,8 +61,8 @@
     .errText{color:var(--danger);font-weight:700}
     footer{border-top:1px solid #ffffff14;padding-block:24px;margin-top:auto}
     .foot{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .menu,.avatar-btn,.visitor-counter,.social{ /* Platzhalter falls du später den Header-Menücode wiederverwendest */ }
     .log{white-space:pre-wrap;background:#0f1331;border:1px solid #ffffff1a;border-radius:12px;padding:.75rem;max-height:240px;overflow:auto}
+    .thumb{width:42px;height:42px;border-radius:10px;border:1px solid #ffffff22;background:#0f1331;object-fit:cover}
   </style>
 </head>
 <body>
@@ -153,11 +153,21 @@
     </section>
 
     <!-- ICONS -->
-   
+    <section class="grid cols-2">
+      <article class="card">
+        <h2>Icons — Catalog</h2>
+        <div class="actions">
+          <button id="btnLoadIcons" class="btn ghost" type="button">Load Icons</button>
+        </div>
+        <table id="tblIcons" class="table" aria-label="Icon catalog">
+          <thead><tr><th>ID</th><th>Code</th><th>Image</th><th>Description</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="log" id="logIcons"></div>
+      </article>
+
       <article class="card">
         <h2>Icons — Upsert / Grant to User</h2>
-
-        <!-- NEU: Upload-Option -->
         <div class="row" style="align-items:center;margin:.25rem 0 .5rem">
           <div>
             <label style="margin:.15rem 0 .25rem">Upload Icon (image/*)</label>
@@ -196,6 +206,7 @@
         </form>
         <div class="log" id="logIconOps"></div>
       </article>
+    </section>
 
     <!-- LINKTREE -->
     <section class="grid cols-2">
@@ -326,7 +337,7 @@
     // Year
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // --- Helpers ---
+    // Utilities
     const $ = (s, r=document) => r.querySelector(s);
     const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     const token = () => localStorage.getItem('gifapi_token');
@@ -338,7 +349,7 @@
       return h;
     }
     const j = (o)=>JSON.stringify(o);
-    const show = (id,msg,ok=true)=>{$(id).innerHTML = (ok? '✅ ' : '❌ ') + (typeof msg==='string'? msg : JSON.stringify(msg,null,2));};
+    const show = (sel,msg,ok=true)=>{$(sel).innerHTML = (ok? '✅ ' : '❌ ') + (typeof msg==='string'? msg : JSON.stringify(msg,null,2));};
     const apiget = async (url)=> (await fetch(url,{headers:headers(false)}));
     const apipost = async (url,body)=> (await fetch(url,{method:'POST',headers:headers(),body:j(body)}));
     const apipatch = async (url,body)=> (await fetch(url,{method:'PATCH',headers:headers(),body:j(body)}));
@@ -359,7 +370,7 @@
     })();
 
     // --- USERS: Create ---
-    $('#fCreateUser').addEventListener('submit', async (e)=>{
+    $('#fCreateUser')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const body = {
@@ -376,23 +387,20 @@
     });
 
     // --- USERS: Fetch + Grant + Update ---
-    let currentUserId = null;
-
-    $('#fGetUser').addEventListener('submit', async (e)=>{
+    $('#fGetUser')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const id = Number(e.target.user_id.value);
       if(!id) return;
       try{
         const r = await apiget(`/user/${id}`);
         const t = await r.json();
-        currentUserId = r.ok ? t.id : null;
         show('#logUser', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
       }catch(err){ show('#logUser', String(err), false); }
     });
 
-    $('#btnGrantAdmin').addEventListener('click', async ()=>{
+    $('#btnGrantAdmin')?.addEventListener('click', async ()=>{
       const idInput = $('#fGetUser [name="user_id"]');
-      const id = Number(idInput.value);
+      const id = Number(idInput?.value || 0);
       if(!id){ show('#logUser', 'User ID required for grant', false); return; }
       try{
         const r = await apipost(`/admin/users/${id}/grant`, {});
@@ -401,7 +409,7 @@
       }catch(err){ show('#logUser', String(err), false); }
     });
 
-    $('#fUpdateUser').addEventListener('submit', async (e)=>{
+    $('#fUpdateUser')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const id = Number($('#fGetUser [name="user_id"]').value);
       if(!id){ show('#logUser', 'Fetch user or enter User ID first', false); return; }
@@ -421,8 +429,9 @@
     });
 
     // --- ICONS: list ---
-    $('#btnLoadIcons').addEventListener('click', async ()=>{
+    $('#btnLoadIcons')?.addEventListener('click', async ()=>{
       const tbody = $('#tblIcons tbody');
+      if(!tbody) return;
       tbody.innerHTML = '';
       try{
         const r = await apiget('/api/icons');
@@ -437,8 +446,37 @@
       }catch(err){ show('#logIcons', String(err), false); }
     });
 
+    // --- ICONS: upload, preview, set URL ---
+    async function uploadIconFile(inputId){
+      const inp = document.getElementById(inputId);
+      const file = inp?.files?.[0];
+      if(!file) return null;
+      const fd = new FormData();
+      fd.append('file', file);
+      const r = await fetch('/api/users/me/linkicon', {
+        method:'POST',
+        headers: { 'X-Auth-Token': token() }, // do NOT set Content-Type manually
+        body: fd
+      });
+      if(!r.ok){ throw new Error(await r.text()); }
+      const { url } = await r.json();
+      return url;
+    }
+
+    $('#fileIconCatalog')?.addEventListener('change', async (e)=>{
+      const file = e.target.files?.[0];
+      if(!file) return;
+      // local preview
+      const prev = $('#iconPreview');
+      prev.src = URL.createObjectURL(file);
+      try{
+        const url = await uploadIconFile('fileIconCatalog');
+        if(url){ $('#iconImageUrl').value = url; show('#logIconOps', `Uploaded → ${url}`, true); }
+      }catch(err){ show('#logIconOps', String(err), false); }
+    });
+
     // --- ICONS: upsert ---
- $('#fUpsertIcon')?.addEventListener('submit', async (e)=>{
+    $('#fUpsertIcon')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const body = { code:f.code.value.trim(), image_url:f.image_url.value.trim(), description:f.description.value||null };
@@ -448,8 +486,9 @@
         show('#logIconOps', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
       }catch(err){ show('#logIconOps', String(err), false); }
     });
+
     // --- ICONS: grant to user ---
-    $('#fGrantIcon').addEventListener('submit', async (e)=>{
+    $('#fGrantIcon')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const uid = Number(f.user_id.value);
@@ -463,7 +502,7 @@
     });
 
     // --- LINKTREE: update ---
-    $('#fUpdateLinktree').addEventListener('submit', async (e)=>{
+    $('#fUpdateLinktree')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const id = Number(f.id.value);
@@ -481,26 +520,9 @@
         show('#logLT', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
       }catch(err){ show('#logLT', String(err), false); }
     });
- async function uploadIconFile(inputId){
-      const inp = document.getElementById(inputId);
-      const file = inp?.files?.[0];
-      if(!file) return null;
-      const fd = new FormData();
-      fd.append('file', file);
-      const r = await fetch('/api/users/me/linkicon', {
-        method:'POST',
-        headers: { 'X-Auth-Token': token() }, // KEIN Content-Type setzen!
-        body: fd
-      });
-      if(!r.ok){
-        throw new Error(await r.text());
-      }
-      const { url } = await r.json();
-      return url;
-    }
 
     // --- LINKS: add ---
-    $('#fAddLink').addEventListener('submit', async (e)=>{
+    $('#fAddLink')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const body = {
@@ -519,7 +541,7 @@
     });
 
     // --- LINKS: update & delete ---
-    $('#fUpdateLink').addEventListener('submit', async (e)=>{
+    $('#fUpdateLink')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const id = Number(f.link_id.value);
@@ -537,22 +559,22 @@
       }catch(err){ show('#logLinks', String(err), false); }
     });
 
-    $('#btnDeleteLink').addEventListener('click', async ()=>{
+    $('#btnDeleteLink')?.addEventListener('click', async ()=>{
       const id = Number($('#fUpdateLink [name="link_id"]').value);
       if(!id){ show('#logLinks','Link ID required',false); return; }
       if(!confirm('Delete link '+id+'?')) return;
       try{
         const r = await apidelete(`/api/links/${id}`);
-        show('#logLinks', r.ok? {ok:true} : await r.text(), r.ok);
+        if(r.ok){ show('#logLinks', {ok:true}, true); } else { show('#logLinks', await r.text(), false); }
       }catch(err){ show('#logLinks', String(err), false); }
     });
 
-    // --- MEDIA: GC ---
-    $('#fGC').addEventListener('submit', async (e)=>{
+    // --- MEDIA: GC (use POST to avoid 405 on GET) ---
+    $('#fGC')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const age = Number($('#age').value || 0);
       try{
-        const r = await apiget(`/api/admin/media/gc?min_age_seconds=${age}`);
+        const r = await apipost('/api/admin/media/gc', { min_age_seconds: age });
         const t = await r.json();
         if(!r.ok){ show('#logGC', t?.detail || JSON.stringify(t), false); return; }
         const summary = `Deleted: ${t.deleted.length} • Skipped: ${t.skipped.length}\n\nDeleted files:\n- ${t.deleted.join('\n- ')}`;
@@ -568,9 +590,9 @@
         if(!r.ok){ slot.innerHTML = `<a class="btn ghost" href="/login">Login</a>`; return; }
         const {user} = await r.json();
         const uname = user?.username ?? 'User';
-        slot.innerHTML = `<span class="chip">Logged in as <strong>${uname}</strong></span>
-                          <button class="btn ghost" id="btnLogout">Logout</button>`;
-        $('#btnLogout').addEventListener('click', async ()=>{
+        slot.innerHTML = `<span class=\"chip\">Logged in as <strong>${uname}</strong></span>
+                          <button class=\"btn ghost\" id=\"btnLogout\">Logout</button>`;
+        $('#btnLogout')?.addEventListener('click', async ()=>{
           try{
             const t = token(); if(t){ await fetch('/api/auth/logout',{method:'POST',headers:{'X-Auth-Token':t}}); }
           }catch{}
