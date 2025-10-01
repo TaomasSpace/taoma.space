@@ -33,8 +33,9 @@ import io
 from PIL import Image, UnidentifiedImageError
 from typing import Literal
 import psycopg
-from urllib.parse import urlparse
+from typing import Literal
 
+DisplayNameMode = Literal['slug','username']
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -241,6 +242,7 @@ class LinktreeCreateIn(BaseModel):
     transparency: int = Field(0, ge=0, le=100)
     name_effect: EffectName = "none"
     background_effect: BgEffectName = "none"
+    display_name_mode: DisplayNameMode = 'slug'
 
 
 class LinktreeUpdateIn(BaseModel):
@@ -255,6 +257,7 @@ class LinktreeUpdateIn(BaseModel):
     transparency: Optional[int] = Field(None, ge=0, le=100)
     name_effect: Optional[EffectName] = None
     background_effect: Optional[BgEffectName] = None
+    display_name_mode: Optional[DisplayNameMode] = None
 
 
 class LinkCreateIn(BaseModel):
@@ -285,6 +288,9 @@ class LinktreeOut(BaseModel):
     transparency: int
     name_effect: EffectName
     background_effect: BgEffectName
+    display_name_mode: DisplayNameMode                 # NEU
+    profile_picture: Optional[str] = None              # NEU – fürs Avatar
+    user_username: Optional[str] = None                # NEU – für „username“-Modus
     links: List[LinkOut]
     icons: List[IconOut]
 
@@ -1096,40 +1102,32 @@ def get_linktree(slug: str):
     if not lt:
         raise HTTPException(404, "Linktree not found")
 
-    # User-Daten holen (Username & Avatar)
+    # Username & Avatar des Owners holen
     user_username = None
     user_pfp = None
     with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
         cur.execute("SELECT username, profile_picture FROM users WHERE id=%s", (lt["user_id"],))
         row = cur.fetchone()
         if row:
-            user_username = row[0]
-            user_pfp = row[1]
+            user_username, user_pfp = row[0], row[1]
 
     icons = [
         {
-            "id": i["id"],
-            "code": i["code"],
-            "image_url": i["image_url"],
+            "id": i["id"], "code": i["code"], "image_url": i["image_url"],
             "description": i.get("description"),
             "displayed": i.get("displayed", False),
             "acquired_at": (i["acquired_at"].isoformat() if i.get("acquired_at") else None),
         }
-        for i in lt["icons"]
-        if i.get("displayed")
+        for i in lt["icons"] if i.get("displayed")
     ]
 
     links = [
         {
-            "id": r["id"],
-            "url": r["url"],
-            "label": r.get("label"),
-            "icon_url": r.get("icon_url"),
-            "position": r.get("position", 0),
+            "id": r["id"], "url": r["url"], "label": r.get("label"),
+            "icon_url": r.get("icon_url"), "position": r.get("position", 0),
             "is_active": r.get("is_active", True),
         }
-        for r in lt["links"]
-        if r.get("is_active", True)
+        for r in lt["links"] if r.get("is_active", True)
     ]
 
     return {
@@ -1145,8 +1143,8 @@ def get_linktree(slug: str):
         "name_effect": lt.get("name_effect", "none"),
         "background_effect": lt.get("background_effect", "none"),
         "display_name_mode": lt.get("display_name_mode", "slug"),
-        "profile_picture": user_pfp,          # <-- NEU
-        "user_username": user_username,       # <-- NEU
+        "profile_picture": user_pfp,              # <= jetzt dabei
+        "user_username": user_username,           # <= jetzt dabei
         "links": links,
         "icons": icons,
     }
