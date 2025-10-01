@@ -671,11 +671,11 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         # Icons (UNGEFILTERT → displayed kann true/false sein)
         cur.execute("""
             SELECT i.id, i.code, i.image_url, i.description,
-                   ui.displayed, ui.acquired_at
-              FROM user_icons ui
-              JOIN icons i ON i.code = ui.icon_code
-             WHERE ui.user_id = %s
-             ORDER BY i.code
+                ui.displayed, ui.acquired_at
+            FROM user_icons ui
+            JOIN icons i ON i.id = ui.icon_id   -- <- HIER!
+            WHERE ui.user_id = %s
+            ORDER BY i.code
         """, (lt["user_id"],))
         icons = cur.fetchall() or []
 

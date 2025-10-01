@@ -801,16 +801,19 @@ class PgGifDB:
             """, (lt["user_id"],))
             rows = cur.fetchall()
 
+            def _to_iso(v):
+                return v.isoformat() if hasattr(v, "isoformat") else v
+
             icons = [
                 {
-                    "id": r["id"],
-                    "code": r["code"],
-                    "image_url": r["image_url"],
-                    "description": r.get("description"),
-                    "displayed": bool(r.get("displayed", False)),
-                    "acquired_at": (r["acquired_at"].isoformat() if r.get("acquired_at") else None),
+                    "id": i["id"],
+                    "code": i["code"],
+                    "image_url": i["image_url"],
+                    "description": i.get("description"),
+                    "displayed": i.get("displayed", False),
+                    "acquired_at": _to_iso(i.get("acquired_at")),
                 }
-                for r in rows
+                for i in lt["icons"] if i.get("displayed")
             ]
 
             lt["links"] = links
