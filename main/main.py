@@ -1180,6 +1180,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             transparency=payload.transparency,
             name_effect=payload.name_effect,
             background_effect=payload.background_effect,
+            display_name_mode=payload.display_name_mode,  # <-- NEU
         )
     except pg_errors.UniqueViolation:
         raise HTTPException(409, "Slug already in use")

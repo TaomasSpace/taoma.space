@@ -715,31 +715,28 @@ class PgGifDB:
         transparency: int = 0,
         name_effect: str = "none",
         background_effect: str = "none",
+        display_name_mode: str = "slug",  # <-- NEU
     ) -> int:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO linktrees (user_id, slug, location, quote, song_url,
-                                    background_url, background_is_video,
-                                    transparency, name_effect, background_effect)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO linktrees (
+                    user_id, slug, location, quote, song_url,
+                    background_url, background_is_video,
+                    transparency, name_effect, background_effect,
+                    display_name_mode           -- <-- NEU
+                )
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)   -- <-- +1 Platzhalter
                 RETURNING id
-            """,
+                """,
                 (
-                    user_id,
-                    slug,
-                    location,
-                    quote,
-                    song_url,
-                    background_url,
-                    background_is_video,
-                    transparency,
-                    name_effect,
-                    background_effect,
+                    user_id, slug, location, quote, song_url,
+                    background_url, background_is_video,
+                    transparency, name_effect, background_effect,
+                    display_name_mode,                      # <-- NEU
                 ),
             )
             linktree_id = cur.fetchone()[0]
-            # Optional: users.linktree_id für schnellen Join setzen
             cur.execute(
                 "UPDATE users SET linktree_id = %s, updated_at = now() WHERE id = %s",
                 (linktree_id, user_id),
