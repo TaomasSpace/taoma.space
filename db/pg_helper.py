@@ -802,16 +802,17 @@ class PgGifDB:
             rows = cur.fetchall()
 
             icons = [
-                    {
-                        "id": i["id"],
-                        "code": i["code"],
-                        "image_url": i["image_url"],
-                        "description": i.get("description"),
-                        "displayed": i.get("displayed", False),
-                        "acquired_at": i.get("acquired_at"),  # bereits String aus pg_helper
-                    }
-                    for i in lt["icons"] if i.get("displayed")
-                ]
+                {
+                    "id": r["id"],
+                    "code": r["code"],
+                    "image_url": r["image_url"],
+                    "description": r.get("description"),
+                    "displayed": bool(r.get("displayed", False)),
+                    "acquired_at": (r["acquired_at"].isoformat() if r.get("acquired_at") else None),
+                }
+                for r in rows
+            ]
+
             lt["links"] = links
             lt["icons"] = icons
             return lt
