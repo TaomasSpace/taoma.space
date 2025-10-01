@@ -63,6 +63,84 @@
     .log{white-space:pre-wrap;background:#0f1331;border:1px solid #ffffff1a;border-radius:12px;padding:.75rem;max-height:240px;overflow:auto}
     /* kleiner Preview fürs Icon */
     .thumb{width:42px;height:42px;border-radius:10px;border:1px solid #ffffff22;background:#0f1331;object-fit:cover}
+     header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: saturate(1.1) blur(10px);
+            background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+            border-bottom: 1px solid #ffffff14
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            font-weight: 800;
+            letter-spacing: .4px
+        }
+
+        .brand .logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: block;
+        }
+
+
+        .links {
+            display: flex;
+            gap: 1rem;
+            align-items: center
+        }
+
+        .links a {
+            padding: .45rem .7rem;
+            border-radius: 10px;
+            border: 1px solid transparent
+        }
+
+        .links a:hover {
+            border-color: #ffffff1f;
+            background: #ffffff0f
+        }
+
+        .mobile-toggle {
+            display: none
+        }
+
+        @media (max-width:800px) {
+            .mobile-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                border: 1px solid #ffffff26;
+                background: transparent
+            }
+
+            .links {
+                position: fixed;
+                inset: 64px 0 auto 0;
+                background: linear-gradient(180deg, #0b0f29, #0b0f2945);
+                padding: 1rem;
+                display: none;
+                flex-direction: column
+            }
+
+            .links.open {
+                display: flex
+            }
+        }
   </style>
 </head>
 <body>
@@ -214,6 +292,13 @@
   </footer>
 
   <script>
+            // mobile menu
+        const toggle = document.getElementById('mobileToggle');
+        const menu = document.getElementById('primary-menu');
+        toggle?.addEventListener('click', () => {
+            const open = menu.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', String(open));
+        });
     document.getElementById('year').textContent = new Date().getFullYear();
 
     const $ = (s, r=document) => r.querySelector(s);
