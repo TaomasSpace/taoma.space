@@ -1320,19 +1320,49 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
     return get_linktree(payload.slug)
 
 
-@app.patch("/api/linktrees/{linktree_id}", response_model=dict)
-def update_linktree_ep(
-    linktree_id: int, payload: LinktreeUpdateIn, user: dict = Depends(require_user)
-):
+
+@app.delete("/api/linktrees/{linktree_id}")
+def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
     _ensure_pg()
     _require_tree_owner_or_admin(linktree_id, user)
-    try:
-        db.update_linktree(
-            linktree_id,
-            **{k: v for k, v in payload.model_dump(exclude_unset=True).items()},
+
+    # Sammle Owner und evtl. Medien-URLs (für Cleanup)
+    with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT user_id, song_url, background_url FROM linktrees WHERE id=%s",
+            (linktree_id,),
         )
-    except pg_errors.UniqueViolation:
-        raise HTTPException(409, "Slug already in use")
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, "Linktree not found")
+
+        owner_id = int(row["user_id"])
+        song_url = row.get("song_url")
+        bg_url   = row.get("background_url")
+
+        # Icon-URLs der Links sammeln (können lokale Medien sein)
+        cur.execute(
+            "SELECT icon_url FROM linktree_links WHERE linktree_id=%s AND icon_url IS NOT NULL",
+            (linktree_id,),
+        )
+        icon_urls = [r["icon_url"] for r in cur.fetchall() or [] if r.get("icon_url")]
+
+        # 1) Links löschen
+        cur.execute("DELETE FROM linktree_links WHERE linktree_id=%s", (linktree_id,))
+        # 2) Verknüpfung beim Owner lösen, falls gesetzt
+        cur.execute(
+            "UPDATE users SET linktree_id = NULL WHERE id=%s AND linktree_id=%s",
+            (owner_id, linktree_id),
+        )
+        # 3) Linktree löschen
+        cur.execute("DELETE FROM linktrees WHERE id=%s", (linktree_id,))
+        conn.commit()
+
+    # Medien aufräumen (nur wenn nirgendwo mehr referenziert)
+    for url in [song_url, bg_url, *icon_urls]:
+        if url:
+            _delete_if_unreferenced(url)
+
     return {"ok": True}
 
 
