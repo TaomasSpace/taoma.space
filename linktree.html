@@ -353,11 +353,15 @@ if (bgEl) {
       updateSoundUI();
 const cardEl = document.getElementById('card');
 if (cardEl) {
-  // transparency = 0 (undurchsichtig) → alpha = 1
-  // transparency = 100 (voll durchsichtig) → alpha = 0
   const t = data.transparency ?? 0;
   const alpha = 1 - (Math.min(Math.max(t, 0), 100) / 100);
-  cardEl.style.setProperty('--card-alpha', alpha.toString());
+
+  if (alpha <= 0) {
+    cardEl.classList.add('transparent');
+  } else {
+    cardEl.classList.remove('transparent');
+    cardEl.style.setProperty('--card-alpha', alpha.toString());
+  }
 }
       // Profil/Badges/Links wie gehabt
         const pfp = document.getElementById('pfp');
