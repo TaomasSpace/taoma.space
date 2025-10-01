@@ -790,16 +790,16 @@ class PgGifDB:
                 (lt["id"],),
             )
             links = cur.fetchall()
-            cur.execute(
-                """
-                SELECT i.id, i.code, i.image_url, i.description, ui.displayed, ui.acquired_at
+            # NEU: per icon_id joinen
+            cur.execute("""
+                SELECT i.id, i.code, i.image_url, i.description,
+                    ui.displayed, ui.acquired_at
                 FROM user_icons ui
                 JOIN icons i ON i.id = ui.icon_id
-                WHERE ui.user_id = (SELECT user_id FROM linktrees WHERE id=%s)
-            ORDER BY i.code
-            """,
-                (lt["id"],),
-            )
+                WHERE ui.user_id = %s
+                ORDER BY i.code
+            """, (lt["user_id"],))
+
             icons = cur.fetchall()
             lt["links"] = links
             lt["icons"] = icons
