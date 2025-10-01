@@ -176,10 +176,6 @@ class PgGifDB:
                     CREATE INDEX IF NOT EXISTS idx_user_icons_user ON user_icons(user_id);
                 """
                 )
-                cur.execute("""UPDATE users
-SET admin = TRUE,
-    updated_at = NOW()
-WHERE id = 1;""")
 
             conn.commit()
 

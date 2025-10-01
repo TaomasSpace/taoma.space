@@ -1259,7 +1259,11 @@ def update_link_ep(link_id: int, payload: LinkUpdateIn, user: dict = Depends(req
     # Werde die neue icon_url gleich aus dem Payload holen
     new_icon = payload.icon_url if payload.icon_url is not None else old_icon
 
-    db.update_link(link_id, **{k: v for k, v in payload.model_dump(exclude_unset=True).items()})
+    fields = payload.model_dump(exclude_unset=True)
+    if "url" in fields and fields["url"] is not None:
+        fields["url"] = str(fields["url"])
+
+    db.update_link(link_id, **fields)
 
     # Cleanup, wenn sich icon_url geändert hat
     if old_icon and old_icon != new_icon:
