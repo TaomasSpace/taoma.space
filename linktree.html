@@ -29,7 +29,6 @@
             overflow-x: hidden;
         }
 
-        /* Background video/image */
         .bg {
             position: fixed;
             inset: 0;
@@ -50,12 +49,12 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            padding: 3rem 1rem;
+            padding: clamp(2rem, 5vw, 3rem) clamp(1rem, 3vw, 1.5rem);
         }
 
         .pfp {
-            width: 120px;
-            height: 120px;
+            width: clamp(96px, 20vw, 120px);
+            height: clamp(96px, 20vw, 120px);
             border-radius: 50%;
             border: 3px solid #fff3;
             box-shadow: var(--shadow);
@@ -63,9 +62,10 @@
         }
 
         .name {
-            font-size: 1.8rem;
+            font-size: clamp(1.5rem, 4vw, 1.8rem);
             font-weight: 800;
             margin: 1rem 0 0.5rem;
+            word-break: break-word;
         }
 
         .location {
@@ -75,12 +75,15 @@
             justify-content: center;
             color: var(--muted);
             margin-bottom: 1rem;
+            font-size: clamp(0.9rem, 2vw, 1rem);
         }
 
         .quote {
             font-style: italic;
             margin-bottom: 1.5rem;
             max-width: 600px;
+            padding: 0 1rem;
+            font-size: clamp(0.9rem, 2vw, 1rem);
         }
 
         .badges {
@@ -89,371 +92,418 @@
             justify-content: center;
             flex-wrap: wrap;
             margin-bottom: 2rem;
+            padding: 0 1rem;
         }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;                 /* kein Platz für Text nötig */
-  background: #ffffff1a;
-  border-radius: 999px;
-  padding: .28rem;        /* nur wenig Innenabstand */
-  border: 1px solid #ffffff26; /* dezente Kante, optional */
-}
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            background: #ffffff1a;
+            border-radius: 999px;
+            padding: .28rem;
+            border: 1px solid #ffffff26;
+        }
 
-.badge img {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-  display: block;
-}
+        .badge img {
+            width: clamp(18px, 4vw, 20px);
+            height: clamp(18px, 4vw, 20px);
+            object-fit: contain;
+            display: block;
+        }
 
-.links {
-  display: grid;
-  gap: 12px;
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto;           /* <– zentriert die Liste innerhalb der Karte */
-}
+        .links {
+            display: grid;
+            gap: clamp(10px, 2vw, 12px);
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 0 clamp(0.5rem, 2vw, 1rem);
+        }
 
-.link {
-  position: relative;        /* für das absolut positionierte Icon */
-  display: flex;
-  align-items: center;
-  justify-content: center;   /* zentriert den Inhalt */
-  text-align: center;
-  gap: .6rem;
-  padding: 0.9rem 1.2rem;
-  border-radius: var(--radius);
-  background: var(--card);
-  border: 1px solid #ffffff22;
-  box-shadow: var(--shadow);
-  transition: .2s;
-  width: 100%;               /* volle Breite für schöne Pillenform */
-}
+        .link {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: .6rem;
+            padding: clamp(0.75rem, 2vw, 0.9rem) clamp(1rem, 2.5vw, 1.2rem);
+            border-radius: var(--radius);
+            background: var(--card);
+            border: 1px solid #ffffff22;
+            box-shadow: var(--shadow);
+            transition: .2s;
+            width: 100%;
+            min-height: 56px;
+        }
 
         .link:hover {
             transform: translateY(-2px);
             background: color-mix(in oklab, var(--card), white 4%);
         }
 
-.link img {
-  width: 35px; height: 35px; object-fit: contain;
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-.link span {
-  margin: 0 auto;
-}
+        .link img {
+            width: clamp(30px, 7vw, 35px);
+            height: clamp(30px, 7vw, 35px);
+            object-fit: contain;
+            position: absolute;
+            left: clamp(12px, 3vw, 14px);
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .link span {
+            margin: 0 auto;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+            word-break: break-word;
+            padding: 0 clamp(2rem, 10vw, 3rem);
+        }
 
         footer {
-            padding: 1rem;
+            padding: clamp(0.75rem, 2vw, 1rem);
             text-align: center;
-            font-size: .85rem;
+            font-size: clamp(0.75rem, 1.8vw, 0.85rem);
             color: var(--muted);
         }
-        .sound-toggle {
-  position: fixed;
-  right: 14px;
-  bottom: 16px;
-  z-index: 10;
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  padding: .45rem .6rem;
-  border-radius: 999px;
-  background: #ffffff1a;
-  color: var(--ink);
-  border: 1px solid #ffffff33;
-  box-shadow: var(--shadow);
-  font-weight: 700;
-  user-select: none;
-  cursor: pointer;
-  backdrop-filter: blur(6px) saturate(1.2);
-}
-.sound-toggle.hidden { display: none; }
-.sound-toggle .dot { width:8px; height:8px; border-radius:50%; background:#ff6b6b; }
-.sound-toggle.on .dot { background:#1dd1a1; }
-/* Name Effects */
-.name.glow {
-  text-shadow: 0 0 8px #85a3ff, 0 0 12px #85a3ff, 0 0 16px #85a3ff;
-}
-.name.neon {
-  color: #0ff;
-  text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
-}
-.name.rainbow {
-  background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: rainbow 3s linear infinite;
-}
-@keyframes rainbow {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
 
-/* Background Effects */
-.bg.night::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,50,0.4);
-  mix-blend-mode: multiply;
-}
-.bg.rain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("/static/effects/rain.gif");
-  background-size: cover;
-  opacity: 0.4;
-  pointer-events: none;
-}
-.bg.snow::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("/static/effects/snow.gif");
-  background-size: cover;
-  opacity: 0.5;
-  pointer-events: none;
-}
-.card {
-  background: rgba(23, 27, 59, var(--card-alpha, 0.8)); /* Default 80% deckend */
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 2rem 2rem;
-  max-width: 600px;
-  width: 100%;
-  backdrop-filter: blur(12px);
-}
-.card.transparent {
-  background: transparent;
-  backdrop-filter: none;
-  box-shadow: none;
-}
+        .sound-toggle {
+            position: fixed;
+            right: clamp(10px, 3vw, 14px);
+            bottom: clamp(12px, 3vw, 16px);
+            z-index: 10;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: clamp(0.4rem, 1.5vw, 0.45rem) clamp(0.5rem, 1.8vw, 0.6rem);
+            border-radius: 999px;
+            background: #ffffff1a;
+            color: var(--ink);
+            border: 1px solid #ffffff33;
+            box-shadow: var(--shadow);
+            font-weight: 700;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+            user-select: none;
+            cursor: pointer;
+            backdrop-filter: blur(6px) saturate(1.2);
+        }
+
+        .sound-toggle.hidden {
+            display: none;
+        }
+
+        .sound-toggle .dot {
+            width: clamp(7px, 1.8vw, 8px);
+            height: clamp(7px, 1.8vw, 8px);
+            border-radius: 50%;
+            background: #ff6b6b;
+        }
+
+        .sound-toggle.on .dot {
+            background: #1dd1a1;
+        }
+
+        .name.glow {
+            text-shadow: 0 0 8px #85a3ff, 0 0 12px #85a3ff, 0 0 16px #85a3ff;
+        }
+
+        .name.neon {
+            color: #0ff;
+            text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
+        }
+
+        .name.rainbow {
+            background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 3s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .bg.night::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 50, 0.4);
+            mix-blend-mode: multiply;
+        }
+
+        .bg.rain::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url("/static/effects/rain.gif");
+            background-size: cover;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .bg.snow::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url("/static/effects/snow.gif");
+            background-size: cover;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .card {
+            background: rgba(23, 27, 59, var(--card-alpha, 0.8));
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: clamp(1.5rem, 4vw, 2rem);
+            max-width: 600px;
+            width: 100%;
+            backdrop-filter: blur(12px);
+        }
+
+        .card.transparent {
+            background: transparent;
+            backdrop-filter: none;
+            box-shadow: none;
+        }
+
+        @media (max-width: 480px) {
+            .link span {
+                font-size: 0.85rem;
+            }
+
+            .name {
+                font-size: 1.4rem;
+            }
+
+            .quote {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (hover: none) {
+            .link:hover {
+                transform: none;
+            }
+
+            .link:active {
+                transform: scale(0.98);
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="bg" id="bg"></div>
     <button id="soundBtn" class="sound-toggle hidden" aria-label="Toggle sound">
-    <span class="dot" aria-hidden="true"></span>
-    <span id="soundLabel">Sound off</span>
+        <span class="dot" aria-hidden="true"></span>
+        <span id="soundLabel">Sound off</span>
     </button>
     <main>
         <div class="card" id="card">
-
-        <img id="pfp" class="pfp" src="/static/icon.png" alt="Profile picture" />
-        <div id="name" class="name">User</div>
-        <div id="quote" class="quote">—</div>
-        <div class="location" id="loc"></div>
-        <div class="badges" id="badges"></div>
-
-        <div class="links" id="links"></div>
-          </div>
-
+            <img id="pfp" class="pfp" src="/static/icon.png" alt="Profile picture" />
+            <div id="name" class="name">User</div>
+            <div id="quote" class="quote">—</div>
+            <div class="location" id="loc"></div>
+            <div class="badges" id="badges"></div>
+            <div class="links" id="links"></div>
+        </div>
     </main>
 
     <footer>
         © <span id="year"></span> TAOMA™
     </footer>
 
-<script>
-(() => {
-  'use strict';
+    <script>
+        (() => {
+            'use strict';
 
-  const yearEl = document.getElementById('year');
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
+            const yearEl = document.getElementById('year');
+            if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  const soundBtn = document.getElementById('soundBtn');
-  const soundLabel = document.getElementById('soundLabel');
-  let bgVideo = null;
-  let bgAudio = null;
-  let soundOn = false;
+            const soundBtn = document.getElementById('soundBtn');
+            const soundLabel = document.getElementById('soundLabel');
+            let bgVideo = null;
+            let bgAudio = null;
+            let soundOn = false;
 
-  function updateSoundUI() {
-    if (!soundBtn) return;
-    soundBtn.classList.toggle('on', soundOn);
-    soundLabel.textContent = soundOn ? 'Sound on' : 'Sound off';
-  }
+            function updateSoundUI() {
+                if (!soundBtn) return;
+                soundBtn.classList.toggle('on', soundOn);
+                soundLabel.textContent = soundOn ? 'Sound on' : 'Sound off';
+            }
 
-  async function turnSoundOn() {
-  try {
-    if (bgAudio) {
-      bgAudio.muted = false;
-      await bgAudio.play().catch(()=>{});
-    } else if (bgVideo) {
-      bgVideo.muted = false;
-      await bgVideo.play().catch(()=>{});
-    } else {
-      return;
-    }
-    soundOn = true;
-    updateSoundUI();
-    soundBtn.classList.remove('hidden');
-  } catch (_) {
-    // bleibt off
-  }
-}
+            async function turnSoundOn() {
+                try {
+                    if (bgAudio) {
+                        bgAudio.muted = false;
+                        await bgAudio.play().catch(() => { });
+                    } else if (bgVideo) {
+                        bgVideo.muted = false;
+                        await bgVideo.play().catch(() => { });
+                    } else {
+                        return;
+                    }
+                    soundOn = true;
+                    updateSoundUI();
+                    soundBtn.classList.remove('hidden');
+                } catch (_) { }
+            }
 
-  function turnSoundOff() {
-    try {
-      if (bgAudio) { bgAudio.muted = true; }
-      if (bgVideo) { bgVideo.muted = true; }
-      soundOn = false;
-      updateSoundUI();
-    } catch(_) {}
-  }
+            function turnSoundOff() {
+                try {
+                    if (bgAudio) { bgAudio.muted = true; }
+                    if (bgVideo) { bgVideo.muted = true; }
+                    soundOn = false;
+                    updateSoundUI();
+                } catch (_) { }
+            }
 
-  soundBtn?.addEventListener('click', () => {
-    if (soundOn) turnSoundOff(); else turnSoundOn();
-  });
+            soundBtn?.addEventListener('click', () => {
+                if (soundOn) turnSoundOff(); else turnSoundOn();
+            });
 
-  // Ein “erster User-Input” schaltet optional sofort Ton an
-  const firstGesture = () => { turnSoundOn(); window.removeEventListener('pointerdown', firstGesture); };
-  window.addEventListener('pointerdown', firstGesture, { once:true });
+            const firstGesture = () => { turnSoundOn(); window.removeEventListener('pointerdown', firstGesture); };
+            window.addEventListener('pointerdown', firstGesture, { once: true });
 
-  async function loadTree() {
-    try {
-      const slug = decodeURIComponent(location.pathname.split('/').pop() || '');
-      const r = await fetch(`/api/linktrees/${encodeURIComponent(slug)}`);
-      if (!r.ok) return;
-      const data = await r.json();
+            async function loadTree() {
+                try {
+                    const slug = decodeURIComponent(location.pathname.split('/').pop() || '');
+                    const r = await fetch(`/api/linktrees/${encodeURIComponent(slug)}`);
+                    if (!r.ok) return;
+                    const data = await r.json();
 
-      // Background (Video oder Bild)
-      const bgEl = document.getElementById('bg');
-      bgVideo = null;
-      if (bgEl && data.background_url) {
-        if (data.background_is_video) {
-          bgEl.innerHTML = `
+                    const bgEl = document.getElementById('bg');
+                    bgVideo = null;
+                    if (bgEl && data.background_url) {
+                        if (data.background_is_video) {
+                            bgEl.innerHTML = `
             <video id="bgvid"
                    src="${data.background_url}"
                    autoplay muted loop
                    playsinline webkit-playsinline
                    preload="auto"></video>`;
-          bgVideo = document.getElementById('bgvid');
-          bgVideo.muted = true;
-          bgVideo.play().catch(() => {});
-          document.addEventListener('visibilitychange', () => { if (!document.hidden) bgVideo?.play().catch(()=>{}); });
-        } else {
-          bgEl.innerHTML = `<img src="${data.background_url}" alt="Background">`;
-        }
-      }
-if (bgEl) {
-  bgEl.classList.remove('night','rain','snow');
-  if (data.background_effect && data.background_effect !== 'none') {
-    bgEl.classList.add(data.background_effect);
-  }
-}
-      // Audio (Song hat Vorrang vor Video-Ton)
-      if (bgAudio) { try { bgAudio.pause(); } catch{} bgAudio.remove(); bgAudio = null; }
-      if (data.song_url) {
-        bgAudio = document.createElement('audio');
-        bgAudio.src = data.song_url;
-        bgAudio.loop = true;
-        bgAudio.preload = 'auto';
-        bgAudio.muted = true;            // Autoplay-freundlich starten
-        document.body.appendChild(bgAudio);
-        bgAudio.play().catch(()=>{});
-        soundBtn?.classList.remove('hidden'); // Button zeigen – Nutzer kann unmute’n
-      } else if (data.background_is_video && bgVideo) {
-        // Kein Song → Videoton anbieten
-        soundBtn?.classList.remove('hidden');
-      } else {
-        soundBtn?.classList.add('hidden'); // nichts abzuspielen
-      }
-      soundOn = false;
-      updateSoundUI();
-const cardEl = document.getElementById('card');
-if (cardEl) {
-  const t = data.transparency ?? 0;
-  const alpha = 1 - (Math.min(Math.max(t, 0), 100) / 100);
+                            bgVideo = document.getElementById('bgvid');
+                            bgVideo.muted = true;
+                            bgVideo.play().catch(() => { });
+                            document.addEventListener('visibilitychange', () => { if (!document.hidden) bgVideo?.play().catch(() => { }); });
+                        } else {
+                            bgEl.innerHTML = `<img src="${data.background_url}" alt="Background">`;
+                        }
+                    }
+                    if (bgEl) {
+                        bgEl.classList.remove('night', 'rain', 'snow');
+                        if (data.background_effect && data.background_effect !== 'none') {
+                            bgEl.classList.add(data.background_effect);
+                        }
+                    }
 
-  if (alpha <= 0) {
-    cardEl.classList.add('transparent');
-  } else {
-    cardEl.classList.remove('transparent');
-    cardEl.style.setProperty('--card-alpha', alpha.toString());
-  }
-}
-      // Profil/Badges/Links wie gehabt
-        const pfp = document.getElementById('pfp');
-        if (pfp) pfp.src = data.profile_picture || '/static/icon.png';
-       const nameEl = document.getElementById('name');
-if (nameEl) {
-  const mode = data.display_name_mode || 'slug';
-  nameEl.textContent = (mode === 'username' ? (data.user_username || data.slug) : data.slug) || 'User';
+                    if (bgAudio) { try { bgAudio.pause(); } catch { } bgAudio.remove(); bgAudio = null; }
+                    if (data.song_url) {
+                        bgAudio = document.createElement('audio');
+                        bgAudio.src = data.song_url;
+                        bgAudio.loop = true;
+                        bgAudio.preload = 'auto';
+                        bgAudio.muted = true;
+                        document.body.appendChild(bgAudio);
+                        bgAudio.play().catch(() => { });
+                        soundBtn?.classList.remove('hidden');
+                    } else if (data.background_is_video && bgVideo) {
+                        soundBtn?.classList.remove('hidden');
+                    } else {
+                        soundBtn?.classList.add('hidden');
+                    }
+                    soundOn = false;
+                    updateSoundUI();
+                    const cardEl = document.getElementById('card');
+                    if (cardEl) {
+                        const t = data.transparency ?? 0;
+                        const alpha = 1 - (Math.min(Math.max(t, 0), 100) / 100);
 
-  // Effekt-Klassen setzen
-  nameEl.classList.remove('glow','neon','rainbow');
-  if (data.name_effect && data.name_effect !== 'none') {
-    nameEl.classList.add(data.name_effect);
-  }
-}
-    const quoteEl = document.getElementById('quote'); if (quoteEl) quoteEl.textContent = data.quote || '';
-      const locEl = document.getElementById('loc');
-      if (locEl) {
-        locEl.innerHTML = data.location
-          ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg> ${data.location}` : '';
-      }
+                        if (alpha <= 0) {
+                            cardEl.classList.add('transparent');
+                        } else {
+                            cardEl.classList.remove('transparent');
+                            cardEl.style.setProperty('--card-alpha', alpha.toString());
+                        }
+                    }
 
-    const badgesEl = document.getElementById('badges');
-    if (badgesEl) {
-      badgesEl.innerHTML = '';
-      (data.icons || []).forEach(ic => {
-        if (!ic.displayed) return;
+                    const pfp = document.getElementById('pfp');
+                    if (pfp) pfp.src = data.profile_picture || '/static/icon.png';
+                    const nameEl = document.getElementById('name');
+                    if (nameEl) {
+                        const mode = data.display_name_mode || 'slug';
+                        nameEl.textContent = (mode === 'username' ? (data.user_username || data.slug) : data.slug) || 'User';
 
-        const desc = ic.description || ic.code || 'badge';
-        const wrap = document.createElement('span');
-        wrap.className = 'badge';
-        // Tooltip via title (Desktop) + aria-label (AT / Touch-Langdruck zeigt oft auch title)
-        wrap.title = desc;
-        wrap.setAttribute('aria-label', desc);
+                        nameEl.classList.remove('glow', 'neon', 'rainbow');
+                        if (data.name_effect && data.name_effect !== 'none') {
+                            nameEl.classList.add(data.name_effect);
+                        }
+                    }
+                    const quoteEl = document.getElementById('quote'); if (quoteEl) quoteEl.textContent = data.quote || '';
+                    const locEl = document.getElementById('loc');
+                    if (locEl) {
+                        locEl.innerHTML = data.location
+                            ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg> ${data.location}` : '';
+                    }
 
-        const img = document.createElement('img');
-        img.src = ic.image_url;
-        img.alt = desc;
-        img.width = 20;
-        img.height = 20;
+                    const badgesEl = document.getElementById('badges');
+                    if (badgesEl) {
+                        badgesEl.innerHTML = '';
+                        (data.icons || []).forEach(ic => {
+                            if (!ic.displayed) return;
 
-        wrap.appendChild(img);
-        badgesEl.appendChild(wrap);
-      });
-    }
-      const linksEl = document.getElementById('links');
-      if (linksEl) {
-        linksEl.innerHTML = '';
-        (data.links || []).forEach(l => {
-          if (!l.is_active) return;
-          const a = document.createElement('a');
-          a.className = 'link';
-          a.href = l.url;
-          a.target = '_blank';
-          a.rel = 'noreferrer';
-          a.innerHTML = `${l.icon_url ? `<img src="${l.icon_url}" alt="">` : ''}<span>${l.label || l.url}</span>`;
-          linksEl.appendChild(a);
-        });
-      }
-    } catch (e) {
-      console.error('loadTree failed:', e);
-    }
-          soundOn = false;
-      updateSoundUI();
+                            const desc = ic.description || ic.code || 'badge';
+                            const wrap = document.createElement('span');
+                            wrap.className = 'badge';
+                            wrap.title = desc;
+                            wrap.setAttribute('aria-label', desc);
 
-      // Musik standardmäßig an
-      setTimeout(() => {
-        turnSoundOn();
-      }, 300); 
-  }
+                            const img = document.createElement('img');
+                            img.src = ic.image_url;
+                            img.alt = desc;
+                            img.width = 20;
+                            img.height = 20;
 
-  loadTree();
-})();
-</script>
+                            wrap.appendChild(img);
+                            badgesEl.appendChild(wrap);
+                        });
+                    }
+                    const linksEl = document.getElementById('links');
+                    if (linksEl) {
+                        linksEl.innerHTML = '';
+                        (data.links || []).forEach(l => {
+                            if (!l.is_active) return;
+                            const a = document.createElement('a');
+                            a.className = 'link';
+                            a.href = l.url;
+                            a.target = '_blank';
+                            a.rel = 'noreferrer';
+                            a.innerHTML = `${l.icon_url ? `<img src="${l.icon_url}" alt="">` : ''}<span>${l.label || l.url}</span>`;
+                            linksEl.appendChild(a);
+                        });
+                    }
+                } catch (e) {
+                    console.error('loadTree failed:', e);
+                }
+                soundOn = false;
+                updateSoundUI();
+
+                setTimeout(() => {
+                    turnSoundOn();
+                }, 300);
+            }
+
+            loadTree();
+        })();
+    </script>
 
 </body>
 
