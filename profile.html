@@ -574,10 +574,7 @@
                 } catch { }
             }
             if (!user) {
-                slot.innerHTML = `
-        <a class="btn small" href="/login">Login</a>
-        <a class="btn small" href="/register">Register</a>
-      `;
+                slot.innerHTML = `<a class="btn sm ghost" href="/login">Login</a><a class="btn sm ghost" href="/register">Register</a>`;
                 return;
             }
             const uname = user.username || 'User'; const initials = uname.trim().slice(0, 2).toUpperCase();
@@ -592,14 +589,14 @@
           <div class="menu" id="userMenu" role="menu" aria-label="User menu">
             <a href="/profile" role="menuitem">Profile</a>
             ${isAdmin ? `<a href="/admin" role="menuitem">Admin</a>` : ``}
-            <button id="logoutBtn" role="menuitem">Logout</button>
+            <button id="logoutBtnHdr" role="menuitem">Logout</button>
           </div>
         </div>`;
-            const btn = slot.querySelector('#avatarBtn'); const menu = slot.querySelector('#userMenu'); const logoutBtn = slot.querySelector('#logoutBtn');
+            const btn = slot.querySelector('#avatarBtn'); const menu = slot.querySelector('#userMenu'); const logoutHdr = slot.querySelector('#logoutBtnHdr');
             function closeMenu() { menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
             btn.addEventListener('click', (e) => { e.stopPropagation(); const open = menu.classList.toggle('open'); btn.setAttribute('aria-expanded', String(open)); });
             document.addEventListener('click', (e) => { if (!menu.contains(e.target) && !btn.contains(e.target)) closeMenu(); });
-            logoutBtn.addEventListener('click', doLogout, { passive: true });
+            logoutHdr.addEventListener('click', doLogout, { passive: true });
         }
 
         // --- Profile page logic
