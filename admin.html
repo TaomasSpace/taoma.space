@@ -386,6 +386,630 @@
         display: flex
       }
     }
+
+    /* === Mobile Optimierungen für Admin Panel === */
+    /* Verhindere horizontales Scrollen */
+    html,
+    body {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    body {
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Container */
+    .container {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding-inline: clamp(12px, 3vw, var(--space));
+      box-sizing: border-box;
+    }
+
+    /* Cards */
+    .card {
+      background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+      border: 1px solid #ffffff1a;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(12px, 3vw, 16px);
+      max-width: 100%;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    /* Inputs responsive */
+    input,
+    select,
+    textarea {
+      width: 100%;
+      max-width: 100%;
+      padding: .6rem .7rem;
+      border-radius: 10px;
+      border: 1px solid #ffffff26;
+      background: #0f1331;
+      color: var(--ink);
+      box-sizing: border-box;
+      font-size: 16px;
+      /* Verhindert Zoom auf iOS */
+      word-break: break-word;
+    }
+
+    /* Labels */
+    label {
+      display: block;
+      margin: .45rem 0 .25rem;
+      font-weight: 600;
+      word-wrap: break-word;
+      max-width: 100%;
+    }
+
+    /* Buttons responsive */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .6rem;
+      padding: .6rem .9rem;
+      border-radius: 12px;
+      background: var(--acc);
+      color: #fff;
+      font-weight: 700;
+      border: 1px solid #ffffff1a;
+      box-shadow: var(--shadow);
+      transition: .2s;
+      cursor: pointer;
+      white-space: nowrap;
+      text-align: center;
+      min-height: 44px;
+      /* Touch-friendly */
+    }
+
+    /* Row Layout */
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      max-width: 100%;
+    }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-top: .75rem;
+    }
+
+    /* Grid responsive */
+    .grid {
+      display: grid;
+      gap: clamp(14px, 2vw, 18px);
+      max-width: 100%;
+    }
+
+    .grid.cols-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* Table responsive */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow-x: auto;
+      display: block;
+    }
+
+    .table thead,
+    .table tbody,
+    .table tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    .table th,
+    .table td {
+      padding: .5rem;
+      border-bottom: 1px solid #ffffff1a;
+      text-align: left;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Log/Code blocks */
+    .log {
+      white-space: pre-wrap;
+      background: #0f1331;
+      border: 1px solid #ffffff1a;
+      border-radius: 12px;
+      padding: .75rem;
+      max-height: 240px;
+      overflow: auto;
+      word-break: break-all;
+      font-size: .9rem;
+      max-width: 100%;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-all;
+    }
+
+    code {
+      word-break: break-all;
+      overflow-wrap: break-word;
+    }
+
+    /* Chips */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .35rem .6rem;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--acc) 15%, transparent);
+      border: 1px solid #ffffff1a;
+      font-size: .9rem;
+      word-wrap: break-word;
+      max-width: 100%;
+    }
+
+    /* === Tablet Breakpoint === */
+    @media (max-width: 900px) {
+
+      /* Grid wird single-column */
+      .grid.cols-2 {
+        grid-template-columns: 1fr;
+      }
+
+      /* Container padding reduzieren */
+      .container {
+        padding-inline: clamp(10px, 2.5vw, 16px);
+      }
+
+      /* Card padding */
+      .card {
+        padding: clamp(10px, 2.5vw, 14px);
+      }
+
+      /* Forms mit flex-wrap */
+      .row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .row>div {
+        flex: 1 1 100% !important;
+        width: 100%;
+      }
+
+      /* Buttons volle Breite */
+      .actions .btn {
+        flex: 1 1 100%;
+        min-width: 120px;
+      }
+
+      /* Table scrollable */
+      .table {
+        font-size: .85rem;
+      }
+
+      .table th,
+      .table td {
+        padding: .4rem;
+      }
+    }
+
+    /* === Smartphone Breakpoint === */
+    @media (max-width: 640px) {
+
+      /* Main padding */
+      main {
+        padding-block: clamp(20px, 4vw, 32px);
+      }
+
+      /* Headings kleiner */
+      h1 {
+        font-size: clamp(20px, 5vw, 28px);
+        margin: .2rem 0 .8rem;
+      }
+
+      h2 {
+        font-size: clamp(16px, 4vw, 20px);
+        margin: 0 0 .5rem;
+      }
+
+      /* Container noch enger */
+      .container {
+        padding-inline: 10px;
+      }
+
+      /* Cards */
+      .card {
+        padding: 10px;
+        border-radius: 12px;
+      }
+
+      /* Inputs kompakter */
+      input,
+      select,
+      textarea {
+        padding: .5rem .6rem;
+        font-size: 15px;
+        border-radius: 8px;
+      }
+
+      /* Buttons kompakter */
+      .btn {
+        padding: .5rem .7rem;
+        font-size: .9rem;
+        gap: .4rem;
+        border-radius: 10px;
+        min-height: 42px;
+      }
+
+      /* Row immer gestapelt */
+      .row {
+        flex-direction: column;
+        gap: .5rem;
+        align-items: stretch;
+      }
+
+      .row>* {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+      }
+
+      /* Inline auf Mobile stapeln */
+      .inline {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .3rem;
+      }
+
+      /* Actions */
+      .actions {
+        flex-direction: column;
+        gap: .4rem;
+      }
+
+      .actions .btn {
+        width: 100%;
+      }
+
+      /* Chips kleiner */
+      .chip {
+        font-size: .85rem;
+        padding: .3rem .5rem;
+      }
+
+      /* Log blocks */
+      .log {
+        padding: .6rem;
+        font-size: .85rem;
+        max-height: 200px;
+      }
+
+      /* Labels */
+      label {
+        font-size: .9rem;
+        margin: .35rem 0 .2rem;
+      }
+
+      /* Kicker */
+      .kicker {
+        font-size: .9rem;
+        margin: 0 0 .4rem;
+      }
+
+      /* Notes */
+      .note {
+        font-size: .85rem;
+        line-height: 1.5;
+      }
+
+      /* Table noch kompakter */
+      .table {
+        font-size: .8rem;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .table th,
+      .table td {
+        padding: .3rem .25rem;
+        font-size: .8rem;
+      }
+
+      /* Thumbnail */
+      .thumb {
+        width: 36px;
+        height: 36px;
+      }
+
+      /* Footer */
+      footer {
+        padding-block: 16px;
+      }
+
+      .foot {
+        flex-direction: column;
+        gap: .7rem;
+        align-items: flex-start;
+      }
+
+      .foot small {
+        font-size: .8rem;
+      }
+    }
+
+    /* === Sehr kleine Smartphones === */
+    @media (max-width: 380px) {
+
+      /* Container minimal */
+      .container {
+        padding-inline: 8px;
+      }
+
+      /* Card padding minimal */
+      .card {
+        padding: 8px;
+      }
+
+      /* Headings noch kleiner */
+      h1 {
+        font-size: 18px;
+      }
+
+      h2 {
+        font-size: 15px;
+      }
+
+      /* Buttons kompakter */
+      .btn {
+        padding: .45rem .6rem;
+        font-size: .85rem;
+        min-height: 40px;
+      }
+
+      /* Inputs */
+      input,
+      select,
+      textarea {
+        padding: .45rem .55rem;
+        font-size: 14px;
+      }
+
+      /* Log */
+      .log {
+        padding: .5rem;
+        font-size: .8rem;
+      }
+
+      /* Chips */
+      .chip {
+        font-size: .8rem;
+        padding: .25rem .45rem;
+      }
+
+      /* Table horizontal scroll */
+      .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    /* === Landscape Mode === */
+    @media (max-height: 500px) and (orientation: landscape) {
+      main {
+        padding-block: 16px;
+      }
+
+      .card {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 20px;
+        margin: 0 0 .6rem;
+      }
+
+      h2 {
+        font-size: 16px;
+        margin: 0 0 .4rem;
+      }
+    }
+
+    /* === Spezielle Fix für Form-Layouts === */
+    @media (max-width: 640px) {
+
+      /* Alle Form-Divs mit style="flex:..." */
+      form>.row>div[style*="flex"] {
+        flex: 1 1 100% !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      /* Select-Felder in Forms */
+      form select {
+        width: 100% !important;
+      }
+
+      /* Input-Gruppen */
+      form .row {
+        align-items: stretch !important;
+      }
+
+      /* HR-Elemente */
+      hr {
+        margin: .7rem 0 !important;
+      }
+    }
+
+    /* === Auth Header Mobile === */
+    .auth {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .auth .btn.small,
+    .btn.small {
+      padding: .5rem .7rem;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid #ffffff26;
+      box-shadow: none;
+      font-weight: 600;
+    }
+
+    .auth-box {
+      position: relative;
+    }
+
+    .avatar-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .35rem .55rem;
+      border-radius: 999px;
+      background: #ffffff10;
+      border: 1px solid #ffffff26;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      background: #0f1331;
+      flex-shrink: 0;
+    }
+
+    .avatar-fallback {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font: 700 12px/1 Inter, ui-sans-serif;
+      background: #25306a;
+      color: #e9ebff;
+      flex-shrink: 0;
+    }
+
+    .menu {
+      position: absolute;
+      right: 0;
+      margin-top: .4rem;
+      min-width: 160px;
+      z-index: 60;
+      background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+      border: 1px solid #ffffff22;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: .35rem;
+      display: none;
+    }
+
+    .menu.open {
+      display: block;
+    }
+
+    .menu a,
+    .menu button {
+      width: 100%;
+      text-align: left;
+      display: block;
+      background: transparent;
+      color: var(--ink);
+      padding: .55rem .65rem;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .menu a:hover,
+    .menu button:hover {
+      background: #ffffff12;
+    }
+
+    @media (max-width: 640px) {
+      .auth {
+        gap: .3rem;
+      }
+
+      .avatar-btn {
+        padding: .3rem .45rem;
+        gap: .4rem;
+      }
+
+      .avatar,
+      .avatar-fallback {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+      }
+
+      .uname {
+        font-size: .85rem !important;
+      }
+
+      .menu {
+        min-width: 140px;
+      }
+    }
+
+    /* === Table Wrapper für horizontales Scrollen === */
+    @media (max-width: 640px) {
+
+      /* Wenn Tables zu breit werden */
+      .table {
+        min-width: 500px;
+        /* Mindestbreite für Table */
+      }
+
+      /* Table Container scrollbar */
+      article.card:has(.table) {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    /* === Right-align Elemente === */
+    .right {
+      margin-left: auto;
+    }
+
+    @media (max-width: 640px) {
+      .right {
+        margin-left: 0;
+        width: 100%;
+      }
+    }
+
+    /* === Prevent text overflow everywhere === */
+    * {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    p,
+    span,
+    div,
+    label,
+    button {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+    }
   </style>
 </head>
 
