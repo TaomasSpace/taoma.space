@@ -390,31 +390,8 @@
 </head>
 
 <body>
-  <header>
-    <div class="container nav" role="navigation" aria-label="Primary">
-      <div class="brand">
-        <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
-        <a href="/"><span>TAOMA™</span></a>
-      </div>
+  <div data-fragment="header"></div>
 
-      <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu" aria-expanded="false"
-        aria-label="Toggle menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-        </svg>
-      </button>
-
-      <nav id="primary-menu" class="links" aria-label="Site">
-        <a href="/">Home</a>
-        <a href="/projects">Projects</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-        <a href="/skills">Skills</a>
-      </nav>
-
-      <div id="authSlot" class="auth"></div>
-    </div>
-  </header>
 
   <main class="container">
     <section class="card">
@@ -693,18 +670,34 @@
     </section>
   </main>
 
-  <footer>
-    <div class="container foot">
-      <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved.</small>
-      <div class="row">
-        <a class="btn ghost" href="/">← Back</a>
-      </div>
-    </div>
-  </footer>
+  <div data-fragment="footer"></div>
+
+
+  <script src="/static/layout.js"></script>
 
   <script>
     // Year
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Visitor counter
+    (async () => {
+      const KEY = "taoma_last_counted_at";
+      const DAY = 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      const last = parseInt(localStorage.getItem(KEY) || "0", 10);
+      const shouldCount = !last || (now - last) > DAY;
+
+      if (shouldCount) {
+        navigator.sendBeacon("/api/visits/increment");
+        localStorage.setItem(KEY, String(now));
+      }
+
+      try {
+        const res = await fetch("/api/visits/value");
+        const { total } = await res.json();
+        document.getElementById("visitor-count").textContent = total ?? "0";
+      } catch { }
+    })();
 
     // Utilities
     const $ = (s, r = document) => r.querySelector(s);
@@ -974,27 +967,6 @@
         show('#logGC', summary, true);
       } catch (err) { show('#logGC', String(err), false); }
     });
-
-    // --- Minimal auth header slot (login/logout) ---
-    (async function renderAuthHeader() {
-      const slot = $('#authSlot'); if (!slot) return;
-      try {
-        const r = await apiget('/api/auth/verify');
-        if (!r.ok) { slot.innerHTML = `<a class="btn ghost" href="/login">Login</a>`; return; }
-        const { user } = await r.json();
-        const uname = user?.username ?? 'User';
-        slot.innerHTML = `<span class=\"chip\">Logged in as <strong>${uname}</strong></span>
-                          <button class=\"btn ghost\" id=\"btnLogout\">Logout</button>`;
-        $('#btnLogout')?.addEventListener('click', async () => {
-          try {
-            const t = token(); if (t) { await fetch('/api/auth/logout', { method: 'POST', headers: { 'X-Auth-Token': t } }); }
-          } catch { }
-          localStorage.removeItem('gifapi_token');
-          localStorage.removeItem('gifapi_token_expires');
-          location.href = '/login';
-        });
-      } catch { slot.innerHTML = `<a class="btn ghost" href="/login">Login</a>`; }
-    })();
     const toggle = document.getElementById('mobileToggle');
     const menu = document.getElementById('primary-menu');
     toggle?.addEventListener('click', () => {
