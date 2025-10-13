@@ -924,22 +924,22 @@
 
         async function safe(fn) { try { return await fn(); } catch (e) { console.error(e); return null; } }
         (async () => {
-            const countEl = document.getElementById("visitor-count");
-            try {
-                const KEY = "taoma_last_counted_at", DAY = 86400000, now = Date.now();
-                const last = Number(localStorage.getItem(KEY) || 0);
-                if (!last || now - last > DAY) {
-                    navigator.sendBeacon && navigator.sendBeacon("/api/visits/increment");
-                    localStorage.setItem(KEY, String(now));
-                }
-                const r = await fetch("/api/visits/value");
-                if (r.ok) {
-                    const { total } = await r.json();
-                    if (countEl) countEl.textContent = String(total ?? 0);
-                } else if (countEl) countEl.textContent = '—';
-            } catch {
-                if (countEl) countEl.textContent = '—';
+            const KEY = "taoma_last_counted_at";
+            const DAY = 24 * 60 * 60 * 1000;
+            const now = Date.now();
+            const last = parseInt(localStorage.getItem(KEY) || "0", 10);
+            const shouldCount = !last || (now - last) > DAY;
+
+            if (shouldCount) {
+                navigator.sendBeacon("/api/visits/increment");
+                localStorage.setItem(KEY, String(now));
             }
+
+            try {
+                const res = await fetch("/api/visits/value");
+                const { total } = await res.json();
+                document.getElementById("visitor-count").textContent = total ?? "0";
+            } catch { }
         })();
         // --- Auth header (wie gehabt) ---
         async function renderAuthHeader() {
@@ -963,8 +963,10 @@
 
             // immer etwas rendern:
             if (!user) {
-                slot.innerHTML = `<a class="btn sm ghost" href="/login">Login</a>
-                                <a class="btn sm ghost" href="/register">Register</a>`;
+                slot.innerHTML = `
+        <a class="btn small" href="/login">Login</a>
+        <a class="btn small" href="/register">Register</a>
+      `;
                 return null;
             }
             const uname = user.username || 'User', initials = uname.trim().slice(0, 2).toUpperCase(), pfp = user.profile_picture && String(user.profile_picture).trim();
@@ -975,13 +977,17 @@
           <span class="uname" style="font-weight:700;font-size:.95rem">${uname}</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
-        <div class="menu" id="userMenu" role="menu"><a href="/profile" role="menuitem">Profile</a>${isAdmin ? `<a href="/admin" role="menuitem">Admin</a>` : ``}<button id="logoutBtnHdr" role="menuitem">Logout</button></div>
+        <div class="menu" id="userMenu" role="menu" aria-label="User menu">
+          <a href="/profile" role="menuitem">Profile</a>
+          ${isAdmin ? `<a href="/admin" role="menuitem">Admin</a>` : ``}
+          <button id="logoutBtn" role="menuitem">Logout</button>
+        </div>
       </div>`;
-            const btn = slot.querySelector('#avatarBtn'), m = slot.querySelector('#userMenu'), lo = slot.querySelector('#logoutBtnHdr');
+            const btn = slot.querySelector('#avatarBtn'), m = slot.querySelector('#userMenu'), logoutBtn = slot.querySelector('#logoutBtn');
             function close() { m.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
             btn.addEventListener('click', e => { e.stopPropagation(); const open = m.classList.toggle('open'); btn.setAttribute('aria-expanded', String(open)); });
             document.addEventListener('click', e => { if (!m.contains(e.target) && !btn.contains(e.target)) close(); });
-            lo.addEventListener('click', async () => { try { const t = localStorage.getItem('gifapi_token'); if (t) { await fetch('/api/auth/logout', { method: 'POST', headers: { 'X-Auth-Token': t } }).catch(() => { }); } } catch { } localStorage.removeItem('gifapi_token'); localStorage.removeItem('gifapi_token_expires'); location.href = '/'; }, { passive: true });
+            logoutBtn.addEventListener('click', async () => { try { const t = localStorage.getItem('gifapi_token'); if (t) { await fetch('/api/auth/logout', { method: 'POST', headers: { 'X-Auth-Token': t } }).catch(() => { }); } } catch { } localStorage.removeItem('gifapi_token'); localStorage.removeItem('gifapi_token_expires'); location.href = '/'; }, { passive: true });
             return user;
         }
 

@@ -679,6 +679,26 @@
     // Year
     document.getElementById('year').textContent = new Date().getFullYear();
 
+    // Visitor counter
+    (async () => {
+      const KEY = "taoma_last_counted_at";
+      const DAY = 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      const last = parseInt(localStorage.getItem(KEY) || "0", 10);
+      const shouldCount = !last || (now - last) > DAY;
+
+      if (shouldCount) {
+        navigator.sendBeacon("/api/visits/increment");
+        localStorage.setItem(KEY, String(now));
+      }
+
+      try {
+        const res = await fetch("/api/visits/value");
+        const { total } = await res.json();
+        document.getElementById("visitor-count").textContent = total ?? "0";
+      } catch { }
+    })();
+
     // Utilities
     const $ = (s, r = document) => r.querySelector(s);
     const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -947,27 +967,6 @@
         show('#logGC', summary, true);
       } catch (err) { show('#logGC', String(err), false); }
     });
-
-    // --- Minimal auth header slot (login/logout) ---
-    (async function renderAuthHeader() {
-      const slot = $('#authSlot'); if (!slot) return;
-      try {
-        const r = await apiget('/api/auth/verify');
-        if (!r.ok) { slot.innerHTML = `<a class="btn ghost" href="/login">Login</a>`; return; }
-        const { user } = await r.json();
-        const uname = user?.username ?? 'User';
-        slot.innerHTML = `<span class=\"chip\">Logged in as <strong>${uname}</strong></span>
-                          <button class=\"btn ghost\" id=\"btnLogout\">Logout</button>`;
-        $('#btnLogout')?.addEventListener('click', async () => {
-          try {
-            const t = token(); if (t) { await fetch('/api/auth/logout', { method: 'POST', headers: { 'X-Auth-Token': t } }); }
-          } catch { }
-          localStorage.removeItem('gifapi_token');
-          localStorage.removeItem('gifapi_token_expires');
-          location.href = '/login';
-        });
-      } catch { slot.innerHTML = `<a class="btn ghost" href="/login">Login</a>`; }
-    })();
     const toggle = document.getElementById('mobileToggle');
     const menu = document.getElementById('primary-menu');
     toggle?.addEventListener('click', () => {
