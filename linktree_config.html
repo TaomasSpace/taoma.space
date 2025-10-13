@@ -366,163 +366,84 @@
             font-size: .9rem;
             margin-top: .4rem
         }
-
         /* --- Auth header styles (copy from portfolio) --- */
-        .auth {
-            display: flex;
-            align-items: center;
-            gap: .5rem;
-        }
+.auth {
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+}
 
-        .auth .btn.small,
-        .btn.small {
-            /* for login/register variant */
-            padding: .5rem .7rem;
-            border-radius: 10px;
-            background: transparent;
-            color: var(--ink);
-            border: 1px solid #ffffff26;
-            box-shadow: none;
-            font-weight: 600;
-        }
+.auth .btn.small,
+.btn.small { /* for login/register variant */
+  padding:.5rem .7rem;
+  border-radius:10px;
+  background:transparent;
+  color:var(--ink);
+  border:1px solid #ffffff26;
+  box-shadow:none;
+  font-weight:600;
+}
 
-        .auth-box {
-            position: relative;
-        }
+.auth-box { position:relative; }
 
-        .avatar-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-            padding: .35rem .55rem;
-            border-radius: 999px;
-            background: #ffffff10;
-            border: 1px solid #ffffff26;
-            cursor: pointer;
-        }
+.avatar-btn {
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.35rem .55rem;
+  border-radius:999px;
+  background:#ffffff10;
+  border:1px solid #ffffff26;
+  cursor:pointer;
+}
 
-        .avatar {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            object-fit: cover;
-            display: block;
-            background: #0f1331;
-        }
+.avatar {
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+  background:#0f1331;
+}
 
-        .avatar-fallback {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            font: 700 12px/1 Inter, ui-sans-serif;
-            background: #25306a;
-            color: #e9ebff;
-        }
+.avatar-fallback {
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font:700 12px/1 Inter, ui-sans-serif;
+  background:#25306a;
+  color:#e9ebff;
+}
 
-        .menu {
-            position: absolute;
-            right: 0;
-            margin-top: .4rem;
-            min-width: 160px;
-            z-index: 60;
-            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
-            border: 1px solid #ffffff22;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            padding: .35rem;
-            display: none;
-        }
+.menu {
+  position:absolute;
+  right:0;
+  margin-top:.4rem;
+  min-width:160px;
+  z-index:60;
+  background:linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+  border:1px solid #ffffff22;
+  border-radius:12px;
+  box-shadow:var(--shadow);
+  padding:.35rem;
+  display:none;
+}
+.menu.open { display:block; }
+.menu a, .menu button {
+  width:100%;
+  text-align:left;
+  display:block;
+  background:transparent;
+  color:var(--ink);
+  padding:.55rem .65rem;
+  border:0;
+  border-radius:10px;
+  cursor:pointer;
+}
+.menu a:hover, .menu button:hover { background:#ffffff12; }
 
-        .menu.open {
-            display: block;
-        }
-
-        .menu a,
-        .menu button {
-            width: 100%;
-            text-align: left;
-            display: block;
-            background: transparent;
-            color: var(--ink);
-            padding: .55rem .65rem;
-            border: 0;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        .menu a:hover,
-        .menu button:hover {
-            background: #ffffff12;
-        }
-
-        /* --- Mobile hardening (Linktree Config) --- */
-        .wrap {
-            grid-template-columns: 1.05fr .95fr;
-        }
-
-        @media (max-width: 980px) {
-            .wrap {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* let flex/grid children actually shrink */
-        .row>* {
-            min-width: 0;
-        }
-
-        .grid>* {
-            min-width: 0;
-        }
-
-        /* inputs and selects: fill container and wrap labels cleanly */
-        .input,
-        .select,
-        textarea {
-            width: 100%;
-        }
-
-        .field label {
-            word-break: break-word;
-        }
-
-        /* links list rows */
-        .link-item {
-            gap: .5rem;
-        }
-
-        .link-item input {
-            flex: 1 1 auto;
-            min-width: 0;
-        }
-
-        .link-item .handle {
-            flex: 0 0 auto;
-        }
-
-        /* show long URLs/labels without pushing layout */
-        #linksList input {
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* make “preview” chips non-overflowing */
-        .kbd {
-            white-space: nowrap;
-        }
-
-        .preview-note {
-            overflow-wrap: anywhere;
-        }
-
-        /* on small phones, tighten panel padding */
-        @media (max-width: 420px) {
-            .panel {
-                padding: 14px;
-            }
-        }
     </style>
 </head>
 
@@ -584,21 +505,21 @@
                         <textarea id="inQuote" class="input" placeholder="Write your bio/quote…"></textarea>
                     </div>
                     <div class="field">
-                        <label for="inSong">Song URL</label>
-                        <input id="inSong" class="input" placeholder="https://…/song.mp3">
+                    <label for="inSong">Song URL</label>
+                    <input id="inSong" class="input" placeholder="https://…/song.mp3">
                     </div>
 
                     <div class="field">
-                        <label for="inBg">Background URL (img/gif/video)</label>
-                        <input id="inBg" class="input" placeholder="https://…/bg.webp">
+                    <label for="inBg">Background URL (img/gif/video)</label>
+                    <input id="inBg" class="input" placeholder="https://…/bg.webp">
                     </div>
                     <div class="field">
-                        <label for="fileSong">Upload Song</label>
-                        <input type="file" id="fileSong" accept="audio/*">
+                    <label for="fileSong">Upload Song</label>
+                    <input type="file" id="fileSong" accept="audio/*">
                     </div>
                     <div class="field">
-                        <label for="fileBg">Upload Background</label>
-                        <input type="file" id="fileBg" accept="image/*,video/*">
+                    <label for="fileBg">Upload Background</label>
+                    <input type="file" id="fileBg" accept="image/*,video/*">
                     </div>
 
                     <div class="field">
@@ -612,13 +533,13 @@
                         <label for="inTrans">Transparency (0–100)</label>
                         <input id="inTrans" class="input" type="number" min="0" max="100" value="0">
                     </div>
-                    <div class="field">
-                        <label for="inDisplayName">Display Name</label>
-                        <select id="inDisplayName" class="select">
-                            <option value="slug">Slug</option>
-                            <option value="username">Username</option>
-                        </select>
-                    </div>
+                <div class="field">
+                <label for="inDisplayName">Display Name</label>
+                <select id="inDisplayName" class="select">
+                    <option value="slug">Slug</option>
+                    <option value="username">Username</option>
+                </select>
+                </div>
                     <div class="field">
                         <label for="inNameFx">Name Effect</label>
                         <select id="inNameFx" class="select">
@@ -667,8 +588,8 @@
                         <input id="inLinkLabel" class="input" placeholder="My Link">
                     </div>
                     <div class="field">
-                        <label for="fileIcon">Upload Link Icon</label>
-                        <input type="file" id="fileIcon" accept="image/*">
+                    <label for="fileIcon">Upload Link Icon</label>
+                    <input type="file" id="fileIcon" accept="image/*">
                     </div>
                     <div class="field">
                         <label for="inLinkIcon">Icon URL</label>
@@ -744,25 +665,25 @@
         document.getElementById('year').textContent = new Date().getFullYear();
 
 
-        async function safe(fn) { try { return await fn(); } catch (e) { console.error(e); return null; } }
-        (async () => {
-            const countEl = document.getElementById("visitor-count");
-            try {
-                const KEY = "taoma_last_counted_at", DAY = 86400000, now = Date.now();
-                const last = Number(localStorage.getItem(KEY) || 0);
-                if (!last || now - last > DAY) {
-                    navigator.sendBeacon && navigator.sendBeacon("/api/visits/increment");
-                    localStorage.setItem(KEY, String(now));
-                }
-                const r = await fetch("/api/visits/value");
-                if (r.ok) {
-                    const { total } = await r.json();
-                    if (countEl) countEl.textContent = String(total ?? 0);
-                } else if (countEl) countEl.textContent = '—';
-            } catch {
-                if (countEl) countEl.textContent = '—';
-            }
-        })();
+        async function safe(fn){ try { return await fn(); } catch (e) { console.error(e); return null; } }
+(async () => {
+  const countEl = document.getElementById("visitor-count");
+  try {
+    const KEY="taoma_last_counted_at", DAY=86400000, now=Date.now();
+    const last = Number(localStorage.getItem(KEY) || 0);
+    if (!last || now - last > DAY) {
+      navigator.sendBeacon && navigator.sendBeacon("/api/visits/increment");
+      localStorage.setItem(KEY, String(now));
+    }
+    const r = await fetch("/api/visits/value");
+    if (r.ok) {
+      const { total } = await r.json();
+      if (countEl) countEl.textContent = String(total ?? 0);
+    } else if (countEl) countEl.textContent = '—';
+  } catch {
+    if (countEl) countEl.textContent = '—';
+  }
+})();
         // --- Auth header (wie gehabt) ---
         async function renderAuthHeader() {
             const slot = document.getElementById('authSlot');
@@ -772,14 +693,14 @@
             let user = null, isAdmin = false;
 
             if (t) {
-                const r = await safe(() => fetch('/api/auth/verify', { headers: { 'X-Auth-Token': t } }));
+                const r = await safe(() => fetch('/api/auth/verify', { headers: { 'X-Auth-Token': t }}));
                 if (r && r.ok) {
-                    const d = await safe(() => r.json());
-                    user = d?.user || null;
-                    isAdmin = !!(user && user.admin);
+                const d = await safe(()=>r.json());
+                user = d?.user || null;
+                isAdmin = !!(user && user.admin);
                 } else {
-                    localStorage.removeItem('gifapi_token');
-                    localStorage.removeItem('gifapi_token_expires');
+                localStorage.removeItem('gifapi_token');
+                localStorage.removeItem('gifapi_token_expires');
                 }
             }
 
@@ -908,11 +829,11 @@
             // NOTE: /api/linktrees/{slug} gibt aktuell keine profile_picture => wir nutzen es nur für Tree/Links/Icons
             return lt;
         }
-        async function apiLoadTreeOwner(id) {
-            const r = await fetch(`/api/linktrees/${id}/manage`, { headers: headers() });
-            if (!r.ok) return null;
-            return await r.json();
-        }
+async function apiLoadTreeOwner(id) {
+  const r = await fetch(`/api/linktrees/${id}/manage`, { headers: headers() });
+  if (!r.ok) return null;
+  return await r.json();
+}
         async function apiEnsureOrUpdateMeta(exists) {
             const body = {
                 slug: $('inSlug').value.trim(),
@@ -924,7 +845,7 @@
                 transparency: parseInt($('inTrans').value || '0', 10),
                 name_effect: $('inNameFx').value,
                 background_effect: $('inBgFx').value,
-                display_name_mode: $('inDisplayName').value,
+                display_name_mode: $('inDisplayName').value, 
             };
             if (!exists) {
                 const r = await fetch('/api/linktrees', { method: 'POST', headers: headers(), body: JSON.stringify(body) });
@@ -995,58 +916,58 @@
             } catch (err) { showMsg(msgLinks, String(err), false); }
         });
 
-        async function refreshData() {
-            const slugInput = $('inSlug').value.trim();
-            let lt = null;
+       async function refreshData() {
+  const slugInput = $('inSlug').value.trim();
+  let lt = null;
 
-            // Wenn wir schon eine ID und ein Token haben → zuerst Owner-Endpoint probieren
-            if (linktreeId && token()) {
-                lt = await apiLoadTreeOwner(linktreeId);
-            }
+  // Wenn wir schon eine ID und ein Token haben → zuerst Owner-Endpoint probieren
+  if (linktreeId && token()) {
+    lt = await apiLoadTreeOwner(linktreeId);
+  }
 
-            // Fallback / First load: public by slug (liefert evtl. nur aktive Links)
-            if (!lt && slugInput) {
-                const pub = await apiLoadTreeBySlug(slugInput);
-                if (pub) {
-                    lt = pub;
-                    // sobald wir die ID kennen, direkt nochmal owner versuchen (um alle Links zu kriegen)
-                    linktreeId = pub.id;
-                    if (token()) {
-                        const full = await apiLoadTreeOwner(linktreeId);
-                        if (full) lt = full;
-                    }
-                }
-            }
+  // Fallback / First load: public by slug (liefert evtl. nur aktive Links)
+  if (!lt && slugInput) {
+    const pub = await apiLoadTreeBySlug(slugInput);
+    if (pub) {
+      lt = pub;
+      // sobald wir die ID kennen, direkt nochmal owner versuchen (um alle Links zu kriegen)
+      linktreeId = pub.id;
+      if (token()) {
+        const full = await apiLoadTreeOwner(linktreeId);
+        if (full) lt = full;
+      }
+    }
+  }
 
-            if (!lt) { currentTree = null; return; }
+  if (!lt) { currentTree = null; return; }
 
-            currentTree = lt;
-            linktreeId = lt.id;
+  currentTree = lt;
+  linktreeId = lt.id;
 
-            // Diese beiden rendern ohnehin, ohne intern zu filtern:
-            fillMetaForm(lt);
-            renderLinks(lt.links || []);   // enthält jetzt auch is_active=false
-            renderBadges(lt.icons || []);  // alle Badges mit displayed-Checkbox
-        }
+  // Diese beiden rendern ohnehin, ohne intern zu filtern:
+  fillMetaForm(lt);
+  renderLinks(lt.links || []);   // enthält jetzt auch is_active=false
+  renderBadges(lt.icons || []);  // alle Badges mit displayed-Checkbox
+}
 
         async function boot() {
             try {
                 const user = await renderAuthHeader();
                 if (!user) {
-                    document.getElementById('notLogged').style.display = 'block';
-                    document.getElementById('cfgWrap').style.display = 'none';
-                    return;
+                document.getElementById('notLogged').style.display = 'block';
+                document.getElementById('cfgWrap').style.display = 'none';
+                return;
                 }
                 document.getElementById('cfgWrap').style.display = 'grid';
 
                 const preferred = slugFromQuery() || user.linktree_slug ||
-                    (user.username || '').toLowerCase().replace(/[^a-z0-9_-]/ig, '');
+                (user.username || '').toLowerCase().replace(/[^a-z0-9_-]/ig, '');
                 document.getElementById('inSlug').value = preferred;
                 document.getElementById('slugPreview').textContent = preferred;
                 document.getElementById('btnOpenPublic').href = `/tree/${encodeURIComponent(preferred)}`;
                 await refreshData(); // will try preferred slug from the input
                 if (!currentTree) {
-                    showMsg(msgMeta, 'You don’t have a Linktree yet. Fill fields and Save to create it.', false);
+                showMsg(msgMeta, 'You don’t have a Linktree yet. Fill fields and Save to create it.', false);
                 }
             } catch (e) {
                 console.error('boot failed:', e);
@@ -1054,51 +975,51 @@
                 showMsg(msgMeta, 'Init failed – see console', false);
                 document.getElementById('notLogged').style.display = 'block';
             }
-        }
+            }
         boot();
         async function uploadFile(inputId, endpoint) {
-            const f = $(inputId).files[0];
-            if (!f) return null;
-            const fd = new FormData();
-            fd.append("file", f);
-            const r = await fetch(endpoint, { method: "POST", headers: { "X-Auth-Token": token() }, body: fd });
-            if (!r.ok) throw new Error(await r.text());
-            const { url } = await r.json();
-            return url;
-        }
-        async function fetchUpload(inputId, endpoint) {
-            const f = $(inputId).files[0];
-            if (!f) return null;
-            const fd = new FormData();
-            fd.append("file", f);
-            const r = await fetch(endpoint, { method: "POST", headers: { "X-Auth-Token": token() }, body: fd });
-            if (!r.ok) throw new Error(await r.text());
-            return await r.json();
-        }
-        $('fileSong').addEventListener('change', async () => {
-            try {
-                const url = await uploadFile('fileSong', '/api/users/me/song');
-                $('inSong').value = url;
-                showMsg(msgMeta, 'Song uploaded', true);
-            } catch (e) { showMsg(msgMeta, 'Song upload failed', false); }
-        });
+    const f = $(inputId).files[0];
+    if (!f) return null;
+    const fd = new FormData();
+    fd.append("file", f);
+    const r = await fetch(endpoint, { method:"POST", headers:{ "X-Auth-Token": token() }, body: fd });
+    if (!r.ok) throw new Error(await r.text());
+    const { url } = await r.json();
+    return url;
+    }
+    async function fetchUpload(inputId, endpoint){
+    const f = $(inputId).files[0];
+    if (!f) return null;
+    const fd = new FormData();
+    fd.append("file", f);
+    const r = await fetch(endpoint, { method:"POST", headers:{ "X-Auth-Token": token() }, body: fd });
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json();
+    }
+$('fileSong').addEventListener('change', async () => {
+  try { 
+    const url = await uploadFile('fileSong', '/api/users/me/song');
+    $('inSong').value = url;
+    showMsg(msgMeta, 'Song uploaded', true);
+  } catch(e){ showMsg(msgMeta, 'Song upload failed', false); }
+});
 
-        $('fileBg').addEventListener('change', async () => {
-            try {
-                const res = await fetchUpload('fileBg', '/api/users/me/background');
-                $('inBg').value = res.url;
-                if (res.is_video) $('inVideo').value = 'true';
-                showMsg(msgMeta, 'Background uploaded', true);
-            } catch (e) { showMsg(msgMeta, 'Background upload failed', false); }
-        });
+$('fileBg').addEventListener('change', async () => {
+  try { 
+    const res = await fetchUpload('fileBg', '/api/users/me/background');
+    $('inBg').value = res.url;
+    if (res.is_video) $('inVideo').value = 'true';
+    showMsg(msgMeta, 'Background uploaded', true);
+  } catch(e){ showMsg(msgMeta, 'Background upload failed', false); }
+});
 
-        $('fileIcon').addEventListener('change', async () => {
-            try {
-                const url = await uploadFile('fileIcon', '/api/users/me/linkicon');
-                $('inLinkIcon').value = url;
-                showMsg(msgLinks, 'Icon uploaded', true);
-            } catch (e) { showMsg(msgLinks, 'Icon upload failed', false); }
-        });
+$('fileIcon').addEventListener('change', async () => {
+  try { 
+    const url = await uploadFile('fileIcon', '/api/users/me/linkicon');
+    $('inLinkIcon').value = url;
+    showMsg(msgLinks, 'Icon uploaded', true);
+  } catch(e){ showMsg(msgLinks, 'Icon upload failed', false); }
+});
 
     </script>
 </body>

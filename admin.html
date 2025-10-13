@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,372 +8,63 @@
   <link rel="icon" type="image/png" href="/static/icon.png">
   <style>
     /* === Base: consistent with other pages === */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box
+    *,*::before,*::after{box-sizing:border-box}
+    :root{
+      --bg:#0e1020;--bg-soft:#141735;--card:#171b3b;--ink:#e9ebff;--muted:#a2a9c8;
+      --acc:#85a3ff;--acc-2:#5b7bff;--ok:#35d79c;--danger:#ff5a6a;
+      --ring:#85a3ff55;--shadow:0 10px 30px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.25);
+      --radius:16px;--space:clamp(16px,2vw,24px);--container:1100px
     }
-
-    :root {
-      --bg: #0e1020;
-      --bg-soft: #141735;
-      --card: #171b3b;
-      --ink: #e9ebff;
-      --muted: #a2a9c8;
-      --acc: #85a3ff;
-      --acc-2: #5b7bff;
-      --ok: #35d79c;
-      --danger: #ff5a6a;
-      --ring: #85a3ff55;
-      --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .25);
-      --radius: 16px;
-      --space: clamp(16px, 2vw, 24px);
-      --container: 1100px
-    }
-
-    html,
-    body {
-      height: 100%
-    }
-
-    body {
-      margin: 0;
-      font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
-      color: var(--ink);
-      background: var(--bg);
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
+    html,body{height:100%}
+    body{margin:0;font:15px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;color:var(--ink);background:var(--bg);min-height:100dvh;display:flex;flex-direction:column}
+    body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
       background:
         radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
         radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
         radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
         linear-gradient(160deg, #0f1531 0%, #0e1020 72%);
     }
-
-    a {
-      color: inherit;
-      text-decoration: none
-    }
-
-    .container {
-      max-width: var(--container);
-      margin: 0 auto;
-      padding-inline: var(--space)
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: .6rem;
-      padding: .6rem .9rem;
-      border-radius: 12px;
-      background: var(--acc);
-      color: #fff;
-      font-weight: 700;
-      border: 1px solid #ffffff1a;
-      box-shadow: var(--shadow);
-      transition: .2s;
-      cursor: pointer
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-      filter: saturate(1.1)
-    }
-
-    .btn.ghost {
-      background: transparent;
-      color: var(--ink);
-      border: 1px solid #ffffff26;
-      box-shadow: none
-    }
-
-    .btn.danger {
-      background: color-mix(in oklab, var(--danger) 80%, #000)
-    }
-
-    .btn.ok {
-      background: color-mix(in oklab, var(--ok) 80%, #000)
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: .4rem;
-      padding: .35rem .6rem;
-      border-radius: 999px;
-      background: color-mix(in oklab, var(--acc) 15%, transparent);
-      border: 1px solid #ffffff1a;
-      font-size: .9rem
-    }
-
-    .card {
-      background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
-      border: 1px solid #ffffff1a;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 1rem
-    }
-
-    .muted {
-      color: var(--muted)
-    }
-
-    :focus-visible {
-      outline: 2px solid var(--acc);
-      outline-offset: 2px;
-      box-shadow: 0 0 0 6px var(--ring)
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      backdrop-filter: saturate(1.1) blur(10px);
-      background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
-      border-bottom: 1px solid #ffffff14
-    }
-
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 64px
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      font-weight: 800;
-      letter-spacing: .4px
-    }
-
-    .brand .logo {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px
-    }
-
-    .links {
-      display: flex;
-      gap: 1rem;
-      align-items: center
-    }
-
-    main {
-      padding-block: clamp(28px, 5vw, 48px)
-    }
-
-    h1 {
-      margin: .2rem 0 1rem;
-      font-size: clamp(24px, 3.8vw, 34px)
-    }
-
-    h2 {
-      margin: 0 0 .6rem;
-      font-size: clamp(18px, 2.6vw, 22px)
-    }
-
-    .grid {
-      display: grid;
-      gap: clamp(14px, 2vw, 18px)
-    }
-
-    .grid.cols-2 {
-      grid-template-columns: 1fr 1fr
-    }
-
-    @media (max-width:900px) {
-      .grid.cols-2 {
-        grid-template-columns: 1fr
-      }
-    }
-
-    label {
-      display: block;
-      margin: .45rem 0 .25rem;
-      font-weight: 600
-    }
-
-    input,
-    select,
-    textarea {
-      width: 100%;
-      padding: .6rem .7rem;
-      border-radius: 10px;
-      border: 1px solid #ffffff26;
-      background: #0f1331;
-      color: var(--ink)
-    }
-
-    .actions {
-      display: flex;
-      gap: .5rem;
-      flex-wrap: wrap;
-      margin-top: .75rem
-    }
-
-    .kicker {
-      margin: 0 0 .5rem
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse
-    }
-
-    .table th,
-    .table td {
-      padding: .5rem;
-      border-bottom: 1px solid #ffffff1a;
-      text-align: left
-    }
-
-    .right {
-      margin-left: auto
-    }
-
-    .inline {
-      display: inline-flex;
-      align-items: center;
-      gap: .5rem
-    }
-
-    .note {
-      font-size: .95rem
-    }
-
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
-    }
-
-    .okText {
-      color: var(--ok);
-      font-weight: 700
-    }
-
-    .errText {
-      color: var(--danger);
-      font-weight: 700
-    }
-
-    footer {
-      border-top: 1px solid #ffffff14;
-      padding-block: 24px;
-      margin-top: auto
-    }
-
-    .foot {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap
-    }
-
-    .log {
-      white-space: pre-wrap;
-      background: #0f1331;
-      border: 1px solid #ffffff1a;
-      border-radius: 12px;
-      padding: .75rem;
-      max-height: 240px;
-      overflow: auto
-    }
-
-    .thumb {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      border: 1px solid #ffffff22;
-      background: #0f1331;
-      object-fit: cover
-    }
-
-    /* --- Mobile hardening (Admin) --- */
-    .row {
-      flex-wrap: wrap;
-    }
-
-    .row>* {
-      min-width: 0;
-    }
-
-    /* critical: allow shrink in flex rows */
-
-    /* inputs/selects should always fit */
-    input,
-    select,
-    textarea {
-      width: 100%;
-    }
-
-    /* long mono strings (tokens, IDs) should wrap nicely */
-    .mono {
-      overflow-wrap: anywhere;
-      word-break: break-word;
-    }
-
-    /* tables/logs inside a safe scroller instead of widening the page */
-    .table {
-      display: table;
-      width: 100%;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .log {
-      max-width: 100%;
-      overflow: auto;
-    }
-
-    /* cards & headings a bit tighter on small phones */
-    @media (max-width: 480px) {
-      main {
-        padding-block: 20px;
-      }
-
-      .card {
-        padding: 12px;
-      }
-
-      h1 {
-        font-size: 22px;
-      }
-
-      h2 {
-        font-size: 18px;
-      }
-    }
-
-    /* chips never overflow their container */
-    .chip {
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    a{color:inherit;text-decoration:none}
+    .container{max-width:var(--container);margin:0 auto;padding-inline:var(--space)}
+    .btn{display:inline-flex;align-items:center;gap:.6rem;padding:.6rem .9rem;border-radius:12px;background:var(--acc);color:#fff;font-weight:700;border:1px solid #ffffff1a;box-shadow:var(--shadow);transition:.2s;cursor:pointer}
+    .btn:hover{transform:translateY(-1px);filter:saturate(1.1)}
+    .btn.ghost{background:transparent;color:var(--ink);border:1px solid #ffffff26;box-shadow:none}
+    .btn.danger{background:color-mix(in oklab, var(--danger) 80%, #000)}
+    .btn.ok{background:color-mix(in oklab, var(--ok) 80%, #000)}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .chip{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .6rem;border-radius:999px;background:color-mix(in oklab, var(--acc) 15%, transparent);border:1px solid #ffffff1a;font-size:.9rem}
+    .card{background:linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));border:1px solid #ffffff1a;border-radius:var(--radius);box-shadow:var(--shadow);padding:1rem}
+    .muted{color:var(--muted)}
+    :focus-visible{outline:2px solid var(--acc);outline-offset:2px;box-shadow:0 0 0 6px var(--ring)}
+    header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(1.1) blur(10px);background:linear-gradient(180deg,#0c0f24cc 0%,#0c0f2400 100%);border-bottom:1px solid #ffffff14}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+    .brand{display:flex;align-items:center;gap:.75rem;font-weight:800;letter-spacing:.4px}
+    .brand .logo{width:28px;height:28px;border-radius:8px}
+    .links{display:flex;gap:1rem;align-items:center}
+    main{padding-block:clamp(28px,5vw,48px)}
+    h1{margin:.2rem 0 1rem;font-size:clamp(24px,3.8vw,34px)}
+    h2{margin:0 0 .6rem;font-size:clamp(18px,2.6vw,22px)}
+    .grid{display:grid;gap:clamp(14px,2vw,18px)}
+    .grid.cols-2{grid-template-columns:1fr 1fr}
+    @media (max-width:900px){.grid.cols-2{grid-template-columns:1fr}}
+    label{display:block;margin:.45rem 0 .25rem;font-weight:600}
+    input,select,textarea{width:100%;padding:.6rem .7rem;border-radius:10px;border:1px solid #ffffff26;background:#0f1331;color:var(--ink)}
+    .actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
+    .kicker{margin:0 0 .5rem}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{padding:.5rem;border-bottom:1px solid #ffffff1a;text-align:left}
+    .right{margin-left:auto}
+    .inline{display:inline-flex;align-items:center;gap:.5rem}
+    .note{font-size:.95rem}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .okText{color:var(--ok);font-weight:700}
+    .errText{color:var(--danger);font-weight:700}
+    footer{border-top:1px solid #ffffff14;padding-block:24px;margin-top:auto}
+    .foot{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .log{white-space:pre-wrap;background:#0f1331;border:1px solid #ffffff1a;border-radius:12px;padding:.75rem;max-height:240px;overflow:auto}
+    .thumb{width:42px;height:42px;border-radius:10px;border:1px solid #ffffff22;background:#0f1331;object-fit:cover}
   </style>
 </head>
-
 <body>
   <header>
     <div class="container nav">
@@ -428,25 +118,21 @@
             <label>User ID</label><input name="user_id" type="number" min="1" required>
           </div>
           <button class="btn" type="submit">Fetch</button>
-          <button class="btn ok" id="btnGrantAdmin" type="button" title="POST /admin/users/{id}/grant">Grant
-            Admin</button>
+          <button class="btn ok" id="btnGrantAdmin" type="button" title="POST /admin/users/{id}/grant">Grant Admin</button>
         </form>
 
         <form id="fUpdateUser" style="margin-top:.75rem">
           <div class="row">
             <div style="flex:1 1 240px">
-              <label>Username</label><input name="username" minlength="3" maxlength="32"
-                placeholder="leave empty to keep">
+              <label>Username</label><input name="username" minlength="3" maxlength="32" placeholder="leave empty to keep">
             </div>
             <div style="flex:1 1 240px">
-              <label>New Password</label><input name="password" type="password" minlength="8"
-                placeholder="leave empty to keep">
+              <label>New Password</label><input name="password" type="password" minlength="8" placeholder="leave empty to keep">
             </div>
           </div>
           <div class="row">
             <div style="flex:1 1 200px">
-              <label>Linktree ID</label><input name="linktree_id" type="number" min="1"
-                placeholder="leave empty to keep">
+              <label>Linktree ID</label><input name="linktree_id" type="number" min="1" placeholder="leave empty to keep">
             </div>
             <div style="flex:1 1 200px">
               <label>Profile Picture URL</label><input name="profile_picture" placeholder="leave empty to keep">
@@ -460,8 +146,7 @@
               <option value="false">false</option>
             </select>
             <span class="right"></span>
-            <button class="btn ghost" id="btnClearUserLT" type="button"
-              title="PATCH /user/{id} {linktree_id:null}">Clear Linktree</button>
+            <button class="btn ghost" id="btnClearUserLT" type="button" title="PATCH /user/{id} {linktree_id:null}">Clear Linktree</button>
             <button class="btn" type="submit">Update User</button>
           </div>
         </form>
@@ -476,19 +161,10 @@
         <div class="actions">
           <button id="btnLoadIcons" class="btn ghost" type="button">Load Icons</button>
         </div>
-        <div class="table-wrap">
-          <table id="tblIcons" class="table" aria-label="Icon catalog">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Code</th>
-                <th>Image</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <table id="tblIcons" class="table" aria-label="Icon catalog">
+          <thead><tr><th>ID</th><th>Code</th><th>Image</th><th>Description</th></tr></thead>
+          <tbody></tbody>
+        </table>
         <div class="log" id="logIcons"></div>
       </article>
 
@@ -500,14 +176,12 @@
             <input type="file" id="fileIconCatalog" accept="image/*">
           </div>
           <img id="iconPreview" class="thumb" alt="" />
-          <small class="muted">Wird auf <code>/api/users/me/linkicon</code> hochgeladen und die URL unten
-            eingesetzt.</small>
+          <small class="muted">Wird auf <code>/api/users/me/linkicon</code> hochgeladen und die URL unten eingesetzt.</small>
         </div>
 
         <form id="fUpsertIcon">
           <label>Code</label><input name="code" required pattern="^[a-z0-9_\-]+$" minlength="2" maxlength="64">
-          <label>Image URL</label><input name="image_url" id="iconImageUrl" required
-            placeholder="/media/... oder extern">
+          <label>Image URL</label><input name="image_url" id="iconImageUrl" required placeholder="/media/... oder extern">
           <label>Description (optional)</label><input name="description">
           <div class="actions">
             <button class="btn" type="submit">Upsert Icon</button>
@@ -548,10 +222,8 @@
           </div>
           <label>Quote</label><input name="quote" placeholder="optional">
           <div class="row">
-            <div style="flex:1 1 200px"><label>Song URL</label><input name="song_url" placeholder="/media/... optional">
-            </div>
-            <div style="flex:1 1 200px"><label>Background URL</label><input name="background_url"
-                placeholder="/media/... optional"></div>
+            <div style="flex:1 1 200px"><label>Song URL</label><input name="song_url" placeholder="/media/... optional"></div>
+            <div style="flex:1 1 200px"><label>Background URL</label><input name="background_url" placeholder="/media/... optional"></div>
           </div>
           <div class="row">
             <div style="flex:1 1 160px">
@@ -572,41 +244,32 @@
               <label>Name Effect</label>
               <select name="name_effect">
                 <option value="">(no change)</option>
-                <option>none</option>
-                <option>glow</option>
-                <option>neon</option>
-                <option>rainbow</option>
+                <option>none</option><option>glow</option><option>neon</option><option>rainbow</option>
               </select>
             </div>
             <div style="flex:1 1 160px">
               <label>Background Effect</label>
               <select name="background_effect">
                 <option value="">(no change)</option>
-                <option>none</option>
-                <option>night</option>
-                <option>rain</option>
-                <option>snow</option>
+                <option>none</option><option>night</option><option>rain</option><option>snow</option>
               </select>
             </div>
             <div style="flex:1 1 180px">
               <label>Display Name Mode</label>
               <select name="display_name_mode">
                 <option value="">(no change)</option>
-                <option>slug</option>
-                <option>username</option>
+                <option>slug</option><option>username</option>
               </select>
             </div>
           </div>
           <div class="actions">
             <button class="btn" type="submit">Update Linktree</button>
-            <button class="btn danger" id="btnDeleteLinktree" type="button" title="DELETE /api/linktrees/{id}">Delete
-              Linktree</button>
+            <button class="btn danger" id="btnDeleteLinktree" type="button" title="DELETE /api/linktrees/{id}">Delete Linktree</button>
           </div>
         </form>
         <div class="log" id="logLT"></div>
         <hr style="border:0;border-top:1px solid #ffffff1a;margin:.9rem 0">
-        <div class="note muted">Danger Zone: Löscht den gesamten Linktree inkl. Links und entfernt die Zuordnung beim
-          Owner. Medien werden nur gelöscht, wenn sie nirgendwo mehr referenziert sind.</div>
+        <div class="note muted">Danger Zone: Löscht den gesamten Linktree inkl. Links und entfernt die Zuordnung beim Owner. Medien werden nur gelöscht, wenn sie nirgendwo mehr referenziert sind.</div>
       </article>
 
       <article class="card">
@@ -617,13 +280,11 @@
           <div class="row">
             <div style="flex:1 1 160px"><label>Label</label><input name="label"></div>
             <div style="flex:1 1 160px"><label>Icon URL</label><input name="icon_url" placeholder="/media/..."></div>
-            <div style="flex:1 1 120px"><label>Position</label><input name="position" type="number" min="0"
-                placeholder="auto append"></div>
+            <div style="flex:1 1 120px"><label>Position</label><input name="position" type="number" min="0" placeholder="auto append"></div>
           </div>
           <label>Active</label>
           <select name="is_active">
-            <option value="true">true</option>
-            <option value="false">false</option>
+            <option value="true">true</option><option value="false">false</option>
           </select>
           <div class="actions"><button class="btn" type="submit">Add Link</button></div>
         </form>
@@ -636,14 +297,11 @@
             <div style="flex:1 1 160px"><label>URL (opt.)</label><input name="url"></div>
             <div style="flex:1 1 160px"><label>Label (opt.)</label><input name="label"></div>
             <div style="flex:1 1 160px"><label>Icon URL (opt.)</label><input name="icon_url"></div>
-            <div style="flex:1 1 120px"><label>Position (opt.)</label><input name="position" type="number" min="0">
-            </div>
+            <div style="flex:1 1 120px"><label>Position (opt.)</label><input name="position" type="number" min="0"></div>
             <div style="flex:1 1 140px">
               <label>Active (opt.)</label>
               <select name="is_active">
-                <option value="">(no change)</option>
-                <option value="true">true</option>
-                <option value="false">false</option>
+                <option value="">(no change)</option><option value="true">true</option><option value="false">false</option>
               </select>
             </div>
           </div>
@@ -667,8 +325,7 @@
         <button class="btn danger" type="submit">Run GC</button>
       </form>
       <div class="log" id="logGC"></div>
-      <p class="note muted">Löscht nur lokale <code class="mono">/media/…</code>-Dateien ohne DB-Referenzen. Deine
-        Serverlogik prüft das bereits.</p>
+      <p class="note muted">Löscht nur lokale <code class="mono">/media/…</code>-Dateien ohne DB-Referenzen. Deine Serverlogik prüft das bereits.</p>
     </section>
   </main>
 
@@ -686,39 +343,39 @@
     document.getElementById('year').textContent = new Date().getFullYear();
 
     // Utilities
-    const $ = (s, r = document) => r.querySelector(s);
-    const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     const token = () => localStorage.getItem('gifapi_token');
 
-    function headers(json = true) {
-      const h = json ? { 'Content-Type': 'application/json' } : {};
+    function headers(json=true){
+      const h = json ? {'Content-Type':'application/json'} : {};
       const t = token();
       if (t) h['X-Auth-Token'] = t;
       return h;
     }
-    const j = (o) => JSON.stringify(o);
-    const show = (sel, msg, ok = true) => { $(sel).innerHTML = (ok ? '✅ ' : '❌ ') + (typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2)); };
-    const apiget = async (url) => (await fetch(url, { headers: headers(false) }));
-    const apipost = async (url, body) => (await fetch(url, { method: 'POST', headers: headers(), body: j(body) }));
-    const apipatch = async (url, body) => (await fetch(url, { method: 'PATCH', headers: headers(), body: j(body) }));
-    const apidelete = async (url) => (await fetch(url, { method: 'DELETE', headers: headers(false) }));
+    const j = (o)=>JSON.stringify(o);
+    const show = (sel,msg,ok=true)=>{$(sel).innerHTML = (ok? '✅ ' : '❌ ') + (typeof msg==='string'? msg : JSON.stringify(msg,null,2));};
+    const apiget = async (url)=> (await fetch(url,{headers:headers(false)}));
+    const apipost = async (url,body)=> (await fetch(url,{method:'POST',headers:headers(),body:j(body)}));
+    const apipatch = async (url,body)=> (await fetch(url,{method:'PATCH',headers:headers(),body:j(body)}));
+    const apidelete = async (url)=> (await fetch(url,{method:'DELETE',headers:headers(false)}));
 
     // --- Gate: must be admin ---
-    (async () => {
-      try {
+    (async ()=>{
+      try{
         const r = await apiget('/api/auth/verify');
-        if (!r.ok) { location.href = '/login'; return; }
+        if(!r.ok){ location.href = '/login'; return; }
         const data = await r.json();
         const user = data?.user;
         $('#whoami').textContent = user ? `uid=${user.id} @ ${user.username}` : 'unknown';
-        if (!user?.admin) { $('#adminBadge').textContent = 'not admin'; $('#adminBadge').classList.add('errText'); location.href = '/'; return; }
-        $('#adminBadge').textContent = 'admin ✓';
+        if(!user?.admin){ $('#adminBadge').textContent='not admin'; $('#adminBadge').classList.add('errText'); location.href='/'; return; }
+        $('#adminBadge').textContent='admin ✓';
         $('#adminBadge').classList.add('okText');
-      } catch (e) { location.href = '/login'; }
+      }catch(e){ location.href='/login'; }
     })();
 
     // --- USERS: Create ---
-    $('#fCreateUser')?.addEventListener('submit', async (e) => {
+    $('#fCreateUser')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const body = {
@@ -727,174 +384,174 @@
         linktree_id: f.linktree_id.value ? Number(f.linktree_id.value) : null,
         profile_picture: f.profile_picture.value || null
       };
-      try {
+      try{
         const r = await apipost('/user', body);
-        const t = await r.json().catch(() => ({}));
-        show('#logCreateUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logCreateUser', String(err), false); }
+        const t = await r.json().catch(()=>({}));
+        show('#logCreateUser', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logCreateUser', String(err), false); }
     });
 
     // --- USERS: Fetch + Grant + Update ---
-    $('#fGetUser')?.addEventListener('submit', async (e) => {
+    $('#fGetUser')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const id = Number(e.target.user_id.value);
-      if (!id) return;
-      try {
+      if(!id) return;
+      try{
         const r = await apiget(`/user/${id}`);
         const t = await r.json();
-        show('#logUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logUser', String(err), false); }
+        show('#logUser', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logUser', String(err), false); }
     });
 
-    $('#btnGrantAdmin')?.addEventListener('click', async () => {
+    $('#btnGrantAdmin')?.addEventListener('click', async ()=>{
       const idInput = $('#fGetUser [name="user_id"]');
       const id = Number(idInput?.value || 0);
-      if (!id) { show('#logUser', 'User ID required for grant', false); return; }
-      try {
+      if(!id){ show('#logUser', 'User ID required for grant', false); return; }
+      try{
         const r = await apipost(`/admin/users/${id}/grant`, {});
         const t = await r.json();
-        show('#logUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logUser', String(err), false); }
+        show('#logUser', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logUser', String(err), false); }
     });
 
-    $('#fUpdateUser')?.addEventListener('submit', async (e) => {
+    $('#fUpdateUser')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const id = Number($('#fGetUser [name="user_id"]').value);
-      if (!id) { show('#logUser', 'Fetch user or enter User ID first', false); return; }
+      if(!id){ show('#logUser', 'Fetch user or enter User ID first', false); return; }
       const f = e.target;
       const body = {};
-      if (f.username.value.trim()) body.username = f.username.value.trim();
-      if (f.password.value) body.password = f.password.value;
-      if (f.linktree_id.value) body.linktree_id = Number(f.linktree_id.value);
-      if (f.profile_picture.value) body.profile_picture = f.profile_picture.value;
-      if (f.admin.value !== '') body.admin = (f.admin.value === 'true');
+      if(f.username.value.trim()) body.username = f.username.value.trim();
+      if(f.password.value) body.password = f.password.value;
+      if(f.linktree_id.value) body.linktree_id = Number(f.linktree_id.value);
+      if(f.profile_picture.value) body.profile_picture = f.profile_picture.value;
+      if(f.admin.value !== '') body.admin = (f.admin.value === 'true');
 
-      try {
+      try{
         const r = await apipatch(`/user/${id}`, body);
         const t = await r.json();
-        show('#logUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logUser', String(err), false); }
+        show('#logUser', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logUser', String(err), false); }
     });
 
     // --- USERS: clear linktree association ---
-    $('#btnClearUserLT')?.addEventListener('click', async () => {
+    $('#btnClearUserLT')?.addEventListener('click', async ()=>{
       const id = Number($('#fGetUser [name=\"user_id\"]').value);
-      if (!id) { show('#logUser', 'Fetch user or enter User ID first', false); return; }
-      if (!confirm('Remove this user\'s linktree association?')) return;
-      try {
+      if(!id){ show('#logUser', 'Fetch user or enter User ID first', false); return; }
+      if(!confirm('Remove this user\'s linktree association?')) return;
+      try{
         const r = await apipatch(`/user/${id}`, { linktree_id: null });
         const t = await r.json();
-        show('#logUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logUser', String(err), false); }
+        show('#logUser', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logUser', String(err), false); }
     });
 
     // --- ICONS: list ---
-    $('#btnLoadIcons')?.addEventListener('click', async () => {
+    $('#btnLoadIcons')?.addEventListener('click', async ()=>{
       const tbody = $('#tblIcons tbody');
-      if (!tbody) return;
+      if(!tbody) return;
       tbody.innerHTML = '';
-      try {
+      try{
         const r = await apiget('/api/icons');
         const list = await r.json();
-        if (!r.ok) { show('#logIcons', list?.detail || JSON.stringify(list), false); return; }
-        list.forEach(i => {
+        if(!r.ok){ show('#logIcons', list?.detail || JSON.stringify(list), false); return; }
+        list.forEach(i=>{
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${i.id}</td><td class="mono">${i.code}</td><td><a class="btn ghost" href="${i.image_url}" target="_blank">open</a></td><td>${i.description || ''}</td>`;
+          tr.innerHTML = `<td>${i.id}</td><td class="mono">${i.code}</td><td><a class="btn ghost" href="${i.image_url}" target="_blank">open</a></td><td>${i.description||''}</td>`;
           tbody.appendChild(tr);
         });
         show('#logIcons', `Loaded ${list.length} icons.`, true);
-      } catch (err) { show('#logIcons', String(err), false); }
+      }catch(err){ show('#logIcons', String(err), false); }
     });
 
     // --- ICONS: upload, preview, set URL ---
-    async function uploadIconFile(inputId) {
+    async function uploadIconFile(inputId){
       const inp = document.getElementById(inputId);
       const file = inp?.files?.[0];
-      if (!file) return null;
+      if(!file) return null;
       const fd = new FormData();
       fd.append('file', file);
       const r = await fetch('/api/users/me/linkicon', {
-        method: 'POST',
+        method:'POST',
         headers: { 'X-Auth-Token': token() }, // do NOT set Content-Type manually
         body: fd
       });
-      if (!r.ok) { throw new Error(await r.text()); }
+      if(!r.ok){ throw new Error(await r.text()); }
       const { url } = await r.json();
       return url;
     }
 
-    $('#fileIconCatalog')?.addEventListener('change', async (e) => {
+    $('#fileIconCatalog')?.addEventListener('change', async (e)=>{
       const file = e.target.files?.[0];
-      if (!file) return;
+      if(!file) return;
       // local preview
       const prev = $('#iconPreview');
       prev.src = URL.createObjectURL(file);
-      try {
+      try{
         const url = await uploadIconFile('fileIconCatalog');
-        if (url) { $('#iconImageUrl').value = url; show('#logIconOps', `Uploaded → ${url}`, true); }
-      } catch (err) { show('#logIconOps', String(err), false); }
+        if(url){ $('#iconImageUrl').value = url; show('#logIconOps', `Uploaded → ${url}`, true); }
+      }catch(err){ show('#logIconOps', String(err), false); }
     });
 
     // --- ICONS: upsert ---
-    $('#fUpsertIcon')?.addEventListener('submit', async (e) => {
+    $('#fUpsertIcon')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
-      const body = { code: f.code.value.trim(), image_url: f.image_url.value.trim(), description: f.description.value || null };
-      try {
+      const body = { code:f.code.value.trim(), image_url:f.image_url.value.trim(), description:f.description.value||null };
+      try{
         const r = await apipost('/api/icons', body);
         const t = await r.json();
-        show('#logIconOps', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logIconOps', String(err), false); }
+        show('#logIconOps', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logIconOps', String(err), false); }
     });
 
     // --- ICONS: grant to user ---
-    $('#fGrantIcon')?.addEventListener('submit', async (e) => {
+    $('#fGrantIcon')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const uid = Number(f.user_id.value);
       const code = f.code.value.trim();
       const displayed = f.displayed.value === 'true';
-      try {
+      try{
         const r = await apipost(`/api/users/${uid}/icons/${encodeURIComponent(code)}`, { displayed });
         const t = await r.json();
-        show('#logIconOps', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logIconOps', String(err), false); }
+        show('#logIconOps', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logIconOps', String(err), false); }
     });
 
     // --- LINKTREE: update ---
-    $('#fUpdateLinktree')?.addEventListener('submit', async (e) => {
+    $('#fUpdateLinktree')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const id = Number(f.id.value);
-      if (!id) { show('#logLT', 'Linktree ID required', false); return; }
+      if(!id){ show('#logLT', 'Linktree ID required', false); return; }
       const body = {};
-      for (const k of ['slug', 'location', 'quote', 'song_url', 'background_url', 'name_effect', 'background_effect', 'display_name_mode']) {
-        const v = f[k].value.trim(); if (v) body[k] = v;
+      for(const k of ['slug','location','quote','song_url','background_url','name_effect','background_effect','display_name_mode']){
+        const v = f[k].value.trim(); if(v) body[k]=v;
       }
-      if (f.background_is_video.value !== '') body.background_is_video = (f.background_is_video.value === 'true');
-      if (f.transparency.value !== '') body.transparency = Number(f.transparency.value);
+      if(f.background_is_video.value !== '') body.background_is_video = (f.background_is_video.value==='true');
+      if(f.transparency.value!=='') body.transparency = Number(f.transparency.value);
 
-      try {
+      try{
         const r = await apipatch(`/api/linktrees/${id}`, body);
         const t = await r.json();
-        show('#logLT', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logLT', String(err), false); }
+        show('#logLT', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logLT', String(err), false); }
     });
 
     // --- LINKTREE: delete ---
-    $('#btnDeleteLinktree')?.addEventListener('click', async () => {
+    $('#btnDeleteLinktree')?.addEventListener('click', async ()=>{
       const id = Number($('#fUpdateLinktree [name="id"]').value);
-      if (!id) { show('#logLT', 'Linktree ID required', false); return; }
-      if (!confirm('Delete linktree ' + id + '? This cannot be undone.')) return;
-      try {
-        const r = await fetch(`/api/linktrees/${id}`, { method: 'DELETE', headers: headers(false) });
-        const t = await r.json().catch(() => ({}));
-        show('#logLT', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logLT', String(err), false); }
+      if(!id){ show('#logLT','Linktree ID required',false); return; }
+      if(!confirm('Delete linktree '+id+'? This cannot be undone.')) return;
+      try{
+        const r = await fetch(`/api/linktrees/${id}`, { method:'DELETE', headers: headers(false) });
+        const t = await r.json().catch(()=>({}));
+        show('#logLT', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logLT', String(err), false); }
     });
 
     // --- LINKS: add ---
-    $('#fAddLink')?.addEventListener('submit', async (e) => {
+    $('#fAddLink')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const body = {
@@ -905,76 +562,75 @@
         is_active: f.is_active.value === 'true'
       };
       const lt = Number(f.linktree_id.value);
-      try {
+      try{
         const r = await apipost(`/api/linktrees/${lt}/links`, body);
         const t = await r.json();
-        show('#logLinks', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logLinks', String(err), false); }
+        show('#logLinks', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logLinks', String(err), false); }
     });
 
     // --- LINKS: update & delete ---
-    $('#fUpdateLink')?.addEventListener('submit', async (e) => {
+    $('#fUpdateLink')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = e.target;
       const id = Number(f.link_id.value);
-      if (!id) { show('#logLinks', 'Link ID required', false); return; }
+      if(!id){ show('#logLinks','Link ID required',false); return; }
       const body = {};
-      if (f.url.value.trim()) body.url = f.url.value.trim();
-      if (f.label.value.trim()) body.label = f.label.value.trim();
-      if (f.icon_url.value.trim()) body.icon_url = f.icon_url.value.trim();
-      if (f.position.value) body.position = Number(f.position.value);
-      if (f.is_active.value !== '') body.is_active = (f.is_active.value === 'true');
-      try {
+      if(f.url.value.trim()) body.url = f.url.value.trim();
+      if(f.label.value.trim()) body.label = f.label.value.trim();
+      if(f.icon_url.value.trim()) body.icon_url = f.icon_url.value.trim();
+      if(f.position.value) body.position = Number(f.position.value);
+      if(f.is_active.value !== '') body.is_active = (f.is_active.value==='true');
+      try{
         const r = await apipatch(`/api/links/${id}`, body);
         const t = await r.json();
-        show('#logLinks', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-      } catch (err) { show('#logLinks', String(err), false); }
+        show('#logLinks', r.ok? t : t?.detail || JSON.stringify(t), r.ok);
+      }catch(err){ show('#logLinks', String(err), false); }
     });
 
-    $('#btnDeleteLink')?.addEventListener('click', async () => {
+    $('#btnDeleteLink')?.addEventListener('click', async ()=>{
       const id = Number($('#fUpdateLink [name="link_id"]').value);
-      if (!id) { show('#logLinks', 'Link ID required', false); return; }
-      if (!confirm('Delete link ' + id + '?')) return;
-      try {
+      if(!id){ show('#logLinks','Link ID required',false); return; }
+      if(!confirm('Delete link '+id+'?')) return;
+      try{
         const r = await apidelete(`/api/links/${id}`);
-        if (r.ok) { show('#logLinks', { ok: true }, true); } else { show('#logLinks', await r.text(), false); }
-      } catch (err) { show('#logLinks', String(err), false); }
+        if(r.ok){ show('#logLinks', {ok:true}, true); } else { show('#logLinks', await r.text(), false); }
+      }catch(err){ show('#logLinks', String(err), false); }
     });
 
     // --- MEDIA: GC (use POST to avoid 405 on GET) ---
-    $('#fGC')?.addEventListener('submit', async (e) => {
+    $('#fGC')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const age = Number($('#age').value || 0);
-      try {
+      try{
         const r = await apipost('/api/admin/media/gc', { min_age_seconds: age });
         const t = await r.json();
-        if (!r.ok) { show('#logGC', t?.detail || JSON.stringify(t), false); return; }
+        if(!r.ok){ show('#logGC', t?.detail || JSON.stringify(t), false); return; }
         const summary = `Deleted: ${t.deleted.length} • Skipped: ${t.skipped.length}\n\nDeleted files:\n- ${t.deleted.join('\n- ')}`;
         show('#logGC', summary, true);
-      } catch (err) { show('#logGC', String(err), false); }
+      }catch(err){ show('#logGC', String(err), false); }
     });
 
     // --- Minimal auth header slot (login/logout) ---
-    (async function renderAuthHeader() {
-      const slot = $('#authSlot'); if (!slot) return;
-      try {
+    (async function renderAuthHeader(){
+      const slot = $('#authSlot'); if(!slot) return;
+      try{
         const r = await apiget('/api/auth/verify');
-        if (!r.ok) { slot.innerHTML = `<a class="btn ghost" href="/login">Login</a>`; return; }
-        const { user } = await r.json();
+        if(!r.ok){ slot.innerHTML = `<a class="btn ghost" href="/login">Login</a>`; return; }
+        const {user} = await r.json();
         const uname = user?.username ?? 'User';
         slot.innerHTML = `<span class=\"chip\">Logged in as <strong>${uname}</strong></span>
                           <button class=\"btn ghost\" id=\"btnLogout\">Logout</button>`;
-        $('#btnLogout')?.addEventListener('click', async () => {
-          try {
-            const t = token(); if (t) { await fetch('/api/auth/logout', { method: 'POST', headers: { 'X-Auth-Token': t } }); }
-          } catch { }
+        $('#btnLogout')?.addEventListener('click', async ()=>{
+          try{
+            const t = token(); if(t){ await fetch('/api/auth/logout',{method:'POST',headers:{'X-Auth-Token':t}}); }
+          }catch{}
           localStorage.removeItem('gifapi_token');
           localStorage.removeItem('gifapi_token_expires');
-          location.href = '/login';
+          location.href='/login';
         });
-      } catch { slot.innerHTML = `<a class="btn ghost" href="/login">Login</a>`; }
+      }catch{ slot.innerHTML = `<a class="btn ghost" href="/login">Login</a>`; }
     })();
   </script>
 </body>
-
 </html>
