@@ -188,16 +188,8 @@
 </head>
 
 <body>
-    <header>
-        <div class="container nav">
-            <div class="brand">
-                <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
-                <a href="/"><span>TAOMA™</span></a>
-            </div>
-            <nav class="links"><a href="/">Home</a><a href="/projects">Projects</a><a href="/about">About</a><a
-                    href="/contact">Contact</a><a href="/skills">Skills</a></nav>
-        </div>
-    </header>
+    <div data-fragment="header"></div>
+
 
     <main class="container">
         <section class="card form" aria-labelledby="reg-title">
@@ -244,6 +236,10 @@
             <p class="muted">We’ll log you in automatically after successful registration.</p>
         </section>
     </main>
+
+    <div data-fragment="footer"></div>
+
+    <script src="/static/layout.js"></script>
 
     <script>
         const u = document.getElementById('username');
