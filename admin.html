@@ -390,31 +390,8 @@
 </head>
 
 <body>
-  <header>
-    <div class="container nav" role="navigation" aria-label="Primary">
-      <div class="brand">
-        <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
-        <a href="/"><span>TAOMA™</span></a>
-      </div>
+  <div data-fragment="header"></div>
 
-      <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu" aria-expanded="false"
-        aria-label="Toggle menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-        </svg>
-      </button>
-
-      <nav id="primary-menu" class="links" aria-label="Site">
-        <a href="/">Home</a>
-        <a href="/projects">Projects</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-        <a href="/skills">Skills</a>
-      </nav>
-
-      <div id="authSlot" class="auth"></div>
-    </div>
-  </header>
 
   <main class="container">
     <section class="card">
@@ -693,14 +670,10 @@
     </section>
   </main>
 
-  <footer>
-    <div class="container foot">
-      <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved.</small>
-      <div class="row">
-        <a class="btn ghost" href="/">← Back</a>
-      </div>
-    </div>
-  </footer>
+  <div data-fragment="footer"></div>
+
+
+  <script src="/static/layout.js"></script>
 
   <script>
     // Year
