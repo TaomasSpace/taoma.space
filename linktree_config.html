@@ -1006,24 +1006,50 @@
             }
         })();
         // --- Auth header (wie gehabt) ---
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            })[ch] || ch);
+        }
+
+        function sanitizeUrl(raw) {
+            if (typeof raw !== 'string') return '';
+            const trimmed = raw.trim();
+            if (!trimmed) return '';
+            if (trimmed.startsWith('javascript:')) return '';
+            try {
+                const u = new URL(trimmed, window.location.origin);
+                if (['http:', 'https:'].includes(u.protocol)) {
+                    return trimmed.startsWith('http://') || trimmed.startsWith('https://') ? u.href : trimmed;
+                }
+            } catch (_) {
+                if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed;
+            }
+            return '';
+        }
+
+        async function fetchSession() {
+            try {
+                const r = await safe(() => fetch('/api/auth/verify', { credentials: 'include' }));
+                if (!r || !r.ok) return null;
+                return await r.json();
+            } catch (_) {
+                return null;
+            }
+        }
+
         async function renderAuthHeader() {
             const slot = document.getElementById('authSlot');
             if (!slot) return null;
 
-            const t = localStorage.getItem('gifapi_token');
-            let user = null, isAdmin = false;
-
-            if (t) {
-                const r = await safe(() => fetch('/api/auth/verify', { headers: { 'X-Auth-Token': t } }));
-                if (r && r.ok) {
-                    const d = await safe(() => r.json());
-                    user = d?.user || null;
-                    isAdmin = !!(user && user.admin);
-                } else {
-                    localStorage.removeItem('gifapi_token');
-                    localStorage.removeItem('gifapi_token_expires');
-                }
-            }
+            const session = await fetchSession();
+            const user = session?.user || null;
+            const isAdmin = !!(user && user.admin);
+            currentUser = user;
 
             // immer etwas rendern:
             if (!user) {
@@ -1031,12 +1057,14 @@
                                 <a class="btn sm ghost" href="/register">Register</a>`;
                 return null;
             }
-            const uname = user.username || 'User', initials = uname.trim().slice(0, 2).toUpperCase(), pfp = user.profile_picture && String(user.profile_picture).trim();
+            const uname = user.username || 'User';
+            const initials = uname.trim().slice(0, 2).toUpperCase();
+            const pfp = sanitizeUrl(user.profile_picture ? String(user.profile_picture) : '');
             slot.innerHTML = `
       <div class="auth-box" style="position:relative">
         <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
-          ${pfp ? `<img class="avatar" src="${pfp}" alt="${uname}'s profile picture">` : `<span class="avatar-fallback" aria-hidden="true">${initials}</span>`}
-          <span class="uname" style="font-weight:700;font-size:.95rem">${uname}</span>
+          ${pfp ? `<img class="avatar" src="${pfp}" alt="${escapeHtml(uname)}'s profile picture">` : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(initials)}</span>`}
+          <span class="uname" style="font-weight:700;font-size:.95rem">${escapeHtml(uname)}</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
         <div class="menu" id="userMenu" role="menu"><a href="/profile" role="menuitem">Profile</a>${isAdmin ? `<a href="/admin" role="menuitem">Admin</a>` : ``}<button id="logoutBtnHdr" role="menuitem">Logout</button></div>
@@ -1045,7 +1073,7 @@
             function close() { m.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
             btn.addEventListener('click', e => { e.stopPropagation(); const open = m.classList.toggle('open'); btn.setAttribute('aria-expanded', String(open)); });
             document.addEventListener('click', e => { if (!m.contains(e.target) && !btn.contains(e.target)) close(); });
-            lo.addEventListener('click', async () => { try { const t = localStorage.getItem('gifapi_token'); if (t) { await fetch('/api/auth/logout', { method: 'POST', headers: { 'X-Auth-Token': t } }).catch(() => { }); } } catch { } localStorage.removeItem('gifapi_token'); localStorage.removeItem('gifapi_token_expires'); location.href = '/'; }, { passive: true });
+            lo.addEventListener('click', async () => { try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch { } location.href = '/'; }, { passive: true });
             return user;
         }
 
@@ -1140,8 +1168,7 @@
         }
 
         // --- API helpers ---
-        function token() { return localStorage.getItem('gifapi_token'); }
-        function headers() { return { 'Content-Type': 'application/json', 'X-Auth-Token': token() }; }
+        function headers() { return { 'Content-Type': 'application/json' }; }
 
         async function apiLoadTreeBySlug(slug) {
             const r = await fetch(`/api/linktrees/${encodeURIComponent(slug)}`);
@@ -1151,7 +1178,7 @@
             return lt;
         }
         async function apiLoadTreeOwner(id) {
-            const r = await fetch(`/api/linktrees/${id}/manage`, { headers: headers() });
+            const r = await fetch(`/api/linktrees/${id}/manage`, { headers: headers(), credentials: 'include' });
             if (!r.ok) return null;
             return await r.json();
         }
@@ -1169,11 +1196,11 @@
                 display_name_mode: $('inDisplayName').value,
             };
             if (!exists) {
-                const r = await fetch('/api/linktrees', { method: 'POST', headers: headers(), body: JSON.stringify(body) });
+                const r = await fetch('/api/linktrees', { method: 'POST', headers: headers(), credentials: 'include', body: JSON.stringify(body) });
                 if (!r.ok) { throw new Error(await r.text()); }
                 return await r.json(); // LinktreeOut
             } else {
-                const r = await fetch(`/api/linktrees/${linktreeId}`, { method: 'PATCH', headers: headers(), body: JSON.stringify(body) });
+                const r = await fetch(`/api/linktrees/${linktreeId}`, { method: 'PATCH', headers: headers(), credentials: 'include', body: JSON.stringify(body) });
                 if (!r.ok) { throw new Error(await r.text()); }
                 return { ok: true };
             }
@@ -1186,27 +1213,27 @@
                 icon_url: $('inLinkIcon').value.trim() || null,
                 is_active: $('inLinkActive').value === 'true'
             };
-            const r = await fetch(`/api/linktrees/${linktreeId}/links`, { method: 'POST', headers: headers(), body: JSON.stringify(body) });
+            const r = await fetch(`/api/linktrees/${linktreeId}/links`, { method: 'POST', headers: headers(), credentials: 'include', body: JSON.stringify(body) });
             if (!r.ok) throw new Error(await r.text());
             return await r.json();
         }
 
         async function apiUpdateLink(linkId, body) {
-            const r = await fetch(`/api/links/${linkId}`, { method: 'PATCH', headers: headers(), body: JSON.stringify(body) });
+            const r = await fetch(`/api/links/${linkId}`, { method: 'PATCH', headers: headers(), credentials: 'include', body: JSON.stringify(body) });
             if (!r.ok) { showMsg(msgLinks, 'Update failed', false); return; }
             showMsg(msgLinks, 'Saved', true);
             await refreshData();
         }
 
         async function apiDeleteLink(linkId) {
-            const r = await fetch(`/api/links/${linkId}`, { method: 'DELETE', headers: headers() });
+            const r = await fetch(`/api/links/${linkId}`, { method: 'DELETE', headers: headers(), credentials: 'include' });
             if (!r.ok) { showMsg(msgLinks, 'Delete failed', false); return; }
             showMsg(msgLinks, 'Deleted', true);
             await refreshData();
         }
 
         async function apiToggleMyIcon(code, displayed) {
-            const r = await fetch(`/api/users/me/icons/${encodeURIComponent(code)}`, { method: 'PATCH', headers: headers(), body: JSON.stringify({ displayed }) });
+            const r = await fetch(`/api/users/me/icons/${encodeURIComponent(code)}`, { method: 'PATCH', headers: headers(), credentials: 'include', body: JSON.stringify({ displayed }) });
             if (!r.ok) { showMsg(msgMeta, 'Icon toggle failed', false); return; }
             showMsg(msgMeta, 'Icon updated', true);
             await refreshData(); // to reflect
@@ -1217,7 +1244,7 @@
 
         $('formMeta').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!token()) { showMsg(msgMeta, 'Not logged in', false); return; }
+            if (!currentUser) { showMsg(msgMeta, 'Not logged in', false); return; }
             try {
                 const exists = !!linktreeId;
                 const res = await apiEnsureOrUpdateMeta(exists);
@@ -1242,7 +1269,7 @@
             let lt = null;
 
             // Wenn wir schon eine ID und ein Token haben → zuerst Owner-Endpoint probieren
-            if (linktreeId && token()) {
+            if (linktreeId && currentUser) {
                 lt = await apiLoadTreeOwner(linktreeId);
             }
 
@@ -1253,7 +1280,7 @@
                     lt = pub;
                     // sobald wir die ID kennen, direkt nochmal owner versuchen (um alle Links zu kriegen)
                     linktreeId = pub.id;
-                    if (token()) {
+                    if (currentUser) {
                         const full = await apiLoadTreeOwner(linktreeId);
                         if (full) lt = full;
                     }
@@ -1301,9 +1328,13 @@
         async function uploadFile(inputId, endpoint) {
             const f = $(inputId).files[0];
             if (!f) return null;
+            if (!currentUser) {
+                const user = await renderAuthHeader();
+                if (!user) throw new Error('Not logged in');
+            }
             const fd = new FormData();
             fd.append("file", f);
-            const r = await fetch(endpoint, { method: "POST", headers: { "X-Auth-Token": token() }, body: fd });
+            const r = await fetch(endpoint, { method: "POST", credentials: 'include', body: fd });
             if (!r.ok) throw new Error(await r.text());
             const { url } = await r.json();
             return url;
@@ -1311,9 +1342,13 @@
         async function fetchUpload(inputId, endpoint) {
             const f = $(inputId).files[0];
             if (!f) return null;
+            if (!currentUser) {
+                const user = await renderAuthHeader();
+                if (!user) throw new Error('Not logged in');
+            }
             const fd = new FormData();
             fd.append("file", f);
-            const r = await fetch(endpoint, { method: "POST", headers: { "X-Auth-Token": token() }, body: fd });
+            const r = await fetch(endpoint, { method: "POST", credentials: 'include', body: fd });
             if (!r.ok) throw new Error(await r.text());
             return await r.json();
         }

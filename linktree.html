@@ -738,6 +738,46 @@
       let bgAudio = null;
       let soundOn = false;
 
+      function safeUrl(raw, { allowRelative = true, allowedProtocols = ['http:', 'https:'] } = {}) {
+        if (typeof raw !== 'string') return '';
+        const trimmed = raw.trim();
+        if (!trimmed) return '';
+        if (/^javascript:/i.test(trimmed)) return '';
+        try {
+          const parsed = new URL(trimmed, window.location.origin);
+          if (allowedProtocols.includes(parsed.protocol)) {
+            if ((parsed.protocol === 'http:' || parsed.protocol === 'https:') && !trimmed.startsWith('http') && allowRelative) {
+              return trimmed;
+            }
+            return parsed.href;
+          }
+        } catch (_) {
+          if (allowRelative && trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+            return trimmed;
+          }
+        }
+        if (allowRelative && trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+          return trimmed;
+        }
+        return '';
+      }
+
+      const safeMediaUrl = (raw) => safeUrl(raw, { allowRelative: true, allowedProtocols: ['http:', 'https:'] });
+      const safeLinkUrl = (raw) => safeUrl(raw, { allowRelative: false, allowedProtocols: ['http:', 'https:', 'mailto:', 'tel:'] });
+
+      function createLocationIcon() {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '16');
+        svg.setAttribute('height', '16');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'currentColor');
+        svg.setAttribute('aria-hidden', 'true');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z');
+        svg.appendChild(path);
+        return svg;
+      }
+
       function updateSoundUI() {
         if (!soundBtn) return;
         soundBtn.classList.toggle('on', soundOn);
@@ -790,20 +830,32 @@
           // Background (Video oder Bild)
           const bgEl = document.getElementById('bg');
           bgVideo = null;
-          if (bgEl && data.background_url) {
-            if (data.background_is_video) {
-              bgEl.innerHTML = `
-            <video id="bgvid"
-                   src="${data.background_url}"
-                   autoplay muted loop
-                   playsinline webkit-playsinline
-                   preload="auto"></video>`;
-              bgVideo = document.getElementById('bgvid');
-              bgVideo.muted = true;
-              bgVideo.play().catch(() => { });
-              document.addEventListener('visibilitychange', () => { if (!document.hidden) bgVideo?.play().catch(() => { }); });
-            } else {
-              bgEl.innerHTML = `<img src="${data.background_url}" alt="Background">`;
+          if (bgEl) {
+            bgEl.textContent = '';
+            const bgUrl = safeMediaUrl(data.background_url);
+            if (bgUrl) {
+              if (data.background_is_video) {
+                const video = document.createElement('video');
+                video.id = 'bgvid';
+                video.src = bgUrl;
+                video.autoplay = true;
+                video.muted = true;
+                video.loop = true;
+                video.setAttribute('playsinline', '');
+                video.setAttribute('webkit-playsinline', '');
+                video.preload = 'auto';
+                bgEl.appendChild(video);
+                bgVideo = video;
+                bgVideo.play().catch(() => { });
+                document.addEventListener('visibilitychange', () => {
+                  if (!document.hidden) bgVideo?.play().catch(() => { });
+                });
+              } else {
+                const img = document.createElement('img');
+                img.src = bgUrl;
+                img.alt = 'Background';
+                bgEl.appendChild(img);
+              }
             }
           }
           if (bgEl) {
@@ -814,9 +866,10 @@
           }
           // Audio (Song hat Vorrang vor Video-Ton)
           if (bgAudio) { try { bgAudio.pause(); } catch { } bgAudio.remove(); bgAudio = null; }
-          if (data.song_url) {
+          const songUrl = safeMediaUrl(data.song_url);
+          if (songUrl) {
             bgAudio = document.createElement('audio');
-            bgAudio.src = data.song_url;
+            bgAudio.src = songUrl;
             bgAudio.loop = true;
             bgAudio.preload = 'auto';
             bgAudio.muted = true;            // Autoplay-freundlich starten
@@ -845,7 +898,10 @@
           }
           // Profil/Badges/Links wie gehabt
           const pfp = document.getElementById('pfp');
-          if (pfp) pfp.src = data.profile_picture || '/static/icon.png';
+          if (pfp) {
+            const profileUrl = safeMediaUrl(data.profile_picture) || '/static/icon.png';
+            pfp.src = profileUrl;
+          }
           const nameEl = document.getElementById('name');
           if (nameEl) {
             const mode = data.display_name_mode || 'slug';
@@ -860,8 +916,15 @@
           const quoteEl = document.getElementById('quote'); if (quoteEl) quoteEl.textContent = data.quote || '';
           const locEl = document.getElementById('loc');
           if (locEl) {
-            locEl.innerHTML = data.location
-              ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg> ${data.location}` : '';
+            locEl.textContent = '';
+            const locText = typeof data.location === 'string' ? data.location.trim() : '';
+            if (locText) {
+              const icon = createLocationIcon();
+              const text = document.createElement('span');
+              text.textContent = ` ${locText}`;
+              locEl.appendChild(icon);
+              locEl.appendChild(text);
+            }
           }
 
           const badgesEl = document.getElementById('badges');
@@ -878,7 +941,9 @@
               wrap.setAttribute('aria-label', desc);
 
               const img = document.createElement('img');
-              img.src = ic.image_url;
+              const iconUrl = safeMediaUrl(ic.image_url);
+              if (!iconUrl) return;
+              img.src = iconUrl;
               img.alt = desc;
               img.width = 20;
               img.height = 20;
@@ -889,15 +954,26 @@
           }
           const linksEl = document.getElementById('links');
           if (linksEl) {
-            linksEl.innerHTML = '';
+            linksEl.textContent = '';
             (data.links || []).forEach(l => {
               if (!l.is_active) return;
+              const href = safeLinkUrl(l.url);
+              if (!href) return;
               const a = document.createElement('a');
               a.className = 'link';
-              a.href = l.url;
+              a.href = href;
               a.target = '_blank';
-              a.rel = 'noreferrer';
-              a.innerHTML = `${l.icon_url ? `<img src="${l.icon_url}" alt="">` : ''}<span>${l.label || l.url}</span>`;
+              a.rel = 'noreferrer noopener';
+              const iconUrl = safeMediaUrl(l.icon_url);
+              if (iconUrl) {
+                const img = document.createElement('img');
+                img.src = iconUrl;
+                img.alt = '';
+                a.appendChild(img);
+              }
+              const span = document.createElement('span');
+              span.textContent = l.label || l.url;
+              a.appendChild(span);
               linksEl.appendChild(a);
             });
           }

@@ -271,6 +271,7 @@
                 const res = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ username, password: pw })
                 });
                 const data = await res.json().catch(() => ({}));
@@ -279,8 +280,6 @@
                     return;
                 }
                 if (!data?.token) { showErr("No token returned by server."); return; }
-                localStorage.setItem('gifapi_token', data.token);
-                if (data.expires_at) localStorage.setItem('gifapi_token_expires', data.expires_at);
                 showOk("Account created. Redirecting…");
                 setTimeout(() => { window.location.href = '/' }, 400);
             } catch (e) {

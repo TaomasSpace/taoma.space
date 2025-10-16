@@ -625,33 +625,70 @@
             } catch { }
         })();
 
-        // --- Auth header renderer (wie besprochen)
-        async function renderAuthHeader() {
-            const slot = document.getElementById('authSlot'); if (!slot) return;
-            const token = localStorage.getItem('gifapi_token'); let user = null; let isAdmin = false;
-            if (token) {
-                try {
-                    const r = await fetch('/api/auth/verify', { headers: { 'X-Auth-Token': token } });
-                    if (r.ok) { const data = await r.json(); user = data?.user || null; isAdmin = !!(user && user.admin); }
-                    else { localStorage.removeItem('gifapi_token'); localStorage.removeItem('gifapi_token_expires'); }
-                } catch { }
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            })[ch] || ch);
+        }
+
+        function sanitizeUrl(raw) {
+            if (typeof raw !== 'string') return '';
+            const trimmed = raw.trim();
+            if (!trimmed) return '';
+            if (trimmed.startsWith('javascript:')) return '';
+            try {
+                const u = new URL(trimmed, window.location.origin);
+                if (['http:', 'https:'].includes(u.protocol)) {
+                    return trimmed.startsWith('http://') || trimmed.startsWith('https://') ? u.href : trimmed;
+                }
+            } catch (_) {
+                if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed;
             }
+            return '';
+        }
+
+        async function fetchSession() {
+            try {
+                const r = await fetch('/api/auth/verify', { credentials: 'include' });
+                if (!r.ok) return null;
+                return await r.json();
+            } catch (_) {
+                return null;
+            }
+        }
+
+        let currentUser = undefined;
+        async function refreshSession() {
+            const session = await fetchSession();
+            currentUser = session?.user || null;
+            return currentUser;
+        }
+
+        async function renderAuthHeader(userOverride) {
+            const slot = document.getElementById('authSlot'); if (!slot) return;
+            const user = userOverride === undefined ? await refreshSession() : userOverride;
             if (!user) {
                 slot.innerHTML = `<a class="btn sm ghost" href="/login">Login</a><a class="btn sm ghost" href="/register">Register</a>`;
                 return;
             }
-            const uname = user.username || 'User'; const initials = uname.trim().slice(0, 2).toUpperCase();
-            const pfp = user.profile_picture && String(user.profile_picture).trim();
+            const unameRaw = user.username || 'User';
+            const uname = escapeHtml(unameRaw);
+            const initials = unameRaw.trim().slice(0, 2).toUpperCase() || 'U';
+            const pfp = sanitizeUrl(user.profile_picture ? String(user.profile_picture) : '');
             slot.innerHTML = `
         <div class="auth-box" style="position:relative">
           <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
-            ${pfp ? `<img class="avatar" src="${pfp}" alt="${uname}'s profile picture">` : `<span class="avatar-fallback" aria-hidden="true">${initials}</span>`}
+            ${pfp ? `<img class="avatar" src="${pfp}" alt="${uname}'s profile picture">` : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(initials)}</span>`}
             <span class="uname" style="font-weight:700;font-size:.95rem">${uname}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
           <div class="menu" id="userMenu" role="menu" aria-label="User menu">
             <a href="/profile" role="menuitem">Profile</a>
-            ${isAdmin ? `<a href="/admin" role="menuitem">Admin</a>` : ``}
+            ${user.admin ? `<a href="/admin" role="menuitem">Admin</a>` : ``}
             <button id="logoutBtnHdr" role="menuitem">Logout</button>
           </div>
         </div>`;
@@ -672,39 +709,34 @@
 
         async function doLogout() {
             try {
-                const t = localStorage.getItem('gifapi_token');
-                if (t) { await fetch('/api/auth/logout', { method: 'POST', headers: { 'X-Auth-Token': t } }).catch(() => { }); }
+                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
             } catch { }
-            localStorage.removeItem('gifapi_token'); localStorage.removeItem('gifapi_token_expires');
             window.location.href = '/';
         }
 
         async function loadProfile() {
-            const token = localStorage.getItem('gifapi_token');
-            if (!token) { notLoggedEl.style.display = 'block'; return; }
             try {
-                const r = await fetch('/api/auth/verify', { headers: { 'X-Auth-Token': token } });
-                if (!r.ok) { notLoggedEl.style.display = 'block'; setTimeout(() => location.href = '/login', 800); return; }
-                const data = await r.json(); const u = data?.user;
-                if (!u) { notLoggedEl.style.display = 'block'; return; }
+                const user = await refreshSession();
+                if (!user) { notLoggedEl.style.display = 'block'; setTimeout(() => location.href = '/login', 800); return; }
 
                 // Fill overview
-                document.getElementById('uname').textContent = u.username || 'User';
-                document.getElementById('uidChip').textContent = u.id ? `ID ${u.id}` : '#';
-                document.getElementById('badgeAdmin').style.display = u.admin ? 'inline-flex' : 'none';
-                document.getElementById('createdAt').textContent = fmtDate(u.created_at);
-                document.getElementById('updatedAt').textContent = fmtDate(u.updated_at);
-                const pfp = (u.profile_picture || '').trim();
-                document.getElementById('pfp').src = pfp || '/static/icon.png';
-                document.getElementById('adminLink').style.display = u.admin ? 'inline-flex' : 'none';
+                document.getElementById('uname').textContent = user.username || 'User';
+                document.getElementById('uidChip').textContent = user.id ? `ID ${user.id}` : '#';
+                document.getElementById('badgeAdmin').style.display = user.admin ? 'inline-flex' : 'none';
+                document.getElementById('createdAt').textContent = fmtDate(user.created_at);
+                document.getElementById('updatedAt').textContent = fmtDate(user.updated_at);
+                const pfp = sanitizeUrl(user.profile_picture || '') || '/static/icon.png';
+                document.getElementById('pfp').src = pfp;
+                document.getElementById('adminLink').style.display = user.admin ? 'inline-flex' : 'none';
 
                 // Prefill forms
-                document.getElementById('inName').value = u.username || '';
-                document.getElementById('inPfp').value = pfp;
-                renderLinktreeSlot(u);
+                document.getElementById('inName').value = user.username || '';
+                document.getElementById('inPfp').value = user.profile_picture || '';
+                renderLinktreeSlot(user);
 
                 // Page visible
                 profileWrap.style.display = 'grid';
+                await renderAuthHeader(user);
             } catch (e) {
                 notLoggedEl.style.display = 'block';
             }
@@ -712,18 +744,20 @@
 
         // update helpers try PATCH /api/users/me, fallback POST /api/users/update
         async function updateMe(payload) {
-            const token = localStorage.getItem('gifapi_token');
-            if (!token) { showMsg('Not logged in', false); return false; }
+            if (currentUser === undefined) {
+                await refreshSession();
+            }
+            if (!currentUser) { showMsg('Not logged in', false); return false; }
             let ok = false, err = null;
 
             try {
-                const r = await fetch('/api/users/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token }, body: JSON.stringify(payload) });
+                const r = await fetch('/api/users/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
                 if (r.ok) { ok = true; } else if (r.status !== 404) { err = await r.text(); }
             } catch (e) { /* continue to fallback */ }
 
             if (!ok) {
                 try {
-                    const r2 = await fetch('/api/users/update', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token }, body: JSON.stringify(payload) });
+                    const r2 = await fetch('/api/users/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
                     if (r2.ok) { ok = true; } else { err = (await r2.text()) || err; }
                 } catch (e2) { err = e2?.message || err; }
             }
@@ -731,7 +765,6 @@
             if (!ok) { showMsg(err || 'Update failed', false); return false; }
             showMsg('Saved', true);
             await loadProfile(); // refresh
-            await renderAuthHeader(); // refresh header name/avatar
             return true;
         }
 
@@ -748,12 +781,25 @@
             const ltSlot = document.getElementById("linktreeSlot");
             if (!ltSlot) return;
             const slug = user.linktree_slug;
+            ltSlot.textContent = '';
             if (slug) {
-                ltSlot.innerHTML = `
-        <a href="/tree/${encodeURIComponent(slug)}" target="_blank" class="btn sm">View Linktree</a>
-        <a href="/linktree/config" class="btn sm ghost">Configure</a>`;
+                const view = document.createElement('a');
+                view.href = `/tree/${encodeURIComponent(slug)}`;
+                view.target = '_blank';
+                view.className = 'btn sm';
+                view.textContent = 'View Linktree';
+                const config = document.createElement('a');
+                config.href = '/linktree/config';
+                config.className = 'btn sm ghost';
+                config.textContent = 'Configure';
+                ltSlot.appendChild(view);
+                ltSlot.appendChild(config);
             } else {
-                ltSlot.innerHTML = `<a href="/linktree/config" class="btn sm">Create Linktree</a>`;
+                const create = document.createElement('a');
+                create.href = '/linktree/config';
+                create.className = 'btn sm';
+                create.textContent = 'Create Linktree';
+                ltSlot.appendChild(create);
             }
         }
         // boot
@@ -790,21 +836,19 @@
                 return showMsg('Unsupported type', false);
             }
             if (f.size > 2 * 1024 * 1024) return showMsg('File too large (max 2MB)', false);
-
-            const token = localStorage.getItem('gifapi_token');
-            if (!token) return showMsg('Not logged in', false);
+            if (currentUser === undefined) { await refreshSession(); }
+            if (!currentUser) return showMsg('Not logged in', false);
 
             const fd = new FormData();
             fd.append('file', f);
             try {
                 const r = await fetch('/api/users/me/avatar', {
                     method: 'POST',
-                    headers: { 'X-Auth-Token': token },
+                    credentials: 'include',
                     body: fd
                 });
                 if (!r.ok) return showMsg(await r.text(), false);
                 await loadProfile(); // refresh avatar
-                await renderAuthHeader();
                 showMsg('Avatar updated', true);
             } catch (e) {
                 showMsg('Upload failed', false);
@@ -818,16 +862,25 @@
                 const items = r.ok ? await r.json() : [];
                 const wrap = document.getElementById('galleryWrap');
                 wrap.innerHTML = '';
-                items.forEach(url => {
+                items.forEach(rawUrl => {
+                    const safe = sanitizeUrl(rawUrl);
+                    if (!safe) return;
                     const b = document.createElement('button');
                     b.type = 'button';
                     b.className = 'btn ghost';
                     b.style.padding = 0;
                     b.style.borderRadius = '12px';
                     b.style.overflow = 'hidden';
-                    b.innerHTML = `<img src="${url}" alt="" style="display:block;width:72px;height:72px;object-fit:cover">`;
+                    const img = document.createElement('img');
+                    img.src = safe;
+                    img.alt = '';
+                    img.style.display = 'block';
+                    img.style.width = '72px';
+                    img.style.height = '72px';
+                    img.style.objectFit = 'cover';
+                    b.appendChild(img);
                     b.addEventListener('click', async () => {
-                        await updateMe({ profile_picture: url });
+                        await updateMe({ profile_picture: safe });
                     });
                     wrap.appendChild(b);
                 });
@@ -853,20 +906,6 @@
 
         // call gallery once on boot
         loadGallery();
-        const ltSlot = document.getElementById("linktreeSlot");
-        if (ltSlot) {
-            const slug = u.linktree_slug;
-            if (slug) {
-                ltSlot.innerHTML = `
-            <a href="/tree/${slug}" target="_blank" class="btn sm">View Linktree</a>
-            <a href="/linktree/config?slug=${slug}" class="btn sm ghost">Configure</a>
-        `;
-            } else {
-                ltSlot.innerHTML = `
-            <a href="/linktree/config" class="btn sm">Create Linktree</a>
-        `;
-            }
-        }
     </script>
 </body>
 
