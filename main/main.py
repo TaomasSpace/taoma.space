@@ -223,10 +223,6 @@ def _extract_token(
     tok = request.cookies.get("taoma_token")
     if tok:
         return tok
-    # 4) ?token=... als Queryparam
-    tok = request.query_params.get("token")
-    if tok:
-        return tok
     return None
 
 
@@ -591,10 +587,8 @@ def skills():
 
 # ------------ GIF API ------------ #
 @app.get("/api/auth/verify")
-def verify(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")):
-    if not x_auth_token or not db.validate_token(x_auth_token):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    user = db.get_token_user(x_auth_token) or {}
+def verify(token: str = Depends(require_token)):
+    user = db.get_token_user(token) or {}
 
     # try to resolve slug if missing
     linktree_slug = user.get("linktree_slug")
@@ -628,7 +622,7 @@ def verify(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")
     }
     return {
         "ok": True,
-        "expires_at": db.get_token_expiry(x_auth_token),
+        "expires_at": db.get_token_expiry(token),
         "user": user_out,
     }
 
@@ -761,9 +755,8 @@ def login(payload: LoginIn):
 
 
 @app.post("/api/auth/logout")
-def logout(x_auth_token: str | None = Header(default=None, alias="X-Auth-Token")):
-    if x_auth_token:
-        db.revoke_token(x_auth_token)
+def logout(token: str = Depends(require_token)):
+    db.revoke_token(token)
     resp = JSONResponse({"ok": True})
     resp.delete_cookie("taoma_token")
     return resp

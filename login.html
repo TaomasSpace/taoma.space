@@ -482,6 +482,7 @@
                 const res = await fetch('/api/auth/login_user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ username, password })
                 });
 
@@ -492,14 +493,11 @@
                     return;
                 }
 
-                const { token, expires_at } = await res.json();
+                const { token } = await res.json();
                 if (!token) { showErr("No token returned by server."); return; }
 
-                localStorage.setItem('gifapi_token', token);
-                if (expires_at) localStorage.setItem('gifapi_token_expires', expires_at);
-
                 // verify + role-based redirect
-                const v = await fetch('/api/auth/verify', { headers: { 'X-Auth-Token': token } });
+                const v = await fetch('/api/auth/verify', { credentials: 'include' });
                 let isAdmin = false;
                 if (v.ok) {
                     const data = await v.json();

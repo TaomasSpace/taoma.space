@@ -443,7 +443,7 @@
         $('#clearAll').onclick = () => { $('#gifForm').reset(); chars.clear(); tags.clear(); renderChips('#chars', chars); renderChips('#tags', tags); $('#preview').style.display = 'none'; $('#status').textContent = ''; };
 
         // auth + calls
-        let AUTH_TOKEN = localStorage.getItem('gifapi_token') || null;
+        let AUTH_TOKEN = null;
         const authHeaders = () => AUTH_TOKEN ? { 'X-Auth-Token': AUTH_TOKEN } : {};
         function requireTokenOrAsk() {
             if (!AUTH_TOKEN) {
@@ -458,11 +458,11 @@
             try {
                 const r = await fetch(base + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
                 const j = await r.json(); if (!r.ok) throw new Error(j.detail || 'Login failed');
-                AUTH_TOKEN = j.token; localStorage.setItem('gifapi_token', AUTH_TOKEN);
-                $('#authMsg').textContent = (getLang() === 'de' ? 'Login ok. Token gespeichert.' : 'Login ok. Token stored.'); $('#authMsg').className = 'status ok';
+                AUTH_TOKEN = j.token;
+                $('#authMsg').textContent = (getLang() === 'de' ? 'Login ok. Token aktiv.' : 'Login ok. Token active.'); $('#authMsg').className = 'status ok';
             } catch (err) { $('#authMsg').textContent = (getLang() === 'de' ? 'Login fehlgeschlagen: ' : 'Login failed: ') + err.message; $('#authMsg').className = 'status err'; }
         };
-        $('#btnLogout').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); try { if (AUTH_TOKEN) { await fetch(base + '/api/auth/logout', { method: 'POST', headers: authHeaders() }); } } finally { AUTH_TOKEN = null; localStorage.removeItem('gifapi_token'); $('#authMsg').textContent = (getLang() === 'de' ? 'Ausgeloggt.' : 'Logged out.'); $('#authMsg').className = 'status'; } };
+        $('#btnLogout').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); try { if (AUTH_TOKEN) { await fetch(base + '/api/auth/logout', { method: 'POST', headers: authHeaders() }); } } finally { AUTH_TOKEN = null; $('#authMsg').textContent = (getLang() === 'de' ? 'Ausgeloggt.' : 'Logged out.'); $('#authMsg').className = 'status'; } };
         $('#gifForm').onsubmit = async (e) => {
             e.preventDefault(); if (!requireTokenOrAsk()) return;
             const base = $('#apiBase').value.replace(/\/$/, ''); const payload = buildPayload();

@@ -686,32 +686,52 @@
             const { total } = await res.json();
             document.getElementById("visitor-count").textContent = total ?? "0";
         })();
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            })[ch] || ch);
+        }
+
+        function sanitizeUrl(raw) {
+            if (typeof raw !== 'string') return '';
+            const trimmed = raw.trim();
+            if (!trimmed) return '';
+            if (trimmed.startsWith('javascript:')) return '';
+            try {
+                const u = new URL(trimmed, window.location.origin);
+                if (['http:', 'https:'].includes(u.protocol)) {
+                    return trimmed.startsWith('http://') || trimmed.startsWith('https://') ? u.href : trimmed;
+                }
+            } catch (_) {
+                if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed;
+            }
+            return '';
+        }
+
+        async function fetchSession() {
+            try {
+                const r = await fetch('/api/auth/verify', { credentials: 'include' });
+                if (!r.ok) return null;
+                return await r.json();
+            } catch (_) {
+                return null;
+            }
+        }
+
         // === Auth header renderer ===
         async function renderAuthHeader() {
             const slot = document.getElementById('authSlot');
             if (!slot) return;
 
-            const token = localStorage.getItem('gifapi_token');
-            let user = null;
-            let isAdmin = false;
-
-            if (token) {
-                try {
-                    const r = await fetch('/api/auth/verify', { headers: { 'X-Auth-Token': token } });
-                    if (r.ok) {
-                        const data = await r.json();
-                        user = data?.user || null;
-                        isAdmin = !!(user && user.admin);
-                    } else {
-                        // Token ungültig → wegräumen
-                        localStorage.removeItem('gifapi_token');
-                        localStorage.removeItem('gifapi_token_expires');
-                    }
-                } catch { }
-            }
+            const session = await fetchSession();
+            const user = session?.user || null;
+            const isAdmin = !!(user && user.admin);
 
             if (!user) {
-                // --- not logged in ---
                 slot.innerHTML = `
         <a class="btn small" href="/login">Login</a>
         <a class="btn small" href="/register">Register</a>
@@ -719,16 +739,15 @@
                 return;
             }
 
-            // --- logged in ---
-            const uname = user.username || 'User';
-            const initials = uname.trim().slice(0, 2).toUpperCase();
-            const pfp = user.profile_picture && String(user.profile_picture).trim();
+            const uname = escapeHtml(user.username || 'User');
+            const initials = (user.username || 'User').trim().slice(0, 2).toUpperCase() || 'U';
+            const pfp = sanitizeUrl(user.profile_picture ? String(user.profile_picture) : '');
 
             slot.innerHTML = `
       <div class="auth-box" style="position:relative">
         <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
           ${pfp ? `<img class="avatar" src="${pfp}" alt="${uname}'s profile picture">`
-                    : `<span class="avatar-fallback" aria-hidden="true">${initials}</span>`}
+                    : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(initials)}</span>`}
           <span class="uname" style="font-weight:700;font-size:.95rem">${uname}</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -763,13 +782,8 @@
 
             logoutBtn.addEventListener('click', async () => {
                 try {
-                    const t = localStorage.getItem('gifapi_token');
-                    if (t) {
-                        await fetch('/api/auth/logout', { method: 'POST', headers: { 'X-Auth-Token': t } }).catch(() => { });
-                    }
+                    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
                 } catch { }
-                localStorage.removeItem('gifapi_token');
-                localStorage.removeItem('gifapi_token_expires');
                 window.location.href = '/';
             }, { passive: true });
         }
