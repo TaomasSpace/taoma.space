@@ -931,6 +931,130 @@ footer .social a.iso-pro:focus-visible {
 .displaySection.theme-bw .btn:hover {
   color: #000;
 }
+
+/* === Button Lab (scoped to the demo container) === */
+.displaySection .btn-lab {
+  --bg-fill: var(--acc);
+  --ink-fill: #fff;
+  --ring-c: var(--ring);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .7rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid #ffffff26;
+  cursor: pointer;
+  font-weight: 800;
+  letter-spacing: .2px;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+  will-change: transform;
+}
+
+/* Icon sizing inside lab buttons */
+.displaySection .btn-lab .icon { width: 20px; height: 20px; }
+
+/* 1) Shine Sweep (your first idea, cleaned + theme-aware) */
+.displaySection .btn-shine {
+  background: var(--bg-fill);
+  color: var(--ink-fill);
+  box-shadow: 0 10px 22px rgba(0,0,0,.28);
+  border: 2px solid #ffffff40;
+  overflow: hidden;
+}
+.displaySection .btn-shine:hover { transform: scale(1.05); border-color: #ffffff80; }
+.displaySection .btn-shine:active { transform: scale(.97); }
+.displaySection .btn-shine::before {
+  content: "";
+  position: absolute;
+  inset: 0 -120px 0 auto;
+  width: 110px;
+  background-image: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.8), transparent 70%);
+  opacity: .55;
+  transform: translateX(-140%);
+}
+.displaySection .btn-shine:hover::before {
+  animation: btn-shine-move 1.4s ease-out forwards;
+}
+@keyframes btn-shine-move {
+  0%   { transform: translateX(-140%); }
+  60%  { transform: translateX(260%); }
+  100% { transform: translateX(260%); }
+}
+
+/* 2) Gradient Frame (glossy border that lights up on hover) */
+.displaySection .btn-frame {
+  background: color-mix(in oklab, var(--card) 25%, transparent);
+  color: var(--ink);
+  border: none;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+}
+.displaySection .btn-frame::before {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; padding: 2px;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--acc) 85%, #fff) 0%,
+                                      color-mix(in oklab, var(--acc) 55%, #fff) 50%,
+                                      color-mix(in oklab, var(--acc) 85%, #fff) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: .0; transition: opacity .45s ease;
+}
+.displaySection .btn-frame:hover::before { opacity: 1; }
+.displaySection .btn-frame:hover { transform: scale(1.04); }
+
+/* 3) Orbit Blur (rotating soft glow behind the pill) */
+.displaySection .btn-orbit {
+  background: var(--bg-fill);
+  color: var(--ink-fill);
+  border: 2px solid #ffffff3d;
+  box-shadow: 0 12px 26px rgba(0,0,0,.32);
+  overflow: visible;
+}
+.displaySection .btn-orbit .orbit {
+  position: absolute; inset: -18px; z-index: -1;
+  display: grid; place-items: center; pointer-events: none;
+}
+.displaySection .btn-orbit .orbit::before {
+  content: ""; width: 10rem; height: 10rem; border-radius: 999px;
+  filter: blur(22px); opacity: .55;
+  background: conic-gradient(from 0deg,
+     color-mix(in oklab, var(--acc) 90%, #fff),
+     color-mix(in oklab, var(--acc) 60%, #fff),
+     color-mix(in oklab, var(--acc) 90%, #fff));
+  animation: orbit-spin 4s linear infinite;
+}
+@keyframes orbit-spin { to { transform: rotate(1turn); } }
+.displaySection .btn-orbit:hover { transform: scale(1.03); }
+.displaySection .btn-orbit:active { transform: scale(.97); }
+
+/* 4) Neon Pulse (subtle neon border + glow) */
+.displaySection .btn-neon {
+  background: color-mix(in oklab, var(--acc) 20%, var(--card));
+  color: var(--ink);
+  border: 1px solid color-mix(in oklab, var(--acc) 65%, #fff);
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--acc) 55%, #fff);
+}
+.displaySection .btn-neon:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 25px 4px color-mix(in oklab, var(--acc) 45%, #fff);
+}
+
+/* 5) Minimal Ghost (high-contrast outline + glow on hover) */
+.displaySection .btn-ghost-2 {
+  background: transparent;
+  color: var(--ink);
+  border: 2px solid color-mix(in oklab, var(--ink) 55%, transparent);
+}
+.displaySection .btn-ghost-2:hover {
+  border-color: var(--acc);
+  box-shadow: 0 0 0 4px var(--ring);
+  transform: translateY(-1px);
+}
+
+/* Small helper for arrow nudge */
+.displaySection .btn-lab:hover .nudge { transform: translateX(4px); transition: transform .25s ease; }
+.displaySection.theme-bw .btn-lab:not(.btn-ghost-2) { color: #000; }
+
   </style>
 </head>
 
@@ -1300,13 +1424,46 @@ footer .social a.iso-pro:focus-visible {
 function renderDemos(section) {
   section.innerHTML = `
     <div class="demo-grid">
+<!-- Buttons -->
+  <div class="demo-card" data-demo="buttons">
+        <h3 class="demo-title">Button Effects</h3>
+        <p class="demo-sub">Five variants with theme-aware colors.</p>
 
-      <!-- Pulse Button -->
-      <div class="demo-card" data-demo="pulse">
-        <h3 class="demo-title">Pulse Button</h3>
-        <p class="demo-sub">Soft glow follows your cursor.</p>
         <div class="demo-row">
-          <button class="btn pulse" id="pulseBtn">Hover me</button>
+          <!-- 1) Shine Sweep -->
+          <button class="btn-lab btn-shine">
+            Apply Now
+            <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M8 12h8M12 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <!-- 2) Gradient Frame -->
+          <button class="btn-lab btn-frame">
+            Let’s get started
+            <svg class="icon nudge" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M8 12h8M12 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <!-- 3) Orbit Blur -->
+          <button class="btn-lab btn-orbit">
+            Contact me
+            <span class="orbit" aria-hidden="true"></span>
+          </button>
+
+          <!-- 4) Neon Pulse -->
+          <button class="btn-lab btn-neon">
+            Download
+            <svg class="icon nudge" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <!-- 5) Minimal Ghost -->
+          <button class="btn-lab btn-ghost-2">
+            Learn more
+          </button>
         </div>
       </div>
 

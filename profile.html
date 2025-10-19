@@ -402,6 +402,115 @@
             border-color: #ff5a6a;
             background: color-mix(in oklab, var(--danger) 10%, transparent)
         }
+        /* === Footer social isometric hover (scoped) === */
+footer .social a.iso-pro {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  /* behält deine vorhandene Border aus .social a */
+  background: color-mix(in oklab, var(--card) 35%, transparent);
+  box-shadow:
+    inset 0 0 20px rgba(255,255,255,.20),
+    inset 0 0 5px rgba(255,255,255,.28),
+    0 5px 8px rgba(0,0,0,.18);
+  transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
+  overflow: visible; /* damit Tooltip/Spans sichtbar bleiben */
+}
+
+footer .social a.iso-pro:hover {
+  background: color-mix(in oklab, var(--card) 45%, transparent);
+  box-shadow:
+    inset 0 0 22px rgba(255,255,255,.22),
+    inset 0 0 6px rgba(255,255,255,.34),
+    0 8px 14px rgba(0,0,0,.22);
+}
+
+/* SVG im Button */
+footer .social a.iso-pro .svg,
+footer .social a.iso-pro svg {
+  width: 22px;
+  height: 22px;
+  transition: transform .3s ease, filter .3s ease, color .3s ease;
+  color: currentColor;           /* wie in deinem Beispiel */
+  fill: currentColor;
+}
+
+/* Isometrischer Versatz auf Hover */
+footer .social a.iso-pro:hover .svg,
+footer .social a.iso-pro:hover svg {
+  transform: translate(5px, -5px);
+}
+
+/* Wellenringe */
+footer .social a.iso-pro span {
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  height: 48px;
+  width: 48px;
+  border-radius: 50%;
+  border: 2px solid currentColor;   /* nutzt die Icon-Farbe */
+  box-shadow:
+    inset 0 0 20px rgba(255,255,255,.25),
+    inset 0 0 5px rgba(255,255,255,.35),
+    0 5px 5px rgba(0,0,0,.16);
+  transition: transform .3s ease, opacity .3s ease;
+  pointer-events: none;
+}
+
+footer .social a.iso-pro:hover span { opacity: 1; }
+footer .social a.iso-pro:hover span:nth-child(1) { opacity: .22; transform: translate(0px, 0px); }
+footer .social a.iso-pro:hover span:nth-child(2) { opacity: .42; transform: translate(4px, -4px); }
+footer .social a.iso-pro:hover span:nth-child(3) { opacity: .62; transform: translate(8px, -8px); }
+
+/* Tooltip */
+footer .social a.iso-pro .text {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translate(10px, -50%) skew(-5deg);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+
+  font: 600 12px/1.2 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+  padding: 6px 8px;
+  border-radius: 6px;
+
+  color: currentColor;
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.28);
+  box-shadow:
+    -5px 0 1px rgba(153,153,153,.18),
+    -10px 0 1px rgba(153,153,153,.14),
+    inset 0 0 20px rgba(255,255,255,.24),
+    inset 0 0 5px rgba(255,255,255,.32),
+    0 5px 5px rgba(0,0,0,.12);
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+footer .social a.iso-pro:hover .text {
+  opacity: 1;
+  transform: translate(18px, -50%) skew(-5deg);
+}
+
+/* Optionale Brand-Farben (ändern nur currentColor) */
+footer .social a.iso-pro.is-fb { color: #ffffff; }
+footer .social a.iso-pro.is-gh { color: #ffffff; }   /* GitHub neutral/weiß auf dark bg */
+footer .social a.iso-pro.is-mail { color: #ffffff; } /* Lila */
+footer .social a.iso-pro.is-discord { color: #ffffff; }
+
+/* Kleines Accessibility-Detail: Fokus */
+footer .social a.iso-pro:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--ring);
+}
     </style>
 </head>
 
@@ -560,50 +669,57 @@
         </div>
     </main>
 
-    <footer>
-        <div class="container foot"
-            style="border-top:1px solid #ffffff14;padding-block:24px;margin-top:auto;display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap">
-            <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved.</small>
-            <div class="visitor-counter">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span id="visitor-count">0</span>
-            </div>
-            <div class="social">
-                <a href="https://guns.lol/taoma" target="_blank" rel="noreferrer" aria-label="guns.lol">
-                    <svg width="18" height="18" viewBox="0 0 512 512" fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M256 32C132 32 32 132 32 256s100 224 224 224 224-100 224-224S380 32 256 32Zm80 160h32v32h-32v32h-32v-32h-32v-32h32v-32h32v32Z" />
-                    </svg>
-                </a>
-                <a href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer" aria-label="GitHub">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z"
-                            fill="currentColor" />
-                    </svg>
-                </a>
-                <a href="mailto:Taoma.M@proton.me" aria-label="Email">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm16 0-8 7L4 6"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </a>
-                <a href="https://discord.gg/H3NDg7e3vD" target="_blank" rel="noreferrer" aria-label="Discord">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z"
-                            fill="currentColor" />
-                    </svg>
-                </a>
-            </div>
-        </div>
-    </footer>
+  <footer>
+    <div class="container foot">
+      <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved.</small>
+      <div class="visitor-counter">
+        <!-- Eye Icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        <span id="visitor-count">0</span>
+      </div>
+      <div class="social">
+  <a href="https://guns.lol/taoma" target="_blank" rel="noreferrer" aria-label="guns.lol"
+     class="iso-pro is-fb">
+    <span></span><span></span><span></span>
+    <svg width="18" height="18" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
+         fill="currentColor" class="svg">
+      <path d="M256 32C132 32 32 132 32 256s100 224 224 224 224-100 224-224S380 32 256 32Zm80 160h32v32h-32v32h-32v-32h-32v-32h32v-32h32v32Z"/>
+    </svg>
+    <div class="text">guns.lol</div>
+  </a>
+
+  <a href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer" aria-label="GitHub"
+     class="iso-pro is-gh">
+    <span></span><span></span><span></span>
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg">
+      <path d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z"/>
+    </svg>
+    <div class="text">GitHub</div>
+  </a>
+
+  <a href="mailto:Taoma.M@proton.me" aria-label="Email" class="iso-pro is-mail">
+    <span></span><span></span><span></span>
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg">
+      <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1zm13 2.383-4.708 2.825L15 11.105zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741M1 11.105l4.708-2.897L1 5.383z"/>
+    </svg>
+    <div class="text">Email</div>
+  </a>
+
+  <a href="https://discord.gg/H3NDg7e3vD" target="_blank" rel="noreferrer" aria-label="Discord"
+     class="iso-pro is-discord">
+    <span></span><span></span><span></span>
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg">
+      <path d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z"/>
+    </svg>
+    <div class="text">Discord</div>
+  </a>
+</div>
+    </div>
+  </footer>
 
     <script>
         // --- Mobile menu
