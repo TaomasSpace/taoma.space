@@ -480,20 +480,6 @@
       outline-offset: 2px;
       box-shadow: 0 0 0 6px var(--ring);
     }
-    .whitemode {
-      background: linear-gradient(to right, white, black);
-      height: 70px;
-      width: 70px;
-      border-radius: 10px;
-      border: 1px solid #ffffff26;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-    }
-    .whitemode:focus-visible {
-      outline: 2px solid var(--acc);
-      outline-offset: 2px;
-      box-shadow: 0 0 0 6px var(--ring);
-    }
     .darkmode:hover {
       box-shadow: 7px 5px 56px -14px #ffffff;
     }
@@ -501,118 +487,99 @@
       transform: scale(0.97);
       box-shadow: 7px 5px 56px -10px #ffffff;
     }
-    .whitemode:hover {
-      box-shadow: 7px 5px 56px -14px #ffffff;
-    }
-    .whitemode:active {
-      transform: scale(0.97);
-      box-shadow: 7px 5px 56px -10px #ffffff;
-    }
-    .checkbox-wrapper-16 *,
-  .checkbox-wrapper-16 *:after,
-  .checkbox-wrapper-16 *:before {
-  box-sizing: border-box;
-}
-
-.checkbox-wrapper-16 .checkbox-input {
-  clip: rect(0 0 0 0);
-  -webkit-clip-path: inset(100%);
-  clip-path: inset(100%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
-}
-
-.checkbox-wrapper-16 .checkbox-input:checked + .checkbox-tile {
-  border-color: #2260ff;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-  color: #2260ff;
-  background: linear-gradient(to right, black, white);
-}
-
-.checkbox-wrapper-16 .checkbox-input:checked + .checkbox-tile:before {
-  transform: scale(1);
-  opacity: 1;
-  background: linear-gradient(to right, black, white);
-  border-color: #2260ff;
-}
-
-.checkbox-wrapper-16 .checkbox-input:checked + .checkbox-tile .checkbox-icon,
-  .checkbox-wrapper-16 .checkbox-input:checked + .checkbox-tile .checkbox-label {
-  color: #2260ff;
-}
-
-.checkbox-wrapper-16 .checkbox-input:focus + .checkbox-tile {
-  border-color: #2260ff;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1), 0 0 0 4px #b5c9fc;
-}
-
-.checkbox-wrapper-16 .checkbox-input:focus + .checkbox-tile:before {
-  transform: scale(1);
-  opacity: 1;
-}
-
-.checkbox-wrapper-16 .checkbox-tile {
+ /* --- Theme tiles --- */
+.selection {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 7rem;
-  min-height: 7rem;
-  border-radius: 0.5rem;
-  border: 2px solid #b5bfd9;
-  background-color: #fff;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-  transition: 0.15s ease;
-  cursor: pointer;
+  gap: .75rem;
+  flex-wrap: wrap;
+  margin-bottom: .75rem;
+}
+
+.theme-tile {
   position: relative;
+  cursor: pointer;
+  user-select: none;
 }
 
-.checkbox-wrapper-16 .checkbox-tile:before {
-  content: "";
+.theme-tile input {
   position: absolute;
-  display: block;
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 2px solid #b5bfd9;
-  background-color: #fff;
-  border-radius: 50%;
-  top: 0.25rem;
-  left: 0.25rem;
+  inset: 0;
   opacity: 0;
-  transform: scale(0);
-  transition: 0.25s ease;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='://www.w3.org/2000/svg' width='192' height='192' fill='%23FFFFFF' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' fill='none'%3E%3C/rect%3E%3Cpolyline points='216 72.005 104 184 48 128.005' fill='none' stroke='%23FFFFFF' stroke-linecap='round' stroke-linejoin='round' stroke-width='32'%3E%3C/polyline%3E%3C/svg%3E");
-  background-size: 12px;
-  background-repeat: no-repeat;
-  background-position: 50% 50%;
+  pointer-events: none;
 }
 
-.checkbox-wrapper-16 .checkbox-tile:hover {
-  border-color: #2260ff;
+.theme-tile .tile {
+  display: grid;
+  grid-template-columns: 28px auto;
+  align-items: center;
+  gap: .6rem;
+  padding: .6rem .8rem;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--card), transparent 10%);
+  border: 1px solid #ffffff26;
+  box-shadow: var(--shadow);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .06s ease;
+}
+.theme-tile .tile:hover { border-color: #85a3ff66; }
+.theme-tile input:focus-visible + .tile {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--ring);
+}
+.theme-tile input:checked + .tile {
+  border-color: var(--acc);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35), 0 0 0 1px var(--acc);
 }
 
-.checkbox-wrapper-16 .checkbox-tile:hover:before {
-  transform: scale(1);
-  opacity: 1;
+.swatch {
+  width: 28px; height: 28px; border-radius: 8px; border: 1px solid #ffffff26;
+}
+.swatch-bw { background: linear-gradient(90deg,#000,#fff); }
+.swatch-dark { background: linear-gradient(90deg,#0b0f29,#1b1f45); }
+.swatch-light { background: linear-gradient(90deg,#fafbff,#e6ebff); }
+.label { font-weight: 600; }
+
+/* --- Theme variable overrides on <body> --- */
+/* Default (dein aktuelles :root = dark-ish) bleibt bestehen */
+
+body.theme-bw {
+  --bg: #0a0a0a;
+  --bg-soft: #161616;
+  --card: #1b1b1b;
+  --ink: #f0f0f0;
+  --muted: #bdbdbd;
+  --acc: #ffffff;      /* neutraler akzent für BW */
+  --ring: #ffffff44;
 }
 
-.checkbox-wrapper-16 .checkbox-icon {
-  transition: 0.375s ease;
-  color: #494949;
+body.theme-dark {
+  /* optional leicht andere Nuancen als dein Default */
+  --bg: #0b0f29;
+  --bg-soft: #12163a;
+  --card: #171b3b;
+  --ink: #e9ebff;
+  --muted: #a2a9c8;
+  --acc: #85a3ff;
+  --ring: #85a3ff55;
 }
 
-.checkbox-wrapper-16 .checkbox-icon svg {
-  width: 3rem;
-  height: 3rem;
+body.theme-light {
+  --bg: #f7f9ff;
+  --bg-soft: #eef2ff;
+  --card: #ffffff;
+  --ink: #111322;
+  --muted: #4b5569;
+  --acc: #3b82f6;
+  --ring: #3b82f633;
 }
 
-.checkbox-wrapper-16 .checkbox-label {
-  color: #707070;
-  transition: 0.375s ease;
-  text-align: center;
+/* Hintergrundverläufe leicht anpassen, damit Light nicht „dunkel“ wirkt */
+body.theme-light::before {
+  background:
+    radial-gradient(1400px 900px at 12% -8%, #e7ebff 0%, #e7ebff 35%, transparent 72%),
+    radial-gradient(1200px 800px at 100% -10%, #bfd3ff 0%, #bfd3ff 28%, transparent 68%),
+    radial-gradient(900px 500px at 95% 115%, #bfd3ff66 0%, transparent 60%),
+    linear-gradient(160deg, #f0f4ff 0%, #f7f9ff 72%);
 }
   </style>
 </head>
@@ -668,26 +635,37 @@
     </section>
 
     <!-- Interactive demos -->
-    <section>
-      <h2 class="section-title">Interactive Frontend Demos</h2>
-      <div class="selection">
-        <div class="checkbox-wrapper-16">
-          <label class="checkbox-wrapper">
-            <input class="checkbox-input" type="checkbox">
-            <span class="checkbox-tile">
-              <span class="checkbox-icon">
-              </span>
-              <span class="checkbox-label">Whitemode</span>
-            </span>
-          </label>
-        </div>
-        <button class="darkmode" onclick=setDarkModeDemo()> </button>
-      </div>
-      <div class="displaySection" id="displaySection">
+<section>
+  <h2 class="section-title">Interactive Frontend Demos</h2>
 
-      </div>
-      
-    </section>
+  <div class="selection" role="radiogroup" aria-label="Theme">
+    <label class="theme-tile">
+      <input type="radio" name="theme" value="bw" checked>
+      <span class="tile">
+        <span class="swatch swatch-bw"></span>
+        <span class="label">Black &amp; White</span>
+      </span>
+    </label>
+
+    <label class="theme-tile">
+      <input type="radio" name="theme" value="dark">
+      <span class="tile">
+        <span class="swatch swatch-dark"></span>
+        <span class="label">Dark</span>
+      </span>
+    </label>
+
+    <label class="theme-tile">
+      <input type="radio" name="theme" value="light">
+      <span class="tile">
+        <span class="swatch swatch-light"></span>
+        <span class="label">Light</span>
+      </span>
+    </label>
+  </div>
+
+  <div class="displaySection" id="displaySection"></div>
+</section>
 
     <section style="margin-top:1rem">
       <div class="card pad">
@@ -961,14 +939,43 @@
     // Render bei Load
     renderAuthHeader();
 
-    function setDarkModeDemo() {
-      const section = document.getElementById("displaySection");
-      section.innerHTML = '<button class="darkmode"> This is the dark mode </button>'
-    }
-    function setWhiteModeDemo() {
-      const section = document.getElementById("displaySection");
-      section.innerHTML = '<button style="whitemode"> This is the white mode </button>'
-    }
+  const DEMO_BY_THEME = {
+    bw:   '<button class="darkmode">Black &amp; White demo</button>',
+    dark: '<button style="background:#0b0f29;color:#e9ebff;border:1px solid #ffffff26;border-radius:10px;padding:.6rem 1rem;">Dark demo</button>',
+    light:'<button style="background:#ffffff;color:#111;border:1px solid #d0d7ff;border-radius:10px;padding:.6rem 1rem;">Light demo</button>',
+  };
+
+  function applyTheme(theme) {
+    const body = document.body;
+    body.classList.remove('theme-bw','theme-dark','theme-light');
+    body.classList.add(
+      theme === 'bw'   ? 'theme-bw'   :
+      theme === 'dark' ? 'theme-dark' : 'theme-light'
+    );
+
+    const section = document.getElementById('displaySection');
+    section.innerHTML = DEMO_BY_THEME[theme] ?? '';
+  }
+
+  // Init: nimm default-checked Radio
+  function initThemeRadios() {
+    const radios = document.querySelectorAll('input[type="radio"][name="theme"]');
+    if (!radios.length) return;
+
+    // Standard: finde den gecheckten (default: bw)
+    const checked = Array.from(radios).find(r => r.checked) || radios[0];
+    applyTheme(checked.value);
+
+    // Listener
+    radios.forEach(r => {
+      r.addEventListener('change', (e) => {
+        if (e.target.checked) applyTheme(e.target.value);
+      });
+    });
+  }
+
+  // call after DOM is ready (du bist am Ende der Seite -> reicht direkt)
+  initThemeRadios();
   </script>
 </body>
 
