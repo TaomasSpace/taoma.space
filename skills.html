@@ -918,7 +918,19 @@ footer .social a.iso-pro:focus-visible {
 .displaySection .progress > span[data-level="strong"] { background: #2ecc71; }
 
 /* Theme scopes bleiben wie bei dir (theme-bw/dark/light auf .displaySection) */
+.displaySection.theme-bw .btn {
+  color: #000; /* schwarzer Text auf weißem Hintergrund */
+}
 
+/* Wenn du NUR helle Buttons willst (also NICHT .ghost) */
+.displaySection.theme-bw .btn:not(.ghost) {
+  color: #000;
+}
+
+/* Optional: damit der Hover nicht wieder weiß wird */
+.displaySection.theme-bw .btn:hover {
+  color: #000;
+}
   </style>
 </head>
 
