@@ -467,15 +467,29 @@
     }
 
     .darkmode {
-      background: linear-gradient(to right, blue, pink);
+      background: linear-gradient(to right, black, white);
       height: 40px;
       width: 40px;
       border-radius: 10px;
-      border: 1px solid #ffffff26; /* passt zum restlichen Stil */
+      border: 1px solid #ffffff26;
       box-shadow: var(--shadow);
       cursor: pointer;
     }
     .darkmode:focus-visible {
+      outline: 2px solid var(--acc);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 6px var(--ring);
+    }
+    .whitemode {
+      background: linear-gradient(to right, white, black);
+      height: 40px;
+      width: 40px;
+      border-radius: 10px;
+      border: 1px solid #ffffff26;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+    .whitemode:focus-visible {
       outline: 2px solid var(--acc);
       outline-offset: 2px;
       box-shadow: 0 0 0 6px var(--ring);
@@ -537,7 +551,7 @@
     <section>
       <h2 class="section-title">Interactive Frontend Demos</h2>
       <div class="selection">
-        <button id="whitemode">White mode</button>
+        <button class="whitekmode" onclick=setWhiteModeDemo()> </button>
         <button class="darkmode" onclick=setDarkModeDemo()> </button>
       </div>
       <div class="displaySection" id="displaySection">
@@ -821,6 +835,10 @@
     function setDarkModeDemo() {
       const section = document.getElementById("displaySection");
       section.innerHTML = '<button style="background:black; font:white;"> This is the dark mode </button>'
+    }
+    function setWhiteModeDemo() {
+      const section = document.getElementById("displaySection");
+      section.innerHTML = '<button style="background:white; font:black;"> This is the white mode </button>'
     }
   </script>
 </body>
