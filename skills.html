@@ -468,8 +468,8 @@
 
     .darkmode {
       background: linear-gradient(to right, black, white);
-      height: 40px;
-      width: 40px;
+      height: 70px;
+      width: 70px;
       border-radius: 10px;
       border: 1px solid #ffffff26;
       box-shadow: var(--shadow);
@@ -482,8 +482,8 @@
     }
     .whitemode {
       background: linear-gradient(to right, white, black);
-      height: 40px;
-      width: 40px;
+      height: 70px;
+      width: 70px;
       border-radius: 10px;
       border: 1px solid #ffffff26;
       box-shadow: var(--shadow);
@@ -493,6 +493,14 @@
       outline: 2px solid var(--acc);
       outline-offset: 2px;
       box-shadow: 0 0 0 6px var(--ring);
+    }
+    .whitemode .darkmode button:hover {
+      box-shadow: 7px 5px 56px -14px #412a91;
+    }
+
+    .whitemode .darkmode button:active {
+      transform: scale(0.97);
+      box-shadow: 7px 5px 56px -10px #412a91;
     }
   </style>
 </head>
