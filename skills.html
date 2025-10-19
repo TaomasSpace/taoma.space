@@ -880,6 +880,43 @@ footer .social a.iso-pro:focus-visible {
   to   { transform: translateY(0);   opacity: 1;  }
 }
 
+
+/* Theme tiles – better contrast/typography on dark */
+.theme-tile .tile { color: var(--ink); font-weight: 700; }
+.theme-tile .tile .label { font-weight: 700; letter-spacing: .2px; }
+.theme-tile input:checked + .tile { color: var(--ink); }
+
+/* Demo: form input with eye toggle */
+.displaySection .input-wrap {
+  position: relative; display: flex; align-items: center; gap: .5rem; width: 100%;
+}
+.displaySection .input-wrap input[type="password"],
+.displaySection .input-wrap input[type="text"] {
+  flex: 1; padding-right: 40px; /* space for eye */
+}
+.displaySection .eye-btn {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 30px; height: 30px; display: grid; place-items: center;
+  background: transparent; border: 0; border-radius: 8px; cursor: pointer; color: var(--muted);
+}
+.displaySection .eye-btn:hover { color: var(--ink); }
+
+/* Password hints */
+.displaySection .hint-list {
+  display: grid; gap: 4px; margin-top: .25rem; font-size: .86rem; color: var(--muted);
+}
+.displaySection .hint { display: flex; align-items: center; gap: .4rem; }
+.displaySection .hint .dot {
+  width: 10px; height: 10px; border-radius: 50%; background: #ffffff30; border: 1px solid #ffffff26;
+}
+.displaySection .hint.ok { color: #7fffb0; }
+.displaySection .hint.ok .dot { background: #2ecc71; border-color: #2ecc71; }
+
+/* Progress color tweak (optional) */
+.displaySection .progress > span[data-level="weak"]   { background: #ff6b6b; }
+.displaySection .progress > span[data-level="okay"]   { background: #ffd166; }
+.displaySection .progress > span[data-level="strong"] { background: #2ecc71; }
+
 /* Theme scopes bleiben wie bei dir (theme-bw/dark/light auf .displaySection) */
 
   </style>
@@ -1255,7 +1292,7 @@ function renderDemos(section) {
       <!-- Pulse Button -->
       <div class="demo-card" data-demo="pulse">
         <h3 class="demo-title">Pulse Button</h3>
-        <p class="demo-sub">Sanfter Hover-Glow folgt der Maus.</p>
+        <p class="demo-sub">Soft glow follows your cursor.</p>
         <div class="demo-row">
           <button class="btn pulse" id="pulseBtn">Hover me</button>
         </div>
@@ -1263,34 +1300,53 @@ function renderDemos(section) {
 
       <!-- Password Strength -->
       <div class="demo-card" data-demo="pwd">
-        <h3 class="demo-title">Passwort-Stärke</h3>
-        <p class="demo-sub">Live-Meter + Hinweise.</p>
+        <h3 class="demo-title">Password Strength</h3>
+        <p class="demo-sub">Live meter + requirements.</p>
+
         <div class="demo-row" style="width:100%">
-          <input type="password" id="pwd" placeholder="Gib ein Passwort ein…" style="flex:1" />
+          <div class="input-wrap">
+            <input type="password" id="pwd" placeholder="Type a password…" />
+            <button class="eye-btn" id="pwdEye" aria-label="Show password" title="Show/Hide">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
           <button class="btn ghost" id="genPwd">Generate</button>
         </div>
+
         <div class="progress"><span id="pwdBar"></span></div>
-        <small id="pwdMsg" class="muted"></small>
+        <small id="pwdMsg" class="muted">Start typing to evaluate…</small>
+
+        <div class="hint-list" id="pwdHints">
+          <div class="hint" data-key="len"><span class="dot"></span><span>At least 12 characters</span></div>
+          <div class="hint" data-key="lower"><span class="dot"></span><span>Contains lowercase</span></div>
+          <div class="hint" data-key="upper"><span class="dot"></span><span>Contains uppercase</span></div>
+          <div class="hint" data-key="num"><span class="dot"></span><span>Contains number</span></div>
+          <div class="hint" data-key="sym"><span class="dot"></span><span>Contains special character</span></div>
+          <div class="hint" data-key="repeat"><span class="dot"></span><span>No 3+ repeated characters</span></div>
+        </div>
       </div>
 
       <!-- Gradient Generator -->
       <div class="demo-card" data-demo="grad">
-        <h3 class="demo-title">Gradient-Generator</h3>
-        <p class="demo-sub">Erzeuge einen frischen Hintergrund-Gradienten.</p>
+        <h3 class="demo-title">Gradient Generator</h3>
+        <p class="demo-sub">Make a fresh background gradient.</p>
         <div class="demo-row">
-          <button class="btn" id="newGrad">Neuer Gradient</button>
+          <button class="btn" id="newGrad">New Gradient</button>
           <button class="btn ghost" id="copyGrad">Copy CSS</button>
         </div>
-        <div class="code" id="gradCode">/* click “Neuer Gradient” */</div>
+        <div class="code" id="gradCode">/* click “New Gradient” */</div>
       </div>
 
       <!-- Toast Notifications -->
       <div class="demo-card" data-demo="toast">
         <h3 class="demo-title">Toasts</h3>
-        <p class="demo-sub">Kleine Notifications im Container.</p>
+        <p class="demo-sub">Tiny notifications inside the container.</p>
         <div class="demo-row">
-          <button class="btn" id="makeToast">Toast anzeigen</button>
-          <button class="btn ghost" id="clearToasts">Alle schließen</button>
+          <button class="btn" id="makeToast">Show toast</button>
+          <button class="btn ghost" id="clearToasts">Clear all</button>
         </div>
       </div>
 
@@ -1299,64 +1355,95 @@ function renderDemos(section) {
     <div class="toasts" id="toasts"></div>
   `;
 
-  // --- Pulse hover tracking ---
+  /* --- Pulse hover --- */
   const pulseBtn = section.querySelector('#pulseBtn');
   pulseBtn?.addEventListener('pointermove', (e) => {
-    const rect = pulseBtn.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const r = pulseBtn.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 100;
+    const y = ((e.clientY - r.top) / r.height) * 100;
     pulseBtn.style.setProperty('--x', `${x}%`);
     pulseBtn.style.setProperty('--y', `${y}%`);
   });
 
-  // --- Password strength ---
-  const pwd = section.querySelector('#pwd');
-  const bar = section.querySelector('#pwdBar');
-  const msg = section.querySelector('#pwdMsg');
-  const gen = section.querySelector('#genPwd');
+  /* --- Password strength + hints --- */
+  const pwd   = section.querySelector('#pwd');
+  const bar   = section.querySelector('#pwdBar');
+  const msg   = section.querySelector('#pwdMsg');
+  const gen   = section.querySelector('#genPwd');
+  const eye   = section.querySelector('#pwdEye');
+  const hints = section.querySelectorAll('#pwdHints .hint');
 
-  function scorePassword(s) {
-    let score = 0;
-    if (!s) return 0;
-    // Länge
-    score += Math.min(10, s.length) * 5;
-    // Diversität
-    const sets = [
-      /[a-z]/.test(s),
-      /[A-Z]/.test(s),
-      /[0-9]/.test(s),
-      /[^A-Za-z0-9]/.test(s)
-    ].filter(Boolean).length;
-    score += (sets - 1) * 15; // 0..45
-    // Bonus für keine Wiederholungen
-    if (!/(.)\1{2,}/.test(s)) score += 10;
-    return Math.max(0, Math.min(100, score));
+  function evaluate(s) {
+    const checks = {
+      len: s.length >= 12,
+      lower: /[a-z]/.test(s),
+      upper: /[A-Z]/.test(s),
+      num: /[0-9]/.test(s),
+      sym: /[^A-Za-z0-9]/.test(s),
+      repeat: !/(.)\1{2,}/.test(s)
+    };
+    // score (length + diversity + no repeats)
+    let score = Math.min(12, s.length) * 5;             // 0..60
+    score += (['lower','upper','num','sym'].filter(k => checks[k]).length - 1) * 12; // 0..36
+    if (checks.repeat) score += 8;                       // +8
+    score = Math.max(0, Math.min(100, score));
+
+    // meter + label
+    bar.style.width = score + '%';
+    bar.dataset.level = score > 75 ? 'strong' : score > 45 ? 'okay' : 'weak';
+    msg.textContent = score === 0 ? 'Start typing…'
+      : score > 75 ? `Strong (${score}%)`
+      : score > 45 ? `Okay (${score}%)`
+      : `Weak (${score}%)`;
+
+    // checklist UI
+    hints.forEach(h => {
+      const key = h.getAttribute('data-key');
+      h.classList.toggle('ok', !!checks[key]);
+    });
   }
-  function updatePwd() {
-    const val = pwd.value;
-    const sc = scorePassword(val);
-    bar.style.width = sc + '%';
-    let txt = 'Sehr schwach';
-    if (sc > 25) txt = 'Schwach';
-    if (sc > 50) txt = 'Okay';
-    if (sc > 75) txt = 'Stark';
-    msg.textContent = `${txt} (${sc}%)`;
+
+  function randomPwd() {
+    const sets = {
+      lower: 'abcdefghijklmnopqrstuvwxyz',
+      upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      num:   '0123456789',
+      sym:   '!$%&*+-_?@#'
+    };
+    // ensure at least one from each set
+    let base = [
+      sets.lower[Math.floor(Math.random()*sets.lower.length)],
+      sets.upper[Math.floor(Math.random()*sets.upper.length)],
+      sets.num[Math.floor(Math.random()*sets.num.length)],
+      sets.sym[Math.floor(Math.random()*sets.sym.length)]
+    ];
+    const all = Object.values(sets).join('');
+    while (base.length < 16) base.push(all[Math.floor(Math.random()*all.length)]);
+    // shuffle
+    for (let i = base.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [base[i], base[j]] = [base[j], base[i]];
+    }
+    return base.join('');
   }
-  pwd?.addEventListener('input', updatePwd);
-  gen?.addEventListener('click', () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!$%&*+-_?';
-    let out = '';
-    for (let i=0;i<16;i++) out += chars[Math.floor(Math.random()*chars.length)];
-    pwd.value = out; updatePwd();
+
+  pwd?.addEventListener('input', () => evaluate(pwd.value));
+  gen?.addEventListener('click', () => { pwd.value = randomPwd(); evaluate(pwd.value); });
+
+  // eye toggle
+  eye?.addEventListener('click', () => {
+    const show = pwd.type === 'password';
+    pwd.type = show ? 'text' : 'password';
+    eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
   });
 
-  // --- Gradient generator ---
+  /* --- Gradient generator --- */
   const gradCode = section.querySelector('#gradCode');
-  const newGrad = section.querySelector('#newGrad');
+  const newGrad  = section.querySelector('#newGrad');
   const copyGrad = section.querySelector('#copyGrad');
 
-  function rand255(){ return Math.floor(Math.random()*256); }
-  function color(){ return `rgb(${rand255()} ${rand255()} ${rand255()})`; }
+  const rand255 = () => Math.floor(Math.random()*256);
+  const color   = () => `rgb(${rand255()} ${rand255()} ${rand255()})`;
   function makeGrad(){
     const g = `linear-gradient(135deg, ${color()} 0%, ${color()} 50%, ${color()} 100%)`;
     section.style.background = `color-mix(in oklab, var(--bg) 70%, transparent), ${g}`;
@@ -1370,13 +1457,13 @@ function renderDemos(section) {
   copyGrad?.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(gradCode.textContent || '');
-      fireToast('Gradient CSS kopiert ✅');
+      fireToast('Gradient CSS copied ✅');
     } catch {
-      fireToast('Konnte nicht kopieren ❌');
+      fireToast('Could not copy ❌');
     }
   });
 
-  // --- Toasts ---
+  /* --- Toasts --- */
   const toasts = section.querySelector('#toasts');
   const makeToastBtn = section.querySelector('#makeToast');
   const clearToastsBtn = section.querySelector('#clearToasts');
@@ -1386,11 +1473,12 @@ function renderDemos(section) {
     el.className = 'toast';
     el.textContent = text;
     toasts?.appendChild(el);
-    setTimeout(() => { el.remove(); }, 3500);
+    setTimeout(() => el.remove(), 3500);
   }
+  window.fireToast = fireToast; // used above
 
-  makeToastBtn?.addEventListener('click', () => fireToast('Hallo von den Toasts 👋'));
-  clearToastsBtn?.addEventListener('click', () => toasts.innerHTML = '');
+  makeToastBtn?.addEventListener('click', () => fireToast('Hello from the toasts 👋'));
+  clearToastsBtn?.addEventListener('click', () => { toasts.innerHTML = ''; });
 }
 
 /** ---------- Theme integration (scoped auf .displaySection) ---------- */
