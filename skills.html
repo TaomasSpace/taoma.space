@@ -520,47 +520,15 @@
 
     <!-- Interactive demos -->
     <section>
-      <h2 class="section-title">Interactive Back-end Demos</h2>
-      <div class="grid cols-3">
-
-        <!-- Ping -->
-        <article class="card pad">
-          <h3>API Ping / Latency</h3>
-          <p class="muted">Round-trip time and server UTC timestamp.</p>
-          <div class="row">
-            <button id="btnPing" class="btn">Run ping</button>
-            <span id="pingOut" class="muted"></span>
-          </div>
-          <div class="progress" style="margin-top:.75rem"><span id="pingBar"></span></div>
-        </article>
-
-        <!-- Echo -->
-        <article class="card pad">
-          <h3>Input Validation (Echo)</h3>
-          <p class="muted">Pydantic validates your input; server returns sanitized JSON.</p>
-          <textarea id="echoIn" rows="6"
-            style="width:100%;border-radius:12px;border:1px solid #ffffff26;background:var(--bg-soft);color:var(--ink);padding:.75rem"
-            placeholder='{"message":"Hello","meta":{"source":"skills-page"}}'></textarea>
-          <div class="row" style="margin-top:.6rem">
-            <button id="btnEcho" class="btn">POST /api/echo</button>
-            <div id="echoOut" class="muted"></div>
-          </div>
-        </article>
-
-        <!-- Job -->
-        <article class="card pad">
-          <h3>Background Job</h3>
-          <p class="muted">Create a job, then watch progress from the server.</p>
-          <div class="row">
-            <input id="jobSeconds" type="number" min="1" max="20" value="5"
-              style="width:90px;border-radius:12px;border:1px solid #ffffff26;background:var(--bg-soft);color:var(--ink);padding:.5rem .7rem" />
-            <button id="btnJob" class="btn">Create job</button>
-            <span id="jobOut" class="muted"></span>
-          </div>
-          <div class="progress" style="margin-top:.75rem"><span id="jobBar"></span></div>
-        </article>
+      <h2 class="section-title">Interactive Frontend Demos</h2>
+      <div class="selection">
+        <button id="whitemode">White mode</button>
+        <button id="darkmode" onclick=setDarkModeDemo()>Dark mode</button>
+      </div>
+      <div class="displaySection" id="displaySection">
 
       </div>
+      
     </section>
 
     <section style="margin-top:1rem">
@@ -834,6 +802,11 @@
 
     // Render bei Load
     renderAuthHeader();
+
+    function setDarkModeDemo() {
+      const section = getElementById("displaySection");
+      section.innerHTML = '<button style="background:black; font:white;"> This is the dark mode </button>'
+    }
   </script>
 </body>
 
