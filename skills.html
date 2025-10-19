@@ -748,6 +748,139 @@ footer .social a.iso-pro:focus-visible {
   outline-offset: 3px;
   box-shadow: 0 0 0 6px var(--ring);
 }
+/* === Demo gallery inside .displaySection === */
+.displaySection {
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #ffffff26;
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.displaySection .demo-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat( auto-fit, minmax(240px, 1fr) );
+}
+
+.displaySection .demo-card {
+  background: var(--card);
+  border: 1px solid #ffffff26;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.displaySection .demo-title {
+  font-weight: 700;
+  margin: 0;
+}
+
+.displaySection .demo-sub {
+  color: var(--muted);
+  margin: 0 0 .25rem;
+  font-size: .9rem;
+}
+
+.displaySection .demo-row {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Buttons */
+.displaySection .btn {
+  background: var(--acc);
+  color: #fff;
+  font-weight: 700;
+  border: 1px solid #ffffff26;
+  border-radius: 10px;
+  padding: .55rem .9rem;
+  cursor: pointer;
+}
+.displaySection .btn.ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid #ffffff3a;
+}
+
+/* Inputs */
+.displaySection input[type="text"],
+.displaySection input[type="password"] {
+  background: var(--bg-soft);
+  color: var(--ink);
+  border: 1px solid #ffffff26;
+  border-radius: 10px;
+  padding: .5rem .65rem;
+  outline: none;
+}
+
+/* Progress bar */
+.displaySection .progress {
+  height: 10px;
+  border-radius: 999px;
+  background: #ffffff22;
+  border: 1px solid #ffffff2a;
+  overflow: hidden;
+}
+.displaySection .progress > span {
+  display:block; height:100%; width:0%;
+  background: var(--acc);
+  transition: width .25s ease;
+}
+
+/* Code box */
+.displaySection .code {
+  white-space: pre;
+  background: var(--bg-soft);
+  padding: .6rem .7rem;
+  border-radius: 10px;
+  border: 1px solid #ffffff1a;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .85rem;
+}
+
+/* Pulse Button demo */
+.displaySection .pulse {
+  position: relative;
+  overflow: hidden;
+}
+.displaySection .pulse::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at var(--x,50%) var(--y,50%), #ffffff33, transparent 40%);
+  opacity: 0; transition: opacity .25s ease;
+}
+.displaySection .pulse:hover::after { opacity: 1; }
+
+/* Toasts */
+.displaySection .toasts {
+  position: fixed; /* bleibt im Container-Viewport dank overflow-clip von body nicht global */
+  inset: auto 16px 16px auto;
+  display: grid;
+  gap: 8px;
+  z-index: 1;
+}
+.displaySection .toast {
+  background: color-mix(in oklab, var(--acc) 35%, var(--card));
+  color: #fff;
+  border: 1px solid #ffffff26;
+  border-radius: 10px;
+  padding: .55rem .75rem;
+  box-shadow: var(--shadow);
+  animation: toast-in .18s ease-out both;
+}
+@keyframes toast-in {
+  from { transform: translateY(8px); opacity: .0; }
+  to   { transform: translateY(0);   opacity: 1;  }
+}
+
+/* Theme scopes bleiben wie bei dir (theme-bw/dark/light auf .displaySection) */
 
   </style>
 </head>
@@ -884,7 +1017,7 @@ footer .social a.iso-pro:focus-visible {
   <a href="mailto:Taoma.M@proton.me" aria-label="Email" class="iso-pro is-mail">
     <span></span><span></span><span></span>
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg">
-      <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm16 0-8 7L4 6"/>
+      <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1zm13 2.383-4.708 2.825L15 11.105zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741M1 11.105l4.708-2.897L1 5.383z"/>
     </svg>
     <div class="text">Email</div>
   </a>
@@ -1115,45 +1248,179 @@ footer .social a.iso-pro:focus-visible {
     // Render bei Load
     renderAuthHeader();
 
- const DEMO_BY_THEME = {
-  bw:   '<button class="demo-btn">Black &amp; White demo</button>',
-  dark: '<button class="demo-btn">Dark demo</button>',
-  light:'<button class="demo-btn">Light demo</button>',
-};
+function renderDemos(section) {
+  section.innerHTML = `
+    <div class="demo-grid">
 
+      <!-- Pulse Button -->
+      <div class="demo-card" data-demo="pulse">
+        <h3 class="demo-title">Pulse Button</h3>
+        <p class="demo-sub">Sanfter Hover-Glow folgt der Maus.</p>
+        <div class="demo-row">
+          <button class="btn pulse" id="pulseBtn">Hover me</button>
+        </div>
+      </div>
+
+      <!-- Password Strength -->
+      <div class="demo-card" data-demo="pwd">
+        <h3 class="demo-title">Passwort-Stärke</h3>
+        <p class="demo-sub">Live-Meter + Hinweise.</p>
+        <div class="demo-row" style="width:100%">
+          <input type="password" id="pwd" placeholder="Gib ein Passwort ein…" style="flex:1" />
+          <button class="btn ghost" id="genPwd">Generate</button>
+        </div>
+        <div class="progress"><span id="pwdBar"></span></div>
+        <small id="pwdMsg" class="muted"></small>
+      </div>
+
+      <!-- Gradient Generator -->
+      <div class="demo-card" data-demo="grad">
+        <h3 class="demo-title">Gradient-Generator</h3>
+        <p class="demo-sub">Erzeuge einen frischen Hintergrund-Gradienten.</p>
+        <div class="demo-row">
+          <button class="btn" id="newGrad">Neuer Gradient</button>
+          <button class="btn ghost" id="copyGrad">Copy CSS</button>
+        </div>
+        <div class="code" id="gradCode">/* click “Neuer Gradient” */</div>
+      </div>
+
+      <!-- Toast Notifications -->
+      <div class="demo-card" data-demo="toast">
+        <h3 class="demo-title">Toasts</h3>
+        <p class="demo-sub">Kleine Notifications im Container.</p>
+        <div class="demo-row">
+          <button class="btn" id="makeToast">Toast anzeigen</button>
+          <button class="btn ghost" id="clearToasts">Alle schließen</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="toasts" id="toasts"></div>
+  `;
+
+  // --- Pulse hover tracking ---
+  const pulseBtn = section.querySelector('#pulseBtn');
+  pulseBtn?.addEventListener('pointermove', (e) => {
+    const rect = pulseBtn.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    pulseBtn.style.setProperty('--x', `${x}%`);
+    pulseBtn.style.setProperty('--y', `${y}%`);
+  });
+
+  // --- Password strength ---
+  const pwd = section.querySelector('#pwd');
+  const bar = section.querySelector('#pwdBar');
+  const msg = section.querySelector('#pwdMsg');
+  const gen = section.querySelector('#genPwd');
+
+  function scorePassword(s) {
+    let score = 0;
+    if (!s) return 0;
+    // Länge
+    score += Math.min(10, s.length) * 5;
+    // Diversität
+    const sets = [
+      /[a-z]/.test(s),
+      /[A-Z]/.test(s),
+      /[0-9]/.test(s),
+      /[^A-Za-z0-9]/.test(s)
+    ].filter(Boolean).length;
+    score += (sets - 1) * 15; // 0..45
+    // Bonus für keine Wiederholungen
+    if (!/(.)\1{2,}/.test(s)) score += 10;
+    return Math.max(0, Math.min(100, score));
+  }
+  function updatePwd() {
+    const val = pwd.value;
+    const sc = scorePassword(val);
+    bar.style.width = sc + '%';
+    let txt = 'Sehr schwach';
+    if (sc > 25) txt = 'Schwach';
+    if (sc > 50) txt = 'Okay';
+    if (sc > 75) txt = 'Stark';
+    msg.textContent = `${txt} (${sc}%)`;
+  }
+  pwd?.addEventListener('input', updatePwd);
+  gen?.addEventListener('click', () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!$%&*+-_?';
+    let out = '';
+    for (let i=0;i<16;i++) out += chars[Math.floor(Math.random()*chars.length)];
+    pwd.value = out; updatePwd();
+  });
+
+  // --- Gradient generator ---
+  const gradCode = section.querySelector('#gradCode');
+  const newGrad = section.querySelector('#newGrad');
+  const copyGrad = section.querySelector('#copyGrad');
+
+  function rand255(){ return Math.floor(Math.random()*256); }
+  function color(){ return `rgb(${rand255()} ${rand255()} ${rand255()})`; }
+  function makeGrad(){
+    const g = `linear-gradient(135deg, ${color()} 0%, ${color()} 50%, ${color()} 100%)`;
+    section.style.background = `color-mix(in oklab, var(--bg) 70%, transparent), ${g}`;
+    gradCode.textContent =
+`/* Paste this into CSS */
+.my-hero {
+  background: ${g};
+}`;
+  }
+  newGrad?.addEventListener('click', makeGrad);
+  copyGrad?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(gradCode.textContent || '');
+      fireToast('Gradient CSS kopiert ✅');
+    } catch {
+      fireToast('Konnte nicht kopieren ❌');
+    }
+  });
+
+  // --- Toasts ---
+  const toasts = section.querySelector('#toasts');
+  const makeToastBtn = section.querySelector('#makeToast');
+  const clearToastsBtn = section.querySelector('#clearToasts');
+
+  function fireToast(text){
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = text;
+    toasts?.appendChild(el);
+    setTimeout(() => { el.remove(); }, 3500);
+  }
+
+  makeToastBtn?.addEventListener('click', () => fireToast('Hallo von den Toasts 👋'));
+  clearToastsBtn?.addEventListener('click', () => toasts.innerHTML = '');
+}
+
+/** ---------- Theme integration (scoped auf .displaySection) ---------- */
 function applyTheme(theme) {
   const section = document.getElementById('displaySection');
   if (!section) return;
 
-  // Theme-Klassen am CONTAINER togglen
   section.classList.remove('theme-bw','theme-dark','theme-light');
   section.classList.add(
     theme === 'bw'   ? 'theme-bw'   :
     theme === 'dark' ? 'theme-dark' : 'theme-light'
   );
 
-  // Demo-Inhalt setzen
-  section.innerHTML = DEMO_BY_THEME[theme] ?? '';
+  // (Re)render demos (Theme-Vars greifen automatisch)
+  renderDemos(section);
 }
-  // Init: nimm default-checked Radio
-  function initThemeRadios() {
-    const radios = document.querySelectorAll('input[type="radio"][name="theme"]');
-    if (!radios.length) return;
 
-    // Standard: finde den gecheckten (default: bw)
-    const checked = Array.from(radios).find(r => r.checked) || radios[0];
-    applyTheme(checked.value);
-
-    // Listener
-    radios.forEach(r => {
-      r.addEventListener('change', (e) => {
-        if (e.target.checked) applyTheme(e.target.value);
-      });
+/** ---------- Radios initialisieren ---------- */
+function initThemeRadios() {
+  const radios = document.querySelectorAll('input[type="radio"][name="theme"]');
+  if (!radios.length) return;
+  const checked = Array.from(radios).find(r => r.checked) || radios[0];
+  applyTheme(checked.value);
+  radios.forEach(r => {
+    r.addEventListener('change', (e) => {
+      if (e.target.checked) applyTheme(e.target.value);
     });
-  }
-
-  // call after DOM is ready (du bist am Ende der Seite -> reicht direkt)
-  initThemeRadios();
+  });
+}
+initThemeRadios();
   </script>
 </body>
 
