@@ -466,10 +466,19 @@
       background: #ffffff12;
     }
 
-    .darkMode button{
-    background: linear-gradient(to right, blue, pink);
-    height: 40px;
-    width: 40px;
+    .darkmode {
+      background: linear-gradient(to right, blue, pink);
+      height: 40px;
+      width: 40px;
+      border-radius: 10px;
+      border: 1px solid #ffffff26; /* passt zum restlichen Stil */
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+    .darkmode:focus-visible {
+      outline: 2px solid var(--acc);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 6px var(--ring);
     }
   </style>
 </head>
