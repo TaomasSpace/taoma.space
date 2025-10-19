@@ -551,7 +551,7 @@
     <section>
       <h2 class="section-title">Interactive Frontend Demos</h2>
       <div class="selection">
-        <button class="whitekmode" onclick=setWhiteModeDemo()> </button>
+        <button class="whitemode" onclick=setWhiteModeDemo()> </button>
         <button class="darkmode" onclick=setDarkModeDemo()> </button>
       </div>
       <div class="displaySection" id="displaySection">
@@ -834,11 +834,11 @@
 
     function setDarkModeDemo() {
       const section = document.getElementById("displaySection");
-      section.innerHTML = '<button style="background:black; font:white;"> This is the dark mode </button>'
+      section.innerHTML = '<button style="background:black; color:white;"> This is the dark mode </button>'
     }
     function setWhiteModeDemo() {
       const section = document.getElementById("displaySection");
-      section.innerHTML = '<button style="background:white; font:black;"> This is the white mode </button>'
+      section.innerHTML = '<button style="background:white; color:black;"> This is the white mode </button>'
     }
   </script>
 </body>
