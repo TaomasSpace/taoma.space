@@ -581,6 +581,65 @@ body.theme-light::before {
     radial-gradient(900px 500px at 95% 115%, #bfd3ff66 0%, transparent 60%),
     linear-gradient(160deg, #f0f4ff 0%, #f7f9ff 72%);
 }
+/* Demo container baseline */
+.displaySection {
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #ffffff26;
+  background: var(--bg);    /* nutzt die lokalen Variablen unten */
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+/* Demo-Button, nutzt die lokalen Variablen */
+.displaySection .demo-btn {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid #ffffff26;
+  border-radius: 10px;
+  padding: .6rem 1rem;
+  cursor: pointer;
+}
+.displaySection .demo-btn:hover {
+  box-shadow: 7px 5px 56px -14px #412a91;
+}
+.displaySection .demo-btn:active {
+  transform: scale(0.97);
+  box-shadow: 7px 5px 56px -10px #412a91;
+}
+
+/* Theme-Variablen SCOPE: nur im Demo-Container */
+.displaySection.theme-bw {
+  --bg: #0a0a0a;
+  --bg-soft: #161616;
+  --card: #1b1b1b;
+  --ink: #f0f0f0;
+  --muted: #bdbdbd;
+  --acc: #ffffff;
+  --ring: #ffffff44;
+}
+
+.displaySection.theme-dark {
+  --bg: #0b0f29;
+  --bg-soft: #12163a;
+  --card: #171b3b;
+  --ink: #e9ebff;
+  --muted: #a2a9c8;
+  --acc: #85a3ff;
+  --ring: #85a3ff55;
+}
+
+.displaySection.theme-light {
+  --bg: #f7f9ff;
+  --bg-soft: #eef2ff;
+  --card: #ffffff;
+  --ink: #111322;
+  --muted: #4b5569;
+  --acc: #3b82f6;
+  --ring: #3b82f633;
+  border-color: #d0d7ff; /* etwas leichter im Light-Theme */
+}
+
   </style>
 </head>
 
@@ -939,24 +998,26 @@ body.theme-light::before {
     // Render bei Load
     renderAuthHeader();
 
-  const DEMO_BY_THEME = {
-    bw:   '<button class="darkmode">Black &amp; White demo</button>',
-    dark: '<button style="background:#0b0f29;color:#e9ebff;border:1px solid #ffffff26;border-radius:10px;padding:.6rem 1rem;">Dark demo</button>',
-    light:'<button style="background:#ffffff;color:#111;border:1px solid #d0d7ff;border-radius:10px;padding:.6rem 1rem;">Light demo</button>',
-  };
+ const DEMO_BY_THEME = {
+  bw:   '<button class="demo-btn">Black &amp; White demo</button>',
+  dark: '<button class="demo-btn">Dark demo</button>',
+  light:'<button class="demo-btn">Light demo</button>',
+};
 
-  function applyTheme(theme) {
-    const body = document.body;
-    body.classList.remove('theme-bw','theme-dark','theme-light');
-    body.classList.add(
-      theme === 'bw'   ? 'theme-bw'   :
-      theme === 'dark' ? 'theme-dark' : 'theme-light'
-    );
+function applyTheme(theme) {
+  const section = document.getElementById('displaySection');
+  if (!section) return;
 
-    const section = document.getElementById('displaySection');
-    section.innerHTML = DEMO_BY_THEME[theme] ?? '';
-  }
+  // Theme-Klassen am CONTAINER togglen
+  section.classList.remove('theme-bw','theme-dark','theme-light');
+  section.classList.add(
+    theme === 'bw'   ? 'theme-bw'   :
+    theme === 'dark' ? 'theme-dark' : 'theme-light'
+  );
 
+  // Demo-Inhalt setzen
+  section.innerHTML = DEMO_BY_THEME[theme] ?? '';
+}
   // Init: nimm default-checked Radio
   function initThemeRadios() {
     const radios = document.querySelectorAll('input[type="radio"][name="theme"]');
