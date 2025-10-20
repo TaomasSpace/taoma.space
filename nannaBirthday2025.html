@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Nanna!</title>
+</head>
+<body>
+    <section id="section">
+    <form onsubmit="checkdate()">
+        <input type="date" id="birthdaydate">
+        <button onclick="submit">Unlock gift</button>
+    </form>
+    </section>
+</body>
+<script>
+
+    function checkdate(){
+        date = document.getElementById("birthdaydate");
+        section = document.getElementById("section");
+        if (date = "24.10.2025" ) {
+            section.innerhtml = '<p>Happy birthday nanna!!</p>';
+        }
+    }
+</script>
+</html>
