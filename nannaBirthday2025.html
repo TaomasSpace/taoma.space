@@ -5,56 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Happy Birthday Nanna!</title>
     <style>
-      .body {
-        align-items: center;
+      body {
         display: flex;
-        margin: 0;
         justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #fff;
+        font-family: cursive;
       }
-      .form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+
+      .gift {
+        position: relative;
         background-color: rgb(241, 241, 130);
-        padding: 60px;
-        padding-inline: 28px;
+        padding: 60px 30px;
         border-radius: 20px;
         box-shadow: 4px 4px rgb(0, 2, 65);
-        font-family: cursive;
+        display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         max-width: 33vw;
         min-height: 33vh;
-        margin-top: 33vh;
-        margin-left: 33vw;
+        transition: transform 0.3s ease;
+      }
+
+      /* Geschenkband – vertikal und horizontal */
+      .gift::before,
+      .gift::after {
+        content: "";
+        position: absolute;
+        background-color: rgb(0, 2, 65);
+      }
+
+      .gift::before {
+        width: 12px;
+        height: 100%;
+        left: 50%;
+        top: 0;
+        transform: translateX(-50%);
+      }
+
+      .gift::after {
+        height: 12px;
+        width: 100%;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+      }
+
+      /* Schleife oben */
+      .ribbon {
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%) rotate(45deg);
+        width: 50px;
+        height: 50px;
+        background-color: rgb(0, 2, 65);
+        border-radius: 10px 10px 0 10px;
+        box-shadow: 3px 3px rgb(0, 2, 65, 0.3);
+      }
+
+      .gift:hover {
+        transform: scale(1.03);
       }
 
       .heading {
         font-size: 25px;
         text-align: center;
         font-weight: 600;
-        font-family: cursive;
-      }
-
-      .form button {
-        /* align-self: flex-end; */
-        padding: 10px;
-        border-radius: 10px;
-        margin-top: 20px;
-        background-color: rgb(241, 241, 130);
-        box-shadow: 2px 3px rgb(0, 2, 65);
-
-        color: rgb(0, 0, 0);
-        font-size: medium;
-        font-weight: 600;
-        transition: 400ms;
-        font-family: cursive;
-      }
-
-      .form button:hover {
-        background-color: rgb(235, 255, 59);
-        transition: 400ms;
-        cursor: pointer;
+        z-index: 2;
       }
 
       .input {
@@ -65,14 +86,32 @@
         border-color: black;
         font-size: 15px;
         box-shadow: 2px 3px rgb(0, 2, 65);
+        margin-top: 10px;
+      }
 
-        font-family: cursive;
+      button {
+        padding: 10px;
+        border-radius: 10px;
+        margin-top: 20px;
+        background-color: rgb(241, 241, 130);
+        box-shadow: 2px 3px rgb(0, 2, 65);
+        color: rgb(0, 0, 0);
+        font-size: medium;
+        font-weight: 600;
+        transition: 300ms;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: rgb(235, 255, 59);
       }
     </style>
   </head>
+
   <body>
     <section id="section">
-      <form onsubmit="return checkDate(event)" class="form">
+      <form onsubmit="return checkDate(event)" class="gift">
+        <div class="ribbon"></div>
         <span class="heading">Input your birth date</span>
         <input
           type="text"
@@ -86,36 +125,38 @@
         <button type="submit">Unlock gift</button>
       </form>
     </section>
+
+    <script>
+      function checkDate(e) {
+        e.preventDefault();
+        const input = document.getElementById("birthdaydate");
+        const section = document.getElementById("section");
+        const val = (input.value || "").trim();
+        const m = val.match(/^([0-3]\d)\.([01]\d)\.(\d{4})$/);
+        if (!m) {
+          alert("Please enter the date in format dd.mm.yyyy");
+          return false;
+        }
+        const dd = parseInt(m[1], 10);
+        const mm = parseInt(m[2], 10);
+        const yyyy = parseInt(m[3], 10);
+        const dt = new Date(yyyy, mm - 1, dd);
+        const isValid =
+          dt.getFullYear() === yyyy &&
+          dt.getMonth() === mm - 1 &&
+          dt.getDate() === dd;
+        if (!isValid) {
+          alert("Invalid date.");
+          return false;
+        }
+        if (dd === 24 && mm === 10 && yyyy === 2008) {
+          section.innerHTML =
+            "<p style='font-size:30px;text-align:center;'>🎉 Happy Birthday Nanna!! 🎉</p>";
+        } else {
+          alert("Not the correct date yet.");
+        }
+        return false;
+      }
+    </script>
   </body>
-  <script>
-    function checkDate(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      const input = document.getElementById("birthdaydate");
-      const section = document.getElementById("section");
-      const val = (input.value || "").trim();
-      const m = val.match(/^([0-3]\d)\.([01]\d)\.(\d{4})$/);
-      if (!m) {
-        alert("Please enter the date in format dd.mm.yyyy");
-        return false;
-      }
-      const dd = parseInt(m[1], 10);
-      const mm = parseInt(m[2], 10);
-      const yyyy = parseInt(m[3], 10);
-      const dt = new Date(yyyy, mm - 1, dd);
-      const isValid =
-        dt.getFullYear() === yyyy &&
-        dt.getMonth() === mm - 1 &&
-        dt.getDate() === dd;
-      if (!isValid) {
-        alert("Invalid date.");
-        return false;
-      }
-      if (dd === 24 && mm === 10 && yyyy === 2008) {
-        section.innerHTML = "<p>Happy birthday nanna!!</p>";
-      } else {
-        alert("Not the correct date yet.");
-      }
-      return false;
-    }
-  </script>
 </html>
