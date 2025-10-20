@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Happy Birthday Nanna!</title>
     <style>
+      .body {
+        align-items: center;
+        content: flex;
+      }
       .form {
         display: flex;
         flex-direction: column;
@@ -98,7 +102,7 @@
         alert("Invalid date.");
         return false;
       }
-      if (dd === 24 && mm === 10 && yyyy === 2025) {
+      if (dd === 24 && mm === 10 && yyyy === 2008) {
         section.innerHTML = "<p>Happy birthday nanna!!</p>";
       } else {
         alert("Not the correct date yet.");
