@@ -214,6 +214,7 @@
     .name.rainbow {
       background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: rainbow 3s linear infinite;
     }
@@ -694,6 +695,7 @@
         text-overflow: ellipsis;
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         /* Max 2 Zeilen */
         -webkit-box-orient: vertical;
       }
