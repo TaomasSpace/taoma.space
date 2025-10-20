@@ -1607,6 +1607,32 @@
     </div>
   </footer>
   <script>
+    (async () => {
+      const KEY = "taoma_last_counted_at";
+      const DAY = 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      const last = parseInt(localStorage.getItem(KEY) || "0", 10);
+      const shouldCount = !last || (now - last) > DAY;
+
+      if (shouldCount) {
+        navigator.sendBeacon("/api/visits/increment");
+        localStorage.setItem(KEY, String(now));
+      }
+
+      const res = await fetch("/api/visits/value");
+      const { total } = await res.json();
+      document.getElementById("visitor-count").textContent = total ?? "0";
+    })();
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[ch] || ch);
+    }
+
     // Year
     document.getElementById('year').textContent = new Date().getFullYear();
 
