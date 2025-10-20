@@ -10,6 +10,7 @@
         display: flex;
         margin: 0;
         justify-content: center;
+        background-color: rgb(255, 255, 204);
       }
       .form {
         display: flex;
@@ -68,6 +69,53 @@
 
         font-family: cursive;
       }
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 20px;
+        margin-top: 40px;
+        padding: 20px;
+        background-color: rgb(255, 255, 204);
+        border-radius: 20px;
+        box-shadow: 4px 4px rgb(0, 2, 65);
+        justify-items: center;
+        align-items: center;
+      }
+
+      .gallery img {
+        width: 100%;
+        max-width: 240px;
+        border-radius: 15px;
+        box-shadow: 2px 3px rgb(0, 2, 65);
+        transition: all 0.3s ease;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+        background-color: rgb(241, 241, 130);
+      }
+
+      .gallery img:hover {
+        transform: scale(1.05) rotate(-1deg);
+        box-shadow: 6px 6px rgb(0, 2, 65);
+        border-color: rgba(0, 0, 0, 0.5);
+      }
+      .gallery img {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.6s ease forwards;
+      }
+
+      .gallery img:nth-child(odd) {
+        animation-delay: 0.2s;
+      }
+      .gallery img:nth-child(even) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
     </style>
   </head>
   <body>
@@ -111,7 +159,8 @@
         return false;
       }
       if (dd === 24 && mm === 10 && yyyy === 2008) {
-        section.innerHTML = "<p>Happy birthday nanna!!</p>";
+        section.innerHTML =
+          '<p>Happy birthday nanna!!</p><section class="gallery"><img src="\\static\\nanna\\imgs\\2025\\image.png"><img src="\\static\\nanna\\imgs\\2025\\image3.png"><img src="\\static\\nanna\\imgs\\2025\\image4.png"><img src="\\static\\nanna\\imgs\\2025\\image5.png"><img src="\\static\\nanna\\imgs\\2025\\IMG_2956.png"><img src="\\static\\nanna\\imgs\\2025\\IMG_4952"><img src="\\static\\nanna\\imgs\\2025\\CD75C588-E5CF-42A2-93C6-3776CE87AFA0.png"><img src="\\static\\nanna\\imgs\\2025\\35C1C6FB-4200-45AE-870D-C058F67E761B.png"><img src="\\static\\nanna\\imgs\\2025\\1C02B905-D47D-4098-A780-A5F80F4C75D2.png"></section>';
       } else {
         alert("Not the correct date yet.");
       }
