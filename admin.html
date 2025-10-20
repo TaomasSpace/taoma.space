@@ -1376,8 +1376,7 @@
             <input type="file" id="fileIconCatalog" accept="image/*">
           </div>
           <img id="iconPreview" class="thumb" alt="" />
-          <small class="muted">Wird auf <code>/api/users/me/linkicon</code> hochgeladen und die URL unten
-            eingesetzt.</small>
+          <small class="muted">Gets uploaded to <code>/api/users/me/linkicon</code> and the url gets inserted below.</small>
         </div>
 
         <form id="fUpsertIcon">
@@ -1481,8 +1480,7 @@
         </form>
         <div class="log" id="logLT"></div>
         <hr style="border:0;border-top:1px solid #ffffff1a;margin:.9rem 0">
-        <div class="note muted">Danger Zone: Löscht den gesamten Linktree inkl. Links und entfernt die Zuordnung beim
-          Owner. Medien werden nur gelöscht, wenn sie nirgendwo mehr referenziert sind.</div>
+        <div class="note muted">Danger Zone: Deletes the whole linktree with the links and removes all connections to owners. Media only gets deleted when its nowhere refferenced.</div>
       </article>
 
       <article class="card">
@@ -1543,8 +1541,7 @@
         <button class="btn danger" type="submit">Run GC</button>
       </form>
       <div class="log" id="logGC"></div>
-      <p class="note muted">Löscht nur lokale <code class="mono">/media/…</code>-Dateien ohne DB-Referenzen. Deine
-        Serverlogik prüft das bereits.</p>
+      <p class="note muted">Deletes löcal <code class="mono">/media/…</code> files without db connection.</p>
     </section>
   </main>
 
