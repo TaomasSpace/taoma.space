@@ -207,6 +207,51 @@
             font-size: .9rem;
             margin-top: .25rem;
         }
+                .links {
+            display: flex;
+            gap: 1rem;
+            align-items: center
+        }
+
+        .links a {
+            padding: .45rem .7rem;
+            border-radius: 10px;
+            border: 1px solid transparent
+        }
+
+        .links a:hover {
+            border-color: #ffffff1f;
+            background: #ffffff0f
+        }
+                .mobile-toggle {
+            display: none
+        }
+
+        @media (max-width:800px) {
+            .mobile-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                border: 1px solid #ffffff26;
+                background: transparent
+            }
+
+            .links {
+                position: fixed;
+                inset: 64px 0 auto 0;
+                background: linear-gradient(180deg, #0b0f29, #0b0f2945);
+                padding: 1rem;
+                display: none;
+                flex-direction: column
+            }
+
+            .links.open {
+                display: flex
+            }
+        }
     </style>
 </head>
 
