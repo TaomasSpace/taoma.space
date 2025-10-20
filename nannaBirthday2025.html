@@ -364,6 +364,38 @@
         transform: translateY(-1px);
         box-shadow: 5px 6px rgb(0, 2, 65);
       }
+      /* feste, ruhige Box-Größe bleibt wie gehabt */
+      .lightbox .box {
+        background: rgb(255, 255, 204);
+        border-radius: 18px;
+        box-shadow: 8px 10px rgb(0, 2, 65);
+        border: 3px solid rgba(0, 0, 0, 0.28);
+        width: min(92vw, 1080px);
+        height: min(80vh, 720px);
+        display: grid;
+        grid-template-rows: auto 1fr auto; /* actions | viewport | caption */
+        overflow: hidden;
+      }
+
+      /* zentrierter Bild-Viewport */
+      .lb-viewport {
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden; /* kein Scrollbalken */
+      }
+
+      /* Bild immer vollständig sichtbar */
+      #lbImg {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        width: auto; /* NICHT auf 100% strecken */
+        height: auto; /* NICHT auf 100% strecken */
+        object-fit: contain; /* extra safety */
+        image-rendering: auto;
+      }
     </style>
   </head>
   <body>
@@ -509,18 +541,21 @@
     </section>
 
     <!-- Lightbox -->
-    <div class="lightbox" id="lightbox" aria-hidden="true">
-      <div class="box">
-        <div class="lb-actions">
-          <button class="lb-btn" id="lbPrev">← Prev</button>
-          <button class="lb-btn" id="lbClose">Close ✖</button>
-          <button class="lb-btn" id="lbNext">Next →</button>
-        </div>
-        <img id="lbImg" alt="">
-        <div class="lb-cap" id="lbCap"></div>
-      </div>
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <div class="box">
+    <div class="lb-actions">
+      <button class="lb-btn" id="lbPrev">← Prev</button>
+      <button class="lb-btn" id="lbClose">Close ✖</button>
+      <button class="lb-btn" id="lbNext">Next →</button>
     </div>
-  </div>`;
+
+    <div class="lb-viewport">
+      <img id="lbImg" alt="">
+    </div>
+
+    <div class="lb-cap" id="lbCap"></div>
+  </div>
+</div>`;
         enableConfetti(document.body);
         launchConfetti(window.innerWidth / 2, window.innerHeight * 0.25, 80);
         initGallery();
