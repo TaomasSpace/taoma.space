@@ -116,9 +116,77 @@
           transform: translateY(0);
         }
       }
+      /* Gallery: Titel + Intro-Text über volle Breite */
+      .gallery > .title,
+      .gallery > .intro {
+        grid-column: 1 / -1;
+      }
+
+      /* Titel */
+      .gallery .title {
+        font-family: cursive;
+        font-weight: 800;
+        font-size: 28px;
+        text-align: center;
+        margin: 0 0 8px 0;
+        letter-spacing: 0.5px;
+        text-shadow: 1px 1px rgba(0, 2, 65, 0.3);
+        position: relative;
+        padding-bottom: 6px;
+      }
+
+      /* kleine Schleifen-Deko unter dem Titel */
+      .gallery .title::after {
+        content: "";
+        display: block;
+        width: 80px;
+        height: 6px;
+        margin: 10px auto 0;
+        background: rgb(0, 2, 65);
+        border-radius: 999px;
+        box-shadow: 2px 2px rgba(0, 2, 65, 0.25);
+      }
+
+      /* Intro-Text-Blase */
+      .gallery .intro {
+        font-family: cursive;
+        font-size: 16px;
+        line-height: 1.6;
+        text-align: center;
+        color: #000;
+        max-width: 900px;
+        margin: 10px auto 20px;
+        background: rgb(241, 241, 130);
+        border: 2px solid rgba(0, 0, 0, 0.15);
+        border-radius: 16px;
+        padding: 14px 16px;
+        box-shadow: 2px 3px rgb(0, 2, 65);
+      }
+
+      /* Mini-Emoji-Glanz ohne Bilder: leicht vibend beim Hover */
+      .gallery .intro:hover {
+        transform: translateY(-1px);
+        transition: transform 0.2s ease;
+      }
+
+      /* Responsiveness */
+      @media (max-width: 600px) {
+        .gallery {
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 14px;
+          padding: 16px;
+        }
+        .gallery .title {
+          font-size: 22px;
+        }
+        .gallery .intro {
+          font-size: 15px;
+          padding: 12px;
+        }
+      }
     </style>
   </head>
-  <body>
+  <body class="body">
     <section id="section">
       <form onsubmit="return checkDate(event)" class="form">
         <span class="heading">Input your birth date</span>
@@ -159,8 +227,30 @@
         return false;
       }
       if (dd === 24 && mm === 10 && yyyy === 2008) {
-        section.innerHTML =
-          '<p>Happy birthday nanna!!</p><section class="gallery"><img src="\\static\\nanna\\imgs\\2025\\image.png"><img src="\\static\\nanna\\imgs\\2025\\image3.png"><img src="\\static\\nanna\\imgs\\2025\\image4.png"><img src="\\static\\nanna\\imgs\\2025\\image5.png"><img src="\\static\\nanna\\imgs\\2025\\IMG_2956.png"><img src="\\static\\nanna\\imgs\\2025\\IMG_4952"><img src="\\static\\nanna\\imgs\\2025\\CD75C588-E5CF-42A2-93C6-3776CE87AFA0.png"><img src="\\static\\nanna\\imgs\\2025\\35C1C6FB-4200-45AE-870D-C058F67E761B.png"><img src="\\static\\nanna\\imgs\\2025\\1C02B905-D47D-4098-A780-A5F80F4C75D2.png"></section>';
+        section.innerHTML = `
+  <div style="max-width:1100px;margin:0 auto;">
+    <p class="heading" style="text-align:center;font-size:30px;margin:0 0 14px;">
+      🎉 Happy Birthday Nanna!! 🎉
+    </p>
+
+    <section class="gallery">
+      <h2 class="title">Gallery</h2>
+      <p class="intro">
+        We made a lot of beautiful memories together in those 115 days we are together.
+        And I am sure we will make a lot more in the upcoming year. 💛
+      </p>
+
+      <img src="/static/nanna/imgs/2025/image.png" alt="memory 1">
+      <img src="/static/nanna/imgs/2025/image3.png" alt="memory 2">
+      <img src="/static/nanna/imgs/2025/image4.png" alt="memory 3">
+      <img src="/static/nanna/imgs/2025/image5.png" alt="memory 4">
+      <img src="/static/nanna/imgs/2025/IMG_2956.png" alt="memory 5">
+      <img src="/static/nanna/imgs/2025/IMG_4952.png" alt="memory 6">
+      <img src="/static/nanna/imgs/2025/CD75C588-E5CF-42A2-93C6-3776CE87AFA0.png" alt="memory 7">
+      <img src="/static/nanna/imgs/2025/35C1C6FB-4200-45AE-870D-C058F67E761B.png" alt="memory 8">
+      <img src="/static/nanna/imgs/2025/1C02B905-D47D-4098-A780-A5F80F4C75D2.png" alt="memory 9">
+    </section>
+  </div>`;
       } else {
         alert("Not the correct date yet.");
       }
