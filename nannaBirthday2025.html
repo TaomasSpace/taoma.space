@@ -1,45 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Happy Birthday Nanna!</title>
-</head>
-<body>
-    <section id="section">
-    <form onsubmit="return checkDate(event)">
-        <input type="text" id="birthdaydate" inputmode="numeric" placeholder="dd.mm.yyyy" pattern="^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$" autocomplete="off">
-        <button type="submit">Unlock gift</button>
-    </form>
-    </section>
-</body>
-<script>
+    <style>
+      .form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background-color: rgb(241, 241, 130);
+        padding: 60px;
+        padding-inline: 28px;
+        border-radius: 20px;
+        box-shadow: 4px 4px rgb(0, 2, 65);
+        font-family: cursive;
+      }
 
-    function checkDate(e){
-        if (e && e.preventDefault) e.preventDefault();
-        const input = document.getElementById('birthdaydate');
-        const section = document.getElementById('section');
-        const val = (input.value || '').trim();
-        const m = val.match(/^([0-3]\d)\.([01]\d)\.(\d{4})$/);
-        if (!m) {
-            alert('Please enter the date in format dd.mm.yyyy');
-            return false;
-        }
-        const dd = parseInt(m[1], 10);
-        const mm = parseInt(m[2], 10);
-        const yyyy = parseInt(m[3], 10);
-        const dt = new Date(yyyy, mm - 1, dd);
-        const isValid = dt.getFullYear() === yyyy && dt.getMonth() === mm - 1 && dt.getDate() === dd;
-        if (!isValid) {
-            alert('Invalid date.');
-            return false;
-        }
-        if (dd === 24 && mm === 10 && yyyy === 2025) {
-            section.innerHTML = '<p>Happy birthday nanna!!</p>';
-        } else {
-            alert('Not the correct date yet.');
-        }
+      .heading {
+        font-size: 25px;
+        text-align: center;
+        font-weight: 600;
+        font-family: cursive;
+      }
+
+      .form button {
+        /* align-self: flex-end; */
+        padding: 10px;
+        border-radius: 10px;
+        margin-top: 20px;
+        background-color: rgb(241, 241, 130);
+        box-shadow: 2px 3px rgb(0, 2, 65);
+
+        color: rgb(0, 0, 0);
+        font-size: medium;
+        font-weight: 600;
+        transition: 400ms;
+        font-family: cursive;
+      }
+
+      .form button:hover {
+        background-color: rgb(235, 255, 59);
+        transition: 400ms;
+        cursor: pointer;
+      }
+
+      .input {
+        padding: 10px;
+        width: 280px;
+        border-radius: 10px;
+        border-style: double;
+        border-color: black;
+        font-size: 15px;
+        box-shadow: 2px 3px rgb(0, 2, 65);
+
+        font-family: cursive;
+      }
+    </style>
+  </head>
+  <body>
+    <section id="section">
+      <form onsubmit="return checkDate(event)">
+        <span class="heading">Input your birth date</span>
+        <input
+          type="text"
+          id="birthdaydate"
+          inputmode="numeric"
+          placeholder="dd.mm.yyyy"
+          pattern="^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$"
+          autocomplete="off"
+        />
+        <button type="submit">Unlock gift</button>
+      </form>
+    </section>
+  </body>
+  <script>
+    function checkDate(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const input = document.getElementById("birthdaydate");
+      const section = document.getElementById("section");
+      const val = (input.value || "").trim();
+      const m = val.match(/^([0-3]\d)\.([01]\d)\.(\d{4})$/);
+      if (!m) {
+        alert("Please enter the date in format dd.mm.yyyy");
         return false;
+      }
+      const dd = parseInt(m[1], 10);
+      const mm = parseInt(m[2], 10);
+      const yyyy = parseInt(m[3], 10);
+      const dt = new Date(yyyy, mm - 1, dd);
+      const isValid =
+        dt.getFullYear() === yyyy &&
+        dt.getMonth() === mm - 1 &&
+        dt.getDate() === dd;
+      if (!isValid) {
+        alert("Invalid date.");
+        return false;
+      }
+      if (dd === 24 && mm === 10 && yyyy === 2025) {
+        section.innerHTML = "<p>Happy birthday nanna!!</p>";
+      } else {
+        alert("Not the correct date yet.");
+      }
+      return false;
     }
-</script>
+  </script>
 </html>
