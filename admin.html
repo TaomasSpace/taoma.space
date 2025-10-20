@@ -999,7 +999,6 @@
     /* === Prevent text overflow everywhere === */
     * {
       min-width: 0;
-      min-height: 0;
     }
 
     p,
@@ -1054,6 +1053,54 @@
         animation: none !important
       }
     }
+
+    footer {
+      border-top: 1px solid #ffffff14;
+      padding-block: 24px;
+      margin-top: auto;
+    }
+
+    .foot {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    /* Visitor counter nicht “floaten” lassen */
+    footer .visitor-counter {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+    }
+
+    footer .visitor-counter svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+
+    /* Base */
+    footer .social {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    /* Stelle sicher, dass diese Blöcke NACH allen generischen .social a-Regeln stehen */
+    footer .social a.iso-pro {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      overflow: visible;
+      /* wichtig für die Ringe/Tooltip */
+    }
+
+    /* … Deine bestehenden iso-pro Hover/Wellen/Tooltip-Regeln … */
 
     /* === Footer social isometric hover (scoped) === */
     footer .social a.iso-pro {
