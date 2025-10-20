@@ -12,6 +12,9 @@
         justify-content: center;
         background-color: rgb(255, 255, 204);
       }
+      body {
+        margin: 0;
+      }
       .form {
         display: flex;
         flex-direction: column;
@@ -396,6 +399,51 @@
         object-fit: contain; /* extra safety */
         image-rendering: auto;
       }
+      /* Viewport bleibt gleich */
+      .lb-viewport {
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      /* Strip enthält 1..n Bilder nebeneinander */
+      .lb-strip {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        height: 100%;
+        padding: 12px;
+      }
+
+      /* Einzelne Items im Strip */
+      .lb-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        max-height: 100%;
+        max-width: 100%;
+      }
+
+      /* Bilder immer vollständig sichtbar */
+      .lb-item img {
+        max-height: 100%;
+        max-width: 100%;
+        height: auto;
+        width: auto;
+        object-fit: contain;
+      }
+
+      /* Layout-Hilfe: bei zwei Bildern je 50% Breite (mit Gap) */
+      .lb-strip.duo .lb-item {
+        flex: 1 1 50%;
+      }
+
+      /* Bei drei kannst du z.B. Drittel fahren (optional) */
+      /* .lb-strip.trio .lb-item{ flex: 1 1 33.33%; } */
     </style>
   </head>
   <body>
@@ -506,16 +554,18 @@
         loading="lazy" decoding="async"
         alt="Shotgungame" data-caption="19.10.2025"></figure>
 
-      <figure class="photo"><img class="img" src="/static/nanna/imgs/2025/image3.png"
-        loading="lazy" decoding="async"
-        alt="Shotgungame" data-caption="Shotgungame">
-        <img class="img" src="/static/nanna/imgs/2025/image4.png"
-        loading="lazy" decoding="async"
-        alt="Shotgungame" data-caption="25.06.2025"></figure>
+      <figure class="photo">
+  <img class="img" src="/static/nanna/imgs/2025/image3.png"
+       loading="lazy" decoding="async"
+       alt="Shotgungame" data-caption="25.06.2025">
+  <img class="img" src="/static/nanna/imgs/2025/image4.png"
+       loading="lazy" decoding="async"
+       alt="Shotgungame" data-caption="25.06.2025">
+</figure>
 
       <figure class="photo"><img class="img" src="/static/nanna/imgs/2025/image5.png"
         loading="lazy" decoding="async"
-        alt="Shotgungame" data-caption="25.06.2025"></figure>
+        alt="Shotgungame" data-caption="30.08.2025"></figure>
 
       <figure class="photo"><img class="img" src="/static/nanna/imgs/2025/IMG_4952.png"
         loading="lazy" decoding="async"
@@ -544,7 +594,7 @@
     </div>
 
     <div class="lb-viewport">
-      <img id="lbImg" alt="">
+      <div id="lbStrip" class="lb-strip"></div>
     </div>
 
     <div class="lb-cap" id="lbCap"></div>
@@ -558,12 +608,11 @@
       }
       return false;
     }
-
     function initGallery() {
       const gal = document.getElementById("gallery");
       const cards = [...gal.querySelectorAll(".photo")];
       const lb = document.getElementById("lightbox");
-      const lbImg = document.getElementById("lbImg");
+      const lbStrip = document.getElementById("lbStrip");
       const lbCap = document.getElementById("lbCap");
       const btnPrev = document.getElementById("lbPrev");
       const btnNext = document.getElementById("lbNext");
@@ -575,25 +624,48 @@
       const open = (i) => {
         idx = i;
         const fig = cards[idx];
-        const img = fig.querySelector("img");
-        lbImg.src = img.src;
-        lbImg.alt = img.alt || "";
-        lbCap.textContent = img.dataset.caption || img.alt || "";
+        const imgs = fig.querySelectorAll("img");
+
+        // Strip leeren
+        lbStrip.innerHTML = "";
+        lbStrip.classList.remove("duo", "trio");
+
+        // Klassische Duos erkennen
+        if (imgs.length === 2) lbStrip.classList.add("duo");
+        else if (imgs.length === 3) lbStrip.classList.add("trio");
+
+        // Bilder klonen und einfügen
+        imgs.forEach((img) => {
+          const item = document.createElement("div");
+          item.className = "lb-item";
+          const clone = img.cloneNode(true);
+          clone.removeAttribute("loading");
+          clone.removeAttribute("decoding");
+          item.appendChild(clone);
+          lbStrip.appendChild(item);
+        });
+
+        // Caption: wenn beide gleiche Caption haben -> einmal, sonst zusammenführen
+        const caps = [...imgs]
+          .map((im) => im.dataset.caption || im.alt || "")
+          .filter(Boolean);
+        const uniqueCaps = [...new Set(caps)];
+        lbCap.textContent =
+          uniqueCaps.length === 1 ? uniqueCaps[0] : uniqueCaps.join(" • ");
+
         lb.classList.add("open");
         lb.setAttribute("aria-hidden", "false");
       };
+
       const close = () => {
         lb.classList.remove("open");
         lb.setAttribute("aria-hidden", "true");
-        lbImg.src = "";
+        lbStrip.innerHTML = "";
       };
       const prev = () => open((idx - 1 + cards.length) % cards.length);
       const next = () => open((idx + 1) % cards.length);
 
-      // Button öffnet direkt die Lightbox mit dem 1. Bild
       btnOpen.addEventListener("click", () => open(0));
-
-      // Navigation + ESC
       btnPrev.onclick = prev;
       btnNext.onclick = next;
       btnClose.onclick = close;
