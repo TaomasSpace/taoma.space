@@ -1694,3 +1694,8 @@ def media_garbage_collect(min_age_seconds: int = Query(60, ge=0)):
             skipped.append(p.name)
 
     return {"ok": True, "deleted": deleted, "skipped": skipped}
+
+
+@app.get("/nanna/birthdays/2025", include_in_schema=False)
+def home():
+    return FileResponse("nannaBirthday2025.html")
