@@ -39,7 +39,7 @@ from psycopg.rows import dict_row
 from fastapi.responses import JSONResponse
 from fastapi import Request
 
-DisplayNameMode = Literal['slug','username']
+DisplayNameMode = Literal["slug", "username"]
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -60,6 +60,8 @@ app.mount("/media", StaticFiles(directory=str(MEDIA_ROOT)), name="media")
 
 ALLOWED_AUDIO = {"audio/mpeg", "audio/ogg", "audio/wav"}
 MAX_AUDIO_BYTES = 10 * 1024 * 1024  # 10 MB
+
+
 def _ensure_pg():
     if not isinstance(db, PgGifDB):
         raise HTTPException(501, "Linktree features require PostgreSQL.")
@@ -138,12 +140,14 @@ def CheckPassword(hashedPassword: str, unhashedPassword: str) -> bool:
     except Exception:
         return False
 
+
 def _is_local_media_url(url: str) -> bool:
     if not isinstance(url, str) or not url:
         return False
     # Erlaube nur genau deinen /media/<dirname>/... Pfad
     prefix = f"/media/{UPLOAD_DIR.name}/"
     return url.startswith(prefix)
+
 
 def _path_from_media_url(url: str) -> pathlib.Path | None:
     if not _is_local_media_url(url):
@@ -158,13 +162,10 @@ def _path_from_media_url(url: str) -> pathlib.Path | None:
         return None
     return p
 
+
 def _count_db_references(url: str) -> int:
     if not url:
         return 0
-    if not isinstance(db, PgGifDB):
-        # SQLite-Pfad: implementiere hier ggf. analog, oder immer 0 zurückgeben
-        with db_lock:
-            pass
     with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
         total = 0
         cur.execute("SELECT COUNT(*) FROM users WHERE profile_picture = %s", (url,))
@@ -176,6 +177,7 @@ def _count_db_references(url: str) -> int:
         cur.execute("SELECT COUNT(*) FROM linktree_links WHERE icon_url = %s", (url,))
         total += int(cur.fetchone()[0])
         return total
+
 
 def _delete_if_unreferenced(url: str) -> bool:
     """Löscht die Datei, wenn lokales Media und DB-Referenzen == 0.
@@ -193,23 +195,25 @@ def _delete_if_unreferenced(url: str) -> bool:
     except Exception as e:
         logger.warning("Failed to delete unreferenced media %s: %s", url, e)
         return False
-    
-def _session_response(payload: dict, token: str, max_age: int = 24*3600) -> JSONResponse:
+
+
+def _session_response(
+    payload: dict, token: str, max_age: int = 24 * 3600
+) -> JSONResponse:
     resp = JSONResponse(payload)
     resp.set_cookie(
         key="taoma_token",
         value=token,
         max_age=max_age,
-        httponly=True,     # schützt vor JS-Zugriff
-        secure=True,       # nur über HTTPS
-        samesite="lax"     # Navigation-Links funktionieren
+        httponly=True,  # schützt vor JS-Zugriff
+        secure=True,  # nur über HTTPS
+        samesite="lax",  # Navigation-Links funktionieren
     )
     return resp
-    
+
+
 def _extract_token(
-    x_auth_token: str | None,
-    authorization: str | None,
-    request: Request
+    x_auth_token: str | None, authorization: str | None, request: Request
 ) -> str | None:
     # 1) Header X-Auth-Token
     if x_auth_token:
@@ -281,7 +285,7 @@ class LinktreeCreateIn(BaseModel):
     transparency: int = Field(0, ge=0, le=100)
     name_effect: EffectName = "none"
     background_effect: BgEffectName = "none"
-    display_name_mode: DisplayNameMode = 'slug'
+    display_name_mode: DisplayNameMode = "slug"
 
 
 class LinktreeUpdateIn(BaseModel):
@@ -327,9 +331,9 @@ class LinktreeOut(BaseModel):
     transparency: int
     name_effect: EffectName
     background_effect: BgEffectName
-    display_name_mode: DisplayNameMode                 # NEU
-    profile_picture: Optional[str] = None              # NEU – fürs Avatar
-    user_username: Optional[str] = None                # NEU – für „username“-Modus
+    display_name_mode: DisplayNameMode  # NEU
+    profile_picture: Optional[str] = None  # NEU – fürs Avatar
+    user_username: Optional[str] = None  # NEU – für „username“-Modus
     links: List[LinkOut]
     icons: List[IconOut]
 
@@ -595,7 +599,9 @@ def verify(token: str = Depends(require_token)):
     if not linktree_slug and user.get("linktree_id") and isinstance(db, PgGifDB):
         try:
             with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
-                cur.execute("SELECT slug FROM linktrees WHERE id=%s", (user["linktree_id"],))
+                cur.execute(
+                    "SELECT slug FROM linktrees WHERE id=%s", (user["linktree_id"],)
+                )
                 row = cur.fetchone()
                 if row:
                     linktree_slug = row[0]
@@ -607,7 +613,7 @@ def verify(token: str = Depends(require_token)):
         "username": user.get("username"),
         "admin": bool(user.get("admin", False)),
         "linktree_id": user.get("linktree_id"),
-        "linktree_slug": linktree_slug,       # <-- add this
+        "linktree_slug": linktree_slug,  # <-- add this
         "profile_picture": user.get("profile_picture"),
         "created_at": (
             user.get("created_at").isoformat()
@@ -626,6 +632,7 @@ def verify(token: str = Depends(require_token)):
         "user": user_out,
     }
 
+
 @app.get("/api/linktrees/{linktree_id}/manage", response_model=LinktreeOut)
 def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
     _ensure_pg()
@@ -633,7 +640,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
 
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
         # Linktree-Stammdaten
-        cur.execute("""
+        cur.execute(
+            """
             SELECT id, user_id, slug, location, quote, song_url, background_url,
                    COALESCE(background_is_video, false) AS background_is_video,
                    COALESCE(transparency, 0)          AS transparency,
@@ -642,35 +650,45 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    COALESCE(display_name_mode,'slug')  AS display_name_mode
               FROM linktrees
              WHERE id = %s
-        """, (linktree_id,))
+        """,
+            (linktree_id,),
+        )
         lt = cur.fetchone()
         if not lt:
             raise HTTPException(404, "Linktree not found")
 
         # Username + Avatar des Owners
-        cur.execute("SELECT username, profile_picture FROM users WHERE id=%s", (lt["user_id"],))
+        cur.execute(
+            "SELECT username, profile_picture FROM users WHERE id=%s", (lt["user_id"],)
+        )
         urow = cur.fetchone()
         user_username = urow["username"] if urow else None
-        user_pfp      = urow["profile_picture"] if urow else None
+        user_pfp = urow["profile_picture"] if urow else None
 
         # Links (UNGEFILTERT → auch is_active=false)
-        cur.execute("""
+        cur.execute(
+            """
             SELECT id, url, label, icon_url, position, is_active
               FROM linktree_links
              WHERE linktree_id = %s
              ORDER BY COALESCE(position, 0), id
-        """, (linktree_id,))
+        """,
+            (linktree_id,),
+        )
         links = cur.fetchall() or []
 
         # Icons (UNGEFILTERT → displayed kann true/false sein)
-        cur.execute("""
+        cur.execute(
+            """
             SELECT i.id, i.code, i.image_url, i.description,
                 ui.displayed, ui.acquired_at
             FROM user_icons ui
             JOIN icons i ON i.id = ui.icon_id   -- <- HIER!
             WHERE ui.user_id = %s
             ORDER BY i.code
-        """, (lt["user_id"],))
+        """,
+            (lt["user_id"],),
+        )
         icons = cur.fetchall() or []
 
     return {
@@ -696,7 +714,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                 "icon_url": r.get("icon_url"),
                 "position": r.get("position", 0),
                 "is_active": bool(r.get("is_active", True)),
-            } for r in links
+            }
+            for r in links
         ],
         "icons": [
             {
@@ -705,10 +724,14 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                 "image_url": r["image_url"],
                 "description": r.get("description"),
                 "displayed": bool(r.get("displayed", False)),
-                "acquired_at": (r["acquired_at"].isoformat() if r.get("acquired_at") else None),
-            } for r in icons
+                "acquired_at": (
+                    r["acquired_at"].isoformat() if r.get("acquired_at") else None
+                ),
+            }
+            for r in icons
         ],
     }
+
 
 @app.get(
     "/api/gif/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
@@ -716,11 +739,11 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
 def admin_page():
     return FileResponse("gifApiAdmin.html")
 
-@app.get(
-    "/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
-)
+
+@app.get("/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)])
 def admin_page():
     return FileResponse("admin.html")
+
 
 @app.get("/api", response_class=HTMLResponse)
 def root():
@@ -1068,7 +1091,9 @@ def register(payload: RegisterIn):
             else row.get("updated_at")
         ),
     }
-    return _session_response({"token": token, "expires_at": exp, "user": user_out}, token)
+    return _session_response(
+        {"token": token, "expires_at": exp, "user": user_out}, token
+    )
 
 
 @app.get("/register", include_in_schema=False)
@@ -1153,7 +1178,9 @@ def _safe_image_bytes(b: bytes) -> str:
 
 
 @app.post("/api/users/me/avatar", response_model=UserOut)
-async def upload_avatar(file: UploadFile = File(...), current: dict = Depends(require_user)):
+async def upload_avatar(
+    file: UploadFile = File(...), current: dict = Depends(require_user)
+):
     if file.content_type not in ALLOWED_MIME:
         raise HTTPException(415, "Unsupported media type")
     data = await file.read()
@@ -1168,13 +1195,20 @@ async def upload_avatar(file: UploadFile = File(...), current: dict = Depends(re
     old_url = None
     try:
         with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
-            cur.execute("SELECT profile_picture FROM users WHERE id=%s", (current["id"],))
+            cur.execute(
+                "SELECT profile_picture FROM users WHERE id=%s", (current["id"],)
+            )
             row = cur.fetchone()
             old_url = row[0] if row else None
     except Exception:
         old_url = None
 
-    ext = {"image/png":"png","image/jpeg":"jpg","image/webp":"webp","image/gif":"gif"}[file.content_type]
+    ext = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
+        "image/gif": "gif",
+    }[file.content_type]
     fname = f"user{current['id']}_{uuid.uuid4().hex}.{ext}"
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
@@ -1230,28 +1264,37 @@ def get_linktree(slug: str):
     user_username = None
     user_pfp = None
     with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
-        cur.execute("SELECT username, profile_picture FROM users WHERE id=%s", (lt["user_id"],))
+        cur.execute(
+            "SELECT username, profile_picture FROM users WHERE id=%s", (lt["user_id"],)
+        )
         row = cur.fetchone()
         if row:
             user_username, user_pfp = row[0], row[1]
 
     icons = [
         {
-            "id": i["id"], "code": i["code"], "image_url": i["image_url"],
+            "id": i["id"],
+            "code": i["code"],
+            "image_url": i["image_url"],
             "description": i.get("description"),
             "displayed": i.get("displayed", False),
             "acquired_at": i.get("acquired_at"),
         }
-        for i in lt["icons"] if i.get("displayed")
+        for i in lt["icons"]
+        if i.get("displayed")
     ]
 
     links = [
         {
-            "id": r["id"], "url": r["url"], "label": r.get("label"),
-            "icon_url": r.get("icon_url"), "position": r.get("position", 0),
+            "id": r["id"],
+            "url": r["url"],
+            "label": r.get("label"),
+            "icon_url": r.get("icon_url"),
+            "position": r.get("position", 0),
             "is_active": r.get("is_active", True),
         }
-        for r in lt["links"] if r.get("is_active", True)
+        for r in lt["links"]
+        if r.get("is_active", True)
     ]
 
     return {
@@ -1267,8 +1310,8 @@ def get_linktree(slug: str):
         "name_effect": lt.get("name_effect", "none"),
         "background_effect": lt.get("background_effect", "none"),
         "display_name_mode": lt.get("display_name_mode", "slug"),
-        "profile_picture": user_pfp,              # <= jetzt dabei
-        "user_username": user_username,           # <= jetzt dabei
+        "profile_picture": user_pfp,  # <= jetzt dabei
+        "user_username": user_username,  # <= jetzt dabei
         "links": links,
         "icons": icons,
     }
@@ -1313,7 +1356,6 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
     return get_linktree(payload.slug)
 
 
-
 @app.delete("/api/linktrees/{linktree_id}")
 def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
     _ensure_pg()
@@ -1331,7 +1373,7 @@ def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
 
         owner_id = int(row["user_id"])
         song_url = row.get("song_url")
-        bg_url   = row.get("background_url")
+        bg_url = row.get("background_url")
 
         # Icon-URLs der Links sammeln (können lokale Medien sein)
         cur.execute(
@@ -1393,19 +1435,28 @@ def add_link_ep(
 
 
 @app.patch("/api/links/{link_id}", response_model=dict)
-def update_link_ep(link_id: int, payload: LinkUpdateIn, user: dict = Depends(require_user)):
+def update_link_ep(
+    link_id: int, payload: LinkUpdateIn, user: dict = Depends(require_user)
+):
     _ensure_pg()
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT lt.user_id, l.linktree_id, l.icon_url
               FROM linktree_links l
               JOIN linktrees lt ON lt.id = l.linktree_id
              WHERE l.id = %s
-        """, (link_id,))
+        """,
+            (link_id,),
+        )
         row = cur.fetchone()
         if not row:
             raise HTTPException(404, "Link not found")
-        owner_id, linktree_id, old_icon = int(row["user_id"]), int(row["linktree_id"]), row["icon_url"]
+        owner_id, linktree_id, old_icon = (
+            int(row["user_id"]),
+            int(row["linktree_id"]),
+            row["icon_url"],
+        )
 
     if not (user.get("admin") or user["id"] == owner_id):
         raise HTTPException(403, "Forbidden (owner or admin only)")
@@ -1503,7 +1554,9 @@ def toggle_my_icon_displayed(
 
 
 @app.post("/api/users/me/song")
-async def upload_song(file: UploadFile = File(...), current: dict = Depends(require_user)):
+async def upload_song(
+    file: UploadFile = File(...), current: dict = Depends(require_user)
+):
     if file.content_type not in ALLOWED_AUDIO:
         raise HTTPException(415, "Unsupported audio type")
     data = await file.read()
@@ -1513,12 +1566,15 @@ async def upload_song(file: UploadFile = File(...), current: dict = Depends(requ
     old_url = None
     try:
         with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT lt.song_url
                   FROM linktrees lt
                   JOIN users u ON u.linktree_id = lt.id
                  WHERE u.id = %s
-            """, (current["id"],))
+            """,
+                (current["id"],),
+            )
             row = cur.fetchone()
             old_url = row[0] if row else None
     except Exception:
@@ -1539,8 +1595,12 @@ async def upload_song(file: UploadFile = File(...), current: dict = Depends(requ
 
 
 @app.post("/api/users/me/background")
-async def upload_background(file: UploadFile = File(...), current: dict = Depends(require_user)):
-    if file.content_type not in ALLOWED_MIME and not file.content_type.startswith("video/"):
+async def upload_background(
+    file: UploadFile = File(...), current: dict = Depends(require_user)
+):
+    if file.content_type not in ALLOWED_MIME and not file.content_type.startswith(
+        "video/"
+    ):
         raise HTTPException(415, "Unsupported background type")
     data = await file.read()
     if len(data) > MAX_UPLOAD_BYTES * 5:
@@ -1550,12 +1610,15 @@ async def upload_background(file: UploadFile = File(...), current: dict = Depend
     old_url = None
     try:
         with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT lt.background_url
                   FROM linktrees lt
                   JOIN users u ON u.linktree_id = lt.id
                  WHERE u.id = %s
-            """, (current["id"],))
+            """,
+                (current["id"],),
+            )
             row = cur.fetchone()
             old_url = row[0] if row else None
     except Exception:
@@ -1568,15 +1631,21 @@ async def upload_background(file: UploadFile = File(...), current: dict = Depend
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
     is_video = file.content_type.startswith("video/")
 
-    db.update_linktree_by_user(current["id"], background_url=url, background_is_video=is_video)
+    db.update_linktree_by_user(
+        current["id"], background_url=url, background_is_video=is_video
+    )
 
     # Cleanup
     if old_url and old_url != url:
         _delete_if_unreferenced(old_url)
 
     return {"url": url, "is_video": is_video}
+
+
 @app.post("/api/users/me/linkicon")
-async def upload_linkicon(file: UploadFile = File(...), current: dict = Depends(require_user)):
+async def upload_linkicon(
+    file: UploadFile = File(...), current: dict = Depends(require_user)
+):
     if file.content_type not in ALLOWED_MIME:
         raise HTTPException(415, "Unsupported image type")
     data = await file.read()
@@ -1594,7 +1663,12 @@ async def upload_linkicon(file: UploadFile = File(...), current: dict = Depends(
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
     return {"url": url}
 
-@app.api_route("/api/admin/media/gc", methods=["POST","GET"], dependencies=[Depends(require_admin)])
+
+@app.api_route(
+    "/api/admin/media/gc",
+    methods=["POST", "GET"],
+    dependencies=[Depends(require_admin)],
+)
 def media_garbage_collect(min_age_seconds: int = Query(60, ge=0)):
     """Löscht unreferenzierte Dateien im Upload-Verzeichnis, die älter als min_age_seconds sind."""
     deleted = []
