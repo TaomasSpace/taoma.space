@@ -201,6 +201,12 @@
             background: transparent;
             color: var(--muted)
         }
+        .caps {
+            display: none;
+            color: #ffcb6b;
+            font-size: .9rem;
+            margin-top: .25rem;
+        }
     </style>
 </head>
 
@@ -237,7 +243,7 @@
                 <div class="control">
                     <input id="password" type="password" minlength="8" placeholder="••••••••" required
                         autocomplete="new-password" />
-                        <button class="toggle-eye" type="button" id="togglePw" aria-label="Show/Hide password"
+                        <button class="toggle-eye" type="button" id="togglePwReg" aria-label="Show/Hide password"
                         title="Show/Hide">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path
@@ -254,7 +260,7 @@
                 <div class="control">
                     <input id="confirm" type="password" minlength="8" placeholder="••••••••" required
                         autocomplete="new-password" />
-                        <button class="toggle-eye" type="button" id="togglePw" aria-label="Show/Hide password"
+                        <button class="toggle-eye" type="button" id="togglePwReg2" aria-label="Show/Hide password"
                         title="Show/Hide">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path
@@ -323,7 +329,7 @@
         const togglePwReg2 = document.getElementById('togglePwReg2');
         const capsWarnReg = document.getElementById('capsWarnReg');
         function handleCaps(e) { try { const on = e.getModifierState && e.getModifierState('CapsLock'); capsWarnReg.style.display = on ? 'inline' : 'none'; } catch { } }
-        p.addEventListener('keyup', handleCaps); p.addEventListener('keydown', handleCaps);
+        document.addEventListener('keyup', handleCaps); document.addEventListener('keydown', handleCaps);
         togglePwReg.addEventListener('click', () => { p.type = p.type === 'password' ? 'text' : 'password'; p.focus(); });
         togglePwReg2.addEventListener('click', () => { c.type = c.type === 'password' ? 'text' : 'password'; c.focus(); });
     </script>
