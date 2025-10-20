@@ -300,6 +300,32 @@
           display: none;
         }
       }
+      .photo .cap {
+        max-height: 4.4em;
+        overflow: hidden;
+        transition: max-height 0.25s ease;
+      }
+      .photo:hover .cap {
+        max-height: 12em; /* klappt auf, wenn Text länger ist */
+      }
+      .photo:hover {
+        transform: translateY(-4px) rotate(-0.25deg);
+      }
+      .gallery.compact .photo:hover {
+        transform: translateY(-3px) rotate(0deg);
+      }
+      @media (max-width: 480px) {
+        .gallery {
+          gap: 14px;
+          padding: 16px;
+        }
+        .photo .cap {
+          font-size: 13px;
+        }
+        .lb-btn {
+          padding: 10px 14px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -326,11 +352,11 @@
       if (confettiEnabled) return;
       confettiEnabled = true;
 
-      // On-click Konfetti
       root.addEventListener(
         "click",
         (e) => {
           if (!confettiEnabled) return;
+          if (e.target.closest("#lightbox")) return; // Lightbox-Klicks ignorieren
           launchConfetti(e.clientX, e.clientY, 28);
         },
         { passive: true }
@@ -415,6 +441,7 @@
 
         <figure class="photo" data-index="0">
             <img class="img" src="/static/nanna/imgs/2025/image.png"
+            loading="lazy" decoding="async"
                 alt="Shotgungame"
                 data-caption="Shotgungame"/>
             <figcaption class="cap">Shotgungame</figcaption>
@@ -422,6 +449,7 @@
 
         <figure class="photo" data-index="1">
             <img class="img" src="/static/nanna/imgs/2025/image3.png"
+            loading="lazy" decoding="async"
                 alt="Shotgungame"
                 data-caption="Shotgungame"/>
             <figcaption class="cap">Shotgungame</figcaption>
@@ -429,42 +457,49 @@
 
         <figure class="photo" data-index="2">
             <img class="img" src="/static/nanna/imgs/2025/image4.png"
+            loading="lazy" decoding="async"
                 alt="Shotgungame"
                 data-caption="Shotgungame"/>
             <figcaption class="cap">Shotgungame</figcaption>
         </figure>
         <figure class="photo" data-index="2">
             <img class="img" src="/static/nanna/imgs/2025/image5.png"
+            loading="lazy" decoding="async"
                 alt="Shotgungame"
                 data-caption="Shotgungame"/>
             <figcaption class="cap">Shotgungame</figcaption>
         </figure>
                 <figure class="photo" data-index="2">
             <img class="img" src="/static/nanna/imgs/2025/IMG_2956.png"
+            loading="lazy" decoding="async"
                 alt="Shotgungame"
                 data-caption="Shotgungame"/>
             <figcaption class="cap">Shotgungame</figcaption>
         </figure>
                 <figure class="photo" data-index="2">
             <img class="img" src="/static/nanna/imgs/2025/IMG_4952.png"
+            loading="lazy" decoding="async"
                 alt="Shotgungame"
                 data-caption="Shotgungame"/>
             <figcaption class="cap">Shotgungame</figcaption>
         </figure>
                 <figure class="photo" data-index="2">
             <img class="img" src="/static/nanna/imgs/2025/CD75C588-E5CF-42A2-93C6-3776CE87AFA0.png"
+            loading="lazy" decoding="async"
                 alt="Shotgungame"
                 data-caption="Shotgungame"/>
             <figcaption class="cap">Shotgungame</figcaption>
         </figure>
                 <figure class="photo" data-index="2">
             <img class="img" src="/static/nanna/imgs/2025/35C1C6FB-4200-45AE-870D-C058F67E761B.png"
+            loading="lazy" decoding="async"
                 alt="Shotgungame"
                 data-caption="Shotgungame"/>
             <figcaption class="cap">Shotgungame</figcaption>
         </figure>
                 <figure class="photo" data-index="2">
             <img class="img" src="/static/nanna/imgs/2025/1C02B905-D47D-4098-A780-A5F80F4C75D2.png"
+            loading="lazy" decoding="async"
                 alt="Shotgungame"
                 data-caption="Shotgungame"/>
             <figcaption class="cap">Shotgungame</figcaption>
@@ -485,6 +520,7 @@
   </div>`;
         enableConfetti(document.body);
         launchConfetti(window.innerWidth / 2, window.innerHeight * 0.25, 80);
+        initGallery();
       } else {
         alert("Not the correct date.");
       }
@@ -551,6 +587,5 @@
         gal.classList.toggle("compact");
       });
     }
-    initGallery();
   </script>
 </html>
