@@ -444,6 +444,104 @@
 
       /* Bei drei kannst du z.B. Drittel fahren (optional) */
       /* .lb-strip.trio .lb-item{ flex: 1 1 33.33%; } */
+      /* Wishes (Accordion) */
+      .wishes {
+        margin: 18px auto 10px;
+        background: rgb(255, 255, 204);
+        border-radius: 20px;
+        box-shadow: 4px 4px rgb(0, 2, 65);
+        border: 2px solid rgba(0, 0, 0, 0.15);
+        padding: 14px;
+      }
+      .wishes-title {
+        margin: 0 0 8px 0;
+        text-align: center;
+        font-family: cursive;
+        font-weight: 800;
+        font-size: 22px;
+        letter-spacing: 0.3px;
+        text-shadow: 1px 1px rgba(0, 2, 65, 0.25);
+      }
+
+      /* Item */
+      .wish-item + .wish-item {
+        margin-top: 10px;
+      }
+
+      /* Header-Button */
+      .wish-header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 14px;
+        background: rgb(241, 241, 130);
+        border: 2px solid rgba(0, 0, 0, 0.15);
+        border-radius: 14px;
+        box-shadow: 2px 3px rgb(0, 2, 65);
+        font-family: cursive;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease,
+          background 0.2s ease;
+      }
+      .wish-header:hover {
+        transform: translateY(-1px);
+        box-shadow: 4px 4px rgb(0, 2, 65);
+      }
+      .wish-header[aria-expanded="true"] {
+        background: rgb(235, 255, 59);
+      }
+
+      /* Chevron */
+      .wish-header .chev {
+        width: 10px;
+        height: 10px;
+        position: relative;
+      }
+      .wish-header .chev::before,
+      .wish-header .chev::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-right: 3px solid rgb(0, 2, 65);
+        border-bottom: 3px solid rgb(0, 2, 65);
+        transform: rotate(45deg);
+        transition: transform 0.2s ease;
+      }
+      .wish-header[aria-expanded="true"] .chev::before,
+      .wish-header[aria-expanded="true"] .chev::after {
+        transform: rotate(-135deg);
+      }
+
+      /* Content (animated height) */
+      .wish-content {
+        background: rgb(241, 241, 130);
+        border: 2px solid rgba(0, 0, 0, 0.12);
+        border-radius: 14px;
+        box-shadow: 2px 3px rgb(0, 2, 65);
+        margin-top: 8px;
+        padding: 0 12px;
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.28s ease, padding-top 0.2s ease,
+          padding-bottom 0.2s ease;
+      }
+      .wish-content p {
+        margin: 10px 4px 12px;
+        line-height: 1.55;
+      }
+
+      /* reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        .wish-content {
+          transition: none;
+        }
+        .wish-header {
+          transition: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -543,7 +641,40 @@
     <p class="heading" style="text-align:center;font-size:30px;margin:0 0 14px;">
       🎉 Happy Birthday Nanna!! 🎉
     </p>
-<p class="intro"> We made a lot of beautiful memories together in those 115 days we are together. And I am sure we will make a lot more in the upcoming year. 💛 </p>    <div style="text-align:center;margin-top:6px;">
+    <p class="intro">You exactly 17 years (6208 Days) old. And we know each other 197 of these days.</p>
+<section class="wishes" id="wishes">
+  <h2 class="wishes-title">Wishes I have for you</h2>
+
+  <article class="wish-item">
+    <button class="wish-header" aria-expanded="false">
+      <span>💛 Health & Happiness</span>
+      <i class="chev" aria-hidden="true"></i>
+    </button>
+    <div class="wish-content" hidden>
+      <p>May you stay healthy, laugh a lot, and always feel loved — every single day.</p>
+    </div>
+  </article>
+
+  <article class="wish-item">
+    <button class="wish-header" aria-expanded="false">
+      <span>🌟 Growth & Confidence</span>
+      <i class="chev" aria-hidden="true"></i>
+    </button>
+    <div class="wish-content" hidden>
+      <p>Believe in your power. Try new things, learn boldly, and trust your pace.</p>
+    </div>
+  </article>
+
+  <article class="wish-item">
+    <button class="wish-header" aria-expanded="false">
+      <span>🎁 Little Joys</span>
+      <i class="chev" aria-hidden="true"></i>
+    </button>
+    <div class="wish-content" hidden>
+      <p>More cozy mornings, shared memes, late-night talks, and tiny wins that feel huge.</p>
+    </div>
+  </article>
+</section><p class="intro"> We made a lot of beautiful memories together in those 115 days we are together. And I am sure we will make a lot more in the upcoming year. 💛 </p>    <div style="text-align:center;margin-top:6px;">
       <button id="openGallery" class="open-gallery-btn">See Memories</button>
     </div>
 
@@ -603,6 +734,7 @@
         enableConfetti(document.body);
         launchConfetti(window.innerWidth / 2, window.innerHeight * 0.25, 80);
         initGallery();
+        initWishes();
       } else {
         alert("Not the correct date.");
       }
@@ -678,6 +810,54 @@
         if (e.key === "ArrowLeft") prev();
         if (e.key === "ArrowRight") next();
       });
+    }
+    function initWishes() {
+      const items = document.querySelectorAll(".wish-item");
+
+      items.forEach((item) => {
+        const btn = item.querySelector(".wish-header");
+        const panel = item.querySelector(".wish-content");
+
+        // sichere Startwerte
+        panel.style.maxHeight = "0px";
+        panel.hidden = true;
+
+        const toggle = () => {
+          const expanded = btn.getAttribute("aria-expanded") === "true";
+          // Close all other items (Accordion-Verhalten)
+          items.forEach((it) => {
+            const b = it.querySelector(".wish-header");
+            const p = it.querySelector(".wish-content");
+            b.setAttribute("aria-expanded", "false");
+            p.style.maxHeight = "0px";
+            p.style.paddingTop = "0px";
+            p.style.paddingBottom = "0px";
+            p.hidden = true;
+          });
+          // Open current
+          if (!expanded) {
+            btn.setAttribute("aria-expanded", "true");
+            panel.hidden = false;
+            // dynamische Höhe animieren
+            panel.style.maxHeight = panel.scrollHeight + "px";
+            panel.style.paddingTop = "8px";
+            panel.style.paddingBottom = "10px";
+          }
+        };
+
+        btn.addEventListener("click", toggle);
+        // Keyboard support
+        btn.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggle();
+          }
+        });
+      });
+
+      // optional: erstes Item offen starten
+      // const first = document.querySelector('.wish-item .wish-header');
+      // if(first) first.click();
     }
   </script>
 </html>
