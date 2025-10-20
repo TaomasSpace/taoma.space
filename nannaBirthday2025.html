@@ -7,20 +7,39 @@
 </head>
 <body>
     <section id="section">
-    <form onsubmit="checkdate()">
-        <input type="date" id="birthdaydate">
-        <button onclick="submit">Unlock gift</button>
+    <form onsubmit="return checkDate(event)">
+        <input type="text" id="birthdaydate" inputmode="numeric" placeholder="dd.mm.yyyy" pattern="^(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[0-2])\\.\\d{4}$" autocomplete="off">
+        <button type="submit">Unlock gift</button>
     </form>
     </section>
 </body>
 <script>
 
-    function checkdate(){
-        date = document.getElementById("birthdaydate");
-        section = document.getElementById("section");
-        if (date = "24.10.2025" ) {
-            section.innerhtml = '<p>Happy birthday nanna!!</p>';
+    function checkDate(e){
+        if (e && e.preventDefault) e.preventDefault();
+        const input = document.getElementById('birthdaydate');
+        const section = document.getElementById('section');
+        const val = (input.value || '').trim();
+        const m = val.match(/^([0-3]\d)\.([01]\d)\.(\d{4})$/);
+        if (!m) {
+            alert('Please enter the date in format dd.mm.yyyy');
+            return false;
         }
+        const dd = parseInt(m[1], 10);
+        const mm = parseInt(m[2], 10);
+        const yyyy = parseInt(m[3], 10);
+        const dt = new Date(yyyy, mm - 1, dd);
+        const isValid = dt.getFullYear() === yyyy && dt.getMonth() === mm - 1 && dt.getDate() === dd;
+        if (!isValid) {
+            alert('Invalid date.');
+            return false;
+        }
+        if (dd === 24 && mm === 10 && yyyy === 2025) {
+            section.innerHTML = '<p>Happy birthday nanna!!</p>';
+        } else {
+            alert('Not the correct date yet.');
+        }
+        return false;
     }
 </script>
 </html>
