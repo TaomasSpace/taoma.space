@@ -1,32 +1,185 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alexandra Health Data</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          sans-serif;
+        padding: 1rem;
+        max-width: 700px;
+        margin: auto;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 120px;
+        gap: 1rem;
+        align-items: center;
+        margin: 0.5rem 0;
+      }
+      .row input[type="range"] {
+        width: 100%;
+      }
+      .actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+      .hint {
+        color: #666;
+        font-size: 0.9rem;
+      }
+      #status {
+        font-size: 0.95rem;
+      }
+    </style>
   </head>
   <body>
-    <p>Borg Skala</p>
-    <input type="range" max="20" min="0" />
-    <p>Erschöpfung</p>
-    <input type="range" max="10" min="0" />
-    <p>Muskelschwäche</p>
-    <input type="range" max="10" min="0" />
-    <p>Schmerzen</p>
-    <input type="range" max="10" min="0" />
-    <p>Angst</p>
-    <input type="range" max="10" min="0" />
-    <p>Konzentration/Gedächtniss</p>
-    <input type="range" max="10" min="0" />
-    <p>Husten</p>
-    <input type="range" max="10" min="0" />
-    <p>Atemnot</p>
-    <input type="range" max="10" min="0" />
-    <p>Temperatur</p>
-    <input type="number" max="45" min="20" />
-    <p>Mens</p>
-    <input type="checkbox" />
-    <p>Notizen</p>
-    <input type="text" />
+    <h1>Health Tracking</h1>
+
+    <div class="row">
+      <label for="Borg">Borg Skala (0–20)</label>
+      <input type="range" max="20" min="0" id="Borg" value="0" />
+    </div>
+
+    <div class="row">
+      <label for="Erschoepfung">Erschöpfung (0–10)</label
+      ><input type="range" max="10" min="0" id="Erschoepfung" value="0" />
+    </div>
+    <div class="row">
+      <label for="Muskelschwaeche">Muskelschwäche (0–10)</label
+      ><input type="range" max="10" min="0" id="Muskelschwaeche" value="0" />
+    </div>
+    <div class="row">
+      <label for="Schmerzen">Schmerzen (0–10)</label
+      ><input type="range" max="10" min="0" id="Schmerzen" value="0" />
+    </div>
+    <div class="row">
+      <label for="Angst">Angst (0–10)</label
+      ><input type="range" max="10" min="0" id="Angst" value="0" />
+    </div>
+    <div class="row">
+      <label for="Konzentration">Konzentration/Gedächtnis (0–10)</label
+      ><input type="range" max="10" min="0" id="Konzentration" value="0" />
+    </div>
+    <div class="row">
+      <label for="Husten">Husten (0–10)</label
+      ><input type="range" max="10" min="0" id="Husten" value="0" />
+    </div>
+    <div class="row">
+      <label for="Atemnot">Atemnot (0–10)</label
+      ><input type="range" max="10" min="0" id="Atemnot" value="0" />
+    </div>
+
+    <div class="row">
+      <label for="Temperatur">Temperatur (°C)</label>
+      <input
+        type="number"
+        max="45"
+        min="20"
+        id="Temperatur"
+        value="36"
+        step="0.1"
+      />
+    </div>
+
+    <div class="row">
+      <label for="Mens">Mens</label>
+      <input type="checkbox" id="Mens" />
+    </div>
+
+    <div class="row">
+      <label for="Notizen">Notizen</label>
+      <input type="text" id="Notizen" placeholder="optional" />
+    </div>
+
+    <div class="actions">
+      <button id="saveBtn">Save</button>
+      <span class="hint">speichert für <span id="todayLabel"></span></span>
+      <span id="status"></span>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+
+      function todayISO() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`; // YYYY-MM-DD
+      }
+
+      async function createOrUpdateData() {
+        const statusEl = $("status");
+        statusEl.textContent = "…speichere";
+        statusEl.style.color = "";
+
+        const day = todayISO();
+
+        // Werte auslesen
+        const payload = {
+          day: day,
+          borg: parseInt($("Borg").value, 10),
+          temperatur: parseFloat($("Temperatur").value),
+          // ASCII-Schlüssel senden ist robuster (API akzeptiert Aliases):
+          erschoepfung: parseInt($("Erschoepfung").value, 10),
+          muskelschwaeche: parseInt($("Muskelschwaeche").value, 10),
+          schmerzen: parseInt($("Schmerzen").value, 10),
+          angst: parseInt($("Angst").value, 10),
+          konzentration: parseInt($("Konzentration").value, 10),
+          husten: parseInt($("Husten").value, 10),
+          atemnot: parseInt($("Atemnot").value, 10),
+          mens: $("Mens").checked,
+          notizen: $("Notizen").value?.trim() || null,
+        };
+
+        try {
+          // Existiert für den Tag bereits ein Eintrag?
+          const check = await fetch(`/alexandra/data/health/by-day/${day}`);
+          if (check.ok) {
+            const existing = await check.json(); // { id, ... }
+            const id = existing.id;
+            const res = await fetch(`/alexandra/data/health/${id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
+            statusEl.textContent = "Aktualisiert ✔";
+            statusEl.style.color = "green";
+          } else if (check.status === 404) {
+            // Neu anlegen
+            const res = await fetch(`/alexandra/data/health`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error(`POST failed: ${res.status}`);
+            statusEl.textContent = "Gespeichert ✔";
+            statusEl.style.color = "green";
+          } else {
+            throw new Error(`Lookup failed: ${check.status}`);
+          }
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = "Fehler beim Speichern";
+          statusEl.style.color = "crimson";
+          alert(String(err));
+        }
+      }
+
+      // UI: heutigen Tag anzeigen
+      $("todayLabel").textContent = todayISO();
+
+      // Button binden
+      $("saveBtn").addEventListener("click", (e) => {
+        e.preventDefault();
+        createOrUpdateData();
+      });
+    </script>
   </body>
 </html>
