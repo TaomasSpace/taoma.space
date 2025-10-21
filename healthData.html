@@ -249,7 +249,9 @@
               <img
                 src="https://www.amsel.de/fileadmin/_processed_/c/2/csm_borg-skala_9f7b2c0d3b.png"
                 alt="Borg-Skala"
-                onerror="this.style.display='none'"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                onerror="this.replaceWith(document.getElementById('borg-fallback').content.cloneNode(true))"
               />
               <div>
                 <a
@@ -1018,5 +1020,24 @@
       }
       wireRangeOutputs();
     </script>
+    <template id="borg-fallback">
+      <div style="font-size: 0.9rem; line-height: 1.35">
+        <strong>Borg-Skala (vereinfachte Orientierung)</strong>
+        <ul style="margin: 0.4rem 0; padding-left: 1rem">
+          <li>0–1: sehr leicht</li>
+          <li>2–3: leicht</li>
+          <li>4–6: etwas anstrengend</li>
+          <li>7–8: anstrengend</li>
+          <li>9–10: sehr anstrengend</li>
+          <li>20 (klassisch): maximale Anstrengung</li>
+        </ul>
+        <a
+          href="https://www.amsel.de/multiple-sklerose/ms-themen/ms-und-sport/einfuehrung/worauf-muessen-menschen-mit-ms-beim-sport-achten/"
+          target="_blank"
+          rel="noopener"
+          >Quelle öffnen</a
+        >
+      </div>
+    </template>
   </body>
 </html>
