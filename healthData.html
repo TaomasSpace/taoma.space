@@ -172,6 +172,18 @@
         justify-content: flex-end;
         margin-top: 0.75rem;
       }
+      .chart-wrap {
+        position: relative;
+        height: 420px; /* feste Arbeits-Höhe */
+        max-height: 70vh; /* optional: nicht höher als 70% Viewport */
+        width: 100%;
+      }
+      #healthChart {
+        position: absolute;
+        inset: 0;
+        width: 100% !important;
+        height: 100% !important; /* Chart nimmt exakt die Wrapper-Höhe */
+      }
     </style>
   </head>
   <body>
@@ -365,7 +377,9 @@
         >
       </div>
 
-      <canvas id="healthChart" height="120"></canvas>
+      <div class="chart-wrap">
+        <canvas id="healthChart"></canvas>
+      </div>
     </div>
 
     <!-- Modal: Bearbeiten/Löschen -->
@@ -508,6 +522,14 @@
             if (!res.ok) throw new Error(`POST failed: ${res.status}`);
             statusEl.textContent = "Gespeichert ✔";
             statusEl.style.color = "green";
+            if (
+              document
+                .querySelector('[data-tab="stats"]')
+                .classList.contains("active")
+            ) {
+              await ensureListLoaded(); // oder allRows pushen/aktualisieren
+              updateChart();
+            }
           } else {
             throw new Error(`Lookup failed: ${check.status}`);
           }
@@ -572,18 +594,18 @@
         for (const r of rows) {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${toISODate(r.day)}</td>
-            <td>${r.borg ?? ""}</td>
-            <td>${r.schmerzen ?? ""}</td>
-            <td>${r.atemnot ?? ""}</td>
-            <td>${fmtTemp(r.temperatur)}</td>
-            <td>${r.mens ? "ja" : "nein"}</td>
-            <td>${(r.notizen || "").replace(/</g, "&lt;")}</td>
-            <td>
-              <button class="btn" data-action="edit">Bearbeiten</button>
-              <button class="btn danger" data-action="delete">Löschen</button>
-            </td>
-          `;
+                  <td>${toISODate(r.day)}</td>
+                  <td>${r.borg ?? ""}</td>
+                  <td>${r.schmerzen ?? ""}</td>
+                  <td>${r.atemnot ?? ""}</td>
+                  <td>${fmtTemp(r.temperatur)}</td>
+                  <td>${r.mens ? "ja" : "nein"}</td>
+                  <td>${(r.notizen || "").replace(/</g, "&lt;")}</td>
+                  <td>
+                    <button class="btn" data-action="edit">Bearbeiten</button>
+                    <button class="btn danger" data-action="delete">Löschen</button>
+                  </td>
+                `;
           tr.querySelector('[data-action="edit"]').addEventListener(
             "click",
             (e) => {
@@ -618,8 +640,6 @@
       $("refreshBtn").addEventListener("click", loadTable);
 
       // ===== Statistik (Chart.js) =====
-      let chart; // Chart.js instance
-
       const METRIC_LABELS = {
         borg: "Borg",
         schmerzen: "Schmerzen",
@@ -694,6 +714,9 @@
         allRows = await res.json();
       }
 
+      let chart; // Chart.js Instanz
+      let statsWired = false; // <— guard
+
       async function initStats() {
         try {
           await ensureListLoaded();
@@ -703,16 +726,17 @@
           return;
         }
 
-        // events
-        document.querySelectorAll(".sMetric").forEach((cb) => {
-          cb.removeEventListener("change", updateChart); // idempotent
-          cb.addEventListener("change", updateChart);
-        });
-        $("sRange").removeEventListener("change", updateChart);
-        $("sRange").addEventListener("change", updateChart);
-
-        // build or update
+        if (!statsWired) {
+          document.querySelectorAll(".sMetric").forEach((cb) => {
+            cb.addEventListener("change", updateChart);
+          });
+          $("sRange").addEventListener("change", updateChart);
+          statsWired = true;
+        }
         updateChart();
+
+        // wenn der Tab gerade erst sichtbar wurde, einmal sauber layouten
+        queueMicrotask(() => chart?.resize());
       }
 
       function updateChart() {
