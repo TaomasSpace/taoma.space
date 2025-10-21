@@ -176,32 +176,32 @@ class PgGifDB:
                 END$$;
             """)
 
-            # (Optional, aber empfehlenswert)
-            # Ein Eintrag pro Tag:
-            cur.execute("""
-                DO $$
-                BEGIN
-                    IF NOT EXISTS (
-                        SELECT 1 FROM pg_indexes
-                        WHERE tablename='health_data'
-                        AND indexname='ux_health_data_day'
-                    ) THEN
-                        -- UNIQUE geht nur, wenn keine Duplikate existieren
-                        BEGIN
-                            ALTER TABLE health_data
-                            ADD CONSTRAINT ux_health_data_day UNIQUE(day);
-                        EXCEPTION WHEN duplicate_table THEN
-                            -- ignorieren, falls schon vorhanden
-                        END;
-                    END IF;
-                END$$;
-            """)
+                # (Optional, aber empfehlenswert)
+                # Ein Eintrag pro Tag:
+                cur.execute("""
+                    DO $$
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM pg_indexes
+                            WHERE tablename='health_data'
+                            AND indexname='ux_health_data_day'
+                        ) THEN
+                            -- UNIQUE geht nur, wenn keine Duplikate existieren
+                            BEGIN
+                                ALTER TABLE health_data
+                                ADD CONSTRAINT ux_health_data_day UNIQUE(day);
+                            EXCEPTION WHEN duplicate_table THEN
+                                -- ignorieren, falls schon vorhanden
+                            END;
+                        END IF;
+                    END$$;
+                """)
 
-            # (Optional) Index für schnelle by-day Abfragen
-            cur.execute("""
-                CREATE INDEX IF NOT EXISTS idx_health_data_day
-                ON health_data(day);
-            """)
+                # (Optional) Index für schnelle by-day Abfragen
+                cur.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_health_data_day
+                    ON health_data(day);
+                """)
 
                 cur.execute("""ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS display_name_mode TEXT NOT NULL DEFAULT 'slug'
