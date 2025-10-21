@@ -63,8 +63,11 @@ app.mount("/media", StaticFiles(directory=str(MEDIA_ROOT)), name="media")
 ALLOWED_AUDIO = {"audio/mpeg", "audio/ogg", "audio/wav"}
 MAX_AUDIO_BYTES = 10 * 1024 * 1024  # 10 MB
 
-ALLOWED_USER_IDS = os.getenv("SPECIAL_USERIDS")
-
+ALLOWED_USER_IDS = {
+    int(x)
+    for x in os.getenv("ALLOWED_USER_IDS", "1").replace(" ", "").split(",")
+    if x
+}
 def _ensure_pg():
     if not isinstance(db, PgGifDB):
         raise HTTPException(501, "Linktree features require PostgreSQL.")
