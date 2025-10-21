@@ -184,6 +184,47 @@
         width: 100% !important;
         height: 100% !important; /* Chart nimmt exakt die Wrapper-Höhe */
       }
+      .info-wrap {
+        display: inline-block;
+        position: relative;
+        margin-left: 0.4rem;
+        cursor: help;
+        user-select: none;
+      }
+      .info-wrap .badge {
+        display: inline-block;
+        font-size: 0.85rem;
+        line-height: 1;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.4rem;
+        padding: 0.12rem 0.35rem;
+        background: #f9fafb;
+        color: #374151;
+      }
+      .info-wrap .tooltip {
+        position: absolute;
+        top: 130%;
+        left: 0;
+        z-index: 20;
+        display: none;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.15);
+        padding: 0.5rem;
+        width: min(420px, 80vw);
+      }
+      .info-wrap:hover .tooltip {
+        display: block;
+      }
+      .info-wrap .tooltip img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+      .info-wrap .tooltip a {
+        color: var(--accent);
+      }
     </style>
   </head>
   <body>
@@ -198,7 +239,30 @@
     <!-- Panel: Erfassen -->
     <div class="panel active" id="panel-capture">
       <div class="row">
-        <label for="Borg">Borg Skala (0–20)</label>
+        <label for="Borg">
+          Borg Skala (0–20)
+          <span class="info-wrap">
+            <span class="badge">ℹ️</span>
+            <span class="tooltip">
+              <!-- Bild: verwende am besten eine DIREKTE Bild-URL.
+             Falls dein Google-Redirect nicht lädt, bleibt hier einfach der Link. -->
+              <img
+                src="https://www.amsel.de/fileadmin/_processed_/c/2/csm_borg-skala_9f7b2c0d3b.png"
+                alt="Borg-Skala"
+                onerror="this.style.display='none'"
+              />
+              <div>
+                <a
+                  href="https://www.amsel.de/multiple-sklerose/ms-themen/ms-und-sport/einfuehrung/worauf-muessen-menschen-mit-ms-beim-sport-achten/"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Quelle öffnen
+                </a>
+              </div>
+            </span>
+          </span>
+        </label>
         <input type="range" max="20" min="0" id="Borg" value="0" />
       </div>
       <div class="row">
@@ -329,7 +393,6 @@
           </select>
         </label>
       </div>
-
       <div
         style="
           display: flex;
@@ -439,6 +502,51 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
 
     <script>
+      let mensMarkedLabels = new Set();
+
+      const mensHighlighter = {
+        id: "mensHighlighter",
+        beforeDatasetsDraw(chart, args, pluginOpts) {
+          if (!mensMarkedLabels.size) return;
+
+          const { ctx, chartArea, scales } = chart;
+          const x = scales.x;
+          if (!x?.ticks?.length) return;
+
+          ctx.save();
+          ctx.fillStyle = "rgba(220, 38, 38, 0.08)"; // zartes Rot
+
+          const tickCount = x.ticks.length;
+          for (let i = 0; i < tickCount; i++) {
+            const label = x.ticks[i].label;
+            if (!mensMarkedLabels.has(label)) continue;
+
+            // Breite zwischen Ticks abschätzen
+            const curr = x.getPixelForTick(i);
+            const prev =
+              i > 0
+                ? x.getPixelForTick(i - 1)
+                : curr - (x.getPixelForTick(i + 1) - curr);
+            const next =
+              i < tickCount - 1
+                ? x.getPixelForTick(i + 1)
+                : curr + (curr - prev);
+            const left = (prev + curr) / 2;
+            const right = (curr + next) / 2;
+            const w = Math.max(1, right - left);
+
+            ctx.fillRect(
+              left,
+              chartArea.top,
+              w,
+              chartArea.bottom - chartArea.top
+            );
+          }
+          ctx.restore();
+        },
+      };
+
+      Chart.register(mensHighlighter);
       // ===== Config =====
       const API_BASE = "/alexandra/data/health"; // ändere zu "/api/health" falls du die API-Route nutzt
 
@@ -755,7 +863,19 @@
           .sort((a, b) => parseDateISO(a.day) - parseDateISO(b.day));
 
         const { labels, datasets } = buildDatasets(rowsAsc, selected);
+        mensMarkedLabels = new Set(
+          rowsAsc.filter((r) => r.mens).map((r) => (r.day || "").slice(0, 10))
+        );
 
+        // Optional: Punkte an Mens-Tagen rot einfärben
+        const pointColors = labels.map((l) =>
+          mensMarkedLabels.has(l) ? "crimson" : undefined
+        );
+        datasets.forEach((ds) => {
+          // nur Punkte einfärben, Linie bleibt auto
+          ds.pointBackgroundColor = pointColors;
+          ds.pointBorderColor = pointColors;
+        });
         const cfg = {
           type: "line",
           data: { labels, datasets },
