@@ -5,16 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alexandra Health Data</title>
     <style>
+      :root {
+        --accent: #2563eb;
+        --muted: #666;
+        --danger: #b91c1c;
+      }
       body {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial,
           sans-serif;
         padding: 1rem;
-        max-width: 700px;
+        max-width: 1000px;
         margin: auto;
+      }
+      .tabs {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 1rem;
+      }
+      .tab {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #e5e7eb;
+        border-bottom: none;
+        border-radius: 0.5rem 0.5rem 0 0;
+        cursor: pointer;
+        background: #f9fafb;
+      }
+      .tab.active {
+        background: white;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
       }
       .row {
         display: grid;
-        grid-template-columns: 1fr 120px;
+        grid-template-columns: 1fr 140px;
         gap: 1rem;
         align-items: center;
         margin: 0.5rem 0;
@@ -29,89 +59,333 @@
         align-items: center;
       }
       .hint {
-        color: #666;
+        color: var(--muted);
         font-size: 0.9rem;
       }
       #status {
         font-size: 0.95rem;
+      }
+
+      /* Historie */
+      .filters {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .filters label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      .filters input {
+        width: 100%;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead th {
+        text-align: left;
+        font-weight: 600;
+        background: #f3f4f6;
+        padding: 0.5rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      tbody td {
+        padding: 0.5rem;
+        border-bottom: 1px solid #f1f5f9;
+      }
+      tbody tr {
+        cursor: pointer;
+      }
+      tbody tr:hover {
+        background: #f8fafc;
+      }
+      .toolbar {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin: 0.75rem 0;
+      }
+      button,
+      .btn {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #e5e7eb;
+        background: white;
+        border-radius: 0.5rem;
+        cursor: pointer;
+      }
+      button.primary {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+      button.danger {
+        background: var(--danger);
+        color: white;
+        border-color: var(--danger);
+      }
+      .pill {
+        font-size: 0.8rem;
+        padding: 0.15rem 0.4rem;
+        border-radius: 0.5rem;
+        background: #eef2ff;
+      }
+      .right {
+        margin-left: auto;
+      }
+
+      /* Modal */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        display: none;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal {
+        background: white;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        width: min(600px, 95vw);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+      .modal header {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      .modal .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+      .modal footer {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        margin-top: 0.75rem;
       }
     </style>
   </head>
   <body>
     <h1>Health Tracking</h1>
 
-    <div class="row">
-      <label for="Borg">Borg Skala (0–20)</label>
-      <input type="range" max="20" min="0" id="Borg" value="0" />
+    <div class="tabs">
+      <div class="tab active" data-tab="capture">Erfassen</div>
+      <div class="tab" data-tab="history">Historie</div>
     </div>
 
-    <div class="row">
-      <label for="Erschoepfung">Erschöpfung (0–10)</label
-      ><input type="range" max="10" min="0" id="Erschoepfung" value="0" />
-    </div>
-    <div class="row">
-      <label for="Muskelschwaeche">Muskelschwäche (0–10)</label
-      ><input type="range" max="10" min="0" id="Muskelschwaeche" value="0" />
-    </div>
-    <div class="row">
-      <label for="Schmerzen">Schmerzen (0–10)</label
-      ><input type="range" max="10" min="0" id="Schmerzen" value="0" />
-    </div>
-    <div class="row">
-      <label for="Angst">Angst (0–10)</label
-      ><input type="range" max="10" min="0" id="Angst" value="0" />
-    </div>
-    <div class="row">
-      <label for="Konzentration">Konzentration/Gedächtnis (0–10)</label
-      ><input type="range" max="10" min="0" id="Konzentration" value="0" />
-    </div>
-    <div class="row">
-      <label for="Husten">Husten (0–10)</label
-      ><input type="range" max="10" min="0" id="Husten" value="0" />
-    </div>
-    <div class="row">
-      <label for="Atemnot">Atemnot (0–10)</label
-      ><input type="range" max="10" min="0" id="Atemnot" value="0" />
+    <!-- Panel: Erfassen -->
+    <div class="panel active" id="panel-capture">
+      <div class="row">
+        <label for="Borg">Borg Skala (0–20)</label>
+        <input type="range" max="20" min="0" id="Borg" value="0" />
+      </div>
+      <div class="row">
+        <label for="Erschoepfung">Erschöpfung (0–10)</label
+        ><input type="range" max="10" min="0" id="Erschoepfung" value="0" />
+      </div>
+      <div class="row">
+        <label for="Muskelschwaeche">Muskelschwäche (0–10)</label
+        ><input type="range" max="10" min="0" id="Muskelschwaeche" value="0" />
+      </div>
+      <div class="row">
+        <label for="Schmerzen">Schmerzen (0–10)</label
+        ><input type="range" max="10" min="0" id="Schmerzen" value="0" />
+      </div>
+      <div class="row">
+        <label for="Angst">Angst (0–10)</label
+        ><input type="range" max="10" min="0" id="Angst" value="0" />
+      </div>
+      <div class="row">
+        <label for="Konzentration">Konzentration/Gedächtnis (0–10)</label
+        ><input type="range" max="10" min="0" id="Konzentration" value="0" />
+      </div>
+      <div class="row">
+        <label for="Husten">Husten (0–10)</label
+        ><input type="range" max="10" min="0" id="Husten" value="0" />
+      </div>
+      <div class="row">
+        <label for="Atemnot">Atemnot (0–10)</label
+        ><input type="range" max="10" min="0" id="Atemnot" value="0" />
+      </div>
+
+      <div class="row">
+        <label for="Temperatur">Temperatur (°C)</label>
+        <input
+          type="number"
+          max="45"
+          min="20"
+          id="Temperatur"
+          value="36"
+          step="0.1"
+        />
+      </div>
+
+      <div class="row">
+        <label for="Mens">Mens</label><input type="checkbox" id="Mens" />
+      </div>
+      <div class="row">
+        <label for="Notizen">Notizen</label
+        ><input type="text" id="Notizen" placeholder="optional" />
+      </div>
+
+      <div class="actions">
+        <button id="saveBtn" class="primary">Save</button>
+        <span class="hint">speichert für <span id="todayLabel"></span></span>
+        <span id="status"></span>
+      </div>
     </div>
 
-    <div class="row">
-      <label for="Temperatur">Temperatur (°C)</label>
-      <input
-        type="number"
-        max="45"
-        min="20"
-        id="Temperatur"
-        value="36"
-        step="0.1"
-      />
+    <!-- Panel: Historie -->
+    <div class="panel" id="panel-history">
+      <div class="toolbar">
+        <strong>Einträge</strong>
+        <span class="pill" id="countBadge">0</span>
+        <button id="refreshBtn" class="btn">Neu laden</button>
+        <span class="right"></span>
+      </div>
+
+      <div class="filters">
+        <div>
+          <label for="fDateFrom">Datum von</label>
+          <input type="date" id="fDateFrom" />
+        </div>
+        <div>
+          <label for="fDateTo">Datum bis</label>
+          <input type="date" id="fDateTo" />
+        </div>
+        <div>
+          <label for="fMinBorg">min Borg</label>
+          <input type="number" id="fMinBorg" min="0" max="20" />
+        </div>
+        <div>
+          <label for="fMinPain">min Schmerzen</label>
+          <input type="number" id="fMinPain" min="0" max="10" />
+        </div>
+        <div>
+          <label for="fMens">Mens</label>
+          <select id="fMens">
+            <option value="">egal</option>
+            <option value="true">ja</option>
+            <option value="false">nein</option>
+          </select>
+        </div>
+        <div>
+          <label for="fQuery">Notizen enthält</label>
+          <input type="text" id="fQuery" placeholder="Stichwort" />
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Borg</th>
+            <th>Schmerzen</th>
+            <th>Atemnot</th>
+            <th>Temp</th>
+            <th>Mens</th>
+            <th>Notizen</th>
+            <th style="width: 150px">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody id="healthTableBody"></tbody>
+      </table>
     </div>
 
-    <div class="row">
-      <label for="Mens">Mens</label>
-      <input type="checkbox" id="Mens" />
-    </div>
-
-    <div class="row">
-      <label for="Notizen">Notizen</label>
-      <input type="text" id="Notizen" placeholder="optional" />
-    </div>
-
-    <div class="actions">
-      <button id="saveBtn">Save</button>
-      <span class="hint">speichert für <span id="todayLabel"></span></span>
-      <span id="status"></span>
+    <!-- Modal: Bearbeiten/Löschen -->
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal" role="dialog" aria-modal="true">
+        <header>Eintrag bearbeiten</header>
+        <div id="modalContent">
+          <div class="grid">
+            <label>Datum <input type="date" id="m_day" /></label>
+            <label
+              >Borg <input type="number" id="m_borg" min="0" max="20"
+            /></label>
+            <label
+              >Temperatur
+              <input type="number" id="m_temp" step="0.1" min="20" max="45"
+            /></label>
+            <label
+              >Erschöpfung <input type="number" id="m_ersch" min="0" max="10"
+            /></label>
+            <label
+              >Muskelschwäche
+              <input type="number" id="m_muskel" min="0" max="10"
+            /></label>
+            <label
+              >Schmerzen <input type="number" id="m_schmerz" min="0" max="10"
+            /></label>
+            <label
+              >Angst <input type="number" id="m_angst" min="0" max="10"
+            /></label>
+            <label
+              >Konzentration <input type="number" id="m_konz" min="0" max="10"
+            /></label>
+            <label
+              >Husten <input type="number" id="m_husten" min="0" max="10"
+            /></label>
+            <label
+              >Atemnot <input type="number" id="m_atem" min="0" max="10"
+            /></label>
+            <label
+              >Mens
+              <select id="m_mens">
+                <option value="false">nein</option>
+                <option value="true">ja</option>
+              </select></label
+            >
+            <label>Notizen <input type="text" id="m_note" /></label>
+          </div>
+        </div>
+        <footer>
+          <button id="btnDelete" class="danger">Löschen</button>
+          <span style="flex: 1"></span>
+          <button id="btnCancel">Abbrechen</button>
+          <button id="btnSaveEdit" class="primary">Speichern</button>
+        </footer>
+      </div>
     </div>
 
     <script>
-      const $ = (id) => document.getElementById(id);
+      // ===== Config =====
+      const API_BASE = "/alexandra/data/health"; // ändere zu "/api/health" falls du die API-Route nutzt
 
-      function todayISO() {
+      // ===== Utils =====
+      const $ = (id) => document.getElementById(id);
+      const todayISO = () => {
         const d = new Date();
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        return `${y}-${m}-${day}`; // YYYY-MM-DD
-      }
+        const y = d.getFullYear(),
+          m = String(d.getMonth() + 1).padStart(2, "0"),
+          day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+      const toISODate = (s) => s?.slice(0, 10);
+      const fmtTemp = (v) => (v != null ? Number(v).toFixed(1) : "");
+
+      // ===== Tabs =====
+      document.querySelectorAll(".tab").forEach((t) => {
+        t.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab")
+            .forEach((x) => x.classList.remove("active"));
+          document
+            .querySelectorAll(".panel")
+            .forEach((x) => x.classList.remove("active"));
+          t.classList.add("active");
+          const id =
+            t.dataset.tab === "capture" ? "panel-capture" : "panel-history";
+          document.getElementById(id).classList.add("active");
+          if (id === "panel-history") loadTable();
+        });
+      });
+
+      // ===== Capture panel logic =====
+      $("todayLabel").textContent = todayISO();
 
       async function createOrUpdateData() {
         const statusEl = $("status");
@@ -119,13 +393,10 @@
         statusEl.style.color = "";
 
         const day = todayISO();
-
-        // Werte auslesen
         const payload = {
           day: day,
           borg: parseInt($("Borg").value, 10),
           temperatur: parseFloat($("Temperatur").value),
-          // ASCII-Schlüssel senden ist robuster (API akzeptiert Aliases):
           erschoepfung: parseInt($("Erschoepfung").value, 10),
           muskelschwaeche: parseInt($("Muskelschwaeche").value, 10),
           schmerzen: parseInt($("Schmerzen").value, 10),
@@ -138,12 +409,11 @@
         };
 
         try {
-          // Existiert für den Tag bereits ein Eintrag?
-          const check = await fetch(`/alexandra/data/health/by-day/${day}`);
+          const check = await fetch(`${API_BASE}/by-day/${day}`);
           if (check.ok) {
-            const existing = await check.json(); // { id, ... }
+            const existing = await check.json();
             const id = existing.id;
-            const res = await fetch(`/alexandra/data/health/${id}`, {
+            const res = await fetch(`${API_BASE}/${id}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
@@ -152,8 +422,7 @@
             statusEl.textContent = "Aktualisiert ✔";
             statusEl.style.color = "green";
           } else if (check.status === 404) {
-            // Neu anlegen
-            const res = await fetch(`/alexandra/data/health`, {
+            const res = await fetch(`${API_BASE}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
@@ -171,15 +440,174 @@
           alert(String(err));
         }
       }
-
-      // UI: heutigen Tag anzeigen
-      $("todayLabel").textContent = todayISO();
-
-      // Button binden
       $("saveBtn").addEventListener("click", (e) => {
         e.preventDefault();
         createOrUpdateData();
       });
+
+      // ===== History panel logic =====
+      let allRows = []; // Cache von /list
+      let currentRow = null; // für Modal
+
+      async function loadTable() {
+        try {
+          const res = await fetch(`${API_BASE}`); // GET: list
+          if (!res.ok) throw new Error(`GET list failed: ${res.status}`);
+          allRows = await res.json();
+          renderTable();
+        } catch (e) {
+          console.error(e);
+          alert("Konnte Einträge nicht laden.");
+        }
+      }
+
+      function applyFilters(rows) {
+        const df = $("fDateFrom").value;
+        const dt = $("fDateTo").value;
+        const minB = $("fMinBorg").value
+          ? parseInt($("fMinBorg").value, 10)
+          : null;
+        const minP = $("fMinPain").value
+          ? parseInt($("fMinPain").value, 10)
+          : null;
+        const mens = $("fMens").value; // "", "true", "false"
+        const q = $("fQuery").value.trim().toLowerCase();
+
+        return rows.filter((r) => {
+          const d = toISODate(r.day || r["day"]); // je nach API könnte day schon Date sein
+          if (df && d < df) return false;
+          if (dt && d > dt) return false;
+          if (minB != null && (r.borg ?? 0) < minB) return false;
+          if (minP != null && (r.schmerzen ?? 0) < minP) return false;
+          if (mens === "true" && !r.mens) return false;
+          if (mens === "false" && r.mens) return false;
+          if (q && !(r.notizen || "").toLowerCase().includes(q)) return false;
+          return true;
+        });
+      }
+
+      function renderTable() {
+        const rows = applyFilters(allRows);
+        $("countBadge").textContent = rows.length;
+        const tb = $("healthTableBody");
+        tb.innerHTML = "";
+        for (const r of rows) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${toISODate(r.day)}</td>
+            <td>${r.borg ?? ""}</td>
+            <td>${r.schmerzen ?? ""}</td>
+            <td>${r.atemnot ?? ""}</td>
+            <td>${fmtTemp(r.temperatur)}</td>
+            <td>${r.mens ? "ja" : "nein"}</td>
+            <td>${(r.notizen || "").replace(/</g, "&lt;")}</td>
+            <td>
+              <button class="btn" data-action="edit">Bearbeiten</button>
+              <button class="btn danger" data-action="delete">Löschen</button>
+            </td>
+          `;
+          tr.querySelector('[data-action="edit"]').addEventListener(
+            "click",
+            (e) => {
+              e.stopPropagation();
+              openEdit(r);
+            }
+          );
+          tr.querySelector('[data-action="delete"]').addEventListener(
+            "click",
+            (e) => {
+              e.stopPropagation();
+              confirmDelete(r);
+            }
+          );
+          tr.addEventListener("click", () => openEdit(r));
+          tb.appendChild(tr);
+        }
+      }
+
+      // Filter Events
+      [
+        "fDateFrom",
+        "fDateTo",
+        "fMinBorg",
+        "fMinPain",
+        "fMens",
+        "fQuery",
+      ].forEach((id) => {
+        $(id).addEventListener("input", renderTable);
+        $(id).addEventListener("change", renderTable);
+      });
+      $("refreshBtn").addEventListener("click", loadTable);
+
+      // ===== Modal =====
+      function openEdit(row) {
+        currentRow = row;
+        $("m_day").value = toISODate(row.day);
+        $("m_borg").value = row.borg ?? 0;
+        $("m_temp").value = row.temperatur ?? 36;
+        $("m_ersch").value = row["erschöpfung"] ?? row.erschoepfung ?? 0;
+        $("m_muskel").value = row["muskelschwäche"] ?? row.muskelschwaeche ?? 0;
+        $("m_schmerz").value = row.schmerzen ?? 0;
+        $("m_angst").value = row.angst ?? 0;
+        $("m_konz").value = row.konzentration ?? 0;
+        $("m_husten").value = row.husten ?? 0;
+        $("m_atem").value = row.atemnot ?? 0;
+        $("m_mens").value = row.mens ? "true" : "false";
+        $("m_note").value = row.notizen || "";
+        $("modalBackdrop").style.display = "flex";
+      }
+      function closeModal() {
+        $("modalBackdrop").style.display = "none";
+        currentRow = null;
+      }
+      $("btnCancel").addEventListener("click", closeModal);
+
+      $("btnSaveEdit").addEventListener("click", async () => {
+        if (!currentRow) return;
+        const id = currentRow.id;
+        const payload = {
+          day: $("m_day").value,
+          borg: parseInt($("m_borg").value, 10),
+          temperatur: parseFloat($("m_temp").value),
+          erschoepfung: parseInt($("m_ersch").value, 10),
+          muskelschwaeche: parseInt($("m_muskel").value, 10),
+          schmerzen: parseInt($("m_schmerz").value, 10),
+          angst: parseInt($("m_angst").value, 10),
+          konzentration: parseInt($("m_konz").value, 10),
+          husten: parseInt($("m_husten").value, 10),
+          atemnot: parseInt($("m_atem").value, 10),
+          mens: $("m_mens").value === "true",
+          notizen: $("m_note").value?.trim() || null,
+        };
+        try {
+          const res = await fetch(`${API_BASE}/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
+          closeModal();
+          await loadTable();
+        } catch (e) {
+          console.error(e);
+          alert("Speichern fehlgeschlagen.");
+        }
+      });
+
+      async function confirmDelete(row) {
+        if (!confirm(`Eintrag vom ${toISODate(row.day)} wirklich löschen?`))
+          return;
+        try {
+          const res = await fetch(`${API_BASE}/${row.id}`, {
+            method: "DELETE",
+          });
+          if (!res.ok) throw new Error(`DELETE failed: ${res.status}`);
+          await loadTable();
+        } catch (e) {
+          console.error(e);
+          alert("Löschen fehlgeschlagen.");
+        }
+      }
     </script>
   </body>
 </html>
