@@ -38,6 +38,8 @@ import bcrypt
 from psycopg.rows import dict_row
 from fastapi.responses import JSONResponse
 from fastapi import Request
+from datetime import date
+from pydantic import AliasChoices
 
 DisplayNameMode = Literal["slug", "username"]
 load_dotenv()
@@ -465,6 +467,71 @@ class RegisterOut(BaseModel):
     expires_at: Optional[str] = None
     user: UserOut
 
+
+class HealthDataBase(BaseModel):
+    day: date
+    borg: int = Field(..., ge=0, le=10)
+    temperatur: int  # z.B. 36..42 (falls gewünscht, füge ge/le hinzu)
+    erschoepfung: int = Field(0, ge=0, le=10, alias="erschöpfung", validation_alias=AliasChoices("erschoepfung", "erschöpfung"))
+    muskelschwaeche: int = Field(0, ge=0, le=10, alias="muskelschwäche", validation_alias=AliasChoices("muskelschwaeche", "muskelschwäche"))
+    schmerzen: int = Field(0, ge=0, le=10)
+    angst: int = Field(0, ge=0, le=10)
+    konzentration: int = Field(0, ge=0, le=10)
+    husten: int = Field(0, ge=0, le=10)
+    atemnot: int = Field(0, ge=0, le=10)
+    mens: bool = False
+    notizen: Optional[str] = None
+
+    model_config = {
+        "populate_by_name": True,  # erlaubt erschoepfung ODER erschöpfung im Input
+    }
+
+
+class HealthDataIn(HealthDataBase):
+    pass
+
+
+class HealthDataUpdate(BaseModel):
+    # alle Felder optional für PATCH
+    day: Optional[date] = None
+    borg: Optional[int] = Field(None, ge=0, le=10)
+    temperatur: Optional[int] = None
+    erschoepfung: Optional[int] = Field(None, ge=0, le=10, alias="erschöpfung", validation_alias=AliasChoices("erschoepfung", "erschöpfung"))
+    muskelschwaeche: Optional[int] = Field(None, ge=0, le=10, alias="muskelschwäche", validation_alias=AliasChoices("muskelschwaeche", "muskelschwäche"))
+    schmerzen: Optional[int] = Field(None, ge=0, le=10)
+    angst: Optional[int] = Field(None, ge=0, le=10)
+    konzentration: Optional[int] = Field(None, ge=0, le=10)
+    husten: Optional[int] = Field(None, ge=0, le=10)
+    atemnot: Optional[int] = Field(None, ge=0, le=10)
+    mens: Optional[bool] = None
+    notizen: Optional[str] = None
+
+    model_config = {
+        "populate_by_name": True,
+    }
+
+
+class HealthDataOut(HealthDataBase):
+    id: int
+
+
+def _health_row_to_out(row: dict) -> HealthDataOut:
+# row kann von psycopg dict_row kommen
+    return HealthDataOut(
+        id=row["id"],
+        day=row["day"],
+        borg=row["borg"],
+        temperatur=row["temperatur"],
+        erschoepfung=row.get("erschöpfung", 0),
+        muskelschwaeche=row.get("muskelschwäche", 0),
+        schmerzen=row.get("schmerzen", 0),
+        angst=row.get("angst", 0),
+        konzentration=row.get("konzentration", 0),
+        husten=row.get("husten", 0),
+        atemnot=row.get("atemnot", 0),
+        mens=row.get("mens", False),
+        notizen=row.get("notizen"),
+    )
 
 @app.get("/", include_in_schema=False)
 def home():
@@ -1711,3 +1778,80 @@ def home():
 @app.get("/alexandra/data/health", dependencies=[Depends(require_specific_user)])
 def very_private_page():
     return FileResponse("healthData.html")
+
+
+# ---------- HealthData CRUD ----------
+
+@app.get("/api/health", response_model=List[HealthDataOut], ependencies=[Depends(require_specific_user)])
+def list_health_data_ep(limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)):
+    _ensure_pg()
+    rows = db.list_health_data(limit=limit, offset=offset)
+    return [_health_row_to_out(r) for r in rows]
+
+
+@app.get("/api/health/{data_id}", response_model=HealthDataOut, ependencies=[Depends(require_specific_user)])
+def get_health_data_ep(data_id: int):
+    _ensure_pg()
+    row = db.get_health_data(data_id)
+    if not row:
+        raise HTTPException(404, "Health data not found")
+    return _health_row_to_out(row)
+
+
+@app.get("/api/health/by-day/{day}", response_model=HealthDataOut, dependencies=[Depends(require_specific_user)])
+def get_health_data_by_day_ep(day: date):
+    _ensure_pg()
+    row = db.get_health_data_by_day(str(day))
+    if not row:
+        raise HTTPException(404, f"No health data for {day}")
+    return _health_row_to_out(row)
+
+
+@app.post("/api/health", response_model=HealthDataOut, status_code=201, ependencies=[Depends(require_specific_user)])
+def create_health_data_ep(payload: HealthDataIn):
+    _ensure_pg()
+    # Einfügen
+    new_id = db.insert_health_data(
+        day=str(payload.day),
+        borg=payload.borg,
+        temperatur=payload.temperatur,
+        erschöpfung=payload.erschoepfung,
+        muskelschwäche=payload.muskelschwaeche,
+        schmerzen=payload.schmerzen,
+        angst=payload.angst,
+        konzentration=payload.konzentration,
+        husten=payload.husten,
+        atemnot=payload.atemnot,
+        mens=payload.mens,
+        notizen=payload.notizen,
+    )
+    row = db.get_health_data(new_id)
+    return _health_row_to_out(row)
+
+
+@app.patch("/api/health/{data_id}", response_model=HealthDataOut, ependencies=[Depends(require_specific_user)])
+def update_health_data_ep(data_id: int, payload: HealthDataUpdate):
+    _ensure_pg()
+    if not db.get_health_data(data_id):
+        raise HTTPException(404, "Health data not found")
+
+    # Nur gesetzte Felder an DB weitergeben
+    fields = payload.model_dump(exclude_unset=True, by_alias=True)
+    # Mapping von ASCII → DB-Spalten (nur falls ASCII verwendet wurde)
+    if "erschoepfung" in fields and "erschöpfung" not in fields:
+        fields["erschöpfung"] = fields.pop("erschoepfung")
+    if "muskelschwaeche" in fields and "muskelschwäche" not in fields:
+        fields["muskelschwäche"] = fields.pop("muskelschwaeche")
+
+    db.update_health_data(data_id, **fields)
+    row = db.get_health_data(data_id)
+    return _health_row_to_out(row)
+
+
+@app.delete("/api/health/{data_id}", status_code=204, ependencies=[Depends(require_specific_user)])
+def delete_health_data_ep(data_id: int):
+    _ensure_pg()
+    if not db.get_health_data(data_id):
+        raise HTTPException(404, "Health data not found")
+    db.delete_health_data(data_id)
+    return Response(status_code=204)

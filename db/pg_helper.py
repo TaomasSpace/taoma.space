@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS health_data (
     temperatur      INTEGER NOT NULL,
     mens            BOOLEAN NOT NULL DEFAULT FALSE,
     notizen         TEXT
-)
+);  --  <<<<<<<<<<<<<<  Semikolon!
 
 -- Saubere FK für users.linktree_id -> linktrees.id
 DO $$
@@ -147,7 +147,8 @@ BEGIN
         FOREIGN KEY (linktree_id) REFERENCES linktrees(id)
         ON DELETE SET NULL;
     END IF;
-END$$;
+END
+$$ LANGUAGE plpgsql
 """
 
 
