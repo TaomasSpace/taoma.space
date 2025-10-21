@@ -1775,21 +1775,21 @@ def home():
 
 
 
-@app.get("/alexandra/data/health", dependencies=[Depends(require_specific_user)])
+@app.get("/alexandra/data/show", dependencies=[Depends(require_specific_user)])
 def very_private_page():
     return FileResponse("healthData.html")
 
 
 # ---------- HealthData CRUD ----------
 
-@app.get("/api/health", response_model=List[HealthDataOut], ependencies=[Depends(require_specific_user)])
+@app.get("/alexandra/data/health", response_model=List[HealthDataOut], dependencies=[Depends(require_specific_user)])
 def list_health_data_ep(limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)):
     _ensure_pg()
     rows = db.list_health_data(limit=limit, offset=offset)
     return [_health_row_to_out(r) for r in rows]
 
 
-@app.get("/api/health/{data_id}", response_model=HealthDataOut, ependencies=[Depends(require_specific_user)])
+@app.get("/alexandra/data/health/{data_id}", response_model=HealthDataOut, dependencies=[Depends(require_specific_user)])
 def get_health_data_ep(data_id: int):
     _ensure_pg()
     row = db.get_health_data(data_id)
@@ -1798,7 +1798,7 @@ def get_health_data_ep(data_id: int):
     return _health_row_to_out(row)
 
 
-@app.get("/api/health/by-day/{day}", response_model=HealthDataOut, dependencies=[Depends(require_specific_user)])
+@app.get("/alexandra/data/health/by-day/{day}", response_model=HealthDataOut, dependencies=[Depends(require_specific_user)])
 def get_health_data_by_day_ep(day: date):
     _ensure_pg()
     row = db.get_health_data_by_day(str(day))
@@ -1807,7 +1807,7 @@ def get_health_data_by_day_ep(day: date):
     return _health_row_to_out(row)
 
 
-@app.post("/api/health", response_model=HealthDataOut, status_code=201, ependencies=[Depends(require_specific_user)])
+@app.post("/alexandra/data/health", response_model=HealthDataOut, status_code=201, dependencies=[Depends(require_specific_user)])
 def create_health_data_ep(payload: HealthDataIn):
     _ensure_pg()
     # Einfügen
@@ -1829,7 +1829,7 @@ def create_health_data_ep(payload: HealthDataIn):
     return _health_row_to_out(row)
 
 
-@app.patch("/api/health/{data_id}", response_model=HealthDataOut, ependencies=[Depends(require_specific_user)])
+@app.patch("/alexandra/data/health/{data_id}", response_model=HealthDataOut, dependencies=[Depends(require_specific_user)])
 def update_health_data_ep(data_id: int, payload: HealthDataUpdate):
     _ensure_pg()
     if not db.get_health_data(data_id):
@@ -1848,7 +1848,7 @@ def update_health_data_ep(data_id: int, payload: HealthDataUpdate):
     return _health_row_to_out(row)
 
 
-@app.delete("/api/health/{data_id}", status_code=204, ependencies=[Depends(require_specific_user)])
+@app.delete("/alexandra/data/health/{data_id}", status_code=204, dependencies=[Depends(require_specific_user)])
 def delete_health_data_ep(data_id: int):
     _ensure_pg()
     if not db.get_health_data(data_id):
