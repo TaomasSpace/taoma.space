@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS health_data (
     konzentration   INTEGER NOT NULL DEFAULT 0,
     husten          INTEGER NOT NULL DEFAULT 0,
     atemnot         INTEGER NOT NULL DEFAULT 0,
-    temperatur      INTEGER NOT NULL,
+    temperatur      REAL NOT NULL,
     mens            BOOLEAN NOT NULL DEFAULT FALSE,
     notizen         TEXT
 );  --  <<<<<<<<<<<<<<  Semikolon!
@@ -160,6 +160,49 @@ class PgGifDB:
             with conn.cursor() as cur:
                 # 1) Grundschema (inkl. GIF-Indizes via IF NOT EXISTS)
                 cur.execute(DDL)
+                cur.execute("""
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_name='health_data'
+                        AND column_name='temperatur'
+                        AND data_type NOT IN ('real','double precision')
+                    ) THEN
+                        ALTER TABLE health_data
+                        ALTER COLUMN temperatur TYPE REAL USING temperatur::REAL;
+                    END IF;
+                END$$;
+            """)
+
+            # (Optional, aber empfehlenswert)
+            # Ein Eintrag pro Tag:
+            cur.execute("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_indexes
+                        WHERE tablename='health_data'
+                        AND indexname='ux_health_data_day'
+                    ) THEN
+                        -- UNIQUE geht nur, wenn keine Duplikate existieren
+                        BEGIN
+                            ALTER TABLE health_data
+                            ADD CONSTRAINT ux_health_data_day UNIQUE(day);
+                        EXCEPTION WHEN duplicate_table THEN
+                            -- ignorieren, falls schon vorhanden
+                        END;
+                    END IF;
+                END$$;
+            """)
+
+            # (Optional) Index für schnelle by-day Abfragen
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_health_data_day
+                ON health_data(day);
+            """)
+
                 cur.execute("""ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS display_name_mode TEXT NOT NULL DEFAULT 'slug'
     CHECK (display_name_mode IN ('slug','username'));""")
@@ -976,7 +1019,7 @@ class PgGifDB:
         *,
         day: str,
         borg: int,
-        temperatur: int,
+        temperatur: float,
         erschöpfung: int = 0,
         muskelschwäche: int = 0,
         schmerzen: int = 0,

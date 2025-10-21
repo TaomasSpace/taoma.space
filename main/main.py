@@ -471,12 +471,21 @@ class RegisterOut(BaseModel):
     user: UserOut
 
 
+
 class HealthDataBase(BaseModel):
     day: date
-    borg: int = Field(..., ge=0, le=10)
-    temperatur: int  # z.B. 36..42 (falls gewünscht, füge ge/le hinzu)
-    erschoepfung: int = Field(0, ge=0, le=10, alias="erschöpfung", validation_alias=AliasChoices("erschoepfung", "erschöpfung"))
-    muskelschwaeche: int = Field(0, ge=0, le=10, alias="muskelschwäche", validation_alias=AliasChoices("muskelschwaeche", "muskelschwäche"))
+    borg: int = Field(..., ge=0, le=20)                         # <- 10 → 20
+    temperatur: float = Field(..., ge=20, le=45)                # <- int → float
+    erschoepfung: int = Field(
+        0, ge=0, le=10,
+        alias="erschöpfung",
+        validation_alias=AliasChoices("erschoepfung","erschöpfung")
+    )
+    muskelschwaeche: int = Field(
+        0, ge=0, le=10,
+        alias="muskelschwäche",
+        validation_alias=AliasChoices("muskelschwaeche","muskelschwäche")
+    )
     schmerzen: int = Field(0, ge=0, le=10)
     angst: int = Field(0, ge=0, le=10)
     konzentration: int = Field(0, ge=0, le=10)
@@ -485,9 +494,7 @@ class HealthDataBase(BaseModel):
     mens: bool = False
     notizen: Optional[str] = None
 
-    model_config = {
-        "populate_by_name": True,  # erlaubt erschoepfung ODER erschöpfung im Input
-    }
+    model_config = {"populate_by_name": True}
 
 
 class HealthDataIn(HealthDataBase):
@@ -495,12 +502,19 @@ class HealthDataIn(HealthDataBase):
 
 
 class HealthDataUpdate(BaseModel):
-    # alle Felder optional für PATCH
     day: Optional[date] = None
-    borg: Optional[int] = Field(None, ge=0, le=10)
-    temperatur: Optional[int] = None
-    erschoepfung: Optional[int] = Field(None, ge=0, le=10, alias="erschöpfung", validation_alias=AliasChoices("erschoepfung", "erschöpfung"))
-    muskelschwaeche: Optional[int] = Field(None, ge=0, le=10, alias="muskelschwäche", validation_alias=AliasChoices("muskelschwaeche", "muskelschwäche"))
+    borg: Optional[int] = Field(None, ge=0, le=20)              # <- 20
+    temperatur: Optional[float] = Field(None, ge=20, le=45)     # <- float
+    erschoepfung: Optional[int] = Field(
+        None, ge=0, le=10,
+        alias="erschöpfung",
+        validation_alias=AliasChoices("erschoepfung","erschöpfung")
+    )
+    muskelschwaeche: Optional[int] = Field(
+        None, ge=0, le=10,
+        alias="muskelschwäche",
+        validation_alias=AliasChoices("muskelschwaeche","muskelschwäche")
+    )
     schmerzen: Optional[int] = Field(None, ge=0, le=10)
     angst: Optional[int] = Field(None, ge=0, le=10)
     konzentration: Optional[int] = Field(None, ge=0, le=10)
@@ -509,9 +523,7 @@ class HealthDataUpdate(BaseModel):
     mens: Optional[bool] = None
     notizen: Optional[str] = None
 
-    model_config = {
-        "populate_by_name": True,
-    }
+    model_config = {"populate_by_name": True}
 
 
 class HealthDataOut(HealthDataBase):
