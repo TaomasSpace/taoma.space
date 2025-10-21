@@ -113,7 +113,7 @@ def require_user(x_auth_token: str = Depends(require_token)):
     return user
 
 def require_specific_user(user: dict = Depends(require_user)):
-    if user["id"] not in ALLOWED_USER_IDS:
+    if user.get("id") not in ALLOWED_USER_IDS:
         raise HTTPException(403, "Forbidden")
     return user
 
