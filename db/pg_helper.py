@@ -118,6 +118,22 @@ CREATE TABLE IF NOT EXISTS user_icons (
     PRIMARY KEY (user_id, icon_id)
 );
 
+CREATE TABLE IF NOT EXISTS health_data (
+    id              SERIAL PRIMARY KEY,
+    day             DATE NOT NULL,
+    borg            INTEGER NOT NULL,
+    erschöpfung     INTEGER NOT NULL DEFAULT 0,
+    muskelschwäche  INTEGER NOT NULL DEFAULT 0,
+    schmerzen       INTEGER NOT NULL DEFAULT 0,
+    angst           INTEGER NOT NULL DEFAULT 0,
+    konzentration   INTEGER NOT NULL DEFAULT 0,
+    husten          INTEGER NOT NULL DEFAULT 0,
+    atemnot         INTEGER NOT NULL DEFAULT 0,
+    temperatur      INTEGER NOT NULL,
+    mens            BOOLEAN NOT NULL DEFAULT FALSE,
+    notizen         TEXT
+)
+
 -- Saubere FK für users.linktree_id -> linktrees.id
 DO $$
 BEGIN
@@ -948,4 +964,104 @@ class PgGifDB:
                 """,
                 values,
             )
+            conn.commit()
+
+
+
+    # ---------------- Health Data ----------------
+
+    def insert_health_data(
+        self,
+        *,
+        day: str,
+        borg: int,
+        temperatur: int,
+        erschöpfung: int = 0,
+        muskelschwäche: int = 0,
+        schmerzen: int = 0,
+        angst: int = 0,
+        konzentration: int = 0,
+        husten: int = 0,
+        atemnot: int = 0,
+        mens: bool = False,
+        notizen: str | None = None,
+    ) -> int:
+        """Fügt einen neuen Health-Datensatz ein und gibt die ID zurück."""
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO health_data (
+                    day, borg, erschöpfung, muskelschwäche, schmerzen,
+                    angst, konzentration, husten, atemnot, temperatur,
+                    mens, notizen
+                )
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                RETURNING id
+                """,
+                (
+                    day, borg, erschöpfung, muskelschwäche, schmerzen,
+                    angst, konzentration, husten, atemnot, temperatur,
+                    mens, notizen,
+                ),
+            )
+            new_id = cur.fetchone()[0]
+            conn.commit()
+            return new_id
+
+
+    def get_health_data(self, data_id: int) -> dict | None:
+        """Liest einen Health-Datensatz anhand seiner ID."""
+        with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+            cur.execute("SELECT * FROM health_data WHERE id = %s", (data_id,))
+            return cur.fetchone()
+
+
+    def get_health_data_by_day(self, day: str) -> dict | None:
+        """Liest den Health-Datensatz für ein bestimmtes Datum (falls vorhanden)."""
+        with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+            cur.execute("SELECT * FROM health_data WHERE day = %s", (day,))
+            return cur.fetchone()
+
+
+    def list_health_data(self, limit: int = 100, offset: int = 0) -> list[dict]:
+        """Liefert eine Liste aller Health-Datensätze, sortiert nach Datum (absteigend)."""
+        with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT * FROM health_data
+                ORDER BY day DESC, id DESC
+                LIMIT %s OFFSET %s
+                """,
+                (limit, offset),
+            )
+            return cur.fetchall()
+
+
+    def update_health_data(self, data_id: int, **fields) -> None:
+        """Aktualisiert bestimmte Felder eines Health-Datensatzes."""
+        allowed = {
+            "day", "borg", "erschöpfung", "muskelschwäche", "schmerzen",
+            "angst", "konzentration", "husten", "atemnot", "temperatur",
+            "mens", "notizen",
+        }
+        sets, vals = [], []
+        for k, v in fields.items():
+            if k in allowed:
+                sets.append(f"{k} = %s")
+                vals.append(v)
+        if not sets:
+            return
+        vals.append(data_id)
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                f"UPDATE health_data SET {', '.join(sets)} WHERE id = %s",
+                tuple(vals),
+            )
+            conn.commit()
+
+
+    def delete_health_data(self, data_id: int) -> None:
+        """Löscht einen Health-Datensatz."""
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute("DELETE FROM health_data WHERE id = %s", (data_id,))
             conn.commit()

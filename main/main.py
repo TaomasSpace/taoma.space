@@ -21,7 +21,7 @@ from fastapi import Depends, Header
 from db.db_helper import GifDB as SqliteGifDB
 from db.pg_helper import PgGifDB
 from fastapi.responses import HTMLResponse
-from fastapi import Response
+from fastapi import Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import threading
 from psycopg import errors as pg_errors
@@ -61,6 +61,7 @@ app.mount("/media", StaticFiles(directory=str(MEDIA_ROOT)), name="media")
 ALLOWED_AUDIO = {"audio/mpeg", "audio/ogg", "audio/wav"}
 MAX_AUDIO_BYTES = 10 * 1024 * 1024  # 10 MB
 
+ALLOWED_USER_IDS = os.getenv("SPECIAL_USERIDS")
 
 def _ensure_pg():
     if not isinstance(db, PgGifDB):
@@ -109,6 +110,10 @@ def require_user(x_auth_token: str = Depends(require_token)):
         raise HTTPException(401, "Unauthorized")
     return user
 
+def require_specific_user(user: dict = Depends(require_user)):
+    if user["id"] not in ALLOWED_USER_IDS:
+        raise HTTPException(403, "Forbidden")
+    return user
 
 def require_admin(user: dict = Depends(require_user)):
     if not bool(user.get("admin", False)):
@@ -1699,3 +1704,10 @@ def media_garbage_collect(min_age_seconds: int = Query(60, ge=0)):
 @app.get("/nanna/birthdays/2025", include_in_schema=False)
 def home():
     return FileResponse("nannaBirthday2025.html")
+
+
+
+
+@app.get("/alexandra/data/health", dependencies=[Depends(require_specific_user)])
+def very_private_page():
+    return FileResponse("healthData.html")
