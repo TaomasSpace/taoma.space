@@ -1072,28 +1072,27 @@
       // Kerzen-Ring auf oberer Etage
       const radius = 140; // Pixel-Abstand vom Zentrum
       const baseY = 49; // Prozent vom Boden der Bühne (wie in makeTier oben gesetzt)
+      // Kerzen-Ringe
       const ring = document.createElement("div");
       ring.className = "candles";
       root.appendChild(ring);
 
-      // außen
-      for (let i = 0; i < 12; i++) {
-        ring.appendChild(
-          makeCandle({ angle: (360 / 12) * i, radius: 150, baseY })
-        );
-        c.style.transform += ` rotateZ(${(Math.random() * 4 - 2).toFixed(
-          1
-        )}deg)`;
+      // Helper zum Erzeugen eines Rings
+      function addRing(n, radius, offsetDeg = 0) {
+        for (let i = 0; i < n; i++) {
+          const angle = (360 / n) * i + offsetDeg;
+          const candle = makeCandle({ angle, radius, baseY });
+          // kleine Zufallsneigung für organischen Look
+          candle.style.transform += ` rotateZ(${(Math.random() * 4 - 2).toFixed(
+            1
+          )}deg)`;
+          ring.appendChild(candle);
+        }
       }
-      // innen
-      for (let i = 0; i < 5; i++) {
-        ring.appendChild(
-          makeCandle({ angle: (360 / 5) * i + 36, radius: 95, baseY })
-        );
-        c.style.transform += ` rotateZ(${(Math.random() * 4 - 2).toFixed(
-          1
-        )}deg)`;
-      }
+
+      // 12 außen + 5 innen = 17
+      addRing(12, 140); // äußere Kerzen
+      addRing(5, 90, 360 / 10); // innere Kerzen, leicht versetzt
       // Klick: einzelne Kerze ausblasen
       ring.addEventListener("click", (e) => {
         const c = e.target.closest(".candle");
