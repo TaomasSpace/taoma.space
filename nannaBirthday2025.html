@@ -447,10 +447,18 @@
         height: auto;
         width: auto;
         object-fit: contain;
+        display: block;
       }
 
       .lb-strip.duo .lb-item {
-        flex: 1 1 50%;
+        flex: 0 1 48%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .lb-strip.duo {
+        padding: 20px;
       }
 
       .wishes {
