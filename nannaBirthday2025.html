@@ -5,73 +5,153 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Happy Birthday Nanna!</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
+      
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+        position: relative;
+        overflow-x: hidden;
+      }
+      
+      /* Floating balloons animation */
+      .balloon {
+        position: fixed;
+        width: 50px;
+        height: 60px;
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        animation: float 6s ease-in-out infinite;
+        z-index: 1;
+        opacity: 0.7;
+      }
+      
+      .balloon::after {
+        content: '';
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 30px;
+        background: rgba(0, 0, 0, 0.3);
+      }
+      
+      .balloon:nth-child(1) { background: #ff6b9d; left: 10%; animation-delay: 0s; }
+      .balloon:nth-child(2) { background: #feca57; left: 25%; animation-delay: 1s; }
+      .balloon:nth-child(3) { background: #48dbfb; left: 40%; animation-delay: 2s; }
+      .balloon:nth-child(4) { background: #ff9ff3; left: 60%; animation-delay: 1.5s; }
+      .balloon:nth-child(5) { background: #54a0ff; left: 75%; animation-delay: 0.5s; }
+      .balloon:nth-child(6) { background: #00d2d3; left: 90%; animation-delay: 2.5s; }
+      
+      @keyframes float {
+        0%, 100% { transform: translateY(100vh) rotate(0deg); }
+        50% { transform: translateY(-20vh) rotate(10deg); }
+      }
+      
       .body {
+        position: relative;
+        z-index: 2;
         align-items: center;
         display: flex;
         margin: 0;
         justify-content: center;
-        background-color: rgb(255, 255, 204);
+        min-height: 100vh;
+        padding: 20px;
       }
-      body {
-        margin: 0;
-      }
+      
       .form {
         display: flex;
         flex-direction: column;
         gap: 10px;
-        background-color: rgb(241, 241, 130);
-        padding: 60px;
-        padding-inline: 28px;
-        border-radius: 20px;
-        box-shadow: 4px 4px rgb(0, 2, 65);
-        font-family: cursive;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 60px 40px;
+        border-radius: 30px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        font-family: 'Comic Sans MS', cursive;
         align-items: center;
         justify-content: center;
-        max-width: 33vw;
-        min-height: 33vh;
-        margin-top: 33vh;
-        margin-left: 33vw;
+        max-width: 450px;
+        width: 100%;
+        border: 5px solid #feca57;
+        animation: formPulse 2s ease-in-out infinite;
+      }
+      
+      @keyframes formPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
       }
 
       .heading {
-        font-size: 25px;
+        font-size: 28px;
         text-align: center;
-        font-weight: 600;
-        font-family: cursive;
+        font-weight: 800;
+        font-family: 'Comic Sans MS', cursive;
+        color: #ff6b9d;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        margin-bottom: 10px;
       }
 
       .form button {
-        /* align-self: flex-end; */
-        padding: 10px;
-        border-radius: 10px;
+        padding: 15px 30px;
+        border-radius: 25px;
         margin-top: 20px;
-        background-color: rgb(241, 241, 130);
-        box-shadow: 2px 3px rgb(0, 2, 65);
-
-        color: rgb(0, 0, 0);
-        font-size: medium;
-        font-weight: 600;
-        transition: 400ms;
-        font-family: cursive;
+        background: linear-gradient(135deg, #feca57 0%, #ff6b9d 100%);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        border: none;
+        color: white;
+        font-size: 18px;
+        font-weight: 700;
+        transition: all 400ms;
+        font-family: 'Comic Sans MS', cursive;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 1px;
       }
 
       .form button:hover {
-        background-color: rgb(235, 255, 59);
-        transition: 400ms;
-        cursor: pointer;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        background: linear-gradient(135deg, #ff6b9d 0%, #feca57 100%);
       }
 
       .input {
-        padding: 10px;
-        width: 280px;
-        border-radius: 10px;
-        border-style: double;
-        border-color: black;
-        font-size: 15px;
-        box-shadow: 2px 3px rgb(0, 2, 65);
-
-        font-family: cursive;
+        padding: 15px 20px;
+        width: 100%;
+        max-width: 300px;
+        border-radius: 20px;
+        border: 3px solid #feca57;
+        font-size: 16px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        font-family: 'Comic Sans MS', cursive;
+        text-align: center;
+        transition: all 300ms;
       }
+      
+      .input:focus {
+        outline: none;
+        border-color: #ff6b9d;
+        transform: scale(1.05);
+      }
+      
+      .intro {
+        text-align: center;
+        font-family: 'Comic Sans MS', cursive;
+        font-size: 18px;
+        line-height: 1.6;
+        color: #333;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 20px 30px;
+        border-radius: 20px;
+        margin: 20px auto;
+        max-width: 800px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 3px solid #feca57;
+      }
+      
       .gallery-toolbar {
         grid-column: 1 / -1;
         display: flex;
@@ -80,69 +160,74 @@
         align-items: center;
         margin-bottom: 6px;
       }
+      
       .gallery-toolbar .btn {
-        background: rgb(241, 241, 130);
-        border: 2px solid rgba(0, 0, 0, 0.15);
-        border-radius: 12px;
-        padding: 8px 12px;
-        font-family: cursive;
-        box-shadow: 2px 3px rgb(0, 2, 65);
+        background: linear-gradient(135deg, #feca57 0%, #ff6b9d 100%);
+        border: none;
+        border-radius: 15px;
+        padding: 10px 20px;
+        font-family: 'Comic Sans MS', cursive;
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.15s ease,
-          background 0.2s ease;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
       }
+      
       .gallery-toolbar .btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 4px 4px rgb(0, 2, 65);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
       }
+      
       .gallery-toolbar .hint {
-        opacity: 0.7;
-        font-family: cursive;
+        opacity: 0.8;
+        font-family: 'Comic Sans MS', cursive;
+        color: white;
       }
 
-      /* Grid neu: Karten statt nackte <img> */
       .gallery {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 22px;
         margin-top: 28px;
         padding: 22px;
-        background: rgb(255, 255, 204);
+        background: rgba(255, 255, 255, 0.9);
         border-radius: 20px;
-        box-shadow: 4px 4px rgb(0, 2, 65);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 3px solid #feca57;
       }
 
-      /* Card */
       .photo {
         position: relative;
-        border-radius: 16px;
+        border-radius: 20px;
         overflow: hidden;
-        background: #0001;
-        box-shadow: 2px 3px rgb(0, 2, 65);
-        border: 2px solid rgba(0, 0, 0, 0.18);
-        transition: transform 0.18s ease, box-shadow 0.18s ease,
-          border-color 0.18s ease;
+        background: #fff;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        border: 3px solid #feca57;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
         isolation: isolate;
       }
+      
       .photo:hover {
-        transform: translateY(-4px);
-        box-shadow: 6px 8px rgb(0, 2, 65);
-        border-color: rgba(0, 0, 0, 0.35);
+        transform: translateY(-8px) rotate(-2deg);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        border-color: #ff6b9d;
       }
+      
       .photo .img {
         width: 100%;
-        aspect-ratio: 4/5; /* ruhigeres Raster */
-        object-fit: cover; /* schneidet sauber */
+        aspect-ratio: 4/5;
+        object-fit: cover;
         display: block;
-        filter: saturate(1.05);
+        filter: saturate(1.1);
         transition: transform 0.25s ease, filter 0.25s ease;
       }
+      
       .photo:hover .img {
-        transform: scale(1.04);
-        filter: saturate(1.15);
+        transform: scale(1.08);
+        filter: saturate(1.3);
       }
 
-      /* „Shine“-Effekt */
       .photo::after {
         content: "";
         position: absolute;
@@ -150,46 +235,49 @@
         width: 60%;
         height: 60%;
         transform: rotate(25deg);
-        background: linear-gradient(90deg, #fff0, #fff4, #fff0);
+        background: linear-gradient(90deg, #fff0, #fff8, #fff0);
         transition: transform 0.6s ease;
         pointer-events: none;
       }
+      
       .photo:hover::after {
         transform: translate(-40%, 60%) rotate(25deg);
       }
 
-      /* Caption-Overlay lesbar */
       .photo .cap {
         position: absolute;
         left: 10px;
         right: 10px;
         bottom: 10px;
-        background: rgba(241, 241, 130, 0.92);
-        border: 2px solid rgba(0, 0, 0, 0.18);
+        background: rgba(254, 202, 87, 0.95);
+        border: 2px solid #ff6b9d;
         border-radius: 12px;
         padding: 8px 10px;
-        font-family: cursive;
+        font-family: 'Comic Sans MS', cursive;
         font-size: 14px;
         line-height: 1.35;
-        color: #000;
-        box-shadow: 2px 3px rgb(0, 2, 65);
+        color: #333;
+        font-weight: 700;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
         max-height: 4.4em;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
-      /* Enter-Animation */
       .photo {
         opacity: 0;
         transform: translateY(14px);
         animation: cardIn 0.45s ease forwards;
       }
+      
       .photo:nth-child(odd) {
         animation-delay: 0.08s;
       }
+      
       .photo:nth-child(even) {
         animation-delay: 0.16s;
       }
+      
       @keyframes cardIn {
         to {
           opacity: 1;
@@ -197,80 +285,94 @@
         }
       }
 
-      /* Compact/Comfy Umschalter */
       .gallery.compact {
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: 16px;
       }
+      
       .gallery.compact .img {
         aspect-ratio: 1/1;
       }
+      
       .gallery.compact .cap {
         font-size: 13px;
         max-height: 3.2em;
       }
 
-      /* Lightbox */
       .lightbox {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.85);
         display: none;
         place-items: center;
         z-index: 9999;
       }
+      
       .lightbox.open {
         display: grid;
       }
+      
       .lightbox .box {
-        background: rgb(255, 255, 204);
-        border-radius: 18px;
-        box-shadow: 8px 10px rgb(0, 2, 65);
-        border: 3px solid rgba(0, 0, 0, 0.28);
-        max-width: min(92vw, 1100px);
-        max-height: 86vh;
-        overflow: hidden;
+        background: white;
+        border-radius: 25px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        border: 5px solid #feca57;
+        width: min(92vw, 1080px);
+        height: min(80vh, 720px);
         display: grid;
         grid-template-rows: auto 1fr auto;
+        overflow: hidden;
       }
+      
       .lightbox img {
         width: 100%;
         height: 100%;
         object-fit: contain;
         background: #000;
       }
+      
       .lightbox .lb-cap {
-        padding: 12px 16px;
-        font-family: cursive;
+        padding: 15px 20px;
+        font-family: 'Comic Sans MS', cursive;
         text-align: center;
-        background: rgb(241, 241, 130);
-        border-top: 2px solid rgba(0, 0, 0, 0.2);
+        background: #feca57;
+        border-top: 3px solid #ff6b9d;
+        font-weight: 700;
+        font-size: 16px;
       }
+      
       .lb-actions {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 8px;
-        padding: 8px 12px;
-        background: rgb(241, 241, 130);
+        padding: 12px 16px;
+        background: #feca57;
       }
+      
       .lb-btn {
-        background: rgb(255, 255, 204);
-        border: 2px solid rgba(0, 0, 0, 0.2);
-        border-radius: 12px;
-        padding: 8px 12px;
-        font-family: cursive;
+        background: white;
+        border: 3px solid #ff6b9d;
+        border-radius: 15px;
+        padding: 10px 20px;
+        font-family: 'Comic Sans MS', cursive;
+        font-weight: 700;
         cursor: pointer;
-        box-shadow: 2px 3px rgb(0, 2, 65);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
         transition: transform 0.15s ease;
+        color: #333;
       }
+      
       .lb-btn:hover {
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        background: #ff6b9d;
+        color: white;
       }
+      
       .confetti {
         position: fixed;
         pointer-events: none;
-        width: 8px;
+        width: 10px;
         height: 12px;
         border-radius: 2px;
         transform: translate(-50%, -50%);
@@ -297,26 +399,403 @@
         }
       }
 
-      /* Bewegungs-reduzierung respektieren */
       @media (prefers-reduced-motion: reduce) {
-        .confetti {
+        .confetti, .balloon {
           display: none;
         }
       }
+      
       .photo .cap {
         max-height: 4.4em;
         overflow: hidden;
         transition: max-height 0.25s ease;
       }
+      
       .photo:hover .cap {
-        max-height: 12em; /* klappt auf, wenn Text länger ist */
+        max-height: 12em;
       }
-      .photo:hover {
-        transform: translateY(-4px) rotate(-0.25deg);
+      
+      .lb-viewport {
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
       }
-      .gallery.compact .photo:hover {
-        transform: translateY(-3px) rotate(0deg);
+
+      .lb-strip {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        height: 100%;
+        padding: 12px;
       }
+
+      .lb-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        max-height: 100%;
+        max-width: 100%;
+      }
+
+      .lb-item img {
+        max-height: 100%;
+        max-width: 100%;
+        height: auto;
+        width: auto;
+        object-fit: contain;
+      }
+
+      .lb-strip.duo .lb-item {
+        flex: 1 1 50%;
+      }
+
+      .wishes {
+        margin: 30px auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 25px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        border: 4px solid #feca57;
+        padding: 25px;
+        max-width: 900px;
+      }
+      
+      .wishes-title {
+        margin: 0 0 15px 0;
+        text-align: center;
+        font-family: 'Comic Sans MS', cursive;
+        font-weight: 900;
+        font-size: 32px;
+        letter-spacing: 1px;
+        background: linear-gradient(135deg, #ff6b9d 0%, #feca57 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .wish-item + .wish-item {
+        margin-top: 15px;
+      }
+
+      .wish-header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        font-family: 'Comic Sans MS', cursive;
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      
+      .wish-header:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      }
+      
+      .wish-header[aria-expanded="true"] {
+        background: linear-gradient(135deg, #ff6b9d 0%, #feca57 100%);
+      }
+
+      .wish-header .chev {
+        width: 12px;
+        height: 12px;
+        position: relative;
+      }
+      
+      .wish-header .chev::before,
+      .wish-header .chev::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-right: 3px solid white;
+        border-bottom: 3px solid white;
+        transform: rotate(45deg);
+        transition: transform 0.2s ease;
+      }
+      
+      .wish-header[aria-expanded="true"] .chev::before,
+      .wish-header[aria-expanded="true"] .chev::after {
+        transform: rotate(-135deg);
+      }
+
+      .wish-content {
+        background: rgba(254, 202, 87, 0.2);
+        border: 2px solid #feca57;
+        border-radius: 18px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        margin-top: 10px;
+        padding: 0 15px;
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.28s ease, padding-top 0.2s ease,
+          padding-bottom 0.2s ease;
+      }
+      
+      .wish-content p {
+        margin: 12px 6px;
+        line-height: 1.7;
+        font-family: 'Comic Sans MS', cursive;
+        color: #333;
+      }
+
+      .open-gallery-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #ff6b9d 0%, #feca57 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 15px 40px;
+        font-family: 'Comic Sans MS', cursive;
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      
+      .open-gallery-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      }
+
+      /* Birthday Cake Styles */
+      .cake-container {
+        margin: 50px auto;
+        padding: 40px 20px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        border: 5px solid #feca57;
+        max-width: 900px;
+      }
+      
+      .cake-title {
+        font-family: 'Comic Sans MS', cursive;
+        font-size: 32px;
+        font-weight: 900;
+        margin-bottom: 30px;
+        background: linear-gradient(135deg, #ff6b9d 0%, #feca57 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .cake-wrapper {
+        display: inline-block;
+        position: relative;
+      }
+      
+      .cake {
+        width: 400px;
+        height: 300px;
+        position: relative;
+        margin: 0 auto;
+      }
+      
+      .cake-layer {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 10px;
+      }
+      
+      .layer-3 {
+        bottom: 0;
+        width: 350px;
+        height: 80px;
+        background: linear-gradient(135deg, #8b5a3c 0%, #6f4518 100%);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      }
+      
+      .layer-3::before {
+        content: '';
+        position: absolute;
+        top: -15px;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(135deg, #ff6b9d 0%, #feca57 100%);
+        border-radius: 10px;
+      }
+      
+      .layer-2 {
+        bottom: 80px;
+        width: 280px;
+        height: 70px;
+        background: linear-gradient(135deg, #a0522d 0%, #8b4513 100%);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      }
+      
+      .layer-2::before {
+        content: '';
+        position: absolute;
+        top: -15px;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+        border-radius: 10px;
+      }
+      
+      .layer-1 {
+        bottom: 150px;
+        width: 210px;
+        height: 60px;
+        background: linear-gradient(135deg, #8b5a3c 0%, #6f4518 100%);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      }
+      
+      .layer-1::before {
+        content: '';
+        position: absolute;
+        top: -15px;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(135deg, #48dbfb 0%, #ff6b9d 100%);
+        border-radius: 10px;
+      }
+      
+      .candles {
+        position: absolute;
+        bottom: 210px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 220px;
+      }
+      
+      .candle {
+        width: 8px;
+        height: 40px;
+        background: linear-gradient(to bottom, #fff 0%, #ffe0e0 100%);
+        border-radius: 4px;
+        position: relative;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      }
+      
+      .candle:hover {
+        transform: scale(1.1);
+      }
+      
+      .candle.blown {
+        opacity: 0.3;
+      }
+      
+      .flame {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 18px;
+        background: radial-gradient(circle at center, #ffff00 0%, #ff6600 50%, #ff0000 100%);
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        animation: flicker 0.5s infinite alternate;
+        box-shadow: 0 0 10px #ff6600, 0 0 20px #ff0000;
+      }
+      
+      .candle.blown .flame {
+        display: none;
+      }
+      
+      @keyframes flicker {
+        0% { transform: translateX(-50%) scale(1) translateY(0); }
+        100% { transform: translateX(-50%) scale(1.05) translateY(-2px); }
+      }
+      
+      .wish-button {
+        margin-top: 30px;
+        padding: 15px 40px;
+        font-size: 20px;
+        font-family: 'Comic Sans MS', cursive;
+        font-weight: 700;
+        background: linear-gradient(135deg, #ff6b9d 0%, #feca57 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      
+      .wish-button:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      }
+      
+      .wish-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      
+      .cake-message {
+        margin-top: 20px;
+        font-family: 'Comic Sans MS', cursive;
+        font-size: 18px;
+        color: #333;
+        font-weight: 600;
+      }
+
+      @media (max-width: 768px) {
+        .cake {
+          width: 300px;
+          height: 250px;
+        }
+        
+        .layer-3 {
+          width: 280px;
+          height: 70px;
+        }
+        
+        .layer-2 {
+          width: 220px;
+          height: 60px;
+          bottom: 70px;
+        }
+        
+        .layer-1 {
+          width: 160px;
+          height: 50px;
+          bottom: 130px;
+        }
+        
+        .candles {
+          bottom: 180px;
+          width: 170px;
+          gap: 6px;
+        }
+        
+        .candle {
+          width: 7px;
+          height: 35px;
+        }
+      }
+
       @media (max-width: 480px) {
         .gallery {
           gap: 14px;
@@ -328,415 +807,27 @@
         .lb-btn {
           padding: 10px 14px;
         }
-      }
-      /* fester, aber responsiver Rahmen für die Lightbox */
-      .lightbox .box {
-        background: rgb(255, 255, 204);
-        border-radius: 18px;
-        box-shadow: 8px 10px rgb(0, 2, 65);
-        border: 3px solid rgba(0, 0, 0, 0.28);
-        width: min(92vw, 1080px); /* fix & ruhig */
-        height: min(80vh, 720px); /* fix & ruhig */
-        display: grid;
-        grid-template-rows: auto 1fr auto;
-        overflow: hidden;
-      }
-
-      /* Bild immer vollständig sichtbar */
-      .lightbox img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain; /* GANZES Bild, ohne Zuschnitt */
-        background: #000;
-      }
-
-      /* hübscher Button zum Öffnen */
-      .open-gallery-btn {
-        display: inline-block;
-        background: rgb(241, 241, 130);
-        border: 2px solid rgba(0, 0, 0, 0.15);
-        border-radius: 14px;
-        padding: 10px 16px;
-        font-family: cursive;
-        box-shadow: 3px 4px rgb(0, 2, 65);
-        cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.15s ease,
-          background 0.2s ease;
-      }
-      .open-gallery-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 5px 6px rgb(0, 2, 65);
-      }
-      /* feste, ruhige Box-Größe bleibt wie gehabt */
-      .lightbox .box {
-        background: rgb(255, 255, 204);
-        border-radius: 18px;
-        box-shadow: 8px 10px rgb(0, 2, 65);
-        border: 3px solid rgba(0, 0, 0, 0.28);
-        width: min(92vw, 1080px);
-        height: min(80vh, 720px);
-        display: grid;
-        grid-template-rows: auto 1fr auto; /* actions | viewport | caption */
-        overflow: hidden;
-      }
-
-      /* zentrierter Bild-Viewport */
-      .lb-viewport {
-        background: #000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden; /* kein Scrollbalken */
-      }
-
-      /* Bild immer vollständig sichtbar */
-      #lbImg {
-        display: block;
-        max-width: 100%;
-        max-height: 100%;
-        width: auto; /* NICHT auf 100% strecken */
-        height: auto; /* NICHT auf 100% strecken */
-        object-fit: contain; /* extra safety */
-        image-rendering: auto;
-      }
-      /* Viewport bleibt gleich */
-      .lb-viewport {
-        background: #000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-      }
-
-      /* Strip enthält 1..n Bilder nebeneinander */
-      .lb-strip {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        width: 100%;
-        height: 100%;
-        padding: 12px;
-      }
-
-      /* Einzelne Items im Strip */
-      .lb-item {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        max-height: 100%;
-        max-width: 100%;
-      }
-
-      /* Bilder immer vollständig sichtbar */
-      .lb-item img {
-        max-height: 100%;
-        max-width: 100%;
-        height: auto;
-        width: auto;
-        object-fit: contain;
-      }
-
-      /* Layout-Hilfe: bei zwei Bildern je 50% Breite (mit Gap) */
-      .lb-strip.duo .lb-item {
-        flex: 1 1 50%;
-      }
-
-      /* Bei drei kannst du z.B. Drittel fahren (optional) */
-      /* .lb-strip.trio .lb-item{ flex: 1 1 33.33%; } */
-      /* Wishes (Accordion) */
-      .wishes {
-        margin: 18px auto 10px;
-        background: rgb(255, 255, 204);
-        border-radius: 20px;
-        box-shadow: 4px 4px rgb(0, 2, 65);
-        border: 2px solid rgba(0, 0, 0, 0.15);
-        padding: 14px;
-      }
-      .wishes-title {
-        margin: 0 0 8px 0;
-        text-align: center;
-        font-family: cursive;
-        font-weight: 800;
-        font-size: 22px;
-        letter-spacing: 0.3px;
-        text-shadow: 1px 1px rgba(0, 2, 65, 0.25);
-      }
-
-      /* Item */
-      .wish-item + .wish-item {
-        margin-top: 10px;
-      }
-
-      /* Header-Button */
-      .wish-header {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 12px 14px;
-        background: rgb(241, 241, 130);
-        border: 2px solid rgba(0, 0, 0, 0.15);
-        border-radius: 14px;
-        box-shadow: 2px 3px rgb(0, 2, 65);
-        font-family: cursive;
-        font-size: 16px;
-        cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.15s ease,
-          background 0.2s ease;
-      }
-      .wish-header:hover {
-        transform: translateY(-1px);
-        box-shadow: 4px 4px rgb(0, 2, 65);
-      }
-      .wish-header[aria-expanded="true"] {
-        background: rgb(235, 255, 59);
-      }
-
-      /* Chevron */
-      .wish-header .chev {
-        width: 10px;
-        height: 10px;
-        position: relative;
-      }
-      .wish-header .chev::before,
-      .wish-header .chev::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-right: 3px solid rgb(0, 2, 65);
-        border-bottom: 3px solid rgb(0, 2, 65);
-        transform: rotate(45deg);
-        transition: transform 0.2s ease;
-      }
-      .wish-header[aria-expanded="true"] .chev::before,
-      .wish-header[aria-expanded="true"] .chev::after {
-        transform: rotate(-135deg);
-      }
-
-      /* Content (animated height) */
-      .wish-content {
-        background: rgb(241, 241, 130);
-        border: 2px solid rgba(0, 0, 0, 0.12);
-        border-radius: 14px;
-        box-shadow: 2px 3px rgb(0, 2, 65);
-        margin-top: 8px;
-        padding: 0 12px;
-        overflow: hidden;
-        max-height: 0;
-        transition: max-height 0.28s ease, padding-top 0.2s ease,
-          padding-bottom 0.2s ease;
-      }
-      .wish-content p {
-        margin: 10px 4px 12px;
-        line-height: 1.55;
-      }
-
-      /* reduced motion */
-      @media (prefers-reduced-motion: reduce) {
-        .wish-content {
-          transition: none;
+        .heading {
+          font-size: 24px;
         }
-        .wish-header {
-          transition: none;
-        }
-      }
-      /* Wrapper */
-      .cake-wrap {
-        max-width: 900px;
-        margin: 28px auto;
-        padding: 16px;
-        background: #ffffcc;
-        border-radius: 18px;
-        box-shadow: 6px 8px #00024155;
-        border: 3px solid #00024144;
-      }
-      .cake-title {
-        margin: 0 0 10px;
-        text-align: center;
-        font-family: cursive;
-        font-size: 22px;
-      }
-
-      /* Bühne */
-      .cake {
-        position: relative;
-        height: clamp(260px, 36vw, 420px);
-        display: grid;
-        place-items: end center;
-        overflow: hidden;
-        border-radius: 16px;
-        background: radial-gradient(120% 140% at 50% 10%, #fffce6, #fff9bf);
-      }
-
-      /* Teller */
-      .cake::before {
-        content: "";
-        position: absolute;
-        inset: auto 6% 6% 6%;
-        height: 38%;
-        background: radial-gradient(
-            90% 120% at 50% 20%,
-            #ddd,
-            #bdbdbd 60%,
-            #9a9a9a 90%
-          )
-          no-repeat;
-        border-radius: 50%;
-        box-shadow: inset 0 40px 80px #00000010, 0 6px 10px #00024133;
-      }
-
-      /* ——— Tiers (zwei Stockwerke) ——— */
-      .tier {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        width: var(--w);
-        height: var(--h);
-        filter: drop-shadow(0 6px 8px #00024144);
-      }
-      .tier .top {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        top: calc(var(--lip));
-        width: 100%;
-        height: 40%;
-        border-radius: 50%;
-        background: radial-gradient(
-          90% 90% at 50% 30%,
-          #f7f2c8,
-          #e9de86 60%,
-          #d7cd71 100%
-        );
-      }
-      .tier .side {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        top: calc(20% + var(--lip));
-        width: 100%;
-        height: 70%;
-        border-radius: 0 0 50% 50% / 0 0 18% 18%;
-        background: linear-gradient(#c9b273, #a88f58 65%) /* Biskuit */,
-          linear-gradient(180deg, #0000, #00000014) /* Schatten */;
-        background-blend-mode: multiply;
-      }
-      .tier .icing {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        top: 0;
-        width: calc(100% + 2%);
-        height: var(--lip);
-        border-radius: 50% / 50%;
-        background: linear-gradient(#f1f182, #e7db73);
-        box-shadow: 0 2px 0 #a3893f55, inset 0 -4px 10px #fff8;
-      }
-
-      /* ——— Kerzen ——— */
-      .candles {
-        position: absolute;
-        inset: 0;
-        display: block;
-        pointer-events: none;
-      }
-      .candle {
-        position: absolute;
-        left: 50%;
-        bottom: var(--baseY, 42%);
-        width: 10px;
-        height: 74px;
-        transform-origin: 50% calc(100% + var(--radius));
-        transform: rotate(calc(var(--angle) * 1deg))
-          translateY(calc(-1 * var(--radius)));
-        pointer-events: auto; /* für Klicks */
-      }
-      .candle .stick {
-        width: 100%;
-        height: 70px;
-        border-radius: 4px;
-        background: repeating-linear-gradient(
-          90deg,
-          #fff,
-          #fff 5px,
-          #eaeaea 5px,
-          #eaeaea 10px
-        );
-        box-shadow: inset 0 -8px 12px #00000014;
-      }
-      .candle .wick {
-        width: 2px;
-        height: 8px;
-        margin: 0 auto;
-        background: #222;
-        border-radius: 2px;
-      }
-      .candle .flame {
-        width: 12px;
-        height: 16px;
-        margin: -2px auto 0;
-        background: radial-gradient(
-          60% 80% at 50% 40%,
-          #ffdca6,
-          #ffb53a 60%,
-          #ff9a00 100%
-        );
-        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-        transform-origin: 50% 100%;
-        animation: flame 0.9s ease-in-out infinite alternate;
-        filter: drop-shadow(0 0 6px #ffb53a) drop-shadow(0 0 12px #ffcc66);
-      }
-      @keyframes flame {
-        from {
-          transform: translateY(-1px) scale(0.95) rotate(-4deg);
-          opacity: 0.92;
-        }
-        to {
-          transform: translateY(1px) scale(1.03) rotate(3deg);
-          opacity: 1;
-        }
-      }
-      /* “Ausgeblasen” Zustand */
-      .candle.off .flame {
-        animation: none;
-        opacity: 0;
-        filter: none;
-      }
-      .candle.off .wick {
-        background: #555;
-      }
-
-      /* Button */
-      .wish-btn {
-        margin: 12px auto 0;
-        display: block;
-        background: #f1f182;
-        border: 2px solid #00000022;
-        border-radius: 14px;
-        padding: 10px 16px;
-        font-family: cursive;
-        box-shadow: 3px 4px #00024155;
-        cursor: pointer;
-      }
-      .wish-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 5px 6px #00024155;
-      }
-
-      /* Motion-Respect */
-      @media (prefers-reduced-motion: reduce) {
-        .flame {
-          animation: none;
+        .cake-title {
+          font-size: 26px;
         }
       }
     </style>
   </head>
   <body>
-    <section id="section">
+    <!-- Floating Balloons -->
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    
+    <section id="section" class="body">
       <form onsubmit="return checkDate(event)" class="form">
-        <span class="heading">Input your birth date</span>
+        <span class="heading">🎂 Input your birth date 🎂</span>
         <input
           type="text"
           id="birthdaydate"
@@ -746,7 +837,7 @@
           autocomplete="off"
           class="input"
         />
-        <button type="submit">Unlock gift</button>
+        <button type="submit">🎁 Unlock Gift 🎁</button>
       </form>
     </section>
   </body>
@@ -761,7 +852,7 @@
         "click",
         (e) => {
           if (!confettiEnabled) return;
-          if (e.target.closest("#lightbox")) return; // Lightbox-Klicks ignorieren
+          if (e.target.closest("#lightbox")) return;
           launchConfetti(e.clientX, e.clientY, 28);
         },
         { passive: true }
@@ -770,12 +861,13 @@
 
     function launchConfetti(x, y, count = 24) {
       const colors = [
-        "#f1f182", // dein Gelb
-        "#000241", // dein Dunkelblau
-        "#85a3ff", // Akzent
-        "#35d79c", // Ok-Grün
-        "#ff5a6a", // Danger/Rot
-        "#ffffff", // Weiß als Glanz
+        "#ff6b9d",
+        "#feca57",
+        "#48dbfb",
+        "#ff9ff3",
+        "#54a0ff",
+        "#00d2d3",
+        "#ffffff",
       ];
       for (let i = 0; i < count; i++) {
         const p = document.createElement("span");
@@ -784,13 +876,11 @@
         p.style.left = x + "px";
         p.style.top = y + "px";
 
-        // zufällige Flugbahn
-        const angle = Math.random() * Math.PI * 2; // 0–360°
-        const dist = 60 + Math.random() * 140; // 60–200px
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 60 + Math.random() * 140;
         const tx = Math.cos(angle) * dist;
         const ty = Math.sin(angle) * dist;
 
-        // Rotation & Dauer
         const rot = (Math.random() * 720 - 360).toFixed(0) + "deg";
         const dur = (0.8 + Math.random() * 0.9).toFixed(2) + "s";
         p.style.setProperty("--tx", tx + "px");
@@ -802,6 +892,7 @@
         p.addEventListener("animationend", () => p.remove());
       }
     }
+    
     function checkDate(e) {
       if (e && e.preventDefault) e.preventDefault();
       const input = document.getElementById("birthdaydate");
@@ -826,14 +917,16 @@
       }
       if (dd === 24 && mm === 10 && yyyy === 2008) {
         section.innerHTML = `
-  <div style="max-width:1100px;margin:0 auto;">
-    <p class="heading" style="text-align:center;font-size:30px;margin:0 0 14px;">
+  <div style="max-width:1100px;margin:0 auto;padding:20px;">
+    <p class="heading" style="text-align:center;font-size:42px;margin:20px 0;text-shadow:3px 3px 6px rgba(0,0,0,0.3);">
       🎉 Happy Birthday Nanna!! 🎉
     </p>
     <p class="intro">You are exactly 17 years (6208 Days) old. And we know each other 197 of these days.</p>
+
 <section class="wishes" id="wishes">
   <h2 class="wishes-title">24.10.2025</h2>
-<p>Since we are together I had the best time of my life, mostly because of you. Thats why i have some wishes for you.</p>
+  <p style="text-align:center;font-family:'Comic Sans MS',cursive;font-size:17px;line-height:1.7;color:#333;">Since we are together I had the best time of my life, mostly because of you. That's why I have some wishes for you.</p>
+  
   <article class="wish-item">
     <button class="wish-header" aria-expanded="false">
       <span>💛 Wishes I have for you</span>
@@ -850,7 +943,7 @@
       <p>Let your choices build a strong foundation for your future dreams.</p>
       <p>I hope you discover new things about yourself along the way.</p>
       <p>May your days be full of interesting lessons and peaceful moments to just be.</p>
-      <p>Always remember to be proud of what you’ve already achieved and what’s yet to come.</p>
+      <p>Always remember to be proud of what you've already achieved and what's yet to come.</p>
       <p>I hope you know you can always reach out to me, in good times and bad.</p>
       <p>May you always feel free to talk about anything with me.</p>
       <p>I wish for you not to be stuck doing things you truly dislike.</p>
@@ -863,26 +956,28 @@
       <p>May we create a lot of new perfect memories together.</p>
       <p>And always remember: I love you, no matter what.</p>
     </div>
-    </section><p class="intro"> We made a lot of beautiful memories together in those 115 days we are together. And I am sure we will make a lot more in the upcoming year. 💛 </p>    <div style="text-align:center;margin-top:6px;">
-      <button id="openGallery" class="open-gallery-btn">See Memories</button>
-    </div>
   </article>
+</section>
 
-    <!-- Quelle der Bilder (unsichtbar) -->
+<p class="intro">We made a lot of beautiful memories together in those 115 days we are together. And I am sure we will make a lot more in the upcoming year. 💛</p>
+
+<div style="text-align:center;margin-top:20px;">
+  <button id="openGallery" class="open-gallery-btn">📸 See Memories 📸</button>
+</div>
+
     <section class="gallery compact" id="gallery" style="display:none">
-      <!-- KEINE Thumbnails sichtbar, nur Daten -->
       <figure class="photo"><img class="img" src="/static/nanna/imgs/2025/image.png"
         loading="lazy" decoding="async"
         alt="Shotgungame" data-caption="19.10.2025"></figure>
 
       <figure class="photo">
-  <img class="img" src="/static/nanna/imgs/2025/image3.png"
-       loading="lazy" decoding="async"
-       alt="Shotgungame" data-caption="25.06.2025">
-  <img class="img" src="/static/nanna/imgs/2025/image4.png"
-       loading="lazy" decoding="async"
-       alt="Shotgungame" data-caption="25.06.2025">
-</figure>
+        <img class="img" src="/static/nanna/imgs/2025/image3.png"
+             loading="lazy" decoding="async"
+             alt="Shotgungame" data-caption="25.06.2025">
+        <img class="img" src="/static/nanna/imgs/2025/image4.png"
+             loading="lazy" decoding="async"
+             alt="Shotgungame" data-caption="25.06.2025">
+      </figure>
 
       <figure class="photo"><img class="img" src="/static/nanna/imgs/2025/image5.png"
         loading="lazy" decoding="async"
@@ -903,44 +998,55 @@
       <figure class="photo"><img class="img" src="/static/nanna/imgs/2025/1C02B905-D47D-4098-A780-A5F80F4C75D2.png"
         loading="lazy" decoding="async"
         alt="Shotgungame" data-caption="19.10.2025"></figure>
-        <figure class="photo"><img class="img" src="/static/nanna/imgs/2025/image9.png"
+        
+      <figure class="photo"><img class="img" src="/static/nanna/imgs/2025/image9.png"
         loading="lazy" decoding="async"
         alt="Shotgungame" data-caption="28.08.2025"></figure>
     </section>
-<section class="cake-wrap">
-  <h3 class="cake-title">Make a wish 🎂</h3>
-  <div id="cssCake" class="cake" data-candles="17"></div>
-  <button id="wishBtn" class="wish-btn" type="button">Blow out the candles</button>
-</section>
-    <!-- Lightbox -->
-<div class="lightbox" id="lightbox" aria-hidden="true">
-  <div class="box">
-    <div class="lb-actions">
-      <button class="lb-btn" id="lbPrev">← Prev</button>
-      <button class="lb-btn" id="lbClose">Close ✖</button>
-      <button class="lb-btn" id="lbNext">Next →</button>
+
+    <!-- Birthday Cake Section -->
+    <div class="cake-container">
+      <h2 class="cake-title">🎂 Make a Wish! 🎂</h2>
+      <div class="cake-wrapper">
+        <div class="cake">
+          <div class="candles" id="candles"></div>
+          <div class="cake-layer layer-1"></div>
+          <div class="cake-layer layer-2"></div>
+          <div class="cake-layer layer-3"></div>
+        </div>
+      </div>
+      <button class="wish-button" id="wishBtn">🎈 Blow Out All Candles 🎈</button>
+      <p class="cake-message" id="cakeMessage">Click on candles to blow them out, or click the button above!</p>
     </div>
 
-    <div class="lb-viewport">
-      <div id="lbStrip" class="lb-strip"></div>
-    </div>
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+      <div class="box">
+        <div class="lb-actions">
+          <button class="lb-btn" id="lbPrev">← Prev</button>
+          <button class="lb-btn" id="lbClose">Close ✖</button>
+          <button class="lb-btn" id="lbNext">Next →</button>
+        </div>
 
-    <div class="lb-cap" id="lbCap"></div>
-  </div>
-</div>`;
+        <div class="lb-viewport">
+          <div id="lbStrip" class="lb-strip"></div>
+        </div>
+
+        <div class="lb-cap" id="lbCap"></div>
+      </div>
+    </div>
+  </div>`;
         enableConfetti(document.body);
         launchConfetti(window.innerWidth / 2, window.innerHeight * 0.25, 80);
         initGallery();
         initWishes();
-        initCssCake(document.getElementById("cssCake"), 17);
-        document
-          .getElementById("wishBtn")
-          ?.addEventListener("click", blowAllCandles);
+        initCake();
+        document.getElementById("wishBtn").addEventListener("click", blowAllCandles);
       } else {
         alert("Not the correct date.");
       }
       return false;
     }
+    
     function initGallery() {
       const gal = document.getElementById("gallery");
       const cards = [...gal.querySelectorAll(".photo")];
@@ -959,15 +1065,12 @@
         const fig = cards[idx];
         const imgs = fig.querySelectorAll("img");
 
-        // Strip leeren
         lbStrip.innerHTML = "";
         lbStrip.classList.remove("duo", "trio");
 
-        // Klassische Duos erkennen
         if (imgs.length === 2) lbStrip.classList.add("duo");
         else if (imgs.length === 3) lbStrip.classList.add("trio");
 
-        // Bilder klonen und einfügen
         imgs.forEach((img) => {
           const item = document.createElement("div");
           item.className = "lb-item";
@@ -978,7 +1081,6 @@
           lbStrip.appendChild(item);
         });
 
-        // Caption: wenn beide gleiche Caption haben -> einmal, sonst zusammenführen
         const caps = [...imgs]
           .map((im) => im.dataset.caption || im.alt || "")
           .filter(Boolean);
@@ -995,6 +1097,7 @@
         lb.setAttribute("aria-hidden", "true");
         lbStrip.innerHTML = "";
       };
+      
       const prev = () => open((idx - 1 + cards.length) % cards.length);
       const next = () => open((idx + 1) % cards.length);
 
@@ -1012,6 +1115,7 @@
         if (e.key === "ArrowRight") next();
       });
     }
+    
     function initWishes() {
       const items = document.querySelectorAll(".wish-item");
 
@@ -1019,13 +1123,11 @@
         const btn = item.querySelector(".wish-header");
         const panel = item.querySelector(".wish-content");
 
-        // sichere Startwerte
         panel.style.maxHeight = "0px";
         panel.hidden = true;
 
         const toggle = () => {
           const expanded = btn.getAttribute("aria-expanded") === "true";
-          // Close all other items (Accordion-Verhalten)
           items.forEach((it) => {
             const b = it.querySelector(".wish-header");
             const p = it.querySelector(".wish-content");
@@ -1035,11 +1137,9 @@
             p.style.paddingBottom = "0px";
             p.hidden = true;
           });
-          // Open current
           if (!expanded) {
             btn.setAttribute("aria-expanded", "true");
             panel.hidden = false;
-            // dynamische Höhe animieren
             panel.style.maxHeight = panel.scrollHeight + "px";
             panel.style.paddingTop = "8px";
             panel.style.paddingBottom = "10px";
@@ -1047,7 +1147,6 @@
         };
 
         btn.addEventListener("click", toggle);
-        // Keyboard support
         btn.addEventListener("keydown", (e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -1055,94 +1154,69 @@
           }
         });
       });
-
-      // optional: erstes Item offen starten
-      // const first = document.querySelector('.wish-item .wish-header');
-      // if(first) first.click();
     }
-    let blowAllCandles = () => {}; // wird unten gesetzt
-
-    function initCssCake(root, count = 17) {
-      if (!root) return;
-
-      // 2 Stockwerke erzeugen
-      root.appendChild(makeTier({ w: 520, h: 190, lip: 22, baseY: 34 })); // unten
-      root.appendChild(makeTier({ w: 360, h: 150, lip: 18, baseY: 49 })); // oben
-
-      // Kerzen-Ring auf oberer Etage
-      const radius = 140; // Pixel-Abstand vom Zentrum
-      const baseY = 49; // Prozent vom Boden der Bühne (wie in makeTier oben gesetzt)
-      // Kerzen-Ringe
-      const ring = document.createElement("div");
-      ring.className = "candles";
-      root.appendChild(ring);
-
-      // Helper zum Erzeugen eines Rings
-      function addRing(n, radius, offsetDeg = 0) {
-        for (let i = 0; i < n; i++) {
-          const angle = (360 / n) * i + offsetDeg;
-          const candle = makeCandle({ angle, radius, baseY });
-          // kleine Zufallsneigung für organischen Look
-          candle.style.transform += ` rotateZ(${(Math.random() * 4 - 2).toFixed(
-            1
-          )}deg)`;
-          ring.appendChild(candle);
-        }
-      }
-
-      // 12 außen + 5 innen = 17
-      addRing(12, 140); // äußere Kerzen
-      addRing(5, 90, 360 / 10); // innere Kerzen, leicht versetzt
-      // Klick: einzelne Kerze ausblasen
-      ring.addEventListener("click", (e) => {
-        const c = e.target.closest(".candle");
-        if (!c) return;
-        c.classList.toggle("off");
-      });
-
-      // Exponiere “alles ausblasen”
-      blowAllCandles = () => {
-        const candles = [...root.querySelectorAll(".candle")];
-        candles.forEach((c, i) => {
-          setTimeout(() => c.classList.add("off"), i * 70); // sequentiell
+    
+    function initCake() {
+      const candlesContainer = document.getElementById("candles");
+      const colors = ['#ff6b9d', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#00d2d3'];
+      
+      for (let i = 0; i < 17; i++) {
+        const candle = document.createElement("div");
+        candle.className = "candle";
+        candle.style.background = `linear-gradient(to bottom, ${colors[i % colors.length]}, ${colors[(i + 1) % colors.length]})`;
+        
+        const flame = document.createElement("div");
+        flame.className = "flame";
+        candle.appendChild(flame);
+        
+        candle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          blowCandle(candle);
         });
-      };
-
-      // Optional: responsive Neuplatzierung (wenn Höhe/Width stark ändert)
-      // Hier genügt CSS; JS unkritisch.
+        
+        candlesContainer.appendChild(candle);
+      }
     }
-
-    function makeTier({ w, h, lip, baseY }) {
-      const t = document.createElement("div");
-      t.className = "tier";
-      Object.assign(t.style, {
-        "--w": w + "px",
-        "--h": h + "px",
-        "--lip": lip + "px",
-        bottom: baseY + "%",
-      });
-      t.innerHTML = `
-    <div class="top"></div>
-    <div class="icing"></div>
-    <div class="side"></div>
-  `;
-      return t;
+    
+    function blowCandle(candle) {
+      if (!candle.classList.contains("blown")) {
+        candle.classList.add("blown");
+        launchConfetti(
+          candle.getBoundingClientRect().left + candle.offsetWidth / 2,
+          candle.getBoundingClientRect().top,
+          12
+        );
+        checkAllBlown();
+      }
     }
-
-    function makeCandle({ angle, radius, baseY }) {
-      const c = document.createElement("div");
-      c.className = "candle";
-      Object.assign(c.style, {
-        "--angle": angle,
-        "--radius": radius + "px",
-        "--baseY": baseY + "%",
+    
+    function blowAllCandles() {
+      const candles = document.querySelectorAll(".candle");
+      let delay = 0;
+      
+      candles.forEach((candle) => {
+        setTimeout(() => {
+          if (!candle.classList.contains("blown")) {
+            blowCandle(candle);
+          }
+        }, delay);
+        delay += 100;
       });
-      c.innerHTML = `
-    <div class="stick"></div>
-    <div class="wick"></div>
-    <div class="flame"></div>
-  `;
-      return c;
+      
+      setTimeout(() => {
+        launchConfetti(window.innerWidth / 2, window.innerHeight / 2, 100);
+      }, delay + 200);
+    }
+    
+    function checkAllBlown() {
+      const candles = document.querySelectorAll(".candle");
+      const allBlown = [...candles].every(c => c.classList.contains("blown"));
+      
+      if (allBlown) {
+        document.getElementById("cakeMessage").textContent = "🎊 Happy Birthday! Your wish has been made! 🎊";
+        document.getElementById("wishBtn").disabled = true;
+        launchConfetti(window.innerWidth / 2, window.innerHeight * 0.6, 60);
+      }
     }
   </script>
 </html>
