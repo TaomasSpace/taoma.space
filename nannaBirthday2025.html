@@ -690,19 +690,20 @@
         flex-wrap: wrap;
         justify-content: center;
         width: 220px;
+        align-items: flex-end;      /* <— NEU: alle Kerzenlinien unten bündig */
       }
-      
+
       .candle {
         width: 8px;
         height: 40px;
         background: linear-gradient(to bottom, #fff 0%, #ffe0e0 100%);
         border-radius: 4px;
         position: relative;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         cursor: pointer;
         transition: transform 0.2s ease;
+        transform-origin: bottom center; /* <— NEU: Hover-Scale bleibt am Boden */
       }
-      
       .candle:hover {
         transform: scale(1.1);
       }
@@ -822,6 +823,10 @@
           font-size: 26px;
         }
       }
+      .photo .img[data-fit="contain"] {
+  object-fit: contain;     /* zeigt das ganze Bild, lässt ggf. Ränder */
+  background: #fff;        /* optional, damit die Ränder „sauber“ wirken */
+}
     </style>
   </head>
   <body>
@@ -993,7 +998,7 @@
 
       <figure class="photo"><img class="img" src="/static/nanna/imgs/2025/IMG_4952.png"
         loading="lazy" decoding="async"
-        alt="Shotgungame" data-caption="28.09.2025"></figure>
+        alt="Shotgungame" data-caption="28.09.2025 data-fit="contain" "></figure>
 
       <figure class="photo"><img class="img" src="/static/nanna/imgs/2025/CD75C588-E5CF-42A2-93C6-3776CE87AFA0.png"
         loading="lazy" decoding="async"
