@@ -932,6 +932,10 @@
         launchConfetti(window.innerWidth / 2, window.innerHeight * 0.25, 80);
         initGallery();
         initWishes();
+        initCssCake(document.getElementById("cssCake"), 17);
+        document
+          .getElementById("wishBtn")
+          ?.addEventListener("click", blowAllCandles);
       } else {
         alert("Not the correct date.");
       }
@@ -1056,12 +1060,6 @@
       // const first = document.querySelector('.wish-item .wish-header');
       // if(first) first.click();
     }
-    // Nach initWishes():
-    initCssCake(document.getElementById("cssCake"), 17);
-    document
-      .getElementById("wishBtn")
-      ?.addEventListener("click", blowAllCandles);
-
     let blowAllCandles = () => {}; // wird unten gesetzt
 
     function initCssCake(root, count = 17) {
@@ -1078,11 +1076,24 @@
       ring.className = "candles";
       root.appendChild(ring);
 
-      for (let i = 0; i < count; i++) {
-        const angle = (360 / count) * i;
-        ring.appendChild(makeCandle({ angle, radius, baseY }));
+      // außen
+      for (let i = 0; i < 12; i++) {
+        ring.appendChild(
+          makeCandle({ angle: (360 / 12) * i, radius: 150, baseY })
+        );
+        c.style.transform += ` rotateZ(${(Math.random() * 4 - 2).toFixed(
+          1
+        )}deg)`;
       }
-
+      // innen
+      for (let i = 0; i < 5; i++) {
+        ring.appendChild(
+          makeCandle({ angle: (360 / 5) * i + 36, radius: 95, baseY })
+        );
+        c.style.transform += ` rotateZ(${(Math.random() * 4 - 2).toFixed(
+          1
+        )}deg)`;
+      }
       // Klick: einzelne Kerze ausblasen
       ring.addEventListener("click", (e) => {
         const c = e.target.closest(".candle");
