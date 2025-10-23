@@ -542,6 +542,195 @@
           transition: none;
         }
       }
+      /* Wrapper */
+      .cake-wrap {
+        max-width: 900px;
+        margin: 28px auto;
+        padding: 16px;
+        background: #ffffcc;
+        border-radius: 18px;
+        box-shadow: 6px 8px #00024155;
+        border: 3px solid #00024144;
+      }
+      .cake-title {
+        margin: 0 0 10px;
+        text-align: center;
+        font-family: cursive;
+        font-size: 22px;
+      }
+
+      /* Bühne */
+      .cake {
+        position: relative;
+        height: clamp(260px, 36vw, 420px);
+        display: grid;
+        place-items: end center;
+        overflow: hidden;
+        border-radius: 16px;
+        background: radial-gradient(120% 140% at 50% 10%, #fffce6, #fff9bf);
+      }
+
+      /* Teller */
+      .cake::before {
+        content: "";
+        position: absolute;
+        inset: auto 6% 6% 6%;
+        height: 38%;
+        background: radial-gradient(
+            90% 120% at 50% 20%,
+            #ddd,
+            #bdbdbd 60%,
+            #9a9a9a 90%
+          )
+          no-repeat;
+        border-radius: 50%;
+        box-shadow: inset 0 40px 80px #00000010, 0 6px 10px #00024133;
+      }
+
+      /* ——— Tiers (zwei Stockwerke) ——— */
+      .tier {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: var(--w);
+        height: var(--h);
+        filter: drop-shadow(0 6px 8px #00024144);
+      }
+      .tier .top {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: calc(var(--lip));
+        width: 100%;
+        height: 40%;
+        border-radius: 50%;
+        background: radial-gradient(
+          90% 90% at 50% 30%,
+          #f7f2c8,
+          #e9de86 60%,
+          #d7cd71 100%
+        );
+      }
+      .tier .side {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: calc(20% + var(--lip));
+        width: 100%;
+        height: 70%;
+        border-radius: 0 0 50% 50% / 0 0 18% 18%;
+        background: linear-gradient(#c9b273, #a88f58 65%) /* Biskuit */,
+          linear-gradient(180deg, #0000, #00000014) /* Schatten */;
+        background-blend-mode: multiply;
+      }
+      .tier .icing {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 0;
+        width: calc(100% + 2%);
+        height: var(--lip);
+        border-radius: 50% / 50%;
+        background: linear-gradient(#f1f182, #e7db73);
+        box-shadow: 0 2px 0 #a3893f55, inset 0 -4px 10px #fff8;
+      }
+
+      /* ——— Kerzen ——— */
+      .candles {
+        position: absolute;
+        inset: 0;
+        display: block;
+        pointer-events: none;
+      }
+      .candle {
+        position: absolute;
+        left: 50%;
+        bottom: var(--baseY, 42%);
+        width: 10px;
+        height: 74px;
+        transform-origin: 50% calc(100% + var(--radius));
+        transform: rotate(calc(var(--angle) * 1deg))
+          translateY(calc(-1 * var(--radius)));
+        pointer-events: auto; /* für Klicks */
+      }
+      .candle .stick {
+        width: 100%;
+        height: 70px;
+        border-radius: 4px;
+        background: repeating-linear-gradient(
+          90deg,
+          #fff,
+          #fff 5px,
+          #eaeaea 5px,
+          #eaeaea 10px
+        );
+        box-shadow: inset 0 -8px 12px #00000014;
+      }
+      .candle .wick {
+        width: 2px;
+        height: 8px;
+        margin: 0 auto;
+        background: #222;
+        border-radius: 2px;
+      }
+      .candle .flame {
+        width: 12px;
+        height: 16px;
+        margin: -2px auto 0;
+        background: radial-gradient(
+          60% 80% at 50% 40%,
+          #ffdca6,
+          #ffb53a 60%,
+          #ff9a00 100%
+        );
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        transform-origin: 50% 100%;
+        animation: flame 0.9s ease-in-out infinite alternate;
+        filter: drop-shadow(0 0 6px #ffb53a) drop-shadow(0 0 12px #ffcc66);
+      }
+      @keyframes flame {
+        from {
+          transform: translateY(-1px) scale(0.95) rotate(-4deg);
+          opacity: 0.92;
+        }
+        to {
+          transform: translateY(1px) scale(1.03) rotate(3deg);
+          opacity: 1;
+        }
+      }
+      /* “Ausgeblasen” Zustand */
+      .candle.off .flame {
+        animation: none;
+        opacity: 0;
+        filter: none;
+      }
+      .candle.off .wick {
+        background: #555;
+      }
+
+      /* Button */
+      .wish-btn {
+        margin: 12px auto 0;
+        display: block;
+        background: #f1f182;
+        border: 2px solid #00000022;
+        border-radius: 14px;
+        padding: 10px 16px;
+        font-family: cursive;
+        box-shadow: 3px 4px #00024155;
+        cursor: pointer;
+      }
+      .wish-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 5px 6px #00024155;
+      }
+
+      /* Motion-Respect */
+      @media (prefers-reduced-motion: reduce) {
+        .flame {
+          animation: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -720,8 +909,11 @@
         loading="lazy" decoding="async"
         alt="Shotgungame" data-caption="28.08.2025"></figure>
     </section>
-<div id="cake3d" style="width:100%;max-width:900px;margin:30px auto;aspect-ratio:16/9;border-radius:16px;box-shadow:4px 4px rgb(0,2,65);background:linear-gradient(#ffd,#ffe);"></div>
-
+<section class="cake-wrap">
+  <h3 class="cake-title">Make a wish 🎂</h3>
+  <div id="cssCake" class="cake" data-candles="17"></div>
+  <button id="wishBtn" class="wish-btn" type="button">Blow out the candles</button>
+</section>
     <!-- Lightbox -->
 <div class="lightbox" id="lightbox" aria-hidden="true">
   <div class="box">
@@ -742,7 +934,6 @@
         launchConfetti(window.innerWidth / 2, window.innerHeight * 0.25, 80);
         initGallery();
         initWishes();
-        initBirthdayCake3D(document.getElementById("cake3d"), { candles: 17 });
       } else {
         alert("Not the correct date.");
       }
@@ -867,216 +1058,83 @@
       // const first = document.querySelector('.wish-item .wish-header');
       // if(first) first.click();
     }
-    function initBirthdayCake3D(root, { candles = 17 } = {}) {
-      if (!root || !window.THREE) return;
+    // Nach initWishes():
+    initCssCake(document.getElementById("cssCake"), 17);
+    document
+      .getElementById("wishBtn")
+      ?.addEventListener("click", blowAllCandles);
 
-      const scene = new THREE.Scene();
-      scene.background = null;
+    let blowAllCandles = () => {}; // wird unten gesetzt
 
-      const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-      });
-      renderer.setSize(root.clientWidth, root.clientHeight);
-      renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
-      root.appendChild(renderer.domElement);
+    function initCssCake(root, count = 17) {
+      if (!root) return;
 
-      const camera = new THREE.PerspectiveCamera(
-        45,
-        root.clientWidth / root.clientHeight,
-        0.1,
-        100
-      );
-      camera.position.set(0, 4, 8);
-      camera.lookAt(0, 1.2, 0);
+      // 2 Stockwerke erzeugen
+      root.appendChild(makeTier({ w: 520, h: 190, lip: 22, baseY: 34 })); // unten
+      root.appendChild(makeTier({ w: 360, h: 150, lip: 18, baseY: 49 })); // oben
 
-      // Licht
-      scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-      const key = new THREE.DirectionalLight(0xffffff, 0.6);
-      key.position.set(3, 6, 3);
-      scene.add(key);
+      // Kerzen-Ring auf oberer Etage
+      const radius = 140; // Pixel-Abstand vom Zentrum
+      const baseY = 49; // Prozent vom Boden der Bühne (wie in makeTier oben gesetzt)
+      const ring = document.createElement("div");
+      ring.className = "candles";
+      root.appendChild(ring);
 
-      // Boden / Shadow-Fake (optional)
-      const floor = new THREE.Mesh(
-        new THREE.CircleGeometry(6, 64),
-        new THREE.MeshStandardMaterial({
-          color: 0xf7f2c8,
-          roughness: 0.95,
-          metalness: 0.0,
-        })
-      );
-      floor.rotation.x = -Math.PI * 0.5;
-      floor.position.y = 0;
-      scene.add(floor);
-
-      // Kuchen (2-stöckig wirkt edel, du kannst 1 lassen)
-      const cakeGroup = new THREE.Group();
-      scene.add(cakeGroup);
-
-      // Farben anpassen: deine Gelb/Blau-Palette
-      const icingColor = 0xf1f182; // helles Gelb (dein Theme)
-      const spongeColor = 0xf5d6a1; // Biskuit
-      const plateColor = 0xffffff;
-
-      // Teller
-      const plate = new THREE.Mesh(
-        new THREE.CylinderGeometry(5, 5, 0.2, 64),
-        new THREE.MeshStandardMaterial({ color: plateColor, roughness: 0.75 })
-      );
-      plate.position.y = 0.1;
-      cakeGroup.add(plate);
-
-      // Untere Schicht
-      const bottom = new THREE.Mesh(
-        new THREE.CylinderGeometry(3.2, 3.2, 1.4, 64),
-        new THREE.MeshStandardMaterial({ color: spongeColor, roughness: 0.8 })
-      );
-      bottom.position.y = 0.9;
-      cakeGroup.add(bottom);
-
-      // Zuckerguss unten (leicht größer)
-      const bottomIcing = new THREE.Mesh(
-        new THREE.CylinderGeometry(3.25, 3.25, 0.35, 64),
-        new THREE.MeshStandardMaterial({ color: icingColor, roughness: 0.6 })
-      );
-      bottomIcing.position.y = bottom.position.y + 0.9;
-      cakeGroup.add(bottomIcing);
-
-      // Obere Schicht (kleiner)
-      const topLayer = new THREE.Mesh(
-        new THREE.CylinderGeometry(2.2, 2.2, 1.0, 64),
-        new THREE.MeshStandardMaterial({ color: spongeColor, roughness: 0.8 })
-      );
-      topLayer.position.y = bottomIcing.position.y + 0.75;
-      cakeGroup.add(topLayer);
-
-      const topIcing = new THREE.Mesh(
-        new THREE.CylinderGeometry(2.25, 2.25, 0.3, 64),
-        new THREE.MeshStandardMaterial({ color: icingColor, roughness: 0.6 })
-      );
-      topIcing.position.y = topLayer.position.y + 0.65;
-      cakeGroup.add(topIcing);
-
-      // Kerzen
-      const candleGroup = new THREE.Group();
-      cakeGroup.add(candleGroup);
-
-      const candleMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        roughness: 0.5,
-        metalness: 0.0,
-      });
-      const wickMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-      const flameMat = new THREE.MeshStandardMaterial({
-        emissive: 0xffaa33,
-        color: 0xffddaa,
-        emissiveIntensity: 1.3,
-      });
-
-      const candleGeom = new THREE.CylinderGeometry(0.07, 0.07, 0.7, 16);
-      const wickGeom = new THREE.CylinderGeometry(0.01, 0.01, 0.08, 8);
-      const flameGeom = new THREE.SphereGeometry(0.06, 12, 12); // “Flamme”-Kern
-
-      const radius = 1.9; // Kreisradius auf der oberen Schicht
-      const baseY = topIcing.position.y + 0.2;
-
-      /** kleine Flammenlichter für Flicker */
-      const flameLights = [];
-
-      for (let i = 0; i < candles; i++) {
-        const a = (i / candles) * Math.PI * 2;
-        const x = Math.cos(a) * radius;
-        const z = Math.sin(a) * radius;
-
-        const c = new THREE.Group();
-        c.position.set(x, baseY, z);
-        c.lookAt(0, baseY, 0); // Kerzen nach Zentrum drehen (optisch nice)
-
-        const body = new THREE.Mesh(candleGeom, candleMat);
-        body.position.y = 0.35;
-        c.add(body);
-
-        const wick = new THREE.Mesh(wickGeom, wickMat);
-        wick.position.y = 0.75;
-        c.add(wick);
-
-        const flame = new THREE.Mesh(flameGeom, flameMat);
-        flame.position.y = 0.82;
-        c.add(flame);
-
-        // Licht an die Flamme koppeln
-        const pl = new THREE.PointLight(0xffaa55, 0.7, 2.2);
-        pl.position.set(0, 0.9, 0);
-        c.add(pl);
-        flameLights.push({ light: pl, flame });
-
-        // Klick zum Auspusten (toggle)
-        c.userData.lit = true;
-        c.userData.toggle = () => {
-          c.userData.lit = !c.userData.lit;
-          flame.visible = c.userData.lit;
-          pl.intensity = c.userData.lit ? 0.7 : 0.0;
-        };
-
-        candleGroup.add(c);
+      for (let i = 0; i < count; i++) {
+        const angle = (360 / count) * i;
+        ring.appendChild(makeCandle({ angle, radius, baseY }));
       }
 
-      // Szene sanft drehen lassen
-      let t = 0;
-      function animate() {
-        requestAnimationFrame(animate);
-        t += 0.016;
-
-        // sanfte Rotation
-        cakeGroup.rotation.y = Math.sin(t * 0.2) * 0.15;
-
-        // Flackern
-        for (const f of flameLights) {
-          if (f.light.intensity > 0) {
-            // Minimaler Jitter
-            f.light.intensity = 0.6 + Math.random() * 0.25;
-            f.flame.scale.setScalar(0.95 + Math.random() * 0.15);
-          }
-        }
-
-        renderer.render(scene, camera);
-      }
-      animate();
-
-      // Resize
-      window.addEventListener("resize", () => {
-        const w = root.clientWidth,
-          h = root.clientHeight;
-        renderer.setSize(w, h);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
+      // Klick: einzelne Kerze ausblasen
+      ring.addEventListener("click", (e) => {
+        const c = e.target.closest(".candle");
+        if (!c) return;
+        c.classList.toggle("off");
       });
 
-      // Raycasting für “Auspusten”
-      const ray = new THREE.Raycaster();
-      const mouse = new THREE.Vector2();
-      renderer.domElement.addEventListener("click", (e) => {
-        const rect = renderer.domElement.getBoundingClientRect();
-        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-        ray.setFromCamera(mouse, camera);
-        const intersects = ray.intersectObjects(candleGroup.children, true);
-        if (intersects.length) {
-          // Finde die Kerzen-Gruppe
-          let obj = intersects[0].object;
-          while (obj && obj.parent !== candleGroup) obj = obj.parent;
-          if (obj && obj.userData && obj.userData.toggle) obj.userData.toggle();
-        }
-      });
+      // Exponiere “alles ausblasen”
+      blowAllCandles = () => {
+        const candles = [...root.querySelectorAll(".candle")];
+        candles.forEach((c, i) => {
+          setTimeout(() => c.classList.add("off"), i * 70); // sequentiell
+        });
+      };
 
-      // Bonus: Taste “B” = alle ausblasen
-      window.addEventListener("keydown", (e) => {
-        if (e.key.toLowerCase() === "b") {
-          candleGroup.children.forEach((c) => {
-            if (c.userData?.lit) c.userData.toggle();
-          });
-        }
+      // Optional: responsive Neuplatzierung (wenn Höhe/Width stark ändert)
+      // Hier genügt CSS; JS unkritisch.
+    }
+
+    function makeTier({ w, h, lip, baseY }) {
+      const t = document.createElement("div");
+      t.className = "tier";
+      Object.assign(t.style, {
+        "--w": w + "px",
+        "--h": h + "px",
+        "--lip": lip + "px",
+        bottom: baseY + "%",
       });
+      t.innerHTML = `
+    <div class="top"></div>
+    <div class="icing"></div>
+    <div class="side"></div>
+  `;
+      return t;
+    }
+
+    function makeCandle({ angle, radius, baseY }) {
+      const c = document.createElement("div");
+      c.className = "candle";
+      Object.assign(c.style, {
+        "--angle": angle,
+        "--radius": radius + "px",
+        "--baseY": baseY + "%",
+      });
+      c.innerHTML = `
+    <div class="stick"></div>
+    <div class="wick"></div>
+    <div class="flame"></div>
+  `;
+      return c;
     }
   </script>
 </html>
