@@ -1870,3 +1870,7 @@ def delete_health_data_ep(data_id: int):
         raise HTTPException(404, "Health data not found")
     db.delete_health_data(data_id)
     return Response(status_code=204)
+
+@app.get("/globalChat", include_in_schema=False)
+def globalChat():
+    return FileResponse("globalChat.html")

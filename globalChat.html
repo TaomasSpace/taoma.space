@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+    <style>
+      #chat {
+        font-family: system-ui, sans-serif;
+        max-width: 700px;
+        margin: 1rem auto;
+      }
+      .message {
+        margin: 0.25rem 0;
+      }
+      #status {
+        margin: 1rem auto;
+        max-width: 700px;
+      }
+      form {
+        display: flex;
+        gap: 0.5rem;
+        max-width: 700px;
+        margin: 0.5rem auto;
+      }
+      input[type="text"] {
+        flex: 1;
+        padding: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status">Connecting to server...</div>
+
+    <div id="chat"></div>
+    <form id="chatForm">
+      <input
+        type="text"
+        id="text"
+        autocomplete="off"
+        placeholder="Type a message..."
+      />
+      <button type="submit">Send</button>
+    </form>
+  </body>
+  <script>
+    const chat = document.getElementById("chat");
+    const status = document.getElementById("status");
+
+    const ws = new WebSocket("wss://localhost:8080");
+
+    ws.addEventListener("open", () => {
+      status.textContent = "Connected to server";
+      status.style.color = "green";
+    });
+
+    ws.addEventListener("message", (ev) => {
+      const p = document.createElement("p");
+      p.className = "message";
+      p.textContent = String(ev.data);
+      chatEl.appendChild(p);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    });
+
+    ws.addEventListener("error", (e) => {
+      statusEl.textContent = "Error: " + (e.message || e.type);
+      statusEl.style.color = "red";
+    });
+
+    formEl.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const msg = inputEl.value.trim();
+      if (!msg) return;
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(msg);
+        inputEl.value = "";
+      }
+    });
+  </script>
+</html>
