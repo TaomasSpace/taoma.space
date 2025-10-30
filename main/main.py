@@ -1926,7 +1926,6 @@ async def global_chat_socket(websocket: WebSocket) -> None:
             text = text.strip()
             if not text:
                 continue
-            await chat_manager.send_personal_message(f"You: {text}", websocket)
             await chat_manager.broadcast(f"{user_id}: {text}", sender=websocket)
     except WebSocketDisconnect:
         pass
