@@ -47,7 +47,14 @@
     const chat = document.getElementById("chat");
     const status = document.getElementById("status");
 
-    const ws = new WebSocket("wss://localhost:8080");
+    const defaultWsUrl = (() => {
+      const protocol = location.protocol === "https:" ? "wss" : "ws";
+      const host = location.host || location.hostname;
+      return `${protocol}://${host}`;
+    })();
+    const wsUrl = window.GLOBAL_CHAT_WS_URL || defaultWsUrl;
+
+    const ws = new WebSocket(wsUrl);
 
     ws.addEventListener("open", () => {
       status.textContent = "Connected to server";
@@ -58,23 +65,28 @@
       const p = document.createElement("p");
       p.className = "message";
       p.textContent = String(ev.data);
-      chatEl.appendChild(p);
-      chatEl.scrollTop = chatEl.scrollHeight;
+      chat.appendChild(p);
+      chat.scrollTop = chat.scrollHeight;
     });
 
     ws.addEventListener("error", (e) => {
-      statusEl.textContent = "Error: " + (e.message || e.type);
-      statusEl.style.color = "red";
+      status.textContent = "Error: " + (e.message || e.type);
+      status.style.color = "red";
     });
-
-    formEl.addEventListener("submit", (e) => {
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("text");
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const msg = inputEl.value.trim();
+      const msg = input.value.trim();
       if (!msg) return;
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(msg);
-        inputEl.value = "";
+        input.value = "";
       }
+    });
+    ws.addEventListener("close", () => {
+      status.textContent = "Disconnected from server";
+      status.style.color = "orange";
     });
   </script>
 </html>

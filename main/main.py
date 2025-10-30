@@ -40,6 +40,7 @@ from fastapi.responses import JSONResponse
 from fastapi import Request
 from datetime import date
 from pydantic import AliasChoices
+from fastapi import WebSocket, WebSocketDisconnect
 
 DisplayNameMode = Literal["slug", "username"]
 load_dotenv()
@@ -1870,6 +1871,70 @@ def delete_health_data_ep(data_id: int):
         raise HTTPException(404, "Health data not found")
     db.delete_health_data(data_id)
     return Response(status_code=204)
+
+class GlobalChatManager:
+    def __init__(self) -> None:
+        self._connections: dict[WebSocket, str] = {}
+        self._next_id = 1
+        self._id_lock = asyncio.Lock()
+
+    async def connect(self, websocket: WebSocket) -> str:
+        await websocket.accept()
+        async with self._id_lock:
+            user_id = f"user{self._next_id}"
+            self._next_id += 1
+        self._connections[websocket] = user_id
+        logger.info("Global chat client connected: %s", user_id)
+        await websocket.send_text("Welcome to the WebSocket server!")
+        await self.broadcast(f"New user connected: {user_id}", sender=websocket)
+        return user_id
+
+    async def disconnect(self, websocket: WebSocket) -> None:
+        user_id = self._connections.pop(websocket, None)
+        if user_id:
+            logger.info("Global chat client disconnected: %s", user_id)
+            await self.broadcast(f"User left: {user_id}", sender=websocket)
+
+    async def broadcast(self, message: str, sender: WebSocket | None = None) -> None:
+        for ws in list(self._connections):
+            if ws is sender:
+                continue
+            try:
+                await ws.send_text(message)
+            except Exception as exc:
+                logger.warning("Failed to send chat broadcast: %s", exc)
+                self._connections.pop(ws, None)
+
+    async def send_personal_message(self, message: str, websocket: WebSocket) -> None:
+        try:
+            await websocket.send_text(message)
+        except Exception as exc:
+            logger.warning("Failed to send chat message to client: %s", exc)
+            self._connections.pop(websocket, None)
+
+
+chat_manager = GlobalChatManager()
+
+
+@app.websocket("/ws/global-chat")
+async def global_chat_socket(websocket: WebSocket) -> None:
+    user_id: str | None = None
+    try:
+        user_id = await chat_manager.connect(websocket)
+        while True:
+            text = await websocket.receive_text()
+            text = text.strip()
+            if not text:
+                continue
+            await chat_manager.send_personal_message(f"You: {text}", websocket)
+            await chat_manager.broadcast(f"{user_id}: {text}", sender=websocket)
+    except WebSocketDisconnect:
+        pass
+    except Exception as exc:
+        logger.exception("Global chat websocket error: %s", exc)
+        await websocket.close(code=1011)
+    finally:
+        await chat_manager.disconnect(websocket)
 
 @app.get("/globalChat", include_in_schema=False)
 def globalChat():
