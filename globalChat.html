@@ -50,8 +50,9 @@
     const defaultWsUrl = (() => {
       const protocol = location.protocol === "https:" ? "wss" : "ws";
       const host = location.host || location.hostname;
-      return `${protocol}://${host}`;
+      return `${protocol}://${host}/ws/global-chat`;
     })();
+
     const wsUrl = window.GLOBAL_CHAT_WS_URL || defaultWsUrl;
 
     const ws = new WebSocket(wsUrl);
