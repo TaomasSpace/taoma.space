@@ -536,6 +536,82 @@
           display: flex;
         }
       }
+      /* --- Auth (Avatar + Menü) --- */
+      .auth {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .avatar-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.55rem;
+        border-radius: 999px;
+        background: #ffffff10;
+        border: 1px solid #ffffff26;
+        cursor: pointer;
+      }
+
+      .avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #0f1331;
+      }
+
+      .avatar-fallback {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font: 700 12px/1 Inter;
+        background: #25306a;
+        color: #e9ebff;
+      }
+
+      .menu {
+        position: absolute;
+        margin-top: 0.4rem;
+        right: 0;
+        min-width: 160px;
+        z-index: 60;
+        background: linear-gradient(
+          180deg,
+          color-mix(in oklab, var(--card), transparent 8%),
+          var(--card)
+        );
+        border: 1px solid #ffffff22;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 0.35rem;
+        display: none;
+      }
+
+      .menu.open {
+        display: block;
+      }
+
+      .menu a,
+      .menu button {
+        width: 100%;
+        text-align: left;
+        display: block;
+        background: transparent;
+        color: var(--ink);
+        padding: 0.55rem 0.65rem;
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .menu a:hover,
+      .menu button:hover {
+        background: #ffffff12;
+      }
     </style>
   </head>
   <body>
