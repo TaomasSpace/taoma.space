@@ -23,6 +23,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.responses import FileResponse
 from db.db_helper import GifDB as SqliteGifDB
 from db.pg_helper import PgGifDB
+import threading
+
 
 DisplayNameMode = Literal["slug", "username"]
 load_dotenv()
