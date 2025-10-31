@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import Body, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
@@ -8,26 +8,26 @@ from dotenv import load_dotenv
 import logging
 import json, html
 from datetime import datetime, timezone
-from fastapi import BackgroundTasks
+from fastapi import Body, BackgroundTasks
 import asyncio, uuid
 from pydantic import BaseModel, Field
 from typing import Any
-from fastapi import FastAPI, HTTPException, Query, Header, Depends
+from fastapi import Body, FastAPI, HTTPException, Query, Header, Depends
 from pydantic import BaseModel, HttpUrl, Field
 from typing import List, Optional
 from pydantic import BaseModel
 import os
-from fastapi import Depends, Header
+from fastapi import Body, Depends, Header
 from db.db_helper import GifDB as SqliteGifDB
 from db.pg_helper import PgGifDB
 from fastapi.responses import HTMLResponse
-from fastapi import Response, Depends
+from fastapi import Body, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import threading
 from psycopg import errors as pg_errors
 import os, base64
-from fastapi import Path as PathParam
-from fastapi import UploadFile, File
+from fastapi import Body, Path as PathParam
+from fastapi import Body, UploadFile, File
 import pathlib
 import io
 from PIL import Image, UnidentifiedImageError
@@ -37,10 +37,10 @@ from typing import Literal
 import bcrypt
 from psycopg.rows import dict_row
 from fastapi.responses import JSONResponse
-from fastapi import Request
+from fastapi import Body, Request
 from datetime import date
 from pydantic import AliasChoices
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import Body, WebSocket, WebSocketDisconnect
 
 DisplayNameMode = Literal["slug", "username"]
 load_dotenv()
@@ -295,7 +295,7 @@ class IconOut(BaseModel):
 
 
 class LinktreeCreateIn(BaseModel):
-    slug: str = Field(...,  min_length=2, max_length=48, pattern=r"^[a-zA-Z0-9_-]+$")
+    slug: str = Field(..., min_length=2, max_length=48, pattern=r"^[a-zA-Z0-9_-]+$")
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
@@ -358,7 +358,7 @@ class LinktreeOut(BaseModel):
 
 
 class IconUpsertIn(BaseModel):
-    code: str = Field(...,  min_length=2, max_length=64, pattern=r"^[a-z0-9_\-]+$")
+    code: str = Field(..., min_length=2, max_length=64, pattern=r"^[a-z0-9_\-]+$")
     image_url: str
     description: Optional[str] = None
 
@@ -426,10 +426,10 @@ class JobIn(BaseModel):
 
 
 class Contact(BaseModel):
-    name: str = Field(...,  min_length=1, max_length=200)
+    name: str = Field(..., min_length=1, max_length=200)
     email: EmailStr
-    subject: str = Field(...,  min_length=1, max_length=200)
-    message: str = Field(...,  min_length=10, max_length=5000)
+    subject: str = Field(..., min_length=1, max_length=200)
+    message: str = Field(..., min_length=10, max_length=5000)
     website: str | None = None  # Honeypot
 
 
@@ -445,8 +445,8 @@ class UserOut(BaseModel):
 
 
 class UserCreateIn(BaseModel):
-    username: str = Field(...,  min_length=3, max_length=32)
-    password: str = Field(...,  min_length=8)
+    username: str = Field(..., min_length=3, max_length=32)
+    password: str = Field(..., min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
 
@@ -470,8 +470,8 @@ class LoginUserIn(BaseModel):
 
 
 class RegisterIn(BaseModel):
-    username: str = Field(...,  min_length=3, max_length=32)
-    password: str = Field(...,  min_length=8)
+    username: str = Field(..., min_length=3, max_length=32)
+    password: str = Field(..., min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
 
@@ -485,8 +485,8 @@ class RegisterOut(BaseModel):
 
 class HealthDataBase(BaseModel):
     day: date
-    borg: int = Field(...,  ge=0, le=20)                         # <- 10 → 20
-    temperatur: float = Field(...,  ge=20, le=45)                # <- int → float
+    borg: int = Field(..., ge=0, le=20)                         # <- 10 → 20
+    temperatur: float = Field(..., ge=20, le=45)                # <- int → float
     erschoepfung: int = Field(
         0, ge=0, le=10,
         alias="erschöpfung",
@@ -709,7 +709,7 @@ def verify(token: str = Depends(require_token)):
     user_out = {
         "id": user.get("id"),
         "username": user.get("username"),
-        "admin": bool(user.get("admin", False) or user.get("is_site_admin", False)),
+        "admin": bool(user.get("admin", False)),
         "linktree_id": user.get("linktree_id"),
         "linktree_slug": linktree_slug,  # <-- add this
         "profile_picture": user.get("profile_picture"),
@@ -1083,9 +1083,9 @@ def create_user(payload: UserCreateIn):
 
 @app.patch("/user/{user_id}", response_model=UserOut)
 def update_user(
-    user_id: int = PathParam(...,  ge=1),
-    payload: UserUpdateIn ,
-    current: dict = Depends(require_user),  # liefert dict des eingeloggten Users
+    user_id: int = Path(..., ge=1),
+    payload: UserUpdateIn = Body(...),
+    current: dict = Depends(require_user),
 ):
     target = db.getUser(user_id)
     if not target:
