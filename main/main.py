@@ -207,15 +207,7 @@ def _delete_if_unreferenced(url: str) -> bool:
         logger.warning("Failed to delete unreferenced media %s: %s", url, e)
         return False
 
-def require_gif_admin(user: dict = Depends(require_user)):
-    if not (bool(user.get("admin")) or bool(user.get("is_gif_admin"))):
-        raise HTTPException(403, "Forbidden: gif admin only")
-    return user
 
-def require_site_admin(user: dict = Depends(require_user)):
-    if not (bool(user.get("admin")) or bool(user.get("is_site_admin"))):
-        raise HTTPException(403, "Forbidden: site admin only")
-    return user
 def _session_response(
     payload: dict, token: str, max_age: int = 24 * 3600
 ) -> JSONResponse:
@@ -295,7 +287,7 @@ class IconOut(BaseModel):
 
 
 class LinktreeCreateIn(BaseModel):
-    slug: str = Field(...,  min_length=2, max_length=48, pattern=r"^[a-zA-Z0-9_-]+$")
+    slug: str = Field(..., min_length=2, max_length=48, pattern=r"^[a-zA-Z0-9_-]+$")
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
@@ -358,7 +350,7 @@ class LinktreeOut(BaseModel):
 
 
 class IconUpsertIn(BaseModel):
-    code: str = Field(...,  min_length=2, max_length=64, pattern=r"^[a-z0-9_\-]+$")
+    code: str = Field(..., min_length=2, max_length=64, pattern=r"^[a-z0-9_\-]+$")
     image_url: str
     description: Optional[str] = None
 
@@ -426,10 +418,10 @@ class JobIn(BaseModel):
 
 
 class Contact(BaseModel):
-    name: str = Field(...,  min_length=1, max_length=200)
+    name: str = Field(..., min_length=1, max_length=200)
     email: EmailStr
-    subject: str = Field(...,  min_length=1, max_length=200)
-    message: str = Field(...,  min_length=10, max_length=5000)
+    subject: str = Field(..., min_length=1, max_length=200)
+    message: str = Field(..., min_length=10, max_length=5000)
     website: str | None = None  # Honeypot
 
 
@@ -445,8 +437,8 @@ class UserOut(BaseModel):
 
 
 class UserCreateIn(BaseModel):
-    username: str = Field(...,  min_length=3, max_length=32)
-    password: str = Field(...,  min_length=8)
+    username: str = Field(..., min_length=3, max_length=32)
+    password: str = Field(..., min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
 
@@ -457,8 +449,6 @@ class UserUpdateIn(BaseModel):
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
     admin: Optional[bool] = None
-    is_gif_admin: Optional[bool] = None         # NEU
-    is_site_admin: Optional[bool] = None        # NEU
 
 
 JOB_STORE: dict[str, dict] = {}
@@ -470,8 +460,8 @@ class LoginUserIn(BaseModel):
 
 
 class RegisterIn(BaseModel):
-    username: str = Field(...,  min_length=3, max_length=32)
-    password: str = Field(...,  min_length=8)
+    username: str = Field(..., min_length=3, max_length=32)
+    password: str = Field(..., min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
 
@@ -485,8 +475,8 @@ class RegisterOut(BaseModel):
 
 class HealthDataBase(BaseModel):
     day: date
-    borg: int = Field(...,  ge=0, le=20)                         # <- 10 → 20
-    temperatur: float = Field(...,  ge=20, le=45)                # <- int → float
+    borg: int = Field(..., ge=0, le=20)                         # <- 10 → 20
+    temperatur: float = Field(..., ge=20, le=45)                # <- int → float
     erschoepfung: int = Field(
         0, ge=0, le=10,
         alias="erschöpfung",
@@ -709,7 +699,7 @@ def verify(token: str = Depends(require_token)):
     user_out = {
         "id": user.get("id"),
         "username": user.get("username"),
-        "admin": bool(user.get("admin", False) or user.get("is_site_admin", False)),
+        "admin": bool(user.get("admin", False)),
         "linktree_id": user.get("linktree_id"),
         "linktree_slug": linktree_slug,  # <-- add this
         "profile_picture": user.get("profile_picture"),
@@ -831,12 +821,16 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
     }
 
 
-@app.get("/api/gif/admin", response_class=HTMLResponse, dependencies=[Depends(require_gif_admin)])
-def gif_admin_page(): return FileResponse("gifApiAdmin.html")  
+@app.get(
+    "/api/gif/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
+)
+def admin_page():
+    return FileResponse("gifApiAdmin.html")
 
 
-@app.get("/admin", response_class=HTMLResponse, dependencies=[Depends(require_site_admin)])
-def site_admin_page(): return FileResponse("admin.html")    
+@app.get("/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)])
+def admin_page():
+    return FileResponse("admin.html")
 
 
 @app.get("/api", response_class=HTMLResponse)
@@ -844,7 +838,7 @@ def root():
     return FileResponse("gifApiMain.html")
 
 
-@app.get("/api/admin/gifs", dependencies=[Depends(require_gif_admin)])
+@app.get("/api/admin/gifs", dependencies=[Depends(require_admin)])
 def admin_list_gifs(
     q: Optional[str] = Query("", description="Titel-Contains, leer = alle"),
     nsfw: str = Query("true", description="false|true|only"),
@@ -952,7 +946,12 @@ def unified_get_gifs(
         raise HTTPException(status_code=404, detail="no gifs in database")
 
 
-@app.post("/api/gifs", response_model=GifOut, status_code=201, dependencies=[Depends(require_gif_admin)])
+@app.post(
+    "/api/gifs",
+    response_model=GifOut,
+    status_code=201,
+    dependencies=[Depends(require_user)],
+)
 def create_or_update_gif(payload: GifIn):
     try:
         existing = None
@@ -994,7 +993,9 @@ def read_gif(gif_id: int):
         raise HTTPException(status_code=404, detail="GIF not found")
 
 
-@app.patch("/api/gifs/{gif_id}", response_model=GifOut, dependencies=[Depends(require_gif_admin)])
+@app.patch(
+    "/api/gifs/{gif_id}", response_model=GifOut, dependencies=[Depends(require_user)]
+)
 def update_gif(gif_id: int, payload: GifUpdate):
     try:
         _ = db.get_gif(gif_id)
@@ -1013,7 +1014,7 @@ def update_gif(gif_id: int, payload: GifUpdate):
     return db.get_gif(gif_id)
 
 
-@app.delete("/api/gifs/{gif_id}", status_code=204, dependencies=[Depends(require_gif_admin)])
+@app.delete("/api/gifs/{gif_id}", status_code=204, dependencies=[Depends(require_user)])
 def delete_gif(gif_id: int):
     try:
         _ = db.get_gif(gif_id)  # 404, falls nicht vorhanden
@@ -1083,8 +1084,8 @@ def create_user(payload: UserCreateIn):
 
 @app.patch("/user/{user_id}", response_model=UserOut)
 def update_user(
-    user_id: int = PathParam(...,  ge=1),
-    payload: UserUpdateIn ,
+    user_id: int = PathParam(..., ge=1),
+    payload: UserUpdateIn = ...,
     current: dict = Depends(require_user),  # liefert dict des eingeloggten Users
 ):
     target = db.getUser(user_id)
@@ -1097,19 +1098,18 @@ def update_user(
     # Nicht-Admin darf nur sich selbst ändern und admin-Feld wird ignoriert
     if not is_admin and not is_self:
         raise HTTPException(403, "Forbidden")
-    admin_value       = payload.admin if is_admin else None
-    gif_admin_value   = payload.is_gif_admin if is_admin else None
-    site_admin_value  = payload.is_site_admin if is_admin else None
+    admin_value = payload.admin if is_admin else None
+
     try:
         db.updateUser(
             user_id,
             username=payload.username.strip() if payload.username is not None else None,
-            password=(hashPassword(payload.password) if payload.password is not None else None),
+            password=(
+                hashPassword(payload.password) if payload.password is not None else None
+            ),
             linktree_id=payload.linktree_id,
             profile_picture=payload.profile_picture,
-            admin=admin_value,
-            is_gif_admin=gif_admin_value,       # NEU
-            is_site_admin=site_admin_value,     # NEU
+            admin=admin_value,  # nur Admin kann das setzen
         )
     except pg_errors.UniqueViolation:
         raise HTTPException(status_code=409, detail="username already exists")
@@ -1194,7 +1194,7 @@ def login_page():
     return FileResponse("login.html")
 
 
-@app.post("/admin/users/{user_id}/grant", dependencies=[Depends(require_site_admin)])
+@app.post("/admin/users/{user_id}/grant", dependencies=[Depends(require_admin)])
 def grant_admin(user_id: int):
     db.updateUser(user_id, admin=True)
     return {"ok": True}
@@ -1608,7 +1608,7 @@ def list_icons():
     ]
 
 
-@app.post("/api/icons", dependencies=[Depends(require_site_admin)], response_model=IconOut)
+@app.post("/api/icons", dependencies=[Depends(require_admin)], response_model=IconOut)
 def upsert_icon_ep(payload: IconUpsertIn):
     _ensure_pg()
     icon_id = db.upsert_icon(payload.code, payload.image_url, payload.description)
@@ -1625,7 +1625,7 @@ def upsert_icon_ep(payload: IconUpsertIn):
     }
 
 
-@app.post("/api/users/{user_id}/icons/{code}", dependencies=[Depends(require_site_admin)])
+@app.post("/api/users/{user_id}/icons/{code}", dependencies=[Depends(require_admin)])
 def grant_icon_ep(user_id: int, code: str, body: GrantIconIn):
     _ensure_pg()
     db.grant_icon(user_id, code, displayed=body.displayed)

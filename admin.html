@@ -1,2391 +1,1970 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TAOMA™ — Admin</title>
-    <meta name="theme-color" content="#0f1223" />
-    <link rel="icon" type="image/png" href="/static/icon.png" />
-    <style>
-      /* === Base: consistent with other pages === */
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-      }
 
-      :root {
-        --bg: #0e1020;
-        --bg-soft: #141735;
-        --card: #171b3b;
-        --ink: #e9ebff;
-        --muted: #a2a9c8;
-        --acc: #85a3ff;
-        --acc-2: #5b7bff;
-        --ok: #35d79c;
-        --danger: #ff5a6a;
-        --ring: #85a3ff55;
-        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
-        --radius: 16px;
-        --space: clamp(16px, 2vw, 24px);
-        --container: 1100px;
-      }
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TAOMA™ — Admin</title>
+  <meta name="theme-color" content="#0f1223" />
+  <link rel="icon" type="image/png" href="/static/icon.png">
+  <style>
+    /* === Base: consistent with other pages === */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box
+    }
 
-      html,
-      body {
-        height: 100%;
-      }
+    :root {
+      --bg: #0e1020;
+      --bg-soft: #141735;
+      --card: #171b3b;
+      --ink: #e9ebff;
+      --muted: #a2a9c8;
+      --acc: #85a3ff;
+      --acc-2: #5b7bff;
+      --ok: #35d79c;
+      --danger: #ff5a6a;
+      --ring: #85a3ff55;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .25);
+      --radius: 16px;
+      --space: clamp(16px, 2vw, 24px);
+      --container: 1100px
+    }
 
-      body {
-        margin: 0;
-        font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI,
-          Roboto, Ubuntu, Arial, sans-serif;
-        color: var(--ink);
-        background: var(--bg);
-        min-height: 100dvh;
-        display: flex;
-        flex-direction: column;
-      }
+    html,
+    body {
+      height: 100%
+    }
 
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        pointer-events: none;
-        background: radial-gradient(
-            1400px 900px at 12% -8%,
-            #1b1f45 0%,
-            #1b1f45 35%,
-            transparent 72%
-          ),
-          radial-gradient(
-            1200px 800px at 100% -10%,
-            #0b4ea8 0%,
-            #0b4ea8 28%,
-            transparent 68%
-          ),
-          radial-gradient(
-            900px 500px at 95% 115%,
-            #0b4ea84d 0%,
-            transparent 60%
-          ),
-          linear-gradient(160deg, #0f1531 0%, #0e1020 72%);
-      }
+    body {
+      margin: 0;
+      font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column
+    }
 
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
+        radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
+        radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
+        linear-gradient(160deg, #0f1531 0%, #0e1020 72%);
+    }
 
-      .container {
-        max-width: var(--container);
-        margin: 0 auto;
-        padding-inline: var(--space);
-      }
+    a {
+      color: inherit;
+      text-decoration: none
+    }
 
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.6rem 0.9rem;
-        border-radius: 12px;
-        background: var(--acc);
-        color: #fff;
-        font-weight: 700;
-        border: 1px solid #ffffff1a;
-        box-shadow: var(--shadow);
-        transition: 0.2s;
-        cursor: pointer;
-      }
+    .container {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding-inline: var(--space)
+    }
 
-      .btn:hover {
-        transform: translateY(-1px);
-        filter: saturate(1.1);
-      }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .6rem .9rem;
+      border-radius: 12px;
+      background: var(--acc);
+      color: #fff;
+      font-weight: 700;
+      border: 1px solid #ffffff1a;
+      box-shadow: var(--shadow);
+      transition: .2s;
+      cursor: pointer
+    }
 
-      .btn.ghost {
-        background: transparent;
-        color: var(--ink);
-        border: 1px solid #ffffff26;
-        box-shadow: none;
-      }
+    .btn:hover {
+      transform: translateY(-1px);
+      filter: saturate(1.1)
+    }
 
-      .btn.danger {
-        background: color-mix(in oklab, var(--danger) 80%, #000);
-      }
+    .btn.ghost {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid #ffffff26;
+      box-shadow: none
+    }
 
-      .btn.ok {
-        background: color-mix(in oklab, var(--ok) 80%, #000);
-      }
+    .btn.danger {
+      background: color-mix(in oklab, var(--danger) 80%, #000)
+    }
 
-      .row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
+    .btn.ok {
+      background: color-mix(in oklab, var(--ok) 80%, #000)
+    }
 
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.35rem 0.6rem;
-        border-radius: 999px;
-        background: color-mix(in oklab, var(--acc) 15%, transparent);
-        border: 1px solid #ffffff1a;
-        font-size: 0.9rem;
-      }
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap
+    }
 
-      .card {
-        background: linear-gradient(
-          180deg,
-          color-mix(in oklab, var(--card), transparent 8%),
-          var(--card)
-        );
-        border: 1px solid #ffffff1a;
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        padding: 1rem;
-      }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .35rem .6rem;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--acc) 15%, transparent);
+      border: 1px solid #ffffff1a;
+      font-size: .9rem
+    }
 
-      .muted {
-        color: var(--muted);
-      }
+    .card {
+      background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+      border: 1px solid #ffffff1a;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem
+    }
 
-      :focus-visible {
-        outline: 2px solid var(--acc);
-        outline-offset: 2px;
-        box-shadow: 0 0 0 6px var(--ring);
-      }
+    .muted {
+      color: var(--muted)
+    }
 
-      header {
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        backdrop-filter: saturate(1.1) blur(10px);
-        background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
-        border-bottom: 1px solid #ffffff14;
-      }
+    :focus-visible {
+      outline: 2px solid var(--acc);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 6px var(--ring)
+    }
 
-      .nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 64px;
-      }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: saturate(1.1) blur(10px);
+      background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+      border-bottom: 1px solid #ffffff14
+    }
 
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-weight: 800;
-        letter-spacing: 0.4px;
-      }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px
+    }
 
-      .brand .logo {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-      }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      font-weight: 800;
+      letter-spacing: .4px
+    }
 
-      .links {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-      }
+    .brand .logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px
+    }
 
-      main {
-        padding-block: clamp(28px, 5vw, 48px);
-      }
+    .links {
+      display: flex;
+      gap: 1rem;
+      align-items: center
+    }
 
-      h1 {
-        margin: 0.2rem 0 1rem;
-        font-size: clamp(24px, 3.8vw, 34px);
-      }
+    main {
+      padding-block: clamp(28px, 5vw, 48px)
+    }
 
-      h2 {
-        margin: 0 0 0.6rem;
-        font-size: clamp(18px, 2.6vw, 22px);
-      }
+    h1 {
+      margin: .2rem 0 1rem;
+      font-size: clamp(24px, 3.8vw, 34px)
+    }
 
-      .grid {
-        display: grid;
-        gap: clamp(14px, 2vw, 18px);
-      }
+    h2 {
+      margin: 0 0 .6rem;
+      font-size: clamp(18px, 2.6vw, 22px)
+    }
 
+    .grid {
+      display: grid;
+      gap: clamp(14px, 2vw, 18px)
+    }
+
+    .grid.cols-2 {
+      grid-template-columns: 1fr 1fr
+    }
+
+    @media (max-width:900px) {
       .grid.cols-2 {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr
       }
+    }
 
-      @media (max-width: 900px) {
-        .grid.cols-2 {
-          grid-template-columns: 1fr;
-        }
-      }
+    label {
+      display: block;
+      margin: .45rem 0 .25rem;
+      font-weight: 600
+    }
 
-      label {
-        display: block;
-        margin: 0.45rem 0 0.25rem;
-        font-weight: 600;
-      }
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: .6rem .7rem;
+      border-radius: 10px;
+      border: 1px solid #ffffff26;
+      background: #0f1331;
+      color: var(--ink)
+    }
 
-      input,
-      select,
-      textarea {
-        width: 100%;
-        padding: 0.6rem 0.7rem;
-        border-radius: 10px;
-        border: 1px solid #ffffff26;
-        background: #0f1331;
-        color: var(--ink);
-      }
+    .actions {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-top: .75rem
+    }
 
-      .actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        margin-top: 0.75rem;
-      }
+    .kicker {
+      margin: 0 0 .5rem
+    }
 
-      .kicker {
-        margin: 0 0 0.5rem;
-      }
+    .table {
+      width: 100%;
+      border-collapse: collapse
+    }
 
-      .table {
-        width: 100%;
-        border-collapse: collapse;
-      }
+    .table th,
+    .table td {
+      padding: .5rem;
+      border-bottom: 1px solid #ffffff1a;
+      text-align: left
+    }
 
-      .table th,
-      .table td {
-        padding: 0.5rem;
-        border-bottom: 1px solid #ffffff1a;
-        text-align: left;
-      }
+    .right {
+      margin-left: auto
+    }
 
-      .right {
-        margin-left: auto;
-      }
+    .inline {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem
+    }
 
-      .inline {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
+    .note {
+      font-size: .95rem
+    }
 
-      .note {
-        font-size: 0.95rem;
-      }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
+    }
 
-      .mono {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      }
+    .okText {
+      color: var(--ok);
+      font-weight: 700
+    }
 
-      .okText {
-        color: var(--ok);
-        font-weight: 700;
-      }
+    .errText {
+      color: var(--danger);
+      font-weight: 700
+    }
 
-      .errText {
-        color: var(--danger);
-        font-weight: 700;
-      }
+    footer {
+      border-top: 1px solid #ffffff14;
+      padding-block: 24px;
+      margin-top: auto
+    }
 
-      footer {
-        border-top: 1px solid #ffffff14;
-        padding-block: 24px;
-        margin-top: auto;
-      }
+    .foot {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap
+    }
 
-      .foot {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-      }
+    .log {
+      white-space: pre-wrap;
+      background: #0f1331;
+      border: 1px solid #ffffff1a;
+      border-radius: 12px;
+      padding: .75rem;
+      max-height: 240px;
+      overflow: auto
+    }
 
-      .log {
-        white-space: pre-wrap;
-        background: #0f1331;
-        border: 1px solid #ffffff1a;
-        border-radius: 12px;
-        padding: 0.75rem;
-        max-height: 240px;
-        overflow: auto;
-      }
+    .thumb {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      border: 1px solid #ffffff22;
+      background: #0f1331;
+      object-fit: cover
+    }
 
-      .thumb {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
-        border: 1px solid #ffffff22;
-        background: #0f1331;
-        object-fit: cover;
-      }
+    /* --- Header --- */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: saturate(1.1) blur(10px);
+      background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+      border-bottom: 1px solid #ffffff14
+    }
 
-      /* --- Header --- */
-      header {
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        backdrop-filter: saturate(1.1) blur(10px);
-        background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
-        border-bottom: 1px solid #ffffff14;
-      }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px
+    }
 
-      .nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 64px;
-      }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      font-weight: 800;
+      letter-spacing: .4px
+    }
 
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-weight: 800;
-        letter-spacing: 0.4px;
-      }
+    .brand .logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: block;
+    }
 
-      .brand .logo {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        display: block;
-      }
 
-      .links {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-      }
+    .links {
+      display: flex;
+      gap: 1rem;
+      align-items: center
+    }
 
-      .links a {
-        padding: 0.45rem 0.7rem;
-        border-radius: 10px;
-        border: 1px solid transparent;
-      }
+    .links a {
+      padding: .45rem .7rem;
+      border-radius: 10px;
+      border: 1px solid transparent
+    }
 
-      .links a:hover {
-        border-color: #ffffff1f;
-        background: #ffffff0f;
-      }
+    .links a:hover {
+      border-color: #ffffff1f;
+      background: #ffffff0f
+    }
 
+    .mobile-toggle {
+      display: none
+    }
+
+    @media (max-width:800px) {
       .mobile-toggle {
-        display: none;
-      }
-
-      @media (max-width: 800px) {
-        .mobile-toggle {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          border: 1px solid #ffffff26;
-          background: transparent;
-        }
-
-        .links {
-          position: fixed;
-          inset: 64px 0 auto 0;
-          background: linear-gradient(180deg, #0b0f29, #0b0f2945);
-          padding: 1rem;
-          display: none;
-          flex-direction: column;
-        }
-
-        .links.open {
-          display: flex;
-        }
-      }
-
-      /* === Mobile Optimierungen für Admin Panel === */
-      /* Verhindere horizontales Scrollen */
-      html,
-      body {
-        max-width: 100vw;
-        overflow-x: hidden;
-      }
-
-      body {
-        padding: 0;
-        margin: 0;
-      }
-
-      /* Container */
-      .container {
-        max-width: var(--container);
-        margin: 0 auto;
-        padding-inline: clamp(12px, 3vw, var(--space));
-        box-sizing: border-box;
-      }
-
-      /* Cards */
-      .card {
-        background: linear-gradient(
-          180deg,
-          color-mix(in oklab, var(--card), transparent 8%),
-          var(--card)
-        );
-        border: 1px solid #ffffff1a;
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        padding: clamp(12px, 3vw, 16px);
-        max-width: 100%;
-        overflow: hidden;
-        box-sizing: border-box;
-      }
-
-      /* Inputs responsive */
-      input,
-      select,
-      textarea {
-        width: 100%;
-        max-width: 100%;
-        padding: 0.6rem 0.7rem;
-        border-radius: 10px;
-        border: 1px solid #ffffff26;
-        background: #0f1331;
-        color: var(--ink);
-        box-sizing: border-box;
-        font-size: 16px;
-        /* Verhindert Zoom auf iOS */
-        word-break: break-word;
-      }
-
-      /* Labels */
-      label {
-        display: block;
-        margin: 0.45rem 0 0.25rem;
-        font-weight: 600;
-        word-wrap: break-word;
-        max-width: 100%;
-      }
-
-      /* Buttons responsive */
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.6rem;
-        padding: 0.6rem 0.9rem;
-        border-radius: 12px;
-        background: var(--acc);
-        color: #fff;
-        font-weight: 700;
-        border: 1px solid #ffffff1a;
-        box-shadow: var(--shadow);
-        transition: 0.2s;
-        cursor: pointer;
-        white-space: nowrap;
-        text-align: center;
-        min-height: 44px;
-        /* Touch-friendly */
-      }
-
-      /* Row Layout */
-      .row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        align-items: center;
-        max-width: 100%;
-      }
-
-      /* Actions */
-      .actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        margin-top: 0.75rem;
-      }
-
-      /* Grid responsive */
-      .grid {
-        display: grid;
-        gap: clamp(14px, 2vw, 18px);
-        max-width: 100%;
-      }
-
-      .grid.cols-2 {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      /* Table responsive */
-      .table {
-        width: 100%;
-        border-collapse: collapse;
-        overflow-x: auto;
-        display: block;
-      }
-
-      .table thead,
-      .table tbody,
-      .table tr {
-        display: table;
-        width: 100%;
-        table-layout: fixed;
-      }
-
-      .table th,
-      .table td {
-        padding: 0.5rem;
-        border-bottom: 1px solid #ffffff1a;
-        text-align: left;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-      }
-
-      /* Log/Code blocks */
-      .log {
-        white-space: pre-wrap;
-        background: #0f1331;
-        border: 1px solid #ffffff1a;
-        border-radius: 12px;
-        padding: 0.75rem;
-        max-height: 240px;
-        overflow: auto;
-        word-break: break-all;
-        font-size: 0.9rem;
-        max-width: 100%;
-      }
-
-      .mono {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        word-break: break-all;
-      }
-
-      code {
-        word-break: break-all;
-        overflow-wrap: break-word;
-      }
-
-      /* Chips */
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.35rem 0.6rem;
-        border-radius: 999px;
-        background: color-mix(in oklab, var(--acc) 15%, transparent);
-        border: 1px solid #ffffff1a;
-        font-size: 0.9rem;
-        word-wrap: break-word;
-        max-width: 100%;
-      }
-
-      /* === Tablet Breakpoint === */
-      @media (max-width: 900px) {
-        /* Grid wird single-column */
-        .grid.cols-2 {
-          grid-template-columns: 1fr;
-        }
-
-        /* Container padding reduzieren */
-        .container {
-          padding-inline: clamp(10px, 2.5vw, 16px);
-        }
-
-        /* Card padding */
-        .card {
-          padding: clamp(10px, 2.5vw, 14px);
-        }
-
-        /* Forms mit flex-wrap */
-        .row {
-          flex-direction: column;
-          align-items: stretch;
-        }
-
-        .row > div {
-          flex: 1 1 100% !important;
-          width: 100%;
-        }
-
-        /* Buttons volle Breite */
-        .actions .btn {
-          flex: 1 1 100%;
-          min-width: 120px;
-        }
-
-        /* Table scrollable */
-        .table {
-          font-size: 0.85rem;
-        }
-
-        .table th,
-        .table td {
-          padding: 0.4rem;
-        }
-      }
-
-      /* === Smartphone Breakpoint === */
-      @media (max-width: 640px) {
-        /* Main padding */
-        main {
-          padding-block: clamp(20px, 4vw, 32px);
-        }
-
-        /* Headings kleiner */
-        h1 {
-          font-size: clamp(20px, 5vw, 28px);
-          margin: 0.2rem 0 0.8rem;
-        }
-
-        h2 {
-          font-size: clamp(16px, 4vw, 20px);
-          margin: 0 0 0.5rem;
-        }
-
-        /* Container noch enger */
-        .container {
-          padding-inline: 10px;
-        }
-
-        /* Cards */
-        .card {
-          padding: 10px;
-          border-radius: 12px;
-        }
-
-        /* Inputs kompakter */
-        input,
-        select,
-        textarea {
-          padding: 0.5rem 0.6rem;
-          font-size: 15px;
-          border-radius: 8px;
-        }
-
-        /* Buttons kompakter */
-        .btn {
-          padding: 0.5rem 0.7rem;
-          font-size: 0.9rem;
-          gap: 0.4rem;
-          border-radius: 10px;
-          min-height: 42px;
-        }
-
-        /* Row immer gestapelt */
-        .row {
-          flex-direction: column;
-          gap: 0.5rem;
-          align-items: stretch;
-        }
-
-        .row > * {
-          width: 100% !important;
-          flex: 1 1 100% !important;
-        }
-
-        /* Inline auf Mobile stapeln */
-        .inline {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 0.3rem;
-        }
-
-        /* Actions */
-        .actions {
-          flex-direction: column;
-          gap: 0.4rem;
-        }
-
-        .actions .btn {
-          width: 100%;
-        }
-
-        /* Chips kleiner */
-        .chip {
-          font-size: 0.85rem;
-          padding: 0.3rem 0.5rem;
-        }
-
-        /* Log blocks */
-        .log {
-          padding: 0.6rem;
-          font-size: 0.85rem;
-          max-height: 200px;
-        }
-
-        /* Labels */
-        label {
-          font-size: 0.9rem;
-          margin: 0.35rem 0 0.2rem;
-        }
-
-        /* Kicker */
-        .kicker {
-          font-size: 0.9rem;
-          margin: 0 0 0.4rem;
-        }
-
-        /* Notes */
-        .note {
-          font-size: 0.85rem;
-          line-height: 1.5;
-        }
-
-        /* Table noch kompakter */
-        .table {
-          font-size: 0.8rem;
-          display: block;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-        }
-
-        .table th,
-        .table td {
-          padding: 0.3rem 0.25rem;
-          font-size: 0.8rem;
-        }
-
-        /* Thumbnail */
-        .thumb {
-          width: 36px;
-          height: 36px;
-        }
-
-        /* Footer */
-        footer {
-          padding-block: 16px;
-        }
-
-        .foot {
-          flex-direction: column;
-          gap: 0.7rem;
-          align-items: flex-start;
-        }
-
-        .foot small {
-          font-size: 0.8rem;
-        }
-      }
-
-      /* === Sehr kleine Smartphones === */
-      @media (max-width: 380px) {
-        /* Container minimal */
-        .container {
-          padding-inline: 8px;
-        }
-
-        /* Card padding minimal */
-        .card {
-          padding: 8px;
-        }
-
-        /* Headings noch kleiner */
-        h1 {
-          font-size: 18px;
-        }
-
-        h2 {
-          font-size: 15px;
-        }
-
-        /* Buttons kompakter */
-        .btn {
-          padding: 0.45rem 0.6rem;
-          font-size: 0.85rem;
-          min-height: 40px;
-        }
-
-        /* Inputs */
-        input,
-        select,
-        textarea {
-          padding: 0.45rem 0.55rem;
-          font-size: 14px;
-        }
-
-        /* Log */
-        .log {
-          padding: 0.5rem;
-          font-size: 0.8rem;
-        }
-
-        /* Chips */
-        .chip {
-          font-size: 0.8rem;
-          padding: 0.25rem 0.45rem;
-        }
-
-        /* Table horizontal scroll */
-        .table-wrapper {
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-        }
-      }
-
-      /* === Landscape Mode === */
-      @media (max-height: 500px) and (orientation: landscape) {
-        main {
-          padding-block: 16px;
-        }
-
-        .card {
-          padding: 10px;
-        }
-
-        h1 {
-          font-size: 20px;
-          margin: 0 0 0.6rem;
-        }
-
-        h2 {
-          font-size: 16px;
-          margin: 0 0 0.4rem;
-        }
-      }
-
-      /* === Spezielle Fix für Form-Layouts === */
-      @media (max-width: 640px) {
-        /* Alle Form-Divs mit style="flex:..." */
-        form > .row > div[style*="flex"] {
-          flex: 1 1 100% !important;
-          width: 100% !important;
-          max-width: 100% !important;
-        }
-
-        /* Select-Felder in Forms */
-        form select {
-          width: 100% !important;
-        }
-
-        /* Input-Gruppen */
-        form .row {
-          align-items: stretch !important;
-        }
-
-        /* HR-Elemente */
-        hr {
-          margin: 0.7rem 0 !important;
-        }
-      }
-
-      /* === Auth Header Mobile === */
-      .auth {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .auth .btn.small,
-      .btn.small {
-        padding: 0.5rem 0.7rem;
-        border-radius: 10px;
-        background: transparent;
-        color: var(--ink);
-        border: 1px solid #ffffff26;
-        box-shadow: none;
-        font-weight: 600;
-      }
-
-      .auth-box {
-        position: relative;
-      }
-
-      .avatar-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.35rem 0.55rem;
-        border-radius: 999px;
-        background: #ffffff10;
-        border: 1px solid #ffffff26;
-        cursor: pointer;
-      }
-
-      .avatar {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        object-fit: cover;
-        display: block;
-        background: #0f1331;
-        flex-shrink: 0;
-      }
-
-      .avatar-fallback {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        font: 700 12px/1 Inter, ui-sans-serif;
-        background: #25306a;
-        color: #e9ebff;
-        flex-shrink: 0;
-      }
-
-      .menu {
-        position: absolute;
-        right: 0;
-        margin-top: 0.4rem;
-        min-width: 160px;
-        z-index: 60;
-        background: linear-gradient(
-          180deg,
-          color-mix(in oklab, var(--card), transparent 8%),
-          var(--card)
-        );
-        border: 1px solid #ffffff22;
-        border-radius: 12px;
-        box-shadow: var(--shadow);
-        padding: 0.35rem;
-        display: none;
-      }
-
-      .menu.open {
-        display: block;
-      }
-
-      .menu a,
-      .menu button {
-        width: 100%;
-        text-align: left;
-        display: block;
-        background: transparent;
-        color: var(--ink);
-        padding: 0.55rem 0.65rem;
-        border: 0;
-        border-radius: 10px;
-        cursor: pointer;
-      }
-
-      .menu a:hover,
-      .menu button:hover {
-        background: #ffffff12;
-      }
-
-      @media (max-width: 640px) {
-        .auth {
-          gap: 0.3rem;
-        }
-
-        .avatar-btn {
-          padding: 0.3rem 0.45rem;
-          gap: 0.4rem;
-        }
-
-        .avatar,
-        .avatar-fallback {
-          width: 24px;
-          height: 24px;
-          font-size: 11px;
-        }
-
-        .uname {
-          font-size: 0.85rem !important;
-        }
-
-        .menu {
-          min-width: 140px;
-        }
-      }
-
-      /* === Table Wrapper für horizontales Scrollen === */
-      @media (max-width: 640px) {
-        /* Wenn Tables zu breit werden */
-        .table {
-          min-width: 500px;
-          /* Mindestbreite für Table */
-        }
-
-        /* Table Container scrollbar */
-        article.card:has(.table) {
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-        }
-      }
-
-      /* === Right-align Elemente === */
-      .right {
-        margin-left: auto;
-      }
-
-      @media (max-width: 640px) {
-        .right {
-          margin-left: 0;
-          width: 100%;
-        }
-      }
-
-      /* === Prevent text overflow everywhere === */
-      * {
-        min-width: 0;
-      }
-
-      p,
-      span,
-      div,
-      label,
-      button {
-        overflow-wrap: break-word;
-        word-wrap: break-word;
-      }
-
-      footer {
-        border-top: 1px solid #ffffff14;
-        padding-block: 24px;
-        margin-top: auto;
-      }
-
-      .foot {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-      }
-
-      .social {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-      }
-
-      .social a {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 40px;
         height: 40px;
-        border-radius: 12px;
+        border-radius: 10px;
         border: 1px solid #ffffff26;
+        background: transparent
       }
 
-      /* --- Focus / Motion --- */
-      :focus-visible {
-        outline: 2px solid var(--acc);
-        outline-offset: 2px;
-        box-shadow: 0 0 0 6px var(--ring);
+      .links {
+        position: fixed;
+        inset: 64px 0 auto 0;
+        background: linear-gradient(180deg, #0b0f29, #0b0f2945);
+        padding: 1rem;
+        display: none;
+        flex-direction: column
       }
 
-      @media (prefers-reduced-motion: reduce) {
-        * {
-          transition: none !important;
-          animation: none !important;
-        }
+      .links.open {
+        display: flex
+      }
+    }
+
+    /* === Mobile Optimierungen für Admin Panel === */
+    /* Verhindere horizontales Scrollen */
+    html,
+    body {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    body {
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Container */
+    .container {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding-inline: clamp(12px, 3vw, var(--space));
+      box-sizing: border-box;
+    }
+
+    /* Cards */
+    .card {
+      background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+      border: 1px solid #ffffff1a;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(12px, 3vw, 16px);
+      max-width: 100%;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    /* Inputs responsive */
+    input,
+    select,
+    textarea {
+      width: 100%;
+      max-width: 100%;
+      padding: .6rem .7rem;
+      border-radius: 10px;
+      border: 1px solid #ffffff26;
+      background: #0f1331;
+      color: var(--ink);
+      box-sizing: border-box;
+      font-size: 16px;
+      /* Verhindert Zoom auf iOS */
+      word-break: break-word;
+    }
+
+    /* Labels */
+    label {
+      display: block;
+      margin: .45rem 0 .25rem;
+      font-weight: 600;
+      word-wrap: break-word;
+      max-width: 100%;
+    }
+
+    /* Buttons responsive */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .6rem;
+      padding: .6rem .9rem;
+      border-radius: 12px;
+      background: var(--acc);
+      color: #fff;
+      font-weight: 700;
+      border: 1px solid #ffffff1a;
+      box-shadow: var(--shadow);
+      transition: .2s;
+      cursor: pointer;
+      white-space: nowrap;
+      text-align: center;
+      min-height: 44px;
+      /* Touch-friendly */
+    }
+
+    /* Row Layout */
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      max-width: 100%;
+    }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-top: .75rem;
+    }
+
+    /* Grid responsive */
+    .grid {
+      display: grid;
+      gap: clamp(14px, 2vw, 18px);
+      max-width: 100%;
+    }
+
+    .grid.cols-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* Table responsive */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow-x: auto;
+      display: block;
+    }
+
+    .table thead,
+    .table tbody,
+    .table tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    .table th,
+    .table td {
+      padding: .5rem;
+      border-bottom: 1px solid #ffffff1a;
+      text-align: left;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Log/Code blocks */
+    .log {
+      white-space: pre-wrap;
+      background: #0f1331;
+      border: 1px solid #ffffff1a;
+      border-radius: 12px;
+      padding: .75rem;
+      max-height: 240px;
+      overflow: auto;
+      word-break: break-all;
+      font-size: .9rem;
+      max-width: 100%;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-all;
+    }
+
+    code {
+      word-break: break-all;
+      overflow-wrap: break-word;
+    }
+
+    /* Chips */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .35rem .6rem;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--acc) 15%, transparent);
+      border: 1px solid #ffffff1a;
+      font-size: .9rem;
+      word-wrap: break-word;
+      max-width: 100%;
+    }
+
+    /* === Tablet Breakpoint === */
+    @media (max-width: 900px) {
+
+      /* Grid wird single-column */
+      .grid.cols-2 {
+        grid-template-columns: 1fr;
       }
 
+      /* Container padding reduzieren */
+      .container {
+        padding-inline: clamp(10px, 2.5vw, 16px);
+      }
+
+      /* Card padding */
+      .card {
+        padding: clamp(10px, 2.5vw, 14px);
+      }
+
+      /* Forms mit flex-wrap */
+      .row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .row>div {
+        flex: 1 1 100% !important;
+        width: 100%;
+      }
+
+      /* Buttons volle Breite */
+      .actions .btn {
+        flex: 1 1 100%;
+        min-width: 120px;
+      }
+
+      /* Table scrollable */
+      .table {
+        font-size: .85rem;
+      }
+
+      .table th,
+      .table td {
+        padding: .4rem;
+      }
+    }
+
+    /* === Smartphone Breakpoint === */
+    @media (max-width: 640px) {
+
+      /* Main padding */
+      main {
+        padding-block: clamp(20px, 4vw, 32px);
+      }
+
+      /* Headings kleiner */
+      h1 {
+        font-size: clamp(20px, 5vw, 28px);
+        margin: .2rem 0 .8rem;
+      }
+
+      h2 {
+        font-size: clamp(16px, 4vw, 20px);
+        margin: 0 0 .5rem;
+      }
+
+      /* Container noch enger */
+      .container {
+        padding-inline: 10px;
+      }
+
+      /* Cards */
+      .card {
+        padding: 10px;
+        border-radius: 12px;
+      }
+
+      /* Inputs kompakter */
+      input,
+      select,
+      textarea {
+        padding: .5rem .6rem;
+        font-size: 15px;
+        border-radius: 8px;
+      }
+
+      /* Buttons kompakter */
+      .btn {
+        padding: .5rem .7rem;
+        font-size: .9rem;
+        gap: .4rem;
+        border-radius: 10px;
+        min-height: 42px;
+      }
+
+      /* Row immer gestapelt */
+      .row {
+        flex-direction: column;
+        gap: .5rem;
+        align-items: stretch;
+      }
+
+      .row>* {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+      }
+
+      /* Inline auf Mobile stapeln */
+      .inline {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .3rem;
+      }
+
+      /* Actions */
+      .actions {
+        flex-direction: column;
+        gap: .4rem;
+      }
+
+      .actions .btn {
+        width: 100%;
+      }
+
+      /* Chips kleiner */
+      .chip {
+        font-size: .85rem;
+        padding: .3rem .5rem;
+      }
+
+      /* Log blocks */
+      .log {
+        padding: .6rem;
+        font-size: .85rem;
+        max-height: 200px;
+      }
+
+      /* Labels */
+      label {
+        font-size: .9rem;
+        margin: .35rem 0 .2rem;
+      }
+
+      /* Kicker */
+      .kicker {
+        font-size: .9rem;
+        margin: 0 0 .4rem;
+      }
+
+      /* Notes */
+      .note {
+        font-size: .85rem;
+        line-height: 1.5;
+      }
+
+      /* Table noch kompakter */
+      .table {
+        font-size: .8rem;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .table th,
+      .table td {
+        padding: .3rem .25rem;
+        font-size: .8rem;
+      }
+
+      /* Thumbnail */
+      .thumb {
+        width: 36px;
+        height: 36px;
+      }
+
+      /* Footer */
       footer {
-        border-top: 1px solid #ffffff14;
-        padding-block: 24px;
-        margin-top: auto;
+        padding-block: 16px;
       }
 
       .foot {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: .7rem;
+        align-items: flex-start;
       }
 
-      /* Visitor counter nicht “floaten” lassen */
-      footer .visitor-counter {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
+      .foot small {
+        font-size: .8rem;
+      }
+    }
+
+    /* === Sehr kleine Smartphones === */
+    @media (max-width: 380px) {
+
+      /* Container minimal */
+      .container {
+        padding-inline: 8px;
       }
 
-      footer .visitor-counter svg {
-        width: 20px;
-        height: 20px;
-        display: block;
+      /* Card padding minimal */
+      .card {
+        padding: 8px;
       }
 
-      /* Base */
-      footer .social {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
+      /* Headings noch kleiner */
+      h1 {
+        font-size: 18px;
       }
 
-      /* Stelle sicher, dass diese Blöcke NACH allen generischen .social a-Regeln stehen */
-      footer .social a.iso-pro {
-        position: relative;
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        overflow: visible;
-        /* wichtig für die Ringe/Tooltip */
+      h2 {
+        font-size: 15px;
       }
 
-      /* … Deine bestehenden iso-pro Hover/Wellen/Tooltip-Regeln … */
-
-      /* === Footer social isometric hover (scoped) === */
-      footer .social a.iso-pro {
-        position: relative;
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        /* behält deine vorhandene Border aus .social a */
-        background: color-mix(in oklab, var(--card) 35%, transparent);
-        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2),
-          inset 0 0 5px rgba(255, 255, 255, 0.28), 0 5px 8px rgba(0, 0, 0, 0.18);
-        transition: transform 0.3s ease, box-shadow 0.3s ease,
-          background 0.3s ease;
-        overflow: visible;
-        /* damit Tooltip/Spans sichtbar bleiben */
+      /* Buttons kompakter */
+      .btn {
+        padding: .45rem .6rem;
+        font-size: .85rem;
+        min-height: 40px;
       }
 
-      footer .social a.iso-pro:hover {
-        background: color-mix(in oklab, var(--card) 45%, transparent);
-        box-shadow: inset 0 0 22px rgba(255, 255, 255, 0.22),
-          inset 0 0 6px rgba(255, 255, 255, 0.34),
-          0 8px 14px rgba(0, 0, 0, 0.22);
+      /* Inputs */
+      input,
+      select,
+      textarea {
+        padding: .45rem .55rem;
+        font-size: 14px;
       }
 
-      /* SVG im Button */
-      footer .social a.iso-pro .svg,
-      footer .social a.iso-pro svg {
-        width: 22px;
-        height: 22px;
-        transition: transform 0.3s ease, filter 0.3s ease, color 0.3s ease;
-        color: currentColor;
-        /* wie in deinem Beispiel */
-        fill: currentColor;
+      /* Log */
+      .log {
+        padding: .5rem;
+        font-size: .8rem;
       }
 
-      /* Isometrischer Versatz auf Hover */
-      footer .social a.iso-pro:hover .svg,
-      footer .social a.iso-pro:hover svg {
-        transform: translate(5px, -5px);
+      /* Chips */
+      .chip {
+        font-size: .8rem;
+        padding: .25rem .45rem;
       }
 
-      /* Wellenringe */
-      footer .social a.iso-pro span {
-        opacity: 0;
-        position: absolute;
-        inset: 0;
-        margin: auto;
-        height: 48px;
-        width: 48px;
-        border-radius: 50%;
-        border: 2px solid currentColor;
-        /* nutzt die Icon-Farbe */
-        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.25),
-          inset 0 0 5px rgba(255, 255, 255, 0.35), 0 5px 5px rgba(0, 0, 0, 0.16);
-        transition: transform 0.3s ease, opacity 0.3s ease;
-        pointer-events: none;
+      /* Table horizontal scroll */
+      .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    /* === Landscape Mode === */
+    @media (max-height: 500px) and (orientation: landscape) {
+      main {
+        padding-block: 16px;
       }
 
-      footer .social a.iso-pro:hover span {
-        opacity: 1;
+      .card {
+        padding: 10px;
       }
 
-      footer .social a.iso-pro:hover span:nth-child(1) {
-        opacity: 0.22;
-        transform: translate(0px, 0px);
+      h1 {
+        font-size: 20px;
+        margin: 0 0 .6rem;
       }
 
-      footer .social a.iso-pro:hover span:nth-child(2) {
-        opacity: 0.42;
-        transform: translate(4px, -4px);
+      h2 {
+        font-size: 16px;
+        margin: 0 0 .4rem;
+      }
+    }
+
+    /* === Spezielle Fix für Form-Layouts === */
+    @media (max-width: 640px) {
+
+      /* Alle Form-Divs mit style="flex:..." */
+      form>.row>div[style*="flex"] {
+        flex: 1 1 100% !important;
+        width: 100% !important;
+        max-width: 100% !important;
       }
 
-      footer .social a.iso-pro:hover span:nth-child(3) {
-        opacity: 0.62;
-        transform: translate(8px, -8px);
+      /* Select-Felder in Forms */
+      form select {
+        width: 100% !important;
       }
 
-      /* Tooltip */
-      footer .social a.iso-pro .text {
-        position: absolute;
-        left: 100%;
-        top: 50%;
-        transform: translate(10px, -50%) skew(-5deg);
-        white-space: nowrap;
-        opacity: 0;
-        pointer-events: none;
-        z-index: 10;
-
-        font: 600 12px/1.2 Inter, ui-sans-serif, system-ui, -apple-system,
-          Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
-        padding: 6px 8px;
-        border-radius: 6px;
-
-        color: currentColor;
-        background: rgba(255, 255, 255, 0.18);
-        border: 1px solid rgba(255, 255, 255, 0.28);
-        box-shadow: -5px 0 1px rgba(153, 153, 153, 0.18),
-          -10px 0 1px rgba(153, 153, 153, 0.14),
-          inset 0 0 20px rgba(255, 255, 255, 0.24),
-          inset 0 0 5px rgba(255, 255, 255, 0.32), 0 5px 5px rgba(0, 0, 0, 0.12);
-        transition: opacity 0.25s ease, transform 0.25s ease;
+      /* Input-Gruppen */
+      form .row {
+        align-items: stretch !important;
       }
 
-      footer .social a.iso-pro:hover .text {
-        opacity: 1;
-        transform: translate(18px, -50%) skew(-5deg);
+      /* HR-Elemente */
+      hr {
+        margin: .7rem 0 !important;
+      }
+    }
+
+    /* === Auth Header Mobile === */
+    .auth {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .auth .btn.small,
+    .btn.small {
+      padding: .5rem .7rem;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid #ffffff26;
+      box-shadow: none;
+      font-weight: 600;
+    }
+
+    .auth-box {
+      position: relative;
+    }
+
+    .avatar-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .35rem .55rem;
+      border-radius: 999px;
+      background: #ffffff10;
+      border: 1px solid #ffffff26;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      background: #0f1331;
+      flex-shrink: 0;
+    }
+
+    .avatar-fallback {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font: 700 12px/1 Inter, ui-sans-serif;
+      background: #25306a;
+      color: #e9ebff;
+      flex-shrink: 0;
+    }
+
+    .menu {
+      position: absolute;
+      right: 0;
+      margin-top: .4rem;
+      min-width: 160px;
+      z-index: 60;
+      background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+      border: 1px solid #ffffff22;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: .35rem;
+      display: none;
+    }
+
+    .menu.open {
+      display: block;
+    }
+
+    .menu a,
+    .menu button {
+      width: 100%;
+      text-align: left;
+      display: block;
+      background: transparent;
+      color: var(--ink);
+      padding: .55rem .65rem;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .menu a:hover,
+    .menu button:hover {
+      background: #ffffff12;
+    }
+
+    @media (max-width: 640px) {
+      .auth {
+        gap: .3rem;
       }
 
-      /* Optionale Brand-Farben (ändern nur currentColor) */
-      footer .social a.iso-pro.is-fb {
-        color: #ffffff;
+      .avatar-btn {
+        padding: .3rem .45rem;
+        gap: .4rem;
       }
 
-      footer .social a.iso-pro.is-gh {
-        color: #ffffff;
+      .avatar,
+      .avatar-fallback {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
       }
 
-      /* GitHub neutral/weiß auf dark bg */
-      footer .social a.iso-pro.is-mail {
-        color: #ffffff;
+      .uname {
+        font-size: .85rem !important;
       }
 
-      /* Lila */
-      footer .social a.iso-pro.is-discord {
-        color: #ffffff;
+      .menu {
+        min-width: 140px;
+      }
+    }
+
+    /* === Table Wrapper für horizontales Scrollen === */
+    @media (max-width: 640px) {
+
+      /* Wenn Tables zu breit werden */
+      .table {
+        min-width: 500px;
+        /* Mindestbreite für Table */
       }
 
-      /* Kleines Accessibility-Detail: Fokus */
-      footer .social a.iso-pro:focus-visible {
-        outline: 2px solid var(--acc);
-        outline-offset: 3px;
-        box-shadow: 0 0 0 6px var(--ring);
+      /* Table Container scrollbar */
+      article.card:has(.table) {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
       }
-    </style>
-  </head>
+    }
 
-  <body>
-    <header>
-      <div class="container nav" role="navigation" aria-label="Primary">
-        <div class="brand">
-          <a href="/"
-            ><img
-              class="logo"
-              src="/static/icon.png"
-              alt="TAOMA logo"
-              width="28"
-              height="28"
-          /></a>
-          <a href="/"><span>TAOMA™</span></a>
-        </div>
+    /* === Right-align Elemente === */
+    .right {
+      margin-left: auto;
+    }
 
-        <button
-          type="button"
-          class="mobile-toggle"
-          id="mobileToggle"
-          aria-controls="primary-menu"
-          aria-expanded="false"
-          aria-label="Toggle menu"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M4 6H20M4 12H20M4 18H20"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
-        </button>
+    @media (max-width: 640px) {
+      .right {
+        margin-left: 0;
+        width: 100%;
+      }
+    }
 
-        <nav id="primary-menu" class="links" aria-label="Site">
-          <a href="/">Home</a>
-          <a href="/projects">Projects</a>
-          <a href="/about">About</a>
-          <a href="/contact">Contact</a>
-          <a href="/skills">Skills</a>
-        </nav>
+    /* === Prevent text overflow everywhere === */
+    * {
+      min-width: 0;
+    }
 
-        <div id="authSlot" class="auth"></div>
+    p,
+    span,
+    div,
+    label,
+    button {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+    }
+
+    footer {
+      border-top: 1px solid #ffffff14;
+      padding-block: 24px;
+      margin-top: auto
+    }
+
+    .foot {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap
+    }
+
+    .social {
+      display: flex;
+      align-items: center;
+      gap: .6rem
+    }
+
+    .social a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid #ffffff26
+    }
+
+    /* --- Focus / Motion --- */
+    :focus-visible {
+      outline: 2px solid var(--acc);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 6px var(--ring)
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        animation: none !important
+      }
+    }
+
+    footer {
+      border-top: 1px solid #ffffff14;
+      padding-block: 24px;
+      margin-top: auto;
+    }
+
+    .foot {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    /* Visitor counter nicht “floaten” lassen */
+    footer .visitor-counter {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+    }
+
+    footer .visitor-counter svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+
+    /* Base */
+    footer .social {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    /* Stelle sicher, dass diese Blöcke NACH allen generischen .social a-Regeln stehen */
+    footer .social a.iso-pro {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      overflow: visible;
+      /* wichtig für die Ringe/Tooltip */
+    }
+
+    /* … Deine bestehenden iso-pro Hover/Wellen/Tooltip-Regeln … */
+
+    /* === Footer social isometric hover (scoped) === */
+    footer .social a.iso-pro {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      /* behält deine vorhandene Border aus .social a */
+      background: color-mix(in oklab, var(--card) 35%, transparent);
+      box-shadow:
+        inset 0 0 20px rgba(255, 255, 255, .20),
+        inset 0 0 5px rgba(255, 255, 255, .28),
+        0 5px 8px rgba(0, 0, 0, .18);
+      transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
+      overflow: visible;
+      /* damit Tooltip/Spans sichtbar bleiben */
+    }
+
+    footer .social a.iso-pro:hover {
+      background: color-mix(in oklab, var(--card) 45%, transparent);
+      box-shadow:
+        inset 0 0 22px rgba(255, 255, 255, .22),
+        inset 0 0 6px rgba(255, 255, 255, .34),
+        0 8px 14px rgba(0, 0, 0, .22);
+    }
+
+    /* SVG im Button */
+    footer .social a.iso-pro .svg,
+    footer .social a.iso-pro svg {
+      width: 22px;
+      height: 22px;
+      transition: transform .3s ease, filter .3s ease, color .3s ease;
+      color: currentColor;
+      /* wie in deinem Beispiel */
+      fill: currentColor;
+    }
+
+    /* Isometrischer Versatz auf Hover */
+    footer .social a.iso-pro:hover .svg,
+    footer .social a.iso-pro:hover svg {
+      transform: translate(5px, -5px);
+    }
+
+    /* Wellenringe */
+    footer .social a.iso-pro span {
+      opacity: 0;
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      height: 48px;
+      width: 48px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      /* nutzt die Icon-Farbe */
+      box-shadow:
+        inset 0 0 20px rgba(255, 255, 255, .25),
+        inset 0 0 5px rgba(255, 255, 255, .35),
+        0 5px 5px rgba(0, 0, 0, .16);
+      transition: transform .3s ease, opacity .3s ease;
+      pointer-events: none;
+    }
+
+    footer .social a.iso-pro:hover span {
+      opacity: 1;
+    }
+
+    footer .social a.iso-pro:hover span:nth-child(1) {
+      opacity: .22;
+      transform: translate(0px, 0px);
+    }
+
+    footer .social a.iso-pro:hover span:nth-child(2) {
+      opacity: .42;
+      transform: translate(4px, -4px);
+    }
+
+    footer .social a.iso-pro:hover span:nth-child(3) {
+      opacity: .62;
+      transform: translate(8px, -8px);
+    }
+
+    /* Tooltip */
+    footer .social a.iso-pro .text {
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translate(10px, -50%) skew(-5deg);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 10;
+
+      font: 600 12px/1.2 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+      padding: 6px 8px;
+      border-radius: 6px;
+
+      color: currentColor;
+      background: rgba(255, 255, 255, .18);
+      border: 1px solid rgba(255, 255, 255, .28);
+      box-shadow:
+        -5px 0 1px rgba(153, 153, 153, .18),
+        -10px 0 1px rgba(153, 153, 153, .14),
+        inset 0 0 20px rgba(255, 255, 255, .24),
+        inset 0 0 5px rgba(255, 255, 255, .32),
+        0 5px 5px rgba(0, 0, 0, .12);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+
+    footer .social a.iso-pro:hover .text {
+      opacity: 1;
+      transform: translate(18px, -50%) skew(-5deg);
+    }
+
+    /* Optionale Brand-Farben (ändern nur currentColor) */
+    footer .social a.iso-pro.is-fb {
+      color: #ffffff;
+    }
+
+    footer .social a.iso-pro.is-gh {
+      color: #ffffff;
+    }
+
+    /* GitHub neutral/weiß auf dark bg */
+    footer .social a.iso-pro.is-mail {
+      color: #ffffff;
+    }
+
+    /* Lila */
+    footer .social a.iso-pro.is-discord {
+      color: #ffffff;
+    }
+
+    /* Kleines Accessibility-Detail: Fokus */
+    footer .social a.iso-pro:focus-visible {
+      outline: 2px solid var(--acc);
+      outline-offset: 3px;
+      box-shadow: 0 0 0 6px var(--ring);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container nav" role="navigation" aria-label="Primary">
+      <div class="brand">
+        <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
+        <a href="/"><span>TAOMA™</span></a>
       </div>
-    </header>
 
-    <main class="container">
-      <section class="card">
-        <p class="kicker muted">Admin</p>
-        <h1>Control Panel</h1>
-        <div class="row">
-          <span id="adminBadge" class="chip">checking…</span>
-          <span id="whoami" class="chip mono"></span>
-          <span class="chip"
-            >All actions reuse your authenticated session via secure
-            cookies.</span
-          >
-        </div>
-      </section>
+      <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu" aria-expanded="false"
+        aria-label="Toggle menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
 
-      <!-- USERS -->
-      <section class="grid cols-2">
-        <article class="card">
-          <h2>Users — Create</h2>
-          <form id="fCreateUser">
-            <label>Username</label
-            ><input name="username" required minlength="3" maxlength="32" />
-            <label>Password</label
-            ><input name="password" type="password" required minlength="8" />
-            <label>Linktree ID (optional)</label
-            ><input
-              name="linktree_id"
-              type="number"
-              min="1"
-              placeholder="e.g. 1"
-            />
-            <label>Profile Picture URL (optional)</label
-            ><input name="profile_picture" placeholder="/media/avatars/…" />
-            <div class="actions">
-              <button class="btn" type="submit">Create User</button>
-              <button class="btn ghost" type="reset">Reset</button>
-            </div>
-          </form>
-          <div class="log" id="logCreateUser"></div>
-        </article>
+      <nav id="primary-menu" class="links" aria-label="Site">
+        <a href="/">Home</a>
+        <a href="/projects">Projects</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/skills">Skills</a>
+      </nav>
 
-        <article class="card">
-          <h2>Users — Lookup / Update / Grant Admin</h2>
-          <form id="fGetUser" class="row" style="align-items: flex-end">
-            <div style="flex: 1 1 180px">
-              <label>User ID</label
-              ><input name="user_id" type="number" min="1" required />
-            </div>
-            <button class="btn" type="submit">Fetch</button>
-            <button
-              class="btn ok"
-              id="btnGrantAdmin"
-              type="button"
-              title="POST /admin/users/{id}/grant"
-            >
-              Grant Admin
-            </button>
-          </form>
+      <div id="authSlot" class="auth"></div>
+    </div>
+  </header>
 
-          <form id="fUpdateUser" style="margin-top: 0.75rem">
-            <div class="row">
-              <div style="flex: 1 1 240px">
-                <label>Username</label
-                ><input
-                  name="username"
-                  minlength="3"
-                  maxlength="32"
-                  placeholder="leave empty to keep"
-                />
-              </div>
-              <div style="flex: 1 1 240px">
-                <label>New Password</label
-                ><input
-                  name="password"
-                  type="password"
-                  minlength="8"
-                  placeholder="leave empty to keep"
-                />
-              </div>
-            </div>
-            <div class="row">
-              <div style="flex: 1 1 200px">
-                <label>Linktree ID</label
-                ><input
-                  name="linktree_id"
-                  type="number"
-                  min="1"
-                  placeholder="leave empty to keep"
-                />
-              </div>
-              <div style="flex: 1 1 200px">
-                <label>Profile Picture URL</label
-                ><input
-                  name="profile_picture"
-                  placeholder="leave empty to keep"
-                />
-              </div>
-            </div>
-            <div class="row" style="align-items: center; margin-top: 0.25rem">
-              <label style="margin: 0">Admin Flag</label>
-              <select name="admin" style="width: auto">
-                <option value="">(no change)</option>
-                <option value="true">true</option>
-                <option value="false">false</option>
-              </select>
+  <main class="container">
+    <section class="card">
+      <p class="kicker muted">Admin</p>
+      <h1>Control Panel</h1>
+      <div class="row">
+        <span id="adminBadge" class="chip">checking…</span>
+        <span id="whoami" class="chip mono"></span>
+        <span class="chip">All actions reuse your authenticated session via secure cookies.</span>
+      </div>
+    </section>
 
-              <!-- NEU: Rollen -->
-              <label style="margin: 0 0 0 1rem">GIF Admin</label>
-              <select name="is_gif_admin" style="width: auto">
-                <option value="">(no change)</option>
-                <option value="true">true</option>
-                <option value="false">false</option>
-              </select>
-
-              <label style="margin: 0 0 0 1rem">Site Admin</label>
-              <select name="is_site_admin" style="width: auto">
-                <option value="">(no change)</option>
-                <option value="true">true</option>
-                <option value="false">false</option>
-              </select>
-              <span class="right"></span>
-              <button
-                class="btn ghost"
-                id="btnClearUserLT"
-                type="button"
-                title="PATCH /user/{id} {linktree_id:null}"
-              >
-                Clear Linktree
-              </button>
-              <button class="btn" type="submit">Update User</button>
-            </div>
-          </form>
-          <div class="log" id="logUser"></div>
-        </article>
-      </section>
-
-      <!-- ICONS -->
-      <section class="grid cols-2">
-        <article class="card">
-          <h2>Icons — Catalog</h2>
+    <!-- USERS -->
+    <section class="grid cols-2">
+      <article class="card">
+        <h2>Users — Create</h2>
+        <form id="fCreateUser">
+          <label>Username</label><input name="username" required minlength="3" maxlength="32">
+          <label>Password</label><input name="password" type="password" required minlength="8">
+          <label>Linktree ID (optional)</label><input name="linktree_id" type="number" min="1" placeholder="e.g. 1">
+          <label>Profile Picture URL (optional)</label><input name="profile_picture" placeholder="/media/avatars/…">
           <div class="actions">
-            <button id="btnLoadIcons" class="btn ghost" type="button">
-              Load Icons
-            </button>
+            <button class="btn" type="submit">Create User</button>
+            <button class="btn ghost" type="reset">Reset</button>
           </div>
-          <table id="tblIcons" class="table" aria-label="Icon catalog">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Code</th>
-                <th>Image</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-          <div class="log" id="logIcons"></div>
-        </article>
+        </form>
+        <div class="log" id="logCreateUser"></div>
+      </article>
 
-        <article class="card">
-          <h2>Icons — Upsert / Grant to User</h2>
-          <div
-            class="row"
-            style="align-items: center; margin: 0.25rem 0 0.5rem"
-          >
-            <div>
-              <label style="margin: 0.15rem 0 0.25rem"
-                >Upload Icon (image/*)</label
-              >
-              <input type="file" id="fileIconCatalog" accept="image/*" />
-            </div>
-            <img id="iconPreview" class="thumb" alt="" />
-            <small class="muted"
-              >Gets uploaded to <code>/api/users/me/linkicon</code> and the url
-              gets inserted below.</small
-            >
+      <article class="card">
+        <h2>Users — Lookup / Update / Grant Admin</h2>
+        <form id="fGetUser" class="row" style="align-items:flex-end">
+          <div style="flex:1 1 180px">
+            <label>User ID</label><input name="user_id" type="number" min="1" required>
           </div>
+          <button class="btn" type="submit">Fetch</button>
+          <button class="btn ok" id="btnGrantAdmin" type="button" title="POST /admin/users/{id}/grant">Grant
+            Admin</button>
+        </form>
 
-          <form id="fUpsertIcon">
-            <label>Code</label
-            ><input
-              name="code"
-              required
-              pattern="^[a-z0-9_\-]+$"
-              minlength="2"
-              maxlength="64"
-            />
-            <label>Image URL</label
-            ><input
-              name="image_url"
-              id="iconImageUrl"
-              required
-              placeholder="/media/... oder extern"
-            />
-            <label>Description (optional)</label><input name="description" />
-            <div class="actions">
-              <button class="btn" type="submit">Upsert Icon</button>
+        <form id="fUpdateUser" style="margin-top:.75rem">
+          <div class="row">
+            <div style="flex:1 1 240px">
+              <label>Username</label><input name="username" minlength="3" maxlength="32"
+                placeholder="leave empty to keep">
             </div>
-          </form>
-
-          <hr
-            style="border: 0; border-top: 1px solid #ffffff1a; margin: 0.9rem 0"
-          />
-
-          <form id="fGrantIcon" class="row">
-            <div style="flex: 1 1 140px">
-              <label>User ID</label
-              ><input name="user_id" type="number" min="1" required />
+            <div style="flex:1 1 240px">
+              <label>New Password</label><input name="password" type="password" minlength="8"
+                placeholder="leave empty to keep">
             </div>
-            <div style="flex: 1 1 160px">
-              <label>Icon Code</label><input name="code" required />
-            </div>
-            <div style="flex: 1 1 160px">
-              <label>Displayed</label>
-              <select name="displayed">
-                <option value="false">false</option>
-                <option value="true">true</option>
-              </select>
-            </div>
-            <button class="btn" type="submit">Grant Icon</button>
-          </form>
-          <div class="log" id="logIconOps"></div>
-        </article>
-      </section>
-
-      <!-- LINKTREE -->
-      <section class="grid cols-2">
-        <article class="card">
-          <h2>Linktree — Update (owner or admin)</h2>
-          <form id="fUpdateLinktree">
-            <label>Linktree ID</label
-            ><input name="id" type="number" min="1" required />
-            <div class="row">
-              <div style="flex: 1 1 200px">
-                <label>Slug</label><input name="slug" placeholder="optional" />
-              </div>
-              <div style="flex: 1 1 200px">
-                <label>Location</label
-                ><input name="location" placeholder="optional" />
-              </div>
-            </div>
-            <label>Quote</label><input name="quote" placeholder="optional" />
-            <div class="row">
-              <div style="flex: 1 1 200px">
-                <label>Song URL</label
-                ><input name="song_url" placeholder="/media/... optional" />
-              </div>
-              <div style="flex: 1 1 200px">
-                <label>Background URL</label
-                ><input
-                  name="background_url"
-                  placeholder="/media/... optional"
-                />
-              </div>
-            </div>
-            <div class="row">
-              <div style="flex: 1 1 160px">
-                <label>Background is video</label>
-                <select name="background_is_video">
-                  <option value="">(no change)</option>
-                  <option value="true">true</option>
-                  <option value="false">false</option>
-                </select>
-              </div>
-              <div style="flex: 1 1 160px">
-                <label>Transparency (0–100)</label>
-                <input
-                  name="transparency"
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder=""
-                />
-              </div>
-            </div>
-            <div class="row">
-              <div style="flex: 1 1 160px">
-                <label>Name Effect</label>
-                <select name="name_effect">
-                  <option value="">(no change)</option>
-                  <option>none</option>
-                  <option>glow</option>
-                  <option>neon</option>
-                  <option>rainbow</option>
-                </select>
-              </div>
-              <div style="flex: 1 1 160px">
-                <label>Background Effect</label>
-                <select name="background_effect">
-                  <option value="">(no change)</option>
-                  <option>none</option>
-                  <option>night</option>
-                  <option>rain</option>
-                  <option>snow</option>
-                </select>
-              </div>
-              <div style="flex: 1 1 180px">
-                <label>Display Name Mode</label>
-                <select name="display_name_mode">
-                  <option value="">(no change)</option>
-                  <option>slug</option>
-                  <option>username</option>
-                </select>
-              </div>
-            </div>
-            <div class="actions">
-              <button class="btn" type="submit">Update Linktree</button>
-              <button
-                class="btn danger"
-                id="btnDeleteLinktree"
-                type="button"
-                title="DELETE /api/linktrees/{id}"
-              >
-                Delete Linktree
-              </button>
-            </div>
-          </form>
-          <div class="log" id="logLT"></div>
-          <hr
-            style="border: 0; border-top: 1px solid #ffffff1a; margin: 0.9rem 0"
-          />
-          <div class="note muted">
-            Danger Zone: Deletes the whole linktree with the links and removes
-            all connections to owners. Media only gets deleted when its nowhere
-            refferenced.
           </div>
-        </article>
-
-        <article class="card">
-          <h2>Links — Add / Update / Delete</h2>
-          <form id="fAddLink">
-            <label>Linktree ID</label
-            ><input name="linktree_id" type="number" min="1" required />
-            <label>URL</label><input name="url" required />
-            <div class="row">
-              <div style="flex: 1 1 160px">
-                <label>Label</label><input name="label" />
-              </div>
-              <div style="flex: 1 1 160px">
-                <label>Icon URL</label
-                ><input name="icon_url" placeholder="/media/..." />
-              </div>
-              <div style="flex: 1 1 120px">
-                <label>Position</label
-                ><input
-                  name="position"
-                  type="number"
-                  min="0"
-                  placeholder="auto append"
-                />
-              </div>
+          <div class="row">
+            <div style="flex:1 1 200px">
+              <label>Linktree ID</label><input name="linktree_id" type="number" min="1"
+                placeholder="leave empty to keep">
             </div>
-            <label>Active</label>
-            <select name="is_active">
+            <div style="flex:1 1 200px">
+              <label>Profile Picture URL</label><input name="profile_picture" placeholder="leave empty to keep">
+            </div>
+          </div>
+          <div class="row" style="align-items:center;margin-top:.25rem">
+            <label style="margin:0">Admin Flag</label>
+            <select name="admin" style="width:auto">
+              <option value="">(no change)</option>
               <option value="true">true</option>
               <option value="false">false</option>
             </select>
-            <div class="actions">
-              <button class="btn" type="submit">Add Link</button>
-            </div>
-          </form>
-
-          <hr
-            style="border: 0; border-top: 1px solid #ffffff1a; margin: 0.9rem 0"
-          />
-
-          <form id="fUpdateLink">
-            <label>Link ID</label
-            ><input name="link_id" type="number" min="1" required />
-            <div class="row">
-              <div style="flex: 1 1 160px">
-                <label>URL (opt.)</label><input name="url" />
-              </div>
-              <div style="flex: 1 1 160px">
-                <label>Label (opt.)</label><input name="label" />
-              </div>
-              <div style="flex: 1 1 160px">
-                <label>Icon URL (opt.)</label><input name="icon_url" />
-              </div>
-              <div style="flex: 1 1 120px">
-                <label>Position (opt.)</label
-                ><input name="position" type="number" min="0" />
-              </div>
-              <div style="flex: 1 1 140px">
-                <label>Active (opt.)</label>
-                <select name="is_active">
-                  <option value="">(no change)</option>
-                  <option value="true">true</option>
-                  <option value="false">false</option>
-                </select>
-              </div>
-            </div>
-            <div class="actions">
-              <button class="btn" type="submit">Update Link</button>
-              <button class="btn danger" id="btnDeleteLink" type="button">
-                Delete Link
-              </button>
-            </div>
-          </form>
-          <div class="log" id="logLinks"></div>
-        </article>
-      </section>
-
-      <!-- MEDIA GC -->
-      <section class="card">
-        <h2>Media — Garbage Collect</h2>
-        <form id="fGC" class="row" style="align-items: flex-end">
-          <div class="inline">
-            <label for="age">Min Age (seconds)</label>
+            <span class="right"></span>
+            <button class="btn ghost" id="btnClearUserLT" type="button"
+              title="PATCH /user/{id} {linktree_id:null}">Clear Linktree</button>
+            <button class="btn" type="submit">Update User</button>
           </div>
-          <input
-            id="age"
-            name="min_age_seconds"
-            type="number"
-            min="0"
-            value="60"
-            style="width: 140px"
-          />
-          <button class="btn danger" type="submit">Run GC</button>
         </form>
-        <div class="log" id="logGC"></div>
-        <p class="note muted">
-          Deletes löcal <code class="mono">/media/…</code> files without db
-          connection.
-        </p>
-      </section>
-    </main>
+        <div class="log" id="logUser"></div>
+      </article>
+    </section>
 
-    <footer>
-      <div class="container foot">
-        <small class="muted"
-          >© <span id="year"></span> TAOMA™. All rights reserved.</small
-        >
-        <div class="visitor-counter">
-          <!-- Eye Icon -->
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-            />
-          </svg>
-          <span id="visitor-count">0</span>
+    <!-- ICONS -->
+    <section class="grid cols-2">
+      <article class="card">
+        <h2>Icons — Catalog</h2>
+        <div class="actions">
+          <button id="btnLoadIcons" class="btn ghost" type="button">Load Icons</button>
         </div>
-        <div class="social">
-          <a
-            href="https://guns.lol/taoma"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="guns.lol"
-            class="iso-pro is-fb"
-          >
-            <span></span><span></span><span></span>
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 512 512"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              class="svg"
-            >
-              <path
-                d="M256 32C132 32 32 132 32 256s100 224 224 224 224-100 224-224S380 32 256 32Zm80 160h32v32h-32v32h-32v-32h-32v-32h32v-32h32v32Z"
-              />
-            </svg>
-            <div class="text">guns.lol</div>
-          </a>
+        <table id="tblIcons" class="table" aria-label="Icon catalog">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Code</th>
+              <th>Image</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="log" id="logIcons"></div>
+      </article>
 
-          <a
-            href="https://github.com/TaomasSpace"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="GitHub"
-            class="iso-pro is-gh"
-          >
-            <span></span><span></span><span></span>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              class="svg"
-            >
-              <path
-                d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z"
-              />
-            </svg>
-            <div class="text">GitHub</div>
-          </a>
-
-          <a
-            href="mailto:Taoma.M@proton.me"
-            aria-label="Email"
-            class="iso-pro is-mail"
-          >
-            <span></span><span></span><span></span>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              class="svg"
-              aria-hidden="true"
-            >
-              <!-- Rahmen des Umschlags -->
-              <rect
-                x="3"
-                y="5"
-                width="18"
-                height="14"
-                rx="2"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linejoin="round"
-              />
-              <!-- Klappe -->
-              <path
-                d="M3 7l9 6 9-6"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <div class="text">Email</div>
-          </a>
-
-          <a
-            href="https://discord.gg/H3NDg7e3vD"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Discord"
-            class="iso-pro is-discord"
-          >
-            <span></span><span></span><span></span>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              class="svg"
-            >
-              <path
-                d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z"
-              />
-            </svg>
-            <div class="text">Discord</div>
-          </a>
+      <article class="card">
+        <h2>Icons — Upsert / Grant to User</h2>
+        <div class="row" style="align-items:center;margin:.25rem 0 .5rem">
+          <div>
+            <label style="margin:.15rem 0 .25rem">Upload Icon (image/*)</label>
+            <input type="file" id="fileIconCatalog" accept="image/*">
+          </div>
+          <img id="iconPreview" class="thumb" alt="" />
+          <small class="muted">Gets uploaded to <code>/api/users/me/linkicon</code> and the url gets inserted below.</small>
         </div>
+
+        <form id="fUpsertIcon">
+          <label>Code</label><input name="code" required pattern="^[a-z0-9_\-]+$" minlength="2" maxlength="64">
+          <label>Image URL</label><input name="image_url" id="iconImageUrl" required
+            placeholder="/media/... oder extern">
+          <label>Description (optional)</label><input name="description">
+          <div class="actions">
+            <button class="btn" type="submit">Upsert Icon</button>
+          </div>
+        </form>
+
+        <hr style="border:0;border-top:1px solid #ffffff1a;margin:.9rem 0">
+
+        <form id="fGrantIcon" class="row">
+          <div style="flex:1 1 140px">
+            <label>User ID</label><input name="user_id" type="number" min="1" required>
+          </div>
+          <div style="flex:1 1 160px">
+            <label>Icon Code</label><input name="code" required>
+          </div>
+          <div style="flex:1 1 160px">
+            <label>Displayed</label>
+            <select name="displayed">
+              <option value="false">false</option>
+              <option value="true">true</option>
+            </select>
+          </div>
+          <button class="btn" type="submit">Grant Icon</button>
+        </form>
+        <div class="log" id="logIconOps"></div>
+      </article>
+    </section>
+
+    <!-- LINKTREE -->
+    <section class="grid cols-2">
+      <article class="card">
+        <h2>Linktree — Update (owner or admin)</h2>
+        <form id="fUpdateLinktree">
+          <label>Linktree ID</label><input name="id" type="number" min="1" required>
+          <div class="row">
+            <div style="flex:1 1 200px"><label>Slug</label><input name="slug" placeholder="optional"></div>
+            <div style="flex:1 1 200px"><label>Location</label><input name="location" placeholder="optional"></div>
+          </div>
+          <label>Quote</label><input name="quote" placeholder="optional">
+          <div class="row">
+            <div style="flex:1 1 200px"><label>Song URL</label><input name="song_url" placeholder="/media/... optional">
+            </div>
+            <div style="flex:1 1 200px"><label>Background URL</label><input name="background_url"
+                placeholder="/media/... optional"></div>
+          </div>
+          <div class="row">
+            <div style="flex:1 1 160px">
+              <label>Background is video</label>
+              <select name="background_is_video">
+                <option value="">(no change)</option>
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+            <div style="flex:1 1 160px">
+              <label>Transparency (0–100)</label>
+              <input name="transparency" type="number" min="0" max="100" placeholder="">
+            </div>
+          </div>
+          <div class="row">
+            <div style="flex:1 1 160px">
+              <label>Name Effect</label>
+              <select name="name_effect">
+                <option value="">(no change)</option>
+                <option>none</option>
+                <option>glow</option>
+                <option>neon</option>
+                <option>rainbow</option>
+              </select>
+            </div>
+            <div style="flex:1 1 160px">
+              <label>Background Effect</label>
+              <select name="background_effect">
+                <option value="">(no change)</option>
+                <option>none</option>
+                <option>night</option>
+                <option>rain</option>
+                <option>snow</option>
+              </select>
+            </div>
+            <div style="flex:1 1 180px">
+              <label>Display Name Mode</label>
+              <select name="display_name_mode">
+                <option value="">(no change)</option>
+                <option>slug</option>
+                <option>username</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn" type="submit">Update Linktree</button>
+            <button class="btn danger" id="btnDeleteLinktree" type="button" title="DELETE /api/linktrees/{id}">Delete
+              Linktree</button>
+          </div>
+        </form>
+        <div class="log" id="logLT"></div>
+        <hr style="border:0;border-top:1px solid #ffffff1a;margin:.9rem 0">
+        <div class="note muted">Danger Zone: Deletes the whole linktree with the links and removes all connections to owners. Media only gets deleted when its nowhere refferenced.</div>
+      </article>
+
+      <article class="card">
+        <h2>Links — Add / Update / Delete</h2>
+        <form id="fAddLink">
+          <label>Linktree ID</label><input name="linktree_id" type="number" min="1" required>
+          <label>URL</label><input name="url" required>
+          <div class="row">
+            <div style="flex:1 1 160px"><label>Label</label><input name="label"></div>
+            <div style="flex:1 1 160px"><label>Icon URL</label><input name="icon_url" placeholder="/media/..."></div>
+            <div style="flex:1 1 120px"><label>Position</label><input name="position" type="number" min="0"
+                placeholder="auto append"></div>
+          </div>
+          <label>Active</label>
+          <select name="is_active">
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+          <div class="actions"><button class="btn" type="submit">Add Link</button></div>
+        </form>
+
+        <hr style="border:0;border-top:1px solid #ffffff1a;margin:.9rem 0">
+
+        <form id="fUpdateLink">
+          <label>Link ID</label><input name="link_id" type="number" min="1" required>
+          <div class="row">
+            <div style="flex:1 1 160px"><label>URL (opt.)</label><input name="url"></div>
+            <div style="flex:1 1 160px"><label>Label (opt.)</label><input name="label"></div>
+            <div style="flex:1 1 160px"><label>Icon URL (opt.)</label><input name="icon_url"></div>
+            <div style="flex:1 1 120px"><label>Position (opt.)</label><input name="position" type="number" min="0">
+            </div>
+            <div style="flex:1 1 140px">
+              <label>Active (opt.)</label>
+              <select name="is_active">
+                <option value="">(no change)</option>
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn" type="submit">Update Link</button>
+            <button class="btn danger" id="btnDeleteLink" type="button">Delete Link</button>
+          </div>
+        </form>
+        <div class="log" id="logLinks"></div>
+      </article>
+    </section>
+
+    <!-- MEDIA GC -->
+    <section class="card">
+      <h2>Media — Garbage Collect</h2>
+      <form id="fGC" class="row" style="align-items:flex-end">
+        <div class="inline">
+          <label for="age">Min Age (seconds)</label>
+        </div>
+        <input id="age" name="min_age_seconds" type="number" min="0" value="60" style="width:140px">
+        <button class="btn danger" type="submit">Run GC</button>
+      </form>
+      <div class="log" id="logGC"></div>
+      <p class="note muted">Deletes löcal <code class="mono">/media/…</code> files without db connection.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container foot">
+      <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved.</small>
+      <div class="visitor-counter">
+        <!-- Eye Icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        <span id="visitor-count">0</span>
       </div>
-    </footer>
-    <script>
-      (async () => {
-        const KEY = "taoma_last_counted_at";
-        const DAY = 24 * 60 * 60 * 1000;
-        const now = Date.now();
-        const last = parseInt(localStorage.getItem(KEY) || "0", 10);
-        const shouldCount = !last || now - last > DAY;
+      <div class="social">
+        <a href="https://guns.lol/taoma" target="_blank" rel="noreferrer" aria-label="guns.lol" class="iso-pro is-fb">
+          <span></span><span></span><span></span>
+          <svg width="18" height="18" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+            class="svg">
+            <path
+              d="M256 32C132 32 32 132 32 256s100 224 224 224 224-100 224-224S380 32 256 32Zm80 160h32v32h-32v32h-32v-32h-32v-32h32v-32h32v32Z" />
+          </svg>
+          <div class="text">guns.lol</div>
+        </a>
 
-        if (shouldCount) {
-          navigator.sendBeacon("/api/visits/increment");
-          localStorage.setItem(KEY, String(now));
-        }
+        <a href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer" aria-label="GitHub"
+          class="iso-pro is-gh">
+          <span></span><span></span><span></span>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg">
+            <path
+              d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z" />
+          </svg>
+          <div class="text">GitHub</div>
+        </a>
 
-        const res = await fetch("/api/visits/value");
-        const { total } = await res.json();
-        document.getElementById("visitor-count").textContent = total ?? "0";
-      })();
-      function escapeHtml(value) {
-        return String(value ?? "").replace(
-          /[&<>"']/g,
-          (ch) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-            }[ch] || ch)
-        );
+        <a href="mailto:Taoma.M@proton.me" aria-label="Email" class="iso-pro is-mail">
+          <span></span><span></span><span></span>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg" aria-hidden="true">
+            <!-- Rahmen des Umschlags -->
+            <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"
+              stroke-linejoin="round" />
+            <!-- Klappe -->
+            <path d="M3 7l9 6 9-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+          <div class="text">Email</div>
+        </a>
+
+        <a href="https://discord.gg/H3NDg7e3vD" target="_blank" rel="noreferrer" aria-label="Discord"
+          class="iso-pro is-discord">
+          <span></span><span></span><span></span>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg">
+            <path
+              d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z" />
+          </svg>
+          <div class="text">Discord</div>
+        </a>
+      </div>
+    </div>
+  </footer>
+  <script>
+    (async () => {
+      const KEY = "taoma_last_counted_at";
+      const DAY = 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      const last = parseInt(localStorage.getItem(KEY) || "0", 10);
+      const shouldCount = !last || (now - last) > DAY;
+
+      if (shouldCount) {
+        navigator.sendBeacon("/api/visits/increment");
+        localStorage.setItem(KEY, String(now));
       }
 
-      // Year
-      document.getElementById("year").textContent = new Date().getFullYear();
+      const res = await fetch("/api/visits/value");
+      const { total } = await res.json();
+      document.getElementById("visitor-count").textContent = total ?? "0";
+    })();
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[ch] || ch);
+    }
 
-      // Utilities
-      const $ = (s, r = document) => r.querySelector(s);
-      const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-      function headers(json = true) {
-        const h = json ? { "Content-Type": "application/json" } : {};
-        return h;
-      }
-      const j = (o) => JSON.stringify(o);
-      const show = (sel, msg, ok = true) => {
-        $(sel).innerHTML =
-          (ok ? "✅ " : "❌ ") +
-          (typeof msg === "string" ? msg : JSON.stringify(msg, null, 2));
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Utilities
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+    function headers(json = true) {
+      const h = json ? { 'Content-Type': 'application/json' } : {};
+      return h;
+    }
+    const j = (o) => JSON.stringify(o);
+    const show = (sel, msg, ok = true) => { $(sel).innerHTML = (ok ? '✅ ' : '❌ ') + (typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2)); };
+    const apiget = async (url) => (await fetch(url, { headers: headers(false), credentials: 'include' }));
+    const apipost = async (url, body) => (await fetch(url, { method: 'POST', headers: headers(), credentials: 'include', body: j(body) }));
+    const apipatch = async (url, body) => (await fetch(url, { method: 'PATCH', headers: headers(), credentials: 'include', body: j(body) }));
+    const apidelete = async (url) => (await fetch(url, { method: 'DELETE', headers: headers(false), credentials: 'include' }));
+
+    // --- Gate: must be admin ---
+    (async () => {
+      try {
+        const r = await apiget('/api/auth/verify');
+        if (!r.ok) { location.href = '/login'; return; }
+        const data = await r.json();
+        const user = data?.user;
+        $('#whoami').textContent = user ? `uid=${user.id} @ ${user.username}` : 'unknown';
+        if (!user?.admin) { $('#adminBadge').textContent = 'not admin'; $('#adminBadge').classList.add('errText'); location.href = '/'; return; }
+        $('#adminBadge').textContent = 'admin ✓';
+        $('#adminBadge').classList.add('okText');
+      } catch (e) { location.href = '/login'; }
+    })();
+
+    // --- USERS: Create ---
+    $('#fCreateUser')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const body = {
+        username: f.username.value.trim(),
+        password: f.password.value,
+        linktree_id: f.linktree_id.value ? Number(f.linktree_id.value) : null,
+        profile_picture: f.profile_picture.value || null
       };
-      const apiget = async (url) =>
-        await fetch(url, { headers: headers(false), credentials: "include" });
-      const apipost = async (url, body) =>
-        await fetch(url, {
-          method: "POST",
-          headers: headers(),
-          credentials: "include",
-          body: j(body),
+      try {
+        const r = await apipost('/user', body);
+        const t = await r.json().catch(() => ({}));
+        show('#logCreateUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logCreateUser', String(err), false); }
+    });
+
+    // --- USERS: Fetch + Grant + Update ---
+    $('#fGetUser')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = Number(e.target.user_id.value);
+      if (!id) return;
+      try {
+        const r = await apiget(`/user/${id}`);
+        const t = await r.json();
+        show('#logUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logUser', String(err), false); }
+    });
+
+    $('#btnGrantAdmin')?.addEventListener('click', async () => {
+      const idInput = $('#fGetUser [name="user_id"]');
+      const id = Number(idInput?.value || 0);
+      if (!id) { show('#logUser', 'User ID required for grant', false); return; }
+      try {
+        const r = await apipost(`/admin/users/${id}/grant`, {});
+        const t = await r.json();
+        show('#logUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logUser', String(err), false); }
+    });
+
+    $('#fUpdateUser')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = Number($('#fGetUser [name="user_id"]').value);
+      if (!id) { show('#logUser', 'Fetch user or enter User ID first', false); return; }
+      const f = e.target;
+      const body = {};
+      if (f.username.value.trim()) body.username = f.username.value.trim();
+      if (f.password.value) body.password = f.password.value;
+      if (f.linktree_id.value) body.linktree_id = Number(f.linktree_id.value);
+      if (f.profile_picture.value) body.profile_picture = f.profile_picture.value;
+      if (f.admin.value !== '') body.admin = (f.admin.value === 'true');
+
+      try {
+        const r = await apipatch(`/user/${id}`, body);
+        const t = await r.json();
+        show('#logUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logUser', String(err), false); }
+    });
+
+    // --- USERS: clear linktree association ---
+    $('#btnClearUserLT')?.addEventListener('click', async () => {
+      const id = Number($('#fGetUser [name=\"user_id\"]').value);
+      if (!id) { show('#logUser', 'Fetch user or enter User ID first', false); return; }
+      if (!confirm('Remove this user\'s linktree association?')) return;
+      try {
+        const r = await apipatch(`/user/${id}`, { linktree_id: null });
+        const t = await r.json();
+        show('#logUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logUser', String(err), false); }
+    });
+
+    // --- ICONS: list ---
+    $('#btnLoadIcons')?.addEventListener('click', async () => {
+      const tbody = $('#tblIcons tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      try {
+        const r = await apiget('/api/icons');
+        const list = await r.json();
+        if (!r.ok) { show('#logIcons', list?.detail || JSON.stringify(list), false); return; }
+        list.forEach(i => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${i.id}</td><td class="mono">${i.code}</td><td><a class="btn ghost" href="${i.image_url}" target="_blank">open</a></td><td>${i.description || ''}</td>`;
+          tbody.appendChild(tr);
         });
-      const apipatch = async (url, body) =>
-        await fetch(url, {
-          method: "PATCH",
-          headers: headers(),
-          credentials: "include",
-          body: j(body),
-        });
-      const apidelete = async (url) =>
-        await fetch(url, {
-          method: "DELETE",
-          headers: headers(false),
-          credentials: "include",
-        });
+        show('#logIcons', `Loaded ${list.length} icons.`, true);
+      } catch (err) { show('#logIcons', String(err), false); }
+    });
 
-      // --- Gate: must be admin ---
-      (async () => {
-        try {
-          const r = await apiget("/api/auth/verify");
-          if (!r.ok) {
-            location.href = "/login";
-            return;
-          }
-          const data = await r.json();
-          const user = data?.user;
-          $("#whoami").textContent = user
-            ? `uid=${user.id} @ ${user.username}`
-            : "unknown";
-          if (!user?.admin) {
-            $("#adminBadge").textContent = "not admin";
-            $("#adminBadge").classList.add("errText");
-            location.href = "/";
-            return;
-          }
-          $("#adminBadge").textContent = "admin ✓";
-          $("#adminBadge").classList.add("okText");
-        } catch (e) {
-          location.href = "/login";
-        }
-      })();
-
-      // --- USERS: Create ---
-      $("#fCreateUser")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const f = e.target;
-        const body = {
-          username: f.username.value.trim(),
-          password: f.password.value,
-          linktree_id: f.linktree_id.value ? Number(f.linktree_id.value) : null,
-          profile_picture: f.profile_picture.value || null,
-        };
-        try {
-          const r = await apipost("/user", body);
-          const t = await r.json().catch(() => ({}));
-          show(
-            "#logCreateUser",
-            r.ok ? t : t?.detail || JSON.stringify(t),
-            r.ok
-          );
-        } catch (err) {
-          show("#logCreateUser", String(err), false);
-        }
+    // --- ICONS: upload, preview, set URL ---
+    async function uploadIconFile(inputId) {
+      const inp = document.getElementById(inputId);
+      const file = inp?.files?.[0];
+      if (!file) return null;
+      const fd = new FormData();
+      fd.append('file', file);
+      const r = await fetch('/api/users/me/linkicon', {
+        method: 'POST',
+        credentials: 'include',
+        body: fd
       });
+      if (!r.ok) { throw new Error(await r.text()); }
+      const { url } = await r.json();
+      return url;
+    }
 
-      // --- USERS: Fetch + Grant + Update ---
-      $("#fGetUser")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const id = Number(e.target.user_id.value);
-        if (!id) return;
-        try {
-          const r = await apiget(`/user/${id}`);
-          const t = await r.json();
-          show("#logUser", r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-        } catch (err) {
-          show("#logUser", String(err), false);
-        }
-      });
+    $('#fileIconCatalog')?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      // local preview
+      const prev = $('#iconPreview');
+      prev.src = URL.createObjectURL(file);
+      try {
+        const url = await uploadIconFile('fileIconCatalog');
+        if (url) { $('#iconImageUrl').value = url; show('#logIconOps', `Uploaded → ${url}`, true); }
+      } catch (err) { show('#logIconOps', String(err), false); }
+    });
 
-      $("#btnGrantAdmin")?.addEventListener("click", async () => {
-        const idInput = $('#fGetUser [name="user_id"]');
-        const id = Number(idInput?.value || 0);
-        if (!id) {
-          show("#logUser", "User ID required for grant", false);
-          return;
-        }
-        try {
-          const r = await apipost(`/admin/users/${id}/grant`, {});
-          const t = await r.json();
-          show("#logUser", r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-        } catch (err) {
-          show("#logUser", String(err), false);
-        }
-      });
+    // --- ICONS: upsert ---
+    $('#fUpsertIcon')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const body = { code: f.code.value.trim(), image_url: f.image_url.value.trim(), description: f.description.value || null };
+      try {
+        const r = await apipost('/api/icons', body);
+        const t = await r.json();
+        show('#logIconOps', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logIconOps', String(err), false); }
+    });
 
-      $("#fUpdateUser")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const id = Number($('#fGetUser [name="user_id"]').value);
-        if (!id) {
-          show("#logUser", "Fetch user or enter User ID first", false);
-          return;
-        }
-        const f = e.target;
-        const body = {};
-        if (f.username.value.trim()) body.username = f.username.value.trim();
-        if (f.password.value) body.password = f.password.value;
-        if (f.linktree_id.value) body.linktree_id = Number(f.linktree_id.value);
-        if (f.profile_picture.value)
-          body.profile_picture = f.profile_picture.value;
-        if (f.admin.value !== "") body.admin = f.admin.value === "true";
+    // --- ICONS: grant to user ---
+    $('#fGrantIcon')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const uid = Number(f.user_id.value);
+      const code = f.code.value.trim();
+      const displayed = f.displayed.value === 'true';
+      try {
+        const r = await apipost(`/api/users/${uid}/icons/${encodeURIComponent(code)}`, { displayed });
+        const t = await r.json();
+        show('#logIconOps', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logIconOps', String(err), false); }
+    });
 
-        try {
-          const r = await apipatch(`/user/${id}`, body);
-          const t = await r.json();
-          show("#logUser", r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-        } catch (err) {
-          show("#logUser", String(err), false);
-        }
-      });
-
-      // --- USERS: clear linktree association ---
-      $("#btnClearUserLT")?.addEventListener("click", async () => {
-        const id = Number($('#fGetUser [name="user_id"]').value);
-        if (!id) {
-          show("#logUser", "Fetch user or enter User ID first", false);
-          return;
-        }
-        if (!confirm("Remove this user's linktree association?")) return;
-        try {
-          const r = await apipatch(`/user/${id}`, { linktree_id: null });
-          const t = await r.json();
-          show("#logUser", r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-        } catch (err) {
-          show("#logUser", String(err), false);
-        }
-      });
-
-      // --- ICONS: list ---
-      $("#btnLoadIcons")?.addEventListener("click", async () => {
-        const tbody = $("#tblIcons tbody");
-        if (!tbody) return;
-        tbody.innerHTML = "";
-        try {
-          const r = await apiget("/api/icons");
-          const list = await r.json();
-          if (!r.ok) {
-            show("#logIcons", list?.detail || JSON.stringify(list), false);
-            return;
-          }
-          list.forEach((i) => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${i.id}</td><td class="mono">${
-              i.code
-            }</td><td><a class="btn ghost" href="${
-              i.image_url
-            }" target="_blank">open</a></td><td>${i.description || ""}</td>`;
-            tbody.appendChild(tr);
-          });
-          show("#logIcons", `Loaded ${list.length} icons.`, true);
-        } catch (err) {
-          show("#logIcons", String(err), false);
-        }
-      });
-
-      // --- ICONS: upload, preview, set URL ---
-      async function uploadIconFile(inputId) {
-        const inp = document.getElementById(inputId);
-        const file = inp?.files?.[0];
-        if (!file) return null;
-        const fd = new FormData();
-        fd.append("file", file);
-        const r = await fetch("/api/users/me/linkicon", {
-          method: "POST",
-          credentials: "include",
-          body: fd,
-        });
-        if (!r.ok) {
-          throw new Error(await r.text());
-        }
-        const { url } = await r.json();
-        return url;
+    // --- LINKTREE: update ---
+    $('#fUpdateLinktree')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const id = Number(f.id.value);
+      if (!id) { show('#logLT', 'Linktree ID required', false); return; }
+      const body = {};
+      for (const k of ['slug', 'location', 'quote', 'song_url', 'background_url', 'name_effect', 'background_effect', 'display_name_mode']) {
+        const v = f[k].value.trim(); if (v) body[k] = v;
       }
+      if (f.background_is_video.value !== '') body.background_is_video = (f.background_is_video.value === 'true');
+      if (f.transparency.value !== '') body.transparency = Number(f.transparency.value);
 
-      $("#fileIconCatalog")?.addEventListener("change", async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        // local preview
-        const prev = $("#iconPreview");
-        prev.src = URL.createObjectURL(file);
-        try {
-          const url = await uploadIconFile("fileIconCatalog");
-          if (url) {
-            $("#iconImageUrl").value = url;
-            show("#logIconOps", `Uploaded → ${url}`, true);
-          }
-        } catch (err) {
-          show("#logIconOps", String(err), false);
-        }
-      });
+      try {
+        const r = await apipatch(`/api/linktrees/${id}`, body);
+        const t = await r.json();
+        show('#logLT', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logLT', String(err), false); }
+    });
 
-      // --- ICONS: upsert ---
-      $("#fUpsertIcon")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const f = e.target;
-        const body = {
-          code: f.code.value.trim(),
-          image_url: f.image_url.value.trim(),
-          description: f.description.value || null,
-        };
-        try {
-          const r = await apipost("/api/icons", body);
-          const t = await r.json();
-          show("#logIconOps", r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-        } catch (err) {
-          show("#logIconOps", String(err), false);
-        }
-      });
+    // --- LINKTREE: delete ---
+    $('#btnDeleteLinktree')?.addEventListener('click', async () => {
+      const id = Number($('#fUpdateLinktree [name="id"]').value);
+      if (!id) { show('#logLT', 'Linktree ID required', false); return; }
+      if (!confirm('Delete linktree ' + id + '? This cannot be undone.')) return;
+      try {
+        const r = await fetch(`/api/linktrees/${id}`, { method: 'DELETE', headers: headers(false) });
+        const t = await r.json().catch(() => ({}));
+        show('#logLT', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logLT', String(err), false); }
+    });
 
-      // --- ICONS: grant to user ---
-      $("#fGrantIcon")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const f = e.target;
-        const uid = Number(f.user_id.value);
-        const code = f.code.value.trim();
-        const displayed = f.displayed.value === "true";
-        try {
-          const r = await apipost(
-            `/api/users/${uid}/icons/${encodeURIComponent(code)}`,
-            { displayed }
-          );
-          const t = await r.json();
-          show("#logIconOps", r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-        } catch (err) {
-          show("#logIconOps", String(err), false);
-        }
-      });
+    // --- LINKS: add ---
+    $('#fAddLink')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const body = {
+        url: f.url.value.trim(),
+        label: f.label.value || null,
+        icon_url: f.icon_url.value || null,
+        position: f.position.value ? Number(f.position.value) : null,
+        is_active: f.is_active.value === 'true'
+      };
+      const lt = Number(f.linktree_id.value);
+      try {
+        const r = await apipost(`/api/linktrees/${lt}/links`, body);
+        const t = await r.json();
+        show('#logLinks', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logLinks', String(err), false); }
+    });
 
-      // --- LINKTREE: update ---
-      $("#fUpdateLinktree")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const f = e.target;
-        const id = Number(f.id.value);
-        if (!id) {
-          show("#logLT", "Linktree ID required", false);
-          return;
-        }
-        const body = {};
-        for (const k of [
-          "slug",
-          "location",
-          "quote",
-          "song_url",
-          "background_url",
-          "name_effect",
-          "background_effect",
-          "display_name_mode",
-        ]) {
-          const v = f[k].value.trim();
-          if (v) body[k] = v;
-        }
-        if (f.background_is_video.value !== "")
-          body.background_is_video = f.background_is_video.value === "true";
-        if (f.transparency.value !== "")
-          body.transparency = Number(f.transparency.value);
+    // --- LINKS: update & delete ---
+    $('#fUpdateLink')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const id = Number(f.link_id.value);
+      if (!id) { show('#logLinks', 'Link ID required', false); return; }
+      const body = {};
+      if (f.url.value.trim()) body.url = f.url.value.trim();
+      if (f.label.value.trim()) body.label = f.label.value.trim();
+      if (f.icon_url.value.trim()) body.icon_url = f.icon_url.value.trim();
+      if (f.position.value) body.position = Number(f.position.value);
+      if (f.is_active.value !== '') body.is_active = (f.is_active.value === 'true');
+      try {
+        const r = await apipatch(`/api/links/${id}`, body);
+        const t = await r.json();
+        show('#logLinks', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logLinks', String(err), false); }
+    });
 
-        try {
-          const r = await apipatch(`/api/linktrees/${id}`, body);
-          const t = await r.json();
-          show("#logLT", r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-        } catch (err) {
-          show("#logLT", String(err), false);
-        }
-      });
+    $('#btnDeleteLink')?.addEventListener('click', async () => {
+      const id = Number($('#fUpdateLink [name="link_id"]').value);
+      if (!id) { show('#logLinks', 'Link ID required', false); return; }
+      if (!confirm('Delete link ' + id + '?')) return;
+      try {
+        const r = await apidelete(`/api/links/${id}`);
+        if (r.ok) { show('#logLinks', { ok: true }, true); } else { show('#logLinks', await r.text(), false); }
+      } catch (err) { show('#logLinks', String(err), false); }
+    });
 
-      // --- LINKTREE: delete ---
-      $("#btnDeleteLinktree")?.addEventListener("click", async () => {
-        const id = Number($('#fUpdateLinktree [name="id"]').value);
-        if (!id) {
-          show("#logLT", "Linktree ID required", false);
-          return;
-        }
-        if (!confirm("Delete linktree " + id + "? This cannot be undone."))
-          return;
-        try {
-          const r = await fetch(`/api/linktrees/${id}`, {
-            method: "DELETE",
-            headers: headers(false),
-          });
-          const t = await r.json().catch(() => ({}));
-          show("#logLT", r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-        } catch (err) {
-          show("#logLT", String(err), false);
-        }
-      });
+    // --- MEDIA: GC (use POST to avoid 405 on GET) ---
+    $('#fGC')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const age = Number($('#age').value || 0);
+      try {
+        const r = await apipost('/api/admin/media/gc', { min_age_seconds: age });
+        const t = await r.json();
+        if (!r.ok) { show('#logGC', t?.detail || JSON.stringify(t), false); return; }
+        const summary = `Deleted: ${t.deleted.length} • Skipped: ${t.skipped.length}\n\nDeleted files:\n- ${t.deleted.join('\n- ')}`;
+        show('#logGC', summary, true);
+      } catch (err) { show('#logGC', String(err), false); }
+    });
 
-      // --- LINKS: add ---
-      $("#fAddLink")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const f = e.target;
-        const body = {
-          url: f.url.value.trim(),
-          label: f.label.value || null,
-          icon_url: f.icon_url.value || null,
-          position: f.position.value ? Number(f.position.value) : null,
-          is_active: f.is_active.value === "true",
-        };
-        const lt = Number(f.linktree_id.value);
-        try {
-          const r = await apipost(`/api/linktrees/${lt}/links`, body);
-          const t = await r.json();
-          show("#logLinks", r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-        } catch (err) {
-          show("#logLinks", String(err), false);
-        }
-      });
+    const toggle = document.getElementById('mobileToggle');
+    const menu = document.getElementById('primary-menu');
+    toggle?.addEventListener('click', () => {
+      const open = menu.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[ch] || ch);
+    }
 
-      // --- LINKS: update & delete ---
-      $("#fUpdateLink")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const f = e.target;
-        const id = Number(f.link_id.value);
-        if (!id) {
-          show("#logLinks", "Link ID required", false);
-          return;
+    function sanitizeUrl(raw) {
+      if (typeof raw !== 'string') return '';
+      const trimmed = raw.trim();
+      if (!trimmed) return '';
+      if (trimmed.startsWith('javascript:')) return '';
+      try {
+        const u = new URL(trimmed, window.location.origin);
+        if (['http:', 'https:'].includes(u.protocol)) {
+          return trimmed.startsWith('http://') || trimmed.startsWith('https://') ? u.href : trimmed;
         }
-        const body = {};
-        if (f.url.value.trim()) body.url = f.url.value.trim();
-        if (f.label.value.trim()) body.label = f.label.value.trim();
-        if (f.icon_url.value.trim()) body.icon_url = f.icon_url.value.trim();
-        if (f.position.value) body.position = Number(f.position.value);
-        if (f.is_active.value !== "")
-          body.is_active = f.is_active.value === "true";
-        try {
-          const r = await apipatch(`/api/links/${id}`, body);
-          const t = await r.json();
-          show("#logLinks", r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
-        } catch (err) {
-          show("#logLinks", String(err), false);
-        }
-      });
-
-      $("#btnDeleteLink")?.addEventListener("click", async () => {
-        const id = Number($('#fUpdateLink [name="link_id"]').value);
-        if (!id) {
-          show("#logLinks", "Link ID required", false);
-          return;
-        }
-        if (!confirm("Delete link " + id + "?")) return;
-        try {
-          const r = await apidelete(`/api/links/${id}`);
-          if (r.ok) {
-            show("#logLinks", { ok: true }, true);
-          } else {
-            show("#logLinks", await r.text(), false);
-          }
-        } catch (err) {
-          show("#logLinks", String(err), false);
-        }
-      });
-
-      // --- MEDIA: GC (use POST to avoid 405 on GET) ---
-      $("#fGC")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const age = Number($("#age").value || 0);
-        try {
-          const r = await apipost("/api/admin/media/gc", {
-            min_age_seconds: age,
-          });
-          const t = await r.json();
-          if (!r.ok) {
-            show("#logGC", t?.detail || JSON.stringify(t), false);
-            return;
-          }
-          const summary = `Deleted: ${t.deleted.length} • Skipped: ${
-            t.skipped.length
-          }\n\nDeleted files:\n- ${t.deleted.join("\n- ")}`;
-          show("#logGC", summary, true);
-        } catch (err) {
-          show("#logGC", String(err), false);
-        }
-      });
-
-      const toggle = document.getElementById("mobileToggle");
-      const menu = document.getElementById("primary-menu");
-      toggle?.addEventListener("click", () => {
-        const open = menu.classList.toggle("open");
-        toggle.setAttribute("aria-expanded", String(open));
-      });
-      function escapeHtml(value) {
-        return String(value ?? "").replace(
-          /[&<>"']/g,
-          (ch) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-            }[ch] || ch)
-        );
+      } catch (_) {
+        if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed;
       }
+      return '';
+    }
 
-      function sanitizeUrl(raw) {
-        if (typeof raw !== "string") return "";
-        const trimmed = raw.trim();
-        if (!trimmed) return "";
-        if (trimmed.startsWith("javascript:")) return "";
-        try {
-          const u = new URL(trimmed, window.location.origin);
-          if (["http:", "https:"].includes(u.protocol)) {
-            return trimmed.startsWith("http://") ||
-              trimmed.startsWith("https://")
-              ? u.href
-              : trimmed;
-          }
-        } catch (_) {
-          if (trimmed.startsWith("/") && !trimmed.startsWith("//"))
-            return trimmed;
-        }
-        return "";
+    async function fetchSession() {
+      try {
+        const r = await apiget('/api/auth/verify');
+        if (!r.ok) return null;
+        return await r.json();
+      } catch (_) {
+        return null;
       }
+    }
 
-      async function fetchSession() {
-        try {
-          const r = await apiget("/api/auth/verify");
-          if (!r.ok) return null;
-          return await r.json();
-        } catch (_) {
-          return null;
-        }
-      }
+    async function renderAuthHeader() {
+      const slot = document.getElementById('authSlot');
+      if (!slot) return;
 
-      async function renderAuthHeader() {
-        const slot = document.getElementById("authSlot");
-        if (!slot) return;
+      const session = await fetchSession();
+      const user = session?.user || null;
 
-        const session = await fetchSession();
-        const user = session?.user || null;
-
-        if (!user) {
-          slot.innerHTML = `
+      if (!user) {
+        slot.innerHTML = `
         <a class="btn small" href="/login">Login</a>
         <a class="btn small" href="/register">Register</a>
       `;
-          return;
-        }
+        return;
+      }
 
-        const unameRaw = user.username || "User";
-        const uname = escapeHtml(unameRaw);
-        const initials = unameRaw.trim().slice(0, 2).toUpperCase() || "U";
-        const pfp = sanitizeUrl(
-          user.profile_picture ? String(user.profile_picture) : ""
-        );
+      const unameRaw = user.username || 'User';
+      const uname = escapeHtml(unameRaw);
+      const initials = unameRaw.trim().slice(0, 2).toUpperCase() || 'U';
+      const pfp = sanitizeUrl(user.profile_picture ? String(user.profile_picture) : '');
 
-        slot.innerHTML = `
+      slot.innerHTML = `
       <div class="auth-box" style="position:relative">
         <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
-          ${
-            pfp
-              ? `<img class="avatar" src="${pfp}" alt="${uname}'s profile picture">`
-              : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(
-                  initials
-                )}</span>`
-          }
+          ${pfp ? `<img class="avatar" src="${pfp}" alt="${uname}'s profile picture">`
+          : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(initials)}</span>`}
           <span class="uname" style="font-weight:700;font-size:.95rem">${uname}</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -2399,41 +1978,35 @@
       </div>
     `;
 
-        const btn = slot.querySelector("#avatarBtn");
-        const menuEl = slot.querySelector("#userMenu");
-        const logoutBtn = slot.querySelector("#logoutBtn");
+      const btn = slot.querySelector('#avatarBtn');
+      const menuEl = slot.querySelector('#userMenu');
+      const logoutBtn = slot.querySelector('#logoutBtn');
 
-        function closeMenu() {
-          menuEl.classList.remove("open");
-          btn.setAttribute("aria-expanded", "false");
-        }
-
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const open = menuEl.classList.toggle("open");
-          btn.setAttribute("aria-expanded", String(open));
-        });
-
-        document.addEventListener("click", (e) => {
-          if (!menuEl.contains(e.target) && !btn.contains(e.target))
-            closeMenu();
-        });
-
-        logoutBtn.addEventListener(
-          "click",
-          async () => {
-            try {
-              await fetch("/api/auth/logout", {
-                method: "POST",
-                credentials: "include",
-              });
-            } catch {}
-            window.location.href = "/";
-          },
-          { passive: true }
-        );
+      function closeMenu() {
+        menuEl.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
       }
-      renderAuthHeader();
-    </script>
-  </body>
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = menuEl.classList.toggle('open');
+        btn.setAttribute('aria-expanded', String(open));
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!menuEl.contains(e.target) && !btn.contains(e.target)) closeMenu();
+      });
+
+      logoutBtn.addEventListener('click', async () => {
+        try {
+          await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        } catch { }
+        window.location.href = '/';
+      }, { passive: true });
+    }
+    renderAuthHeader();
+
+  </script>
+</body>
+
 </html>

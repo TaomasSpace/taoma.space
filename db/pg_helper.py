@@ -214,13 +214,6 @@ class PgGifDB:
                     REFERENCES users(id) ON DELETE CASCADE
                 """
                 )
-                cur.execute("""
-                    ALTER TABLE users
-                        ADD COLUMN IF NOT EXISTS is_gif_admin  BOOLEAN NOT NULL DEFAULT FALSE;
-
-                    ALTER TABLE users
-                        ADD COLUMN IF NOT EXISTS is_site_admin BOOLEAN NOT NULL DEFAULT FALSE;
-                            """)
                 cur.execute(
                     """
                     CREATE INDEX IF NOT EXISTS idx_sessions_user
@@ -695,28 +688,37 @@ class PgGifDB:
         password: str | None = None,
         linktree_id: int | None = None,
         profile_picture: str | None = None,
-        admin: bool | None = None,
-        is_gif_admin: bool | None = None,      # NEU
-        is_site_admin: bool | None = None,     # NEU
+        admin: bool | None = None,  # <- wichtig: None statt False
     ) -> None:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             if username is not None:
-                cur.execute("UPDATE users SET username = %s WHERE id = %s", (username, user_id))
+                cur.execute(
+                    "UPDATE users SET username = %s WHERE id = %s", (username, user_id)
+                )
             if password is not None:
-                cur.execute("UPDATE users SET password = %s WHERE id = %s", (password, user_id))
+                cur.execute(
+                    "UPDATE users SET password = %s WHERE id = %s", (password, user_id)
+                )
             if linktree_id is not None:
-                cur.execute("UPDATE users SET linktree_id = %s WHERE id = %s", (linktree_id, user_id))
+                cur.execute(
+                    "UPDATE users SET linktree_id = %s WHERE id = %s",
+                    (linktree_id, user_id),
+                )
             if profile_picture is not None:
-                cur.execute("UPDATE users SET profile_picture = %s WHERE id = %s", (profile_picture, user_id))
+                cur.execute(
+                    "UPDATE users SET profile_picture = %s WHERE id = %s",
+                    (profile_picture, user_id),
+                )
             if admin is not None:
-                cur.execute("UPDATE users SET admin = %s WHERE id = %s", (admin, user_id))
-            if is_gif_admin is not None:            # NEU
-                cur.execute("UPDATE users SET is_gif_admin = %s WHERE id = %s", (is_gif_admin, user_id))
-            if is_site_admin is not None:           # NEU
-                cur.execute("UPDATE users SET is_site_admin = %s WHERE id = %s", (is_site_admin, user_id))
-
-            cur.execute("UPDATE users SET updated_at = %s WHERE id = %s", (datetime.now(timezone.utc), user_id))
+                cur.execute(
+                    "UPDATE users SET admin = %s WHERE id = %s", (admin, user_id)
+                )
+            cur.execute(
+                "UPDATE users SET updated_at = %s WHERE id = %s",
+                (datetime.now(timezone.utc), user_id),
+            )
             conn.commit()
+
     def getUser(self, user_id: int) -> dict | None:
         with psycopg.connect(
             self.dsn, row_factory=dict_row
