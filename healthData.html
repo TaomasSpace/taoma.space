@@ -469,6 +469,50 @@
           animation: none !important;
         }
       }
+      /* Slider mit Tick-Leiste */
+      .slider {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto 16px; /* 2. Reihe = Tick-Zeile */
+        align-items: center;
+      }
+      .slider input[type="range"] {
+        grid-row: 1;
+        width: 100%;
+      }
+
+      /* Tick-Container */
+      .slider .ticks {
+        grid-row: 2;
+        position: relative;
+        height: 16px;
+      }
+
+      /* Einzelne Ticks */
+      .slider .ticks span {
+        position: absolute;
+        bottom: 2px;
+        width: 1px;
+        height: 8px;
+        background: var(--line);
+        transform: translateX(-0.5px);
+        opacity: 0.9;
+      }
+      .slider .ticks span.major {
+        height: 12px;
+        background: color-mix(in sRGB, var(--ink) 65%, var(--line));
+      }
+
+      /* Optional: dezente Labels (min/mid/max) */
+      .slider .tick-label {
+        position: absolute;
+        top: 0;
+        transform: translateX(-50%);
+        font-size: 0.72rem;
+        color: var(--muted);
+        user-select: none;
+        line-height: 1;
+      }
     </style>
   </head>
 
@@ -1314,16 +1358,72 @@
           alert("Löschen fehlgeschlagen.");
         }
       }
+      function enhanceSlidersWithTicks() {
+        document
+          .querySelectorAll('.form-grid input[type="range"]')
+          .forEach((r) => {
+            // nicht doppelt wrappen
+            if (r.closest(".slider")) return;
+
+            const min = Number(r.min || 0);
+            const max = Number(r.max || 100);
+            const step = Number(r.step || 1);
+            const total = max - min || 1;
+
+            // Wrapper + Tick-Container
+            const wrap = document.createElement("div");
+            wrap.className = "slider";
+            const ticks = document.createElement("div");
+            ticks.className = "ticks";
+
+            // Alle Steps als Ticks
+            for (let v = min; v <= max; v += step) {
+              const p = ((v - min) / total) * 100;
+              const s = document.createElement("span");
+              s.style.left = `${p}%`;
+              if ((v - min) % 5 === 0) s.classList.add("major"); // Major alle 5
+              ticks.appendChild(s);
+            }
+
+            // dezente Labels: min / mid / max
+            const addLabel = (value, text) => {
+              const lbl = document.createElement("div");
+              lbl.className = "tick-label";
+              const p = ((value - min) / total) * 100;
+              lbl.style.left = `${p}%`;
+              lbl.textContent = String(text);
+              ticks.appendChild(lbl);
+            };
+            addLabel(min, min);
+            addLabel(
+              min + total / 2,
+              (min + total / 2) % 1 === 0 ? min + total / 2 : ""
+            );
+            addLabel(max, max);
+
+            // Range in den Wrapper verschieben (Output/Label bleiben in der .row)
+            r.parentElement.insertBefore(wrap, r);
+            wrap.appendChild(r);
+            wrap.appendChild(ticks);
+          });
+      }
 
       function wireRangeOutputs() {
-        document.querySelectorAll('input[type="range"]').forEach((r) => {
-          const out = r.parentElement.querySelector("output.val");
-          const update = () => (out.textContent = r.value);
-          r.addEventListener("input", update);
-          r.addEventListener("change", update);
-          update();
-        });
+        document
+          .querySelectorAll('.form-grid input[type="range"]')
+          .forEach((r) => {
+            const row = r.closest(".row") || r.parentElement;
+            const out = row.querySelector("output.val");
+            if (!out) return;
+            const update = () => (out.textContent = r.value);
+            r.addEventListener("input", update);
+            r.addEventListener("change", update);
+            update();
+          });
       }
+
+      // Aufrufreihenfolge: erst Ticks bauen, dann Outputs verbinden
+      enhanceSlidersWithTicks();
       wireRangeOutputs();
     </script>
   </body>
