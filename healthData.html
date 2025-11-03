@@ -513,6 +513,45 @@
         user-select: none;
         line-height: 1;
       }
+      /* Slider mit Tick-Leiste + Zahlen */
+      .slider {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto 24px; /* 2. Reihe = Tick/Labels */
+        align-items: center;
+      }
+      .slider input[type="range"] {
+        grid-row: 1;
+        width: 100%;
+      }
+      .slider .ticks {
+        grid-row: 2;
+        position: relative;
+        height: 24px;
+      }
+      .slider .ticks span {
+        position: absolute;
+        bottom: 12px; /* Platz für Labels darunter */
+        width: 1px;
+        height: 8px;
+        background: var(--line);
+        transform: translateX(-0.5px);
+        opacity: 0.9;
+      }
+      .slider .ticks span.major {
+        height: 12px;
+        background: color-mix(in sRGB, var(--ink) 65%, var(--line));
+      }
+      .slider .tick-label {
+        position: absolute;
+        top: 12px;
+        transform: translateX(-50%);
+        font-size: 0.72rem;
+        color: var(--muted);
+        user-select: none;
+        line-height: 1;
+        white-space: nowrap;
+      }
     </style>
   </head>
 
@@ -1369,6 +1408,14 @@
             const step = Number(r.step || 1);
             const total = max - min || 1;
 
+            // Optional pro Slider steuerbar:
+            // data-label-step="2" -> nur jede 2. Zahl beschriften
+            // data-major-step="5" -> jeder 5. Tick ist "major"
+            const labelStep = Number(r.dataset.labelStep || 1);
+            const majorStep = Number(
+              r.dataset.majorStep || (total >= 10 ? 5 : step)
+            );
+
             const wrap = document.createElement("div");
             wrap.className = "slider";
             const ticks = document.createElement("div");
@@ -1376,28 +1423,26 @@
 
             for (let v = min; v <= max; v += step) {
               const p = ((v - min) / total) * 100;
-              const s = document.createElement("span");
-              s.style.left = `${p}%`;
-              if ((v - min) % 1 === 0) s.classList.add("major"); // Major alle 1
-              ticks.appendChild(s);
+
+              // Tick-Strich
+              const tick = document.createElement("span");
+              tick.style.left = `${p}%`;
+              if ((v - min) % majorStep === 0) tick.classList.add("major");
+              ticks.appendChild(tick);
+
+              // Zahl
+              if ((v - min) % labelStep === 0) {
+                const lbl = document.createElement("div");
+                lbl.className = "tick-label";
+                lbl.style.left = `${p}%`;
+                lbl.textContent = String(v);
+                ticks.appendChild(lbl);
+              }
             }
 
-            const addLabel = (value, text) => {
-              const lbl = document.createElement("div");
-              lbl.className = "tick-label";
-              const p = ((value - min) / total) * 100;
-              lbl.style.left = `${p}%`;
-              lbl.textContent = String(text);
-              ticks.appendChild(lbl);
-            };
-            addLabel(min, min);
-            addLabel(
-              min + total / total,
-              (min + total / total) % 1 === 0 ? min + total / total : ""
-            );
-            addLabel(max, max);
-
-            r.parentElement.insertBefore(wrap, r);
+            // Range in Wrapper verschieben
+            const parent = r.parentElement; // .row (display: contents) ist ok
+            parent.insertBefore(wrap, r);
             wrap.appendChild(r);
             wrap.appendChild(ticks);
           });
