@@ -1362,7 +1362,6 @@
         document
           .querySelectorAll('.form-grid input[type="range"]')
           .forEach((r) => {
-            // nicht doppelt wrappen
             if (r.closest(".slider")) return;
 
             const min = Number(r.min || 0);
@@ -1370,22 +1369,19 @@
             const step = Number(r.step || 1);
             const total = max - min || 1;
 
-            // Wrapper + Tick-Container
             const wrap = document.createElement("div");
             wrap.className = "slider";
             const ticks = document.createElement("div");
             ticks.className = "ticks";
 
-            // Alle Steps als Ticks
             for (let v = min; v <= max; v += step) {
               const p = ((v - min) / total) * 100;
               const s = document.createElement("span");
               s.style.left = `${p}%`;
-              if ((v - min) % 5 === 0) s.classList.add("major"); // Major alle 5
+              if ((v - min) % 1 === 0) s.classList.add("major"); // Major alle 1
               ticks.appendChild(s);
             }
 
-            // dezente Labels: min / mid / max
             const addLabel = (value, text) => {
               const lbl = document.createElement("div");
               lbl.className = "tick-label";
@@ -1401,7 +1397,6 @@
             );
             addLabel(max, max);
 
-            // Range in den Wrapper verschieben (Output/Label bleiben in der .row)
             r.parentElement.insertBefore(wrap, r);
             wrap.appendChild(r);
             wrap.appendChild(ticks);
@@ -1422,7 +1417,6 @@
           });
       }
 
-      // Aufrufreihenfolge: erst Ticks bauen, dann Outputs verbinden
       enhanceSlidersWithTicks();
       wireRangeOutputs();
     </script>
