@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS health_data (
     konzentration   INTEGER NOT NULL DEFAULT 0,
     husten          INTEGER NOT NULL DEFAULT 0,
     atemnot         INTEGER NOT NULL DEFAULT 0,
-    temperatur      REAL NOT NULL,
+    temperatur      REAL NULL,
     mens            BOOLEAN NOT NULL DEFAULT FALSE,
     notizen         TEXT
 );  --  <<<<<<<<<<<<<<  Semikolon!
@@ -175,7 +175,10 @@ class PgGifDB:
                     END IF;
                 END$$;
             """)
-
+                cur.execute("""
+                            ALTER TABLE health_data
+                            ALTER COLUMN temperatur DROP NOT NULL;
+                            """)
                 # (Optional, aber empfehlenswert)
                 # Ein Eintrag pro Tag:
                 cur.execute("""
@@ -1019,7 +1022,7 @@ class PgGifDB:
         *,
         day: str,
         borg: int,
-        temperatur: float,
+        temperatur: Optional[float] = None,   # <-- jetzt optional
         erschöpfung: int = 0,
         muskelschwäche: int = 0,
         schmerzen: int = 0,
@@ -1030,24 +1033,50 @@ class PgGifDB:
         mens: bool = False,
         notizen: str | None = None,
     ) -> int:
-        """Fügt einen neuen Health-Datensatz ein und gibt die ID zurück."""
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
-            cur.execute(
-                """
-                INSERT INTO health_data (
-                    day, borg, erschöpfung, muskelschwäche, schmerzen,
-                    angst, konzentration, husten, atemnot, temperatur,
-                    mens, notizen
-                )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            cols = [
+                "day",
+                "borg",
+                "erschöpfung",
+                "muskelschwäche",
+                "schmerzen",
+                "angst",
+                "konzentration",
+                "husten",
+                "atemnot",
+                # "temperatur" kommt ggf. dynamisch
+                "mens",
+                "notizen",
+            ]
+            vals = [
+                day,
+                borg,
+                erschöpfung,
+                muskelschwäche,
+                schmerzen,
+                angst,
+                konzentration,
+                husten,
+                atemnot,
+                # temperatur ggf. weiter unten,
+                mens,
+                notizen,
+            ]
+
+            # Temperatur ggf. an passender Stelle einschieben (vor mens/notizen)
+            if temperatur is not None:
+                # Spalte VOR 'mens' einfügen (d. h. Index -2 in unserer Liste)
+                insert_pos = len(cols) - 2
+                cols.insert(insert_pos, "temperatur")
+                vals.insert(insert_pos, temperatur)
+
+            placeholders = ", ".join(["%s"] * len(cols))
+            sql = f"""
+                INSERT INTO health_data ({", ".join(cols)})
+                VALUES ({placeholders})
                 RETURNING id
-                """,
-                (
-                    day, borg, erschöpfung, muskelschwäche, schmerzen,
-                    angst, konzentration, husten, atemnot, temperatur,
-                    mens, notizen,
-                ),
-            )
+            """
+            cur.execute(sql, tuple(vals))
             new_id = cur.fetchone()[0]
             conn.commit()
             return new_id
@@ -1082,7 +1111,11 @@ class PgGifDB:
 
 
     def update_health_data(self, data_id: int, **fields) -> None:
-        """Aktualisiert bestimmte Felder eines Health-Datensatzes."""
+        """
+        Aktualisiert bestimmte Felder eines Health-Datensatzes.
+        Wichtig: Ein explizit übergebener Key mit Wert None (z. B. temperatur=None)
+        setzt die Spalte in der DB auf NULL.
+        """
         allowed = {
             "day", "borg", "erschöpfung", "muskelschwäche", "schmerzen",
             "angst", "konzentration", "husten", "atemnot", "temperatur",
@@ -1094,7 +1127,8 @@ class PgGifDB:
                 sets.append(f"{k} = %s")
                 vals.append(v)
         if not sets:
-            return
+            return  # nichts zu tun
+
         vals.append(data_id)
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(

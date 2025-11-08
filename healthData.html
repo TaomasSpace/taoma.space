@@ -172,7 +172,8 @@
       }
       .form-grid input[type="number"],
       .form-grid input[type="text"],
-      .form-grid select {
+      .form-grid select,
+      .form-grid input[type="date"] {
         width: 100%;
         padding: 0.6rem 0.7rem;
         border: 1px solid var(--line);
@@ -460,6 +461,9 @@
         thead th {
           position: static;
         }
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
       }
 
       /* Accessibility niceties */
@@ -469,55 +473,12 @@
           animation: none !important;
         }
       }
+
       /* Slider mit Tick-Leiste */
       .slider {
         position: relative;
         display: grid;
-        grid-template-rows: auto 16px; /* 2. Reihe = Tick-Zeile */
-        align-items: center;
-      }
-      .slider input[type="range"] {
-        grid-row: 1;
-        width: 100%;
-      }
-
-      /* Tick-Container */
-      .slider .ticks {
-        grid-row: 2;
-        position: relative;
-        height: 16px;
-      }
-
-      /* Einzelne Ticks */
-      .slider .ticks span {
-        position: absolute;
-        bottom: 2px;
-        width: 1px;
-        height: 8px;
-        background: var(--line);
-        transform: translateX(-0.5px);
-        opacity: 0.9;
-      }
-      .slider .ticks span.major {
-        height: 12px;
-        background: color-mix(in sRGB, var(--ink) 65%, var(--line));
-      }
-
-      /* Optional: dezente Labels (min/mid/max) */
-      .slider .tick-label {
-        position: absolute;
-        top: 0;
-        transform: translateX(-50%);
-        font-size: 0.72rem;
-        color: var(--muted);
-        user-select: none;
-        line-height: 1;
-      }
-      /* Slider mit Tick-Leiste + Zahlen */
-      .slider {
-        position: relative;
-        display: grid;
-        grid-template-rows: auto 24px; /* 2. Reihe = Tick/Labels */
+        grid-template-rows: auto 24px;
         align-items: center;
       }
       .slider input[type="range"] {
@@ -531,7 +492,7 @@
       }
       .slider .ticks span {
         position: absolute;
-        bottom: 12px; /* Platz für Labels darunter */
+        bottom: 12px;
         width: 1px;
         height: 8px;
         background: var(--line);
@@ -551,6 +512,13 @@
         user-select: none;
         line-height: 1;
         white-space: nowrap;
+      }
+
+      /* Statistik-Tabellen-Layout */
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 0.4fr;
+        gap: var(--space-4);
       }
     </style>
   </head>
@@ -588,6 +556,12 @@
           <!-- Panel: Erfassen -->
           <div class="panel active" id="panel-capture">
             <form class="form-grid" autocomplete="off">
+              <div class="row">
+                <label for="Datum">Datum</label>
+                <input type="date" id="Datum" />
+                <span></span>
+              </div>
+
               <div class="row">
                 <label for="Borg">
                   Borg Skala (0–20)
@@ -690,15 +664,16 @@
               </div>
 
               <div class="row">
-                <label for="Temperatur">Temperatur (°C)</label
-                ><input
+                <label for="Temperatur">Temperatur (°C) <span class="hint">(optional)</span></label>
+                <input
                   type="number"
-                  max="40"
-                  min="35"
+                  max="45"
+                  min="20"
                   id="Temperatur"
-                  value="36"
                   step="0.1"
-                /><span></span>
+                  placeholder="optional"
+                />
+                <span></span>
               </div>
               <div class="row">
                 <label for="Mens">Mens</label
@@ -790,76 +765,71 @@
           <!-- Panel: Statistik -->
           <div class="panel" id="panel-stats">
             <div class="toolbar">
-              <strong>Diagramm</strong>
-              <span class="right"></span>
-              <label
-                >Zeitraum:
-                <select id="sRange">
-                  <option value="7">7 Tage</option>
-                  <option value="30" selected>30 Tage</option>
-                  <option value="90">90 Tage</option>
-                  <option value="365">12 Monate</option>
+              <div>
+                <label for="sRange" class="hint">Zeitraum</label>
+                <select id="sRange" class="btn">
+                  <option value="30">30 Tage</option>
+                  <option value="90" selected>90 Tage</option>
+                  <option value="180">180 Tage</option>
+                  <option value="365">365 Tage</option>
                   <option value="all">Alles</option>
                 </select>
-              </label>
+              </div>
+              <div class="right hint">
+                Metriken:
+                <label><input type="checkbox" class="sMetric" value="borg" checked /> Borg</label>
+                <label><input type="checkbox" class="sMetric" value="schmerzen" /> Schmerzen</label>
+                <label><input type="checkbox" class="sMetric" value="atemnot" /> Atemnot</label>
+                <label><input type="checkbox" class="sMetric" value="husten" /> Husten</label>
+                <label><input type="checkbox" class="sMetric" value="angst" /> Angst</label>
+                <label><input type="checkbox" class="sMetric" value="konzentration" /> Konzentration</label>
+                <label><input type="checkbox" class="sMetric" value="erschoepfung" /> Erschöpfung</label>
+                <label><input type="checkbox" class="sMetric" value="muskelschwaeche" /> Muskelschwäche</label>
+                <label><input type="checkbox" class="sMetric" value="temperatur" /> Temperatur</label>
+              </div>
             </div>
 
-            <div
-              style="
-                display: flex;
-                gap: 0.75rem;
-                flex-wrap: wrap;
-                padding: 0 var(--space-4) var(--space-3);
-              "
-            >
-              <label
-                ><input type="checkbox" class="sMetric" value="borg" checked />
-                Borg</label
-              >
-              <label
-                ><input type="checkbox" class="sMetric" value="schmerzen" />
-                Schmerzen</label
-              >
-              <label
-                ><input type="checkbox" class="sMetric" value="atemnot" />
-                Atemnot</label
-              >
-              <label
-                ><input type="checkbox" class="sMetric" value="husten" />
-                Husten</label
-              >
-              <label
-                ><input type="checkbox" class="sMetric" value="angst" />
-                Angst</label
-              >
-              <label
-                ><input type="checkbox" class="sMetric" value="konzentration" />
-                Konzentration</label
-              >
-              <label
-                ><input type="checkbox" class="sMetric" value="erschoepfung" />
-                Erschöpfung</label
-              >
-              <label
-                ><input
-                  type="checkbox"
-                  class="sMetric"
-                  value="muskelschwaeche"
-                />
-                Muskelschwäche</label
-              >
-              <label
-                ><input type="checkbox" class="sMetric" value="temperatur" />
-                Temperatur (°C)</label
-              >
-            </div>
-
-            <div class="card chart-card">
+            <div class="chart-card">
+              <h3>Verlauf (ausgewählte Werte)</h3>
               <div class="chart-wrap">
                 <canvas id="healthChart"></canvas>
               </div>
             </div>
+
+            <div class="table-wrap grid2">
+              <!-- Tabelle 1: Alle Werte außer Borg -->
+              <div class="table-scroll">
+                <table id="tableOther">
+                  <thead>
+                    <tr>
+                      <th>Datum</th>
+                      <th>Erschöpfung</th>
+                      <th>Muskelschwäche</th>
+                      <th>Schmerzen</th>
+                      <th>Angst</th>
+                      <th>Konzentration</th>
+                      <th>Husten</th>
+                      <th>Atemnot</th>
+                      <th>Temperatur</th>
+                      <th>Mens</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+
+              <!-- Tabelle 2: Borg separat -->
+              <div class="table-scroll">
+                <table id="tableBorg">
+                  <thead>
+                    <tr><th>Datum</th><th>Borg</th></tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
           </div>
+
         </div>
       </section>
     </div>
@@ -876,7 +846,7 @@
             /></label>
             <label
               >Temperatur
-              <input type="number" id="m_temp" step="0.1" min="20" max="45"
+              <input type="number" id="m_temp" step="0.1" min="20" max="45" placeholder="optional"
             /></label>
             <label
               >Erschöpfung <input type="number" id="m_ersch" min="0" max="10"
@@ -942,7 +912,7 @@
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
 
-    <!-- Existing App Logic (unchanged IDs & behaviour) -->
+    <!-- App Logic -->
     <script>
       let mensMarkedLabels = new Set();
       const mensHighlighter = {
@@ -1018,15 +988,20 @@
 
       // Capture
       $("todayLabel").textContent = todayISO();
+      $("Datum").addEventListener("change", () => {
+        $("todayLabel").textContent = $("Datum").value || todayISO();
+      });
+
       async function createOrUpdateData() {
         const statusEl = $("status");
         statusEl.textContent = "…speichere";
         statusEl.style.color = "";
-        const day = todayISO();
+        const day =
+          $("Datum").value || new Date().toISOString().split("T")[0];
+
         const payload = {
           day,
           borg: parseInt($("Borg").value, 10),
-          temperatur: parseFloat($("Temperatur").value),
           erschoepfung: parseInt($("Erschoepfung").value, 10),
           muskelschwaeche: parseInt($("Muskelschwaeche").value, 10),
           schmerzen: parseInt($("Schmerzen").value, 10),
@@ -1037,6 +1012,14 @@
           mens: $("Mens").checked,
           notizen: $("Notizen").value?.trim() || null,
         };
+
+        // Temperatur nur mitsenden, wenn gesetzt
+        const tRaw = $("Temperatur").value;
+        const tNum = parseFloat(tRaw);
+        if (tRaw !== "" && Number.isFinite(tNum)) {
+          payload.temperatur = tNum;
+        }
+
         try {
           const check = await fetch(`${API_BASE}/by-day/${day}`);
           if (check.ok) {
@@ -1234,6 +1217,39 @@
       }
       let chart;
       let statsWired = false;
+
+      function renderStatsTables(rowsAsc) {
+        // Tabelle Borg
+        const tbB = document.querySelector("#tableBorg tbody");
+        tbB.innerHTML = "";
+        rowsAsc.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${toISODate(r.day)}</td><td>${r.borg ?? ""}</td>`;
+          tbB.appendChild(tr);
+        });
+
+        // Tabelle Other (alle außer Borg)
+        const tbO = document.querySelector("#tableOther tbody");
+        tbO.innerHTML = "";
+        rowsAsc.forEach((r) => {
+          const rr = normalizeRowKeys(r);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${toISODate(r.day)}</td>
+            <td>${rr.erschoepfung ?? ""}</td>
+            <td>${rr.muskelschwaeche ?? ""}</td>
+            <td>${rr.schmerzen ?? ""}</td>
+            <td>${rr.angst ?? ""}</td>
+            <td>${rr.konzentration ?? ""}</td>
+            <td>${rr.husten ?? ""}</td>
+            <td>${rr.atemnot ?? ""}</td>
+            <td>${fmtTemp(rr.temperatur)}</td>
+            <td>${rr.mens ? "ja" : "nein"}</td>
+          `;
+          tbO.appendChild(tr);
+        });
+      }
+
       async function initStats() {
         try {
           await ensureListLoaded();
@@ -1252,6 +1268,7 @@
         updateChart();
         queueMicrotask(() => chart?.resize());
       }
+
       function updateChart() {
         const selected = [...document.querySelectorAll(".sMetric:checked")].map(
           (c) => c.value
@@ -1264,6 +1281,9 @@
         const rowsAsc = filterRange(allRows, $("sRange").value)
           .slice()
           .sort((a, b) => parseDateISO(a.day) - parseDateISO(b.day));
+
+        // Tabellen füllen
+        renderStatsTables(rowsAsc);
 
         const { labels, datasets } = buildDatasets(rowsAsc, selected);
         mensMarkedLabels = new Set(
@@ -1313,7 +1333,6 @@
           },
         };
 
-        // ✅ Fix: ctx definieren (und sauber typisieren für IntelliSense)
         const ctx = /** @type {HTMLCanvasElement} */ (
           document.getElementById("healthChart")
         ).getContext("2d");
@@ -1333,7 +1352,7 @@
         currentRow = row;
         $("m_day").value = toISODate(row.day);
         $("m_borg").value = row.borg ?? 0;
-        $("m_temp").value = row.temperatur ?? 36;
+        $("m_temp").value = row.temperatur ?? "";
         $("m_ersch").value = row["erschöpfung"] ?? row.erschoepfung ?? 0;
         $("m_muskel").value = row["muskelschwäche"] ?? row.muskelschwaeche ?? 0;
         $("m_schmerz").value = row.schmerzen ?? 0;
@@ -1357,7 +1376,6 @@
         const payload = {
           day: $("m_day").value,
           borg: parseInt($("m_borg").value, 10),
-          temperatur: parseFloat($("m_temp").value),
           erschoepfung: parseInt($("m_ersch").value, 10),
           muskelschwaeche: parseInt($("m_muskel").value, 10),
           schmerzen: parseInt($("m_schmerz").value, 10),
@@ -1368,6 +1386,13 @@
           mens: $("m_mens").value === "true",
           notizen: $("m_note").value?.trim() || null,
         };
+        // Temperatur nur mitsenden, wenn gesetzt
+        const tRaw = $("m_temp").value;
+        const tNum = parseFloat(tRaw);
+        if (tRaw !== "" && Number.isFinite(tNum)) {
+          payload.temperatur = tNum;
+        }
+
         try {
           const res = await fetch(`${API_BASE}/${id}`, {
             method: "PATCH",
@@ -1377,6 +1402,9 @@
           if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
           closeModal();
           await loadTable();
+          if (document.querySelector('[data-tab="stats"]').classList.contains("active")) {
+            updateChart();
+          }
         } catch (e) {
           console.error(e);
           alert("Speichern fehlgeschlagen.");
@@ -1392,11 +1420,17 @@
           });
           if (!res.ok) throw new Error(`DELETE failed: ${res.status}`);
           await loadTable();
+          if (document.querySelector('[data-tab="stats"]').classList.contains("active")) {
+            await ensureListLoaded();
+            updateChart();
+          }
         } catch (e) {
           console.error(e);
           alert("Löschen fehlgeschlagen.");
         }
       }
+
+      // Slider-Ticks + Output
       function enhanceSlidersWithTicks() {
         document
           .querySelectorAll('.form-grid input[type="range"]')
@@ -1408,9 +1442,6 @@
             const step = Number(r.step || 1);
             const total = max - min || 1;
 
-            // Optional pro Slider steuerbar:
-            // data-label-step="2" -> nur jede 2. Zahl beschriften
-            // data-major-step="5" -> jeder 5. Tick ist "major"
             const labelStep = Number(r.dataset.labelStep || 1);
             const majorStep = Number(
               r.dataset.majorStep || (total >= 10 ? 5 : step)
@@ -1424,13 +1455,11 @@
             for (let v = min; v <= max; v += step) {
               const p = ((v - min) / total) * 100;
 
-              // Tick-Strich
               const tick = document.createElement("span");
               tick.style.left = `${p}%`;
               if ((v - min) % majorStep === 0) tick.classList.add("major");
               ticks.appendChild(tick);
 
-              // Zahl
               if ((v - min) % labelStep === 0) {
                 const lbl = document.createElement("div");
                 lbl.className = "tick-label";
@@ -1440,8 +1469,7 @@
               }
             }
 
-            // Range in Wrapper verschieben
-            const parent = r.parentElement; // .row (display: contents) ist ok
+            const parent = r.parentElement;
             parent.insertBefore(wrap, r);
             wrap.appendChild(r);
             wrap.appendChild(ticks);
@@ -1462,6 +1490,8 @@
           });
       }
 
+      // Init
+      $("todayLabel").textContent = todayISO();
       enhanceSlidersWithTicks();
       wireRangeOutputs();
     </script>

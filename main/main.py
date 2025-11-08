@@ -476,7 +476,7 @@ class RegisterOut(BaseModel):
 class HealthDataBase(BaseModel):
     day: date
     borg: int = Field(..., ge=0, le=20)                         # <- 10 → 20
-    temperatur: float = Field(..., ge=20, le=45)                # <- int → float
+    temperatur: Optional[float] = Field(None, ge=20, le=45)               # <- int → float
     erschoepfung: int = Field(
         0, ge=0, le=10,
         alias="erschöpfung",
@@ -505,7 +505,7 @@ class HealthDataIn(HealthDataBase):
 class HealthDataUpdate(BaseModel):
     day: Optional[date] = None
     borg: Optional[int] = Field(None, ge=0, le=20)              # <- 20
-    temperatur: Optional[float] = Field(None, ge=20, le=45)     # <- float
+    temperatur: Optional[float] = Field(None, ge=20, le=45)
     erschoepfung: Optional[int] = Field(
         None, ge=0, le=10,
         alias="erschöpfung",
@@ -1938,3 +1938,60 @@ async def global_chat_socket(websocket: WebSocket) -> None:
 @app.get("/globalChat", include_in_schema=False)
 def globalChat():
     return FileResponse("globalChat.html")
+
+@app.patch("/api/linktrees/{linktree_id}", response_model=dict)
+def update_linktree_ep(
+    linktree_id: int,
+    payload: LinktreeUpdateIn,
+    user: dict = Depends(require_user),
+):
+    _ensure_pg()
+    # Owner/Admin prüfen
+    _require_tree_owner_or_admin(linktree_id, user)
+
+    fields = payload.model_dump(exclude_unset=True)
+
+    # Wenn slug geändert werden soll: einfache Kollision prüfen
+    if "slug" in fields and fields["slug"]:
+        new_slug = fields["slug"]
+        with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+            cur.execute("SELECT id FROM linktrees WHERE slug=%s AND id<>%s", (new_slug, linktree_id))
+            if cur.fetchone():
+                raise HTTPException(409, "Slug already in use")
+
+    # Vorherige Medien-URLs zum Aufräumen merken
+    old_song = None
+    old_bg = None
+    with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT song_url, background_url FROM linktrees WHERE id=%s",
+            (linktree_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, "Linktree not found")
+        old_song = row.get("song_url")
+        old_bg = row.get("background_url")
+
+    # Dynamisches UPDATE bauen
+    cols = []
+    vals = []
+    for k, v in fields.items():
+        cols.append(f"{k}=%s")
+        vals.append(v)
+    if cols:
+        q = f"UPDATE linktrees SET {', '.join(cols)}, updated_at=NOW() WHERE id=%s"
+        vals.append(linktree_id)
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            cur.execute(q, tuple(vals))
+            conn.commit()
+
+    # Medien-Cleanup, falls URLs gewechselt wurden
+    new_song = fields.get("song_url", old_song)
+    new_bg = fields.get("background_url", old_bg)
+    if old_song and old_song != new_song:
+        _delete_if_unreferenced(old_song)
+    if old_bg and old_bg != new_bg:
+        _delete_if_unreferenced(old_bg)
+
+    return {"ok": True}
