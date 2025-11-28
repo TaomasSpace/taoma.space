@@ -1045,23 +1045,19 @@
                   const video = document.createElement("video");
                   video.id = "bgvid";
                   video.src = bgUrl;
-                  video.autoplay = true;
+                  video.autoplay = false;
                   video.muted = true;
                   video.loop = true;
                   video.setAttribute("muted", "");
                   video.setAttribute("playsinline", "");
                   video.setAttribute("webkit-playsinline", "");
                   video.preload = "auto";
-                  const kickOff = () => video.play().catch(() => {});
-                  video.addEventListener("canplay", kickOff, { once: true });
-                  video.addEventListener("loadeddata", kickOff, { once: true });
                   bgEl.appendChild(video);
                   bgVideo = video;
-                  bgVideo.play().catch(() => {});
-                  document.addEventListener("visibilitychange", () => {
-                    if (!document.hidden) bgVideo?.play().catch(() => {});
-                  });
                   needsGate = true;
+                  document.addEventListener("visibilitychange", () => {
+                    if (!document.hidden && !gateActive) bgVideo?.play().catch(() => {});
+                  });
                 } else {
                   const img = document.createElement("img");
                   img.src = bgUrl;
