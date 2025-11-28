@@ -1454,14 +1454,6 @@ footer .social a.iso-pro:focus-visible {
                 lt = await apiLoadTreeOwnerBySlug(slugInput, currentDevice);
             }
 
-            if (!lt && slugInput) {
-                const pub = await apiLoadTreeBySlug(slugInput, currentDevice);
-                if (pub) {
-                    lt = pub;
-                    linktreeId = pub.id;
-                }
-            }
-
             if (!lt && currentDevice === 'mobile' && currentUser) {
                 try {
                     lt = await apiCloneVariant(slugInput, 'mobile');
