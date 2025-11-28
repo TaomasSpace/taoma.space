@@ -1029,7 +1029,11 @@
             const slug = decodeURIComponent(
               location.pathname.split("/").pop() || ""
             );
-            const r = await fetch(`/api/linktrees/${encodeURIComponent(slug)}`);
+            const device =
+              window.matchMedia("(max-width: 720px)").matches ? "mobile" : "pc";
+            const r = await fetch(
+              `/api/linktrees/${encodeURIComponent(slug)}?device=${device}`
+            );
             if (!r.ok) return;
             const data = await r.json();
             let needsGate = false;

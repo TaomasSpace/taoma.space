@@ -43,6 +43,7 @@ from pydantic import AliasChoices
 from fastapi import WebSocket, WebSocketDisconnect
 
 DisplayNameMode = Literal["slug", "username", "custom"]
+DeviceType = Literal["pc", "mobile"]
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -289,6 +290,7 @@ class IconOut(BaseModel):
 
 class LinktreeCreateIn(BaseModel):
     slug: str = Field(..., min_length=2, max_length=48, pattern=r"^[a-zA-Z0-9_-]+$")
+    device_type: DeviceType = "pc"
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
@@ -308,6 +310,7 @@ class LinktreeUpdateIn(BaseModel):
     slug: Optional[str] = Field(
         None, min_length=2, max_length=48, pattern=r"^[a-zA-Z0-9_-]+$"
     )
+    device_type: Optional[DeviceType] = None
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
@@ -343,6 +346,7 @@ class LinktreeOut(BaseModel):
     id: int
     user_id: int
     slug: str
+    device_type: DeviceType
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
@@ -747,6 +751,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    COALESCE(transparency, 0)          AS transparency,
                    COALESCE(name_effect, 'none')       AS name_effect,
                    COALESCE(background_effect,'none')  AS background_effect,
+                   device_type,
                    COALESCE(display_name_mode,'slug')  AS display_name_mode,
                    custom_display_name,
                    link_color,
@@ -799,6 +804,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "id": lt["id"],
         "user_id": lt["user_id"],
         "slug": lt["slug"],
+        "device_type": lt.get("device_type", "pc"),
         "location": lt.get("location"),
         "quote": lt.get("quote"),
         "song_url": lt.get("song_url"),
@@ -839,6 +845,21 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
             for r in icons
         ],
     }
+
+
+@app.get("/api/linktrees/by-slug/{slug}/manage", response_model=LinktreeOut)
+def get_linktree_manage_by_slug(
+    slug: str,
+    device: DeviceType = Query("pc"),
+    user: dict = Depends(require_user),
+):
+    _ensure_pg()
+    lt = db.get_linktree_by_slug(slug, device)
+    if not lt:
+        raise HTTPException(404, "Linktree not found")
+    if not (user.get("admin") or user["id"] == lt["user_id"]):
+        raise HTTPException(403, "Forbidden (owner or admin only)")
+    return get_linktree_manage(lt["id"], user)
 
 
 @app.get(
@@ -1362,9 +1383,11 @@ def linktree_config_page():
 
 
 @app.get("/api/linktrees/{slug}", response_model=LinktreeOut)
-def get_linktree(slug: str):
+def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or mobile")):
     _ensure_pg()
-    lt = db.get_linktree_by_slug(slug)
+    lt = db.get_linktree_by_slug(slug, device)
+    if not lt and device == "mobile":
+        lt = db.get_linktree_by_slug(slug, "pc")  # fallback
     if not lt:
         raise HTTPException(404, "Linktree not found")
 
@@ -1409,6 +1432,7 @@ def get_linktree(slug: str):
         "id": lt["id"],
         "user_id": lt["user_id"],
         "slug": lt["slug"],
+        "device_type": lt.get("device_type", "pc"),
         "location": lt.get("location"),
         "quote": lt.get("quote"),
         "song_url": lt.get("song_url"),
@@ -1443,14 +1467,15 @@ def linktree_page(slug: str):
 )
 def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_user)):
     _ensure_pg()
-    # Ein Tree pro User – DB hat UNIQUE(user_id), aber wir geben eine saubere 409
-    existing = db.get_linktree_by_slug(payload.slug)
+    # Ein Tree pro User + device_type
+    existing = db.get_linktree_by_slug(payload.slug, payload.device_type)
     if existing and existing["user_id"] == user["id"]:
-        raise HTTPException(409, "You already have a linktree with this slug")
+        raise HTTPException(409, "You already have a linktree with this slug and device")
     try:
         linktree_id = db.create_linktree(
             user_id=user["id"],
             slug=payload.slug,
+            device_type=payload.device_type,
             location=payload.location,
             quote=payload.quote,
             song_url=payload.song_url,
@@ -1467,9 +1492,33 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
         )
     except pg_errors.UniqueViolation:
         raise HTTPException(409, "Slug already in use")
-    lt = db.get_linktree_by_slug(payload.slug)
+    lt = db.get_linktree_by_slug(payload.slug, payload.device_type)
     # public shaping wie oben:
-    return get_linktree(payload.slug)
+    return get_linktree(payload.slug, device=payload.device_type)
+
+
+@app.post("/api/linktrees/{slug}/clone", response_model=LinktreeOut)
+def clone_linktree_variant(
+    slug: str,
+    target_device: DeviceType = Query("mobile"),
+    user: dict = Depends(require_user),
+):
+    _ensure_pg()
+    if target_device not in ("pc", "mobile"):
+        raise HTTPException(400, "Invalid target device")
+    source_device = "pc" if target_device == "mobile" else "mobile"
+    src = db.get_linktree_by_slug(slug, source_device)
+    if not src:
+        raise HTTPException(404, "Source linktree not found")
+    if not (user.get("admin") or user["id"] == src["user_id"]):
+        raise HTTPException(403, "Forbidden (owner or admin only)")
+    try:
+        new_id = db.clone_linktree_variant(slug, source_device, target_device, src["user_id"])
+    except ValueError as ve:
+        raise HTTPException(409, str(ve))
+    except KeyError:
+        raise HTTPException(404, "Source linktree not found")
+    return get_linktree_manage(new_id, user)
 
 
 @app.delete("/api/linktrees/{linktree_id}")
@@ -1979,20 +2028,13 @@ def update_linktree_ep(
 
     fields = payload.model_dump(exclude_unset=True)
 
-    # Wenn slug geändert werden soll: einfache Kollision prüfen
-    if "slug" in fields and fields["slug"]:
-        new_slug = fields["slug"]
-        with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
-            cur.execute("SELECT id FROM linktrees WHERE slug=%s AND id<>%s", (new_slug, linktree_id))
-            if cur.fetchone():
-                raise HTTPException(409, "Slug already in use")
-
-    # Vorherige Medien-URLs zum Aufräumen merken
+    # Vorherige Medien-URLs zum Aufräumen merken + device_type
     old_song = None
     old_bg = None
+    current_device_type = None
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
         cur.execute(
-            "SELECT song_url, background_url FROM linktrees WHERE id=%s",
+            "SELECT song_url, background_url, device_type FROM linktrees WHERE id=%s",
             (linktree_id,),
         )
         row = cur.fetchone()
@@ -2000,6 +2042,19 @@ def update_linktree_ep(
             raise HTTPException(404, "Linktree not found")
         old_song = row.get("song_url")
         old_bg = row.get("background_url")
+        current_device_type = row.get("device_type") or "pc"
+
+    # Wenn slug geändert werden soll: einfache Kollision prüfen (gleicher device_type)
+    if "slug" in fields and fields["slug"]:
+        new_slug = fields["slug"]
+        target_device = fields.get("device_type") or current_device_type
+        with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT id FROM linktrees WHERE slug=%s AND id<>%s AND device_type=%s",
+                (new_slug, linktree_id, target_device),
+            )
+            if cur.fetchone():
+                raise HTTPException(409, "Slug already in use")
 
     # Dynamisches UPDATE bauen
     cols = []

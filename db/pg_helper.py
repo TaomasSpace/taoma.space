@@ -68,9 +68,11 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS linktrees (
     id                  SERIAL PRIMARY KEY,
-    user_id             INTEGER NOT NULL UNIQUE
+    user_id             INTEGER NOT NULL
                         REFERENCES users(id) ON DELETE CASCADE,
-    slug                TEXT NOT NULL UNIQUE,     -- wird zu /tree/{slug}
+    device_type         TEXT NOT NULL DEFAULT 'pc'
+                        CHECK (device_type IN ('pc','mobile')),
+    slug                TEXT NOT NULL,            -- wird zu /tree/{slug}
     location            TEXT,
     quote               TEXT,
     song_url            TEXT,                     -- Audio-URL
@@ -227,6 +229,19 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS device_type TEXT NOT NULL DEFAULT 'pc';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS linktrees_device_type_check;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT linktrees_device_type_check
+  CHECK (device_type IN ('pc','mobile'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS custom_display_name TEXT;
                 """)
                 cur.execute("""
@@ -261,6 +276,35 @@ class PgGifDB:
   ADD CONSTRAINT chk_link_bg_alpha_range
   CHECK (link_bg_alpha BETWEEN 0 AND 100);
                 """)
+                cur.execute("""
+  DO $$
+  BEGIN
+    IF EXISTS (
+      SELECT 1 FROM information_schema.table_constraints
+      WHERE table_name='linktrees' AND constraint_type='UNIQUE' AND constraint_name='linktrees_user_id_key'
+    ) THEN
+      ALTER TABLE linktrees DROP CONSTRAINT linktrees_user_id_key;
+    END IF;
+  END$$;
+                """)
+                cur.execute("""
+  CREATE UNIQUE INDEX IF NOT EXISTS ux_linktrees_user_device
+  ON linktrees(user_id, device_type);
+                """)
+                cur.execute("""
+  DO $$
+  BEGIN
+    IF EXISTS (
+      SELECT 1 FROM pg_indexes WHERE tablename='linktrees' AND indexname='ux_linktrees_slug'
+    ) THEN
+      DROP INDEX ux_linktrees_slug;
+    END IF;
+  END$$;
+                """)
+                cur.execute("""
+  CREATE UNIQUE INDEX IF NOT EXISTS ux_linktrees_slug_device
+  ON linktrees (lower(slug), device_type);
+                """)
                 # 2) Nachrüst-Änderungen idempotent
                 cur.execute(
                     """
@@ -283,7 +327,14 @@ class PgGifDB:
                 )
                 cur.execute(
                     """
-                    CREATE UNIQUE INDEX IF NOT EXISTS ux_linktrees_slug ON linktrees (lower(slug));
+                    CREATE UNIQUE INDEX IF NOT EXISTS ux_linktrees_user_device
+                    ON linktrees (user_id, device_type);
+                """
+                )
+                cur.execute(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS ux_linktrees_slug_device
+                    ON linktrees (lower(slug), device_type);
                 """
                 )
                 cur.execute(
@@ -831,6 +882,7 @@ class PgGifDB:
         name_effect: str = "none",
         background_effect: str = "none",
         display_name_mode: str = "slug",  # <-- NEU
+        device_type: str = "pc",
         custom_display_name: str | None = None,
         link_color: str | None = None,
         link_bg_color: str | None = None,
@@ -840,7 +892,7 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, location, quote, song_url,
+                    user_id, slug, device_type, location, quote, song_url,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,          -- <-- NEU
@@ -849,11 +901,11 @@ class PgGifDB:
                     link_bg_color,
                     link_bg_alpha
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)   -- <-- + Platzhalter
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)   -- <-- + Platzhalter
                 RETURNING id
                 """,
                 (
-                    user_id, slug, location, quote, song_url,
+                    user_id, slug, device_type, location, quote, song_url,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,
@@ -864,10 +916,11 @@ class PgGifDB:
                 ),
             )
             linktree_id = cur.fetchone()[0]
-            cur.execute(
-                "UPDATE users SET linktree_id = %s, updated_at = now() WHERE id = %s",
-                (linktree_id, user_id),
-            )
+            if device_type == "pc":
+                cur.execute(
+                    "UPDATE users SET linktree_id = %s, updated_at = now() WHERE id = %s",
+                    (linktree_id, user_id),
+                )
             conn.commit()
             return linktree_id
 
@@ -875,6 +928,7 @@ class PgGifDB:
     def update_linktree(self, linktree_id: int, **fields) -> None:
         allowed = {
             "slug",
+            "device_type",
             "location",
             "quote",
             "song_url",
@@ -905,9 +959,81 @@ class PgGifDB:
             conn.commit()
 
 
-    def get_linktree_by_slug(self, slug: str) -> dict | None:
+    def clone_linktree_variant(self, source_slug: str, source_device: str, target_device: str, user_id: int) -> int:
+        """Clone an existing linktree (including links) to another device variant."""
+        if target_device not in {"pc", "mobile"}:
+            raise ValueError("invalid target device")
         with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
-            cur.execute("SELECT * FROM linktrees WHERE lower(slug)=lower(%s)", (slug,))
+            cur.execute(
+                "SELECT * FROM linktrees WHERE lower(slug)=lower(%s) AND device_type=%s AND user_id=%s",
+                (source_slug, source_device, user_id),
+            )
+            src = cur.fetchone()
+            if not src:
+                raise KeyError("source linktree not found")
+            cur.execute(
+                "SELECT id FROM linktrees WHERE lower(slug)=lower(%s) AND device_type=%s AND user_id=%s",
+                (source_slug, target_device, user_id),
+            )
+            if cur.fetchone():
+                raise ValueError("target variant already exists")
+            cur.execute(
+                """
+                INSERT INTO linktrees (
+                    user_id, slug, device_type, location, quote, song_url,
+                    background_url, background_is_video,
+                    transparency, name_effect, background_effect,
+                    display_name_mode, custom_display_name,
+                    link_color, link_bg_color, link_bg_alpha
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                RETURNING id
+                """,
+                (
+                    src["user_id"],
+                    src["slug"],
+                    target_device,
+                    src.get("location"),
+                    src.get("quote"),
+                    src.get("song_url"),
+                    src.get("background_url"),
+                    src.get("background_is_video"),
+                    src.get("transparency"),
+                    src.get("name_effect"),
+                    src.get("background_effect"),
+                    src.get("display_name_mode"),
+                    src.get("custom_display_name"),
+                    src.get("link_color"),
+                    src.get("link_bg_color"),
+                    src.get("link_bg_alpha", 100),
+                ),
+            )
+            new_id = cur.fetchone()["id"]
+            cur.execute(
+                "SELECT url, label, icon_url, position, is_active FROM linktree_links WHERE linktree_id=%s",
+                (src["id"],),
+            )
+            for link in cur.fetchall() or []:
+                cur.execute(
+                    """
+                    INSERT INTO linktree_links(linktree_id, url, label, icon_url, position, is_active)
+                    VALUES (%s,%s,%s,%s,%s,%s)
+                    """,
+                    (
+                        new_id,
+                        link["url"],
+                        link.get("label"),
+                        link.get("icon_url"),
+                        link.get("position", 0),
+                        link.get("is_active", True),
+                    ),
+                )
+            conn.commit()
+            return new_id
+
+
+    def get_linktree_by_slug(self, slug: str, device_type: str = "pc") -> dict | None:
+        with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+            cur.execute("SELECT * FROM linktrees WHERE lower(slug)=lower(%s) AND device_type=%s", (slug, device_type))
             lt = cur.fetchone()
             if not lt:
                 return None

@@ -915,11 +915,19 @@ footer .social a.iso-pro:focus-visible {
 
                 <form id="formMeta" class="grid cols-2" autocomplete="off">
                     <div class="field">
+                        <label for="inDevice">Editing for</label>
+                        <select id="inDevice" class="select">
+                            <option value="pc">Desktop</option>
+                            <option value="mobile">Mobile</option>
+                        </select>
+                        <div class="preview-note muted">Default is Desktop. Switching to Mobile can create a separate copy.</div>
+                    </div>
+                    <div class="field">
                         <label for="inSlug">Slug (URL)</label>
                         <input id="inSlug" class="input" placeholder="your-handle" pattern="^[a-zA-Z0-9_-]{2,48}$"
                             required>
                         <div class="preview-note muted">Preview: <code
-                                class="kbd">/tree/<span id="slugPreview">—</span></code></div>
+                                class="kbd">/tree/<span id="slugPreview">-</span></code></div>
                     </div>
                     <div class="field">
                         <label for="inLocation">Location</label>
@@ -1218,6 +1226,7 @@ footer .social a.iso-pro:focus-visible {
         let currentUser = null;
         let currentTree = null; // {id, slug, ...}
         let linktreeId = null;
+        let currentDevice = 'pc';
 
         const $ = (id) => document.getElementById(id);
         const msgMeta = $('msgMeta'), msgLinks = $('msgLinks');
@@ -1231,6 +1240,8 @@ footer .social a.iso-pro:focus-visible {
         function fillMetaForm(lt) {
             $('inSlug').value = lt.slug || '';
             $('slugPreview').textContent = lt.slug || '-';
+            $('inDevice').value = lt.device_type || 'pc';
+            currentDevice = lt.device_type || 'pc';
             $('inLocation').value = lt.location || '';
             $('inQuote').value = lt.quote || '';
             $('inSong').value = lt.song_url || '';
@@ -1322,22 +1333,28 @@ footer .social a.iso-pro:focus-visible {
         // --- API helpers ---
         function headers() { return { 'Content-Type': 'application/json' }; }
 
-        async function apiLoadTreeBySlug(slug) {
-            const r = await fetch(`/api/linktrees/${encodeURIComponent(slug)}`);
+        async function apiLoadTreeBySlug(slug, device = currentDevice) {
+            const r = await fetch(`/api/linktrees/${encodeURIComponent(slug)}?device=${encodeURIComponent(device || 'pc')}`);
             if (!r.ok) return null;
             const lt = await r.json();
             // NOTE: /api/linktrees/{slug} gibt aktuell keine profile_picture => wir nutzen es nur für Tree/Links/Icons
             return lt;
         }
-        async function apiLoadTreeOwner(id) {
-            const r = await fetch(`/api/linktrees/${id}/manage`, { headers: headers(), credentials: 'include' });
+        async function apiLoadTreeOwnerBySlug(slug, device = currentDevice) {
+            const r = await fetch(`/api/linktrees/by-slug/${encodeURIComponent(slug)}/manage?device=${encodeURIComponent(device || 'pc')}`, { headers: headers(), credentials: 'include' });
             if (!r.ok) return null;
+            return await r.json();
+        }
+        async function apiCloneVariant(slug, targetDevice = 'mobile') {
+            const r = await fetch(`/api/linktrees/${encodeURIComponent(slug)}/clone?target_device=${encodeURIComponent(targetDevice)}`, { method: 'POST', headers: headers(), credentials: 'include' });
+            if (!r.ok) throw new Error(await r.text());
             return await r.json();
         }
         async function apiEnsureOrUpdateMeta(exists) {
             const linkBgAlpha = Math.min(100, Math.max(0, parseInt($('inLinkBgAlpha').value || '100', 10)));
             const body = {
                 slug: $('inSlug').value.trim(),
+                device_type: currentDevice,
                 location: $('inLocation').value.trim() || null,
                 quote: $('inQuote').value.trim() || null,
                 song_url: $('inSong').value.trim() || null,
@@ -1400,6 +1417,10 @@ footer .social a.iso-pro:focus-visible {
         $('inSlug').addEventListener('input', e => { $('slugPreview').textContent = e.target.value.trim() || '-'; $('btnOpenPublic').href = `/tree/${encodeURIComponent(e.target.value.trim())}`; });
         $('inDisplayName').addEventListener('change', toggleCustomNameField);
         toggleCustomNameField();
+        $('inDevice').addEventListener('change', async (e) => {
+            currentDevice = e.target.value || 'pc';
+            await refreshData();
+        });
 
         $('formMeta').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1427,22 +1448,26 @@ footer .social a.iso-pro:focus-visible {
             const slugInput = $('inSlug').value.trim();
             let lt = null;
 
-            // Wenn wir schon eine ID und ein Token haben → zuerst Owner-Endpoint probieren
-            if (linktreeId && currentUser) {
-                lt = await apiLoadTreeOwner(linktreeId);
+            if (!slugInput) { currentTree = null; return; }
+
+            if (currentUser) {
+                lt = await apiLoadTreeOwnerBySlug(slugInput, currentDevice);
             }
 
-            // Fallback / First load: public by slug (liefert evtl. nur aktive Links)
             if (!lt && slugInput) {
-                const pub = await apiLoadTreeBySlug(slugInput);
+                const pub = await apiLoadTreeBySlug(slugInput, currentDevice);
                 if (pub) {
                     lt = pub;
-                    // sobald wir die ID kennen, direkt nochmal owner versuchen (um alle Links zu kriegen)
                     linktreeId = pub.id;
-                    if (currentUser) {
-                        const full = await apiLoadTreeOwner(linktreeId);
-                        if (full) lt = full;
-                    }
+                }
+            }
+
+            if (!lt && currentDevice === 'mobile' && currentUser) {
+                try {
+                    lt = await apiCloneVariant(slugInput, 'mobile');
+                    showMsg(msgMeta, 'Mobile version created from desktop', true);
+                } catch (_) {
+                    showMsg(msgMeta, 'Create mobile copy failed', false);
                 }
             }
 
@@ -1450,11 +1475,12 @@ footer .social a.iso-pro:focus-visible {
 
             currentTree = lt;
             linktreeId = lt.id;
+            currentDevice = lt.device_type || currentDevice;
+            $('inDevice').value = currentDevice;
 
-            // Diese beiden rendern ohnehin, ohne intern zu filtern:
             fillMetaForm(lt);
-            renderLinks(lt.links || []);   // enthält jetzt auch is_active=false
-            renderBadges(lt.icons || []);  // alle Badges mit displayed-Checkbox
+            renderLinks(lt.links || []);
+            renderBadges(lt.icons || []);
         }
 
         async function boot() {
@@ -1472,6 +1498,8 @@ footer .social a.iso-pro:focus-visible {
                 document.getElementById('inSlug').value = preferred;
                 document.getElementById('slugPreview').textContent = preferred;
                 document.getElementById('btnOpenPublic').href = `/tree/${encodeURIComponent(preferred)}`;
+                currentDevice = 'pc';
+                document.getElementById('inDevice').value = 'pc';
                 await refreshData(); // will try preferred slug from the input
                 if (!currentTree) {
                     showMsg(msgMeta, 'You don’t have a Linktree yet. Fill fields and Save to create it.', false);
