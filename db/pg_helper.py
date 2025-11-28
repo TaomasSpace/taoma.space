@@ -222,7 +222,7 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
-  ADD CONSTRAINT IF NOT EXISTS linktrees_display_name_mode_check
+  ADD CONSTRAINT linktrees_display_name_mode_check
   CHECK (display_name_mode IN ('slug','username','custom'));
                 """)
                 cur.execute("""
