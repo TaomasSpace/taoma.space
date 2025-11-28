@@ -1138,15 +1138,16 @@
                 linksEl.appendChild(a);
               });
             }
-        } catch (e) {
-          console.error("loadTree failed:", e);
+          } catch (e) {
+            console.error("loadTree failed:", e);
+          }
+          soundOn = false;
+          updateSoundUI();
         }
-        soundOn = false;
-        updateSoundUI();
-      }
 
-      loadTree();
-    })();
+        loadTree();
+      })();
+      turnSoundOn();
     </script>
   </body>
 </html>
