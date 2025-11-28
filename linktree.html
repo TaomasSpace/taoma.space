@@ -195,16 +195,52 @@
         display: none;
       }
 
-      .sound-toggle .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #ff6b6b;
-      }
+    .sound-toggle .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff6b6b;
+    }
 
-      .sound-toggle.on .dot {
-        background: #1dd1a1;
-      }
+    .sound-toggle.on .dot {
+      background: #1dd1a1;
+    }
+
+    .enter-gate {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 9;
+      transition: opacity .2s ease;
+    }
+
+    .enter-gate.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .enter-box {
+      padding: 1rem 1.4rem;
+      border-radius: 14px;
+      background: rgba(15, 18, 35, 0.85);
+      border: 1px solid #ffffff33;
+      box-shadow: var(--shadow);
+      color: var(--ink);
+      text-align: center;
+      min-width: 220px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .enter-box p {
+      margin: 0 0 .25rem;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
 
       /* Name Effects */
       .name.glow {
@@ -725,13 +761,19 @@
   </head>
 
   <body>
-    <div class="bg" id="bg"></div>
-    <button id="soundBtn" class="sound-toggle hidden" aria-label="Toggle sound">
-      <span class="dot" aria-hidden="true"></span>
-      <span id="soundLabel">Sound off</span>
-    </button>
-    <main>
-      <div class="card" id="card">
+  <div class="bg" id="bg"></div>
+  <div id="enterOverlay" class="enter-gate hidden" role="button" tabindex="0" aria-label="Enter site to enable media">
+    <div class="enter-box">
+      <p>Click to enter</p>
+      <span class="muted">Enable video & sound</span>
+    </div>
+  </div>
+  <button id="soundBtn" class="sound-toggle hidden" aria-label="Toggle sound">
+    <span class="dot" aria-hidden="true"></span>
+    <span id="soundLabel">Sound off</span>
+  </button>
+  <main>
+    <div class="card" id="card">
         <img
           id="pfp"
           class="pfp"
@@ -758,9 +800,10 @@
 
         const soundBtn = document.getElementById("soundBtn");
         const soundLabel = document.getElementById("soundLabel");
-        let bgVideo = null;
-        let bgAudio = null;
-        let soundOn = false;
+      let bgVideo = null;
+      let bgAudio = null;
+      let soundOn = false;
+      let gateActive = false;
 
         function safeUrl(
           raw,
@@ -891,17 +934,30 @@
           return svg;
         }
 
-        function updateSoundUI() {
-          if (!soundBtn) return;
-          soundBtn.classList.toggle("on", soundOn);
-          soundLabel.textContent = soundOn ? "Sound on" : "Sound off";
-        }
+      function updateSoundUI() {
+        if (!soundBtn) return;
+        soundBtn.classList.toggle("on", soundOn);
+        soundLabel.textContent = soundOn ? "Sound on" : "Sound off";
+      }
 
-        async function turnSoundOn() {
-          try {
-            if (bgAudio) {
-              bgAudio.muted = false;
-              await bgAudio.play().catch(() => {});
+      function showGate(show) {
+        const gate = document.getElementById("enterOverlay");
+        if (!gate) return;
+        if (show) {
+          gate.classList.remove("hidden");
+          gateActive = true;
+          gate.focus({ preventScroll: true });
+        } else {
+          gate.classList.add("hidden");
+          gateActive = false;
+        }
+      }
+
+      async function turnSoundOn() {
+        try {
+          if (bgAudio) {
+            bgAudio.muted = false;
+            await bgAudio.play().catch(() => {});
             } else if (bgVideo) {
               bgVideo.muted = false;
               await bgVideo.play().catch(() => {});
@@ -929,10 +985,37 @@
           } catch (_) {}
         }
 
-        soundBtn?.addEventListener("click", () => {
-          if (soundOn) turnSoundOff();
-          else turnSoundOn();
-        });
+      soundBtn?.addEventListener("click", () => {
+        if (soundOn) turnSoundOff();
+        else turnSoundOn();
+      });
+
+      function enterExperience() {
+        showGate(false);
+        if (bgVideo) {
+          bgVideo.muted = false;
+          bgVideo.play().catch(() => {});
+        }
+        if (bgAudio) {
+          bgAudio.muted = false;
+          bgAudio
+            .play()
+            .then(() => {
+              soundOn = true;
+              updateSoundUI();
+            })
+            .catch(() => {});
+        }
+      }
+
+      const gate = document.getElementById("enterOverlay");
+      gate?.addEventListener("click", enterExperience);
+      gate?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          enterExperience();
+        }
+      });
 
         // Ein “erster User-Input” schaltet optional sofort Ton an
         const firstGesture = () => {
@@ -949,6 +1032,7 @@
             const r = await fetch(`/api/linktrees/${encodeURIComponent(slug)}`);
             if (!r.ok) return;
             const data = await r.json();
+            let needsGate = false;
 
             // Background (Video oder Bild)
             const bgEl = document.getElementById("bg");
@@ -977,6 +1061,7 @@
                   document.addEventListener("visibilitychange", () => {
                     if (!document.hidden) bgVideo?.play().catch(() => {});
                   });
+                  needsGate = true;
                 } else {
                   const img = document.createElement("img");
                   img.src = bgUrl;
@@ -999,35 +1084,27 @@
               bgAudio.remove();
               bgAudio = null;
             }
-            const songUrl = safeMediaUrl(data.song_url);
+                        const songUrl = safeMediaUrl(data.song_url);
             if (songUrl) {
               bgAudio = document.createElement("audio");
               bgAudio.src = songUrl;
               bgAudio.loop = true;
               bgAudio.preload = "auto";
-              bgAudio.muted = true; // Autoplay-friendly start, then try to unmute
+              bgAudio.muted = true; // Autoplay-friendly start, gate will unmute
               document.body.appendChild(bgAudio);
-              const tryUnmute = () => {
-                if (!bgAudio) return;
-                bgAudio.muted = false;
-                bgAudio
-                  .play()
-                  .then(() => {
-                    soundOn = true;
-                    updateSoundUI();
-                  })
-                  .catch(() => {});
-              };
-              bgAudio.addEventListener("canplay", tryUnmute, { once: false });
-              bgAudio.addEventListener("loadeddata", tryUnmute, { once: true });
               bgAudio.play().catch(() => {});
-              setTimeout(tryUnmute, 150);
+              needsGate = true;
               soundBtn?.classList.remove("hidden"); // Button zeigen - Nutzer kann unmute'n
             } else if (data.background_is_video && bgVideo) {
-              // Kein Song → Videoton anbieten
+              // Kein Song -> Videoton anbieten
               soundBtn?.classList.remove("hidden");
             } else {
               soundBtn?.classList.add("hidden"); // nichts abzuspielen
+            }
+            if (needsGate) {
+              showGate(true);
+            } else {
+              showGate(false);
             }
             soundOn = false;
             updateSoundUI();
