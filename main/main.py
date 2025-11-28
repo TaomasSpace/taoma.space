@@ -1471,6 +1471,11 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
     existing = db.get_linktree_by_slug(payload.slug, payload.device_type)
     if existing and existing["user_id"] == user["id"]:
         raise HTTPException(409, "You already have a linktree with this slug and device")
+    # globale Slug-Kollision prüfen (andere User)
+    with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+        cur.execute("SELECT user_id FROM linktrees WHERE lower(slug)=lower(%s) AND user_id<>%s LIMIT 1", (payload.slug, user["id"]))
+        if cur.fetchone():
+            raise HTTPException(409, "Slug already in use")
     try:
         linktree_id = db.create_linktree(
             user_id=user["id"],
@@ -2050,8 +2055,8 @@ def update_linktree_ep(
         target_device = fields.get("device_type") or current_device_type
         with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
             cur.execute(
-                "SELECT id FROM linktrees WHERE slug=%s AND id<>%s AND device_type=%s",
-                (new_slug, linktree_id, target_device),
+                "SELECT id FROM linktrees WHERE lower(slug)=lower(%s) AND id<>%s AND user_id<>%s",
+                (new_slug, linktree_id, user["id"]),
             )
             if cur.fetchone():
                 raise HTTPException(409, "Slug already in use")
@@ -2067,6 +2072,12 @@ def update_linktree_ep(
         vals.append(linktree_id)
         with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
             cur.execute(q, tuple(vals))
+            # Wenn Slug geändert: auch andere Device-Variante des gleichen Users synchronisieren
+            if "slug" in fields and fields["slug"]:
+                cur.execute(
+                    "UPDATE linktrees SET slug=%s, updated_at=NOW() WHERE user_id=%s AND device_type<>%s",
+                    (fields["slug"], user["id"], current_device_type),
+                )
             conn.commit()
 
     # Medien-Cleanup, falls URLs gewechselt wurden

@@ -344,12 +344,6 @@ class PgGifDB:
                 )
                 cur.execute(
                     """
-                    CREATE UNIQUE INDEX IF NOT EXISTS ux_linktrees_slug_device
-                    ON linktrees (lower(slug), device_type);
-                """
-                )
-                cur.execute(
-                    """
                     DO $$
                     BEGIN
                         IF EXISTS (
@@ -360,6 +354,32 @@ class PgGifDB:
                         END IF;
                     END$$;
                     """
+                )
+                cur.execute(
+                    """
+                    DO $$
+                    BEGIN
+                        IF EXISTS (
+                            SELECT 1 FROM pg_indexes
+                            WHERE tablename='linktrees'
+                            AND indexname='ux_linktrees_slug_device'
+                        ) THEN
+                            DROP INDEX ux_linktrees_slug_device;
+                        END IF;
+                    END$$;
+                    """
+                )
+                cur.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_linktrees_slug_device
+                    ON linktrees (lower(slug), device_type);
+                """
+                )
+                cur.execute(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS ux_linktrees_slug_user
+                    ON linktrees (lower(slug), user_id);
+                """
                 )
                 cur.execute(
                     """

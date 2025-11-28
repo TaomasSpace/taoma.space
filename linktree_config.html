@@ -1458,6 +1458,8 @@ footer .social a.iso-pro:focus-visible {
                 try {
                     lt = await apiCloneVariant(slugInput, 'mobile');
                     showMsg(msgMeta, 'Mobile version created from desktop', true);
+                    // Slug stayed the same across devices
+                    linktreeId = lt.id;
                 } catch (_) {
                     showMsg(msgMeta, 'Create mobile copy failed', false);
                 }
