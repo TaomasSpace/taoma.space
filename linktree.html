@@ -1005,10 +1005,24 @@
               bgAudio.src = songUrl;
               bgAudio.loop = true;
               bgAudio.preload = "auto";
-              bgAudio.muted = true; // Autoplay-freundlich starten
+              bgAudio.muted = true; // Autoplay-friendly start, then try to unmute
               document.body.appendChild(bgAudio);
+              const tryUnmute = () => {
+                if (!bgAudio) return;
+                bgAudio.muted = false;
+                bgAudio
+                  .play()
+                  .then(() => {
+                    soundOn = true;
+                    updateSoundUI();
+                  })
+                  .catch(() => {});
+              };
+              bgAudio.addEventListener("canplay", tryUnmute, { once: false });
+              bgAudio.addEventListener("loadeddata", tryUnmute, { once: true });
               bgAudio.play().catch(() => {});
-              soundBtn?.classList.remove("hidden"); // Button zeigen – Nutzer kann unmute’n
+              setTimeout(tryUnmute, 150);
+              soundBtn?.classList.remove("hidden"); // Button zeigen - Nutzer kann unmute'n
             } else if (data.background_is_video && bgVideo) {
               // Kein Song → Videoton anbieten
               soundBtn?.classList.remove("hidden");
