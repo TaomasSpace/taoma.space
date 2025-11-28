@@ -1124,20 +1124,15 @@
                 linksEl.appendChild(a);
               });
             }
-          } catch (e) {
-            console.error("loadTree failed:", e);
-          }
-          soundOn = false;
-          updateSoundUI();
-
-          // Musik standardmäßig an
-          setTimeout(() => {
-            turnSoundOn();
-          }, 300);
+        } catch (e) {
+          console.error("loadTree failed:", e);
         }
+        soundOn = false;
+        updateSoundUI();
+      }
 
-        loadTree();
-      })();
+      loadTree();
+    })();
     </script>
   </body>
 </html>
