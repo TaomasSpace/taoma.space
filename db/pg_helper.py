@@ -241,6 +241,17 @@ class PgGifDB:
   CHECK (device_type IN ('pc','mobile'));
                 """)
                 cur.execute("""
+  DO $$
+  BEGIN
+    IF EXISTS (
+      SELECT 1 FROM information_schema.table_constraints
+      WHERE table_name='linktrees' AND constraint_name='linktrees_slug_key'
+    ) THEN
+      ALTER TABLE linktrees DROP CONSTRAINT linktrees_slug_key;
+    END IF;
+  END$$;
+                """)
+                cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS custom_display_name TEXT;
                 """)
@@ -336,6 +347,19 @@ class PgGifDB:
                     CREATE UNIQUE INDEX IF NOT EXISTS ux_linktrees_slug_device
                     ON linktrees (lower(slug), device_type);
                 """
+                )
+                cur.execute(
+                    """
+                    DO $$
+                    BEGIN
+                        IF EXISTS (
+                            SELECT 1 FROM information_schema.table_constraints
+                            WHERE table_name='linktrees' AND constraint_name='linktrees_slug_key'
+                        ) THEN
+                            ALTER TABLE linktrees DROP CONSTRAINT linktrees_slug_key;
+                        END IF;
+                    END$$;
+                    """
                 )
                 cur.execute(
                     """
