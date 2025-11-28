@@ -964,9 +964,13 @@
                   video.autoplay = true;
                   video.muted = true;
                   video.loop = true;
+                  video.setAttribute("muted", "");
                   video.setAttribute("playsinline", "");
                   video.setAttribute("webkit-playsinline", "");
                   video.preload = "auto";
+                  const kickOff = () => video.play().catch(() => {});
+                  video.addEventListener("canplay", kickOff, { once: true });
+                  video.addEventListener("loadeddata", kickOff, { once: true });
                   bgEl.appendChild(video);
                   bgVideo = video;
                   bgVideo.play().catch(() => {});
