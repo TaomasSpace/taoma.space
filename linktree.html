@@ -1146,8 +1146,11 @@
         }
 
         loadTree();
+        document.addEventListener("DOMContentLoaded", () => {
+          console.log("Page loaded (HTML ready)");
+          turnSoundOn();
+        });
       })();
-      turnSoundOn();
     </script>
   </body>
 </html>
