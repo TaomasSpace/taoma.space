@@ -254,7 +254,11 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
-  ADD CONSTRAINT IF NOT EXISTS chk_link_bg_alpha_range
+  DROP CONSTRAINT IF EXISTS chk_link_bg_alpha_range;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_link_bg_alpha_range
   CHECK (link_bg_alpha BETWEEN 0 AND 100);
                 """)
                 # 2) Nachrüst-Änderungen idempotent
