@@ -82,6 +82,13 @@ CREATE TABLE IF NOT EXISTS linktrees (
                         CHECK (name_effect IN ('none','glow','neon','rainbow')),
     background_effect   TEXT NOT NULL DEFAULT 'none'
                         CHECK (background_effect IN ('none','night','rain','snow')),
+    display_name_mode   TEXT NOT NULL DEFAULT 'slug'
+                        CHECK (display_name_mode IN ('slug','username','custom')),
+    custom_display_name TEXT,
+    link_color          TEXT,
+    link_bg_color       TEXT,
+    link_bg_alpha       SMALLINT NOT NULL DEFAULT 100
+                        CHECK (link_bg_alpha BETWEEN 0 AND 100),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ
 );
@@ -208,7 +215,48 @@ class PgGifDB:
 
                 cur.execute("""ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS display_name_mode TEXT NOT NULL DEFAULT 'slug'
-    CHECK (display_name_mode IN ('slug','username'));""")
+    CHECK (display_name_mode IN ('slug','username','custom'));""")
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS linktrees_display_name_mode_check;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT IF NOT EXISTS linktrees_display_name_mode_check
+  CHECK (display_name_mode IN ('slug','username','custom'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS custom_display_name TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS link_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS link_bg_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS link_bg_alpha SMALLINT;
+                """)
+                cur.execute("""
+  UPDATE linktrees SET link_bg_alpha = 100 WHERE link_bg_alpha IS NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN link_bg_alpha SET DEFAULT 100;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN link_bg_alpha SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT IF NOT EXISTS chk_link_bg_alpha_range
+  CHECK (link_bg_alpha BETWEEN 0 AND 100);
+                """)
                 # 2) Nachrüst-Änderungen idempotent
                 cur.execute(
                     """
@@ -779,6 +827,10 @@ class PgGifDB:
         name_effect: str = "none",
         background_effect: str = "none",
         display_name_mode: str = "slug",  # <-- NEU
+        custom_display_name: str | None = None,
+        link_color: str | None = None,
+        link_bg_color: str | None = None,
+        link_bg_alpha: int = 100,
     ) -> int:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
@@ -787,9 +839,13 @@ class PgGifDB:
                     user_id, slug, location, quote, song_url,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
-                    display_name_mode           -- <-- NEU
+                    display_name_mode,          -- <-- NEU
+                    custom_display_name,
+                    link_color,
+                    link_bg_color,
+                    link_bg_alpha
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)   -- <-- +1 Platzhalter
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)   -- <-- + Platzhalter
                 RETURNING id
                 """,
                 (
@@ -797,6 +853,10 @@ class PgGifDB:
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,
+                    custom_display_name,
+                    link_color,
+                    link_bg_color,
+                    link_bg_alpha,
                 ),
             )
             linktree_id = cur.fetchone()[0]
@@ -820,6 +880,10 @@ class PgGifDB:
             "name_effect",
             "background_effect",
             "display_name_mode",
+            "custom_display_name",
+            "link_color",
+            "link_bg_color",
+            "link_bg_alpha",
         }
         sets, vals = [], []
         for k, v in fields.items():

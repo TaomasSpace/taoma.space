@@ -956,7 +956,7 @@ footer .social a.iso-pro:focus-visible {
                         </select>
                     </div>
                     <div class="field">
-                        <label for="inTrans">Transparency (0–100)</label>
+                        <label for="inTrans">Card Transparency (0-100)</label>
                         <input id="inTrans" class="input" type="number" min="0" max="100" value="0">
                     </div>
                     <div class="field">
@@ -964,7 +964,13 @@ footer .social a.iso-pro:focus-visible {
                         <select id="inDisplayName" class="select">
                             <option value="slug">Slug</option>
                             <option value="username">Username</option>
+                            <option value="custom">Custom</option>
                         </select>
+                    </div>
+                    <div class="field">
+                        <label for="inCustomName">Custom Name</label>
+                        <input id="inCustomName" class="input" placeholder="Your name/nickname" maxlength="64">
+                        <div class="preview-note muted">Used when Display Name is set to Custom.</div>
                     </div>
                     <div class="field">
                         <label for="inNameFx">Name Effect</label>
@@ -974,6 +980,18 @@ footer .social a.iso-pro:focus-visible {
                             <option value="neon">neon</option>
                             <option value="rainbow">rainbow</option>
                         </select>
+                    </div>
+                    <div class="field">
+                        <label for="inLinkColor">Link Text Color</label>
+                        <input id="inLinkColor" class="input" type="color" value="#e9ebff">
+                    </div>
+                    <div class="field">
+                        <label for="inLinkBgColor">Link Background Color</label>
+                        <input id="inLinkBgColor" class="input" type="color" value="#171b3b">
+                    </div>
+                    <div class="field">
+                        <label for="inLinkBgAlpha">Link Background Transparency (0-100)</label>
+                        <input id="inLinkBgAlpha" class="input" type="number" min="0" max="100" value="100">
                     </div>
                     <div class="field">
                         <label for="inBgFx">Background Effect</label>
@@ -1207,21 +1225,36 @@ footer .social a.iso-pro:focus-visible {
         function showMsg(el, text, ok = false) { el.textContent = text; el.className = 'alert ' + (ok ? 'ok' : 'err'); el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3500); }
         function slugFromQuery() { const u = new URL(location.href); return u.searchParams.get('slug'); }
 
+        const DEFAULT_LINK_COLOR = '#e9ebff';
+        const DEFAULT_LINK_BG_COLOR = '#171b3b';
+
         function fillMetaForm(lt) {
             $('inSlug').value = lt.slug || '';
-            $('slugPreview').textContent = lt.slug || '—';
+            $('slugPreview').textContent = lt.slug || '-';
             $('inLocation').value = lt.location || '';
             $('inQuote').value = lt.quote || '';
             $('inSong').value = lt.song_url || '';
             $('inBg').value = lt.background_url || '';
             $('inVideo').value = String(!!lt.background_is_video);
             $('inDisplayName').value = lt.display_name_mode || 'slug';
+            $('inCustomName').value = lt.custom_display_name || '';
             $('inTrans').value = lt.transparency ?? 0;
             $('inNameFx').value = lt.name_effect || 'none';
             $('inBgFx').value = lt.background_effect || 'none';
+            $('inLinkColor').value = lt.link_color || DEFAULT_LINK_COLOR;
+            $('inLinkBgColor').value = lt.link_bg_color || DEFAULT_LINK_BG_COLOR;
+            $('inLinkBgAlpha').value = lt.link_bg_alpha ?? 100;
+            toggleCustomNameField();
             const btnOpen = $('btnOpenPublic');
             btnOpen.href = `/tree/${encodeURIComponent(lt.slug)}`;
             btnOpen.textContent = `/tree/${lt.slug}`;
+        }
+
+        function toggleCustomNameField() {
+            const isCustom = $('inDisplayName').value === 'custom';
+            const input = $('inCustomName');
+            input.disabled = !isCustom;
+            input.parentElement?.classList.toggle('muted', !isCustom);
         }
 
         function renderLinks(links) {
@@ -1302,6 +1335,7 @@ footer .social a.iso-pro:focus-visible {
             return await r.json();
         }
         async function apiEnsureOrUpdateMeta(exists) {
+            const linkBgAlpha = Math.min(100, Math.max(0, parseInt($('inLinkBgAlpha').value || '100', 10)));
             const body = {
                 slug: $('inSlug').value.trim(),
                 location: $('inLocation').value.trim() || null,
@@ -1313,6 +1347,10 @@ footer .social a.iso-pro:focus-visible {
                 name_effect: $('inNameFx').value,
                 background_effect: $('inBgFx').value,
                 display_name_mode: $('inDisplayName').value,
+                custom_display_name: $('inCustomName').value.trim() || null,
+                link_color: $('inLinkColor').value || null,
+                link_bg_color: $('inLinkBgColor').value || null,
+                link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
             };
             if (!exists) {
                 const r = await fetch('/api/linktrees', { method: 'POST', headers: headers(), credentials: 'include', body: JSON.stringify(body) });
@@ -1359,7 +1397,9 @@ footer .social a.iso-pro:focus-visible {
         }
 
         // --- Page boot / flow ---
-        $('inSlug').addEventListener('input', e => { $('slugPreview').textContent = e.target.value.trim() || '—'; $('btnOpenPublic').href = `/tree/${encodeURIComponent(e.target.value.trim())}`; });
+        $('inSlug').addEventListener('input', e => { $('slugPreview').textContent = e.target.value.trim() || '-'; $('btnOpenPublic').href = `/tree/${encodeURIComponent(e.target.value.trim())}`; });
+        $('inDisplayName').addEventListener('change', toggleCustomNameField);
+        toggleCustomNameField();
 
         $('formMeta').addEventListener('submit', async (e) => {
             e.preventDefault();

@@ -42,7 +42,7 @@ from datetime import date
 from pydantic import AliasChoices
 from fastapi import WebSocket, WebSocketDisconnect
 
-DisplayNameMode = Literal["slug", "username"]
+DisplayNameMode = Literal["slug", "username", "custom"]
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -266,6 +266,7 @@ ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp", "image/gif"}
 
 EffectName = Literal["none", "glow", "neon", "rainbow"]
 BgEffectName = Literal["none", "night", "rain", "snow"]
+HEX_COLOR_RE = r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
 
 
 class LinkOut(BaseModel):
@@ -297,6 +298,10 @@ class LinktreeCreateIn(BaseModel):
     name_effect: EffectName = "none"
     background_effect: BgEffectName = "none"
     display_name_mode: DisplayNameMode = "slug"
+    custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
+    link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    link_bg_alpha: int = Field(100, ge=0, le=100)
 
 
 class LinktreeUpdateIn(BaseModel):
@@ -312,6 +317,10 @@ class LinktreeUpdateIn(BaseModel):
     name_effect: Optional[EffectName] = None
     background_effect: Optional[BgEffectName] = None
     display_name_mode: Optional[DisplayNameMode] = None
+    custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
+    link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
 
 
 class LinkCreateIn(BaseModel):
@@ -343,11 +352,14 @@ class LinktreeOut(BaseModel):
     name_effect: EffectName
     background_effect: BgEffectName
     display_name_mode: DisplayNameMode  # NEU
-    profile_picture: Optional[str] = None  # NEU – fürs Avatar
-    user_username: Optional[str] = None  # NEU – für „username“-Modus
+    custom_display_name: Optional[str] = None
+    link_color: Optional[str] = None
+    link_bg_color: Optional[str] = None
+    link_bg_alpha: int = 100
+    profile_picture: Optional[str] = None  # NEU - fuer Avatar
+    user_username: Optional[str] = None  # NEU - fuer "username"-Modus
     links: List[LinkOut]
     icons: List[IconOut]
-
 
 class IconUpsertIn(BaseModel):
     code: str = Field(..., min_length=2, max_length=64, pattern=r"^[a-z0-9_\-]+$")
@@ -735,7 +747,11 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    COALESCE(transparency, 0)          AS transparency,
                    COALESCE(name_effect, 'none')       AS name_effect,
                    COALESCE(background_effect,'none')  AS background_effect,
-                   COALESCE(display_name_mode,'slug')  AS display_name_mode
+                   COALESCE(display_name_mode,'slug')  AS display_name_mode,
+                   custom_display_name,
+                   link_color,
+                   link_bg_color,
+                   COALESCE(link_bg_alpha, 100)        AS link_bg_alpha
               FROM linktrees
              WHERE id = %s
         """,
@@ -792,6 +808,10 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "name_effect": lt.get("name_effect") or "none",
         "background_effect": lt.get("background_effect") or "none",
         "display_name_mode": lt.get("display_name_mode") or "slug",
+        "custom_display_name": lt.get("custom_display_name"),
+        "link_color": lt.get("link_color"),
+        "link_bg_color": lt.get("link_bg_color"),
+        "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
         "profile_picture": user_pfp,
         "user_username": user_username,
         "links": [
@@ -1398,6 +1418,10 @@ def get_linktree(slug: str):
         "name_effect": lt.get("name_effect", "none"),
         "background_effect": lt.get("background_effect", "none"),
         "display_name_mode": lt.get("display_name_mode", "slug"),
+        "custom_display_name": lt.get("custom_display_name"),
+        "link_color": lt.get("link_color"),
+        "link_bg_color": lt.get("link_bg_color"),
+        "link_bg_alpha": lt.get("link_bg_alpha", 100),
         "profile_picture": user_pfp,  # <= jetzt dabei
         "user_username": user_username,  # <= jetzt dabei
         "links": links,
@@ -1436,6 +1460,10 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             name_effect=payload.name_effect,
             background_effect=payload.background_effect,
             display_name_mode=payload.display_name_mode,  # <-- NEU
+            custom_display_name=payload.custom_display_name,
+            link_color=payload.link_color,
+            link_bg_color=payload.link_bg_color,
+            link_bg_alpha=payload.link_bg_alpha,
         )
     except pg_errors.UniqueViolation:
         raise HTTPException(409, "Slug already in use")
