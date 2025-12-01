@@ -1053,7 +1053,7 @@
 
       async function createOrUpdateData() {
         const statusEl = $("status");
-        statusEl.textContent = "…speichere";
+        statusEl.textContent = "speichere...";
         statusEl.style.color = "";
         const day = $("Datum").value || new Date().toISOString().split("T")[0];
 
@@ -1080,7 +1080,7 @@
         }
 
         try {
-                    await ensureListLoaded();
+          await ensureListLoaded();
           const existing = (allRows || []).find(
             (r) => (r.day || "").slice(0, 10) === day
           );
@@ -1112,7 +1112,13 @@
           ) {
             updateChart();
           }
-
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = "Fehler beim Speichern";
+          statusEl.style.color = "crimson";
+          alert(String(err));
+        }
+      }
       $("saveBtn").addEventListener("click", (e) => {
         e.preventDefault();
         createOrUpdateData();
