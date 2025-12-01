@@ -690,8 +690,8 @@
                 /><span></span>
               </div>
               <div class="row">
-                <label for="other"> Anderes </label>
-                <input type="text" id="other" /> <span></span>
+                <label for="OtherCapture"> Anderes </label>
+                <input type="text" id="OtherCapture" /> <span></span>
               </div>
             </form>
 
@@ -1069,7 +1069,7 @@
           atemnot: parseInt($("Atemnot").value, 10),
           mens: $("Mens").checked,
           notizen: $("Notizen").value?.trim() || null,
-          other: $("other").value?.trim() || null,
+          other: $("OtherCapture").value?.trim() || null,
         };
 
         // Temperatur nur mitsenden, wenn gesetzt
@@ -1452,7 +1452,7 @@
           atemnot: parseInt($("m_atem").value, 10),
           mens: $("m_mens").value === "true",
           notizen: $("m_note").value?.trim() || null,
-          other: $("other").value?.trim() || null,
+          other: $("OtherCapture").value?.trim() || null,
         };
         // Temperatur nur mitsenden, wenn gesetzt
         const tRaw = $("m_temp").value;
