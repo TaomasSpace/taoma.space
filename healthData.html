@@ -1080,45 +1080,39 @@
         }
 
         try {
-          const check = await fetch(`${API_BASE}/by-day/${day}`);
-          if (check.ok) {
-            const existing = await check.json();
-            const id = existing.id;
-            const res = await fetch(`${API_BASE}/${id}`, {
+                    await ensureListLoaded();
+          const existing = (allRows || []).find(
+            (r) => (r.day || "").slice(0, 10) === day
+          );
+          if (existing) {
+            const res = await fetch(`${API_BASE}/${existing.id}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
             if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
-            statusEl.textContent = "Aktualisiert ✔";
+            statusEl.textContent = "Aktualisiert ✓";
             statusEl.style.color = "#16a34a";
-          } else if (check.status === 404) {
+          } else {
             const res = await fetch(`${API_BASE}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
             if (!res.ok) throw new Error(`POST failed: ${res.status}`);
-            statusEl.textContent = "Gespeichert ✔";
+            statusEl.textContent = "Gespeichert ✓";
             statusEl.style.color = "#16a34a";
-            if (
-              document
-                .querySelector('[data-tab="stats"]')
-                .classList.contains("active")
-            ) {
-              await ensureListLoaded();
-              updateChart();
-            }
-          } else {
-            throw new Error(`Lookup failed: ${check.status}`);
           }
-        } catch (err) {
-          console.error(err);
-          statusEl.textContent = "Fehler beim Speichern";
-          statusEl.style.color = "crimson";
-          alert(String(err));
-        }
-      }
+          await loadTable();
+          await ensureListLoaded();
+          if (
+            document
+              .querySelector('[data-tab="stats"]')
+              .classList.contains("active")
+          ) {
+            updateChart();
+          }
+
       $("saveBtn").addEventListener("click", (e) => {
         e.preventDefault();
         createOrUpdateData();
@@ -1431,6 +1425,11 @@
         currentRow = null;
       }
       $("btnCancel").addEventListener("click", closeModal);
+      $("btnDelete").addEventListener("click", async () => {
+        if (!currentRow) return;
+        await confirmDelete(currentRow);
+        closeModal();
+      });
 
       $("btnSaveEdit").addEventListener("click", async () => {
         if (!currentRow) return;
