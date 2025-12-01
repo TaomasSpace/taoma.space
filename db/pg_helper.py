@@ -241,6 +241,10 @@ class PgGifDB:
   CHECK (device_type IN ('pc','mobile'));
                 """)
                 cur.execute("""
+    ALTER TABLE health_data
+    ADD COLUMN IF NOT EXISTS other TEXT;                     
+""")
+                cur.execute("""
   DO $$
   BEGIN
     IF EXISTS (
@@ -1284,6 +1288,7 @@ class PgGifDB:
         atemnot: int = 0,
         mens: bool = False,
         notizen: str | None = None,
+        other: str | None = None,
     ) -> int:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cols = [
@@ -1299,6 +1304,7 @@ class PgGifDB:
                 # "temperatur" kommt ggf. dynamisch
                 "mens",
                 "notizen",
+                "other",
             ]
             vals = [
                 day,
@@ -1313,6 +1319,7 @@ class PgGifDB:
                 # temperatur ggf. weiter unten,
                 mens,
                 notizen,
+                other,
             ]
 
             # Temperatur ggf. an passender Stelle einschieben (vor mens/notizen)
@@ -1371,7 +1378,7 @@ class PgGifDB:
         allowed = {
             "day", "borg", "erschöpfung", "muskelschwäche", "schmerzen",
             "angst", "konzentration", "husten", "atemnot", "temperatur",
-            "mens", "notizen",
+            "mens", "notizen", "other",
         }
         sets, vals = [], []
         for k, v in fields.items():

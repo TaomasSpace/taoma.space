@@ -1109,21 +1109,22 @@
             soundOn = false;
             updateSoundUI();
             const cardEl = document.getElementById("card");
+            let cardAlpha = 1;
             if (cardEl) {
               const t = data.transparency ?? 0;
-              const alpha = 1 - Math.min(Math.max(t, 0), 100) / 100;
+              cardAlpha = 1 - Math.min(Math.max(t, 0), 100) / 100;
 
-              if (alpha <= 0) {
+              if (cardAlpha <= 0) {
                 cardEl.classList.add("transparent");
               } else {
                 cardEl.classList.remove("transparent");
-                cardEl.style.setProperty("--card-alpha", alpha.toString());
+                cardEl.style.setProperty("--card-alpha", cardAlpha.toString());
               }
             }
             applyLinkStyles(
               data.link_color,
               data.link_bg_color,
-              data.link_bg_alpha
+              Math.round(cardAlpha * 100)
             );
             // Profil/Badges/Links wie gehabt
             const pfp = document.getElementById("pfp");

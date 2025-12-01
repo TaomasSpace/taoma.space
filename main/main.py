@@ -510,7 +510,7 @@ class HealthDataBase(BaseModel):
     atemnot: int = Field(0, ge=0, le=10)
     mens: bool = False
     notizen: Optional[str] = None
-
+    other: Optional[str] = None
     model_config = {"populate_by_name": True}
 
 
@@ -539,7 +539,7 @@ class HealthDataUpdate(BaseModel):
     atemnot: Optional[int] = Field(None, ge=0, le=10)
     mens: Optional[bool] = None
     notizen: Optional[str] = None
-
+    other: Optional[str] = None
     model_config = {"populate_by_name": True}
 
 
@@ -563,6 +563,7 @@ def _health_row_to_out(row: dict) -> HealthDataOut:
         atemnot=row.get("atemnot", 0),
         mens=row.get("mens", False),
         notizen=row.get("notizen"),
+        other=row.get("other"),
     )
 
 @app.get("/", include_in_schema=False)
@@ -1922,6 +1923,7 @@ def create_health_data_ep(payload: HealthDataIn):
         atemnot=payload.atemnot,
         mens=payload.mens,
         notizen=payload.notizen,
+        other=payload.other,
     )
     row = db.get_health_data(new_id)
     return _health_row_to_out(row)

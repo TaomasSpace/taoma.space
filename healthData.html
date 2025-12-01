@@ -664,7 +664,9 @@
               </div>
 
               <div class="row">
-                <label for="Temperatur">Temperatur (°C) <span class="hint">(optional)</span></label>
+                <label for="Temperatur"
+                  >Temperatur (°C) <span class="hint">(optional)</span></label
+                >
                 <input
                   type="number"
                   max="45"
@@ -777,15 +779,59 @@
               </div>
               <div class="right hint">
                 Metriken:
-                <label><input type="checkbox" class="sMetric" value="borg" checked /> Borg</label>
-                <label><input type="checkbox" class="sMetric" value="schmerzen" /> Schmerzen</label>
-                <label><input type="checkbox" class="sMetric" value="atemnot" /> Atemnot</label>
-                <label><input type="checkbox" class="sMetric" value="husten" /> Husten</label>
-                <label><input type="checkbox" class="sMetric" value="angst" /> Angst</label>
-                <label><input type="checkbox" class="sMetric" value="konzentration" /> Konzentration</label>
-                <label><input type="checkbox" class="sMetric" value="erschoepfung" /> Erschöpfung</label>
-                <label><input type="checkbox" class="sMetric" value="muskelschwaeche" /> Muskelschwäche</label>
-                <label><input type="checkbox" class="sMetric" value="temperatur" /> Temperatur</label>
+                <label
+                  ><input
+                    type="checkbox"
+                    class="sMetric"
+                    value="borg"
+                    checked
+                  />
+                  Borg</label
+                >
+                <label
+                  ><input type="checkbox" class="sMetric" value="schmerzen" />
+                  Schmerzen</label
+                >
+                <label
+                  ><input type="checkbox" class="sMetric" value="atemnot" />
+                  Atemnot</label
+                >
+                <label
+                  ><input type="checkbox" class="sMetric" value="husten" />
+                  Husten</label
+                >
+                <label
+                  ><input type="checkbox" class="sMetric" value="angst" />
+                  Angst</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="sMetric"
+                    value="konzentration"
+                  />
+                  Konzentration</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="sMetric"
+                    value="erschoepfung"
+                  />
+                  Erschöpfung</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="sMetric"
+                    value="muskelschwaeche"
+                  />
+                  Muskelschwäche</label
+                >
+                <label
+                  ><input type="checkbox" class="sMetric" value="temperatur" />
+                  Temperatur</label
+                >
               </div>
             </div>
 
@@ -822,14 +868,16 @@
               <div class="table-scroll">
                 <table id="tableBorg">
                   <thead>
-                    <tr><th>Datum</th><th>Borg</th></tr>
+                    <tr>
+                      <th>Datum</th>
+                      <th>Borg</th>
+                    </tr>
                   </thead>
                   <tbody></tbody>
                 </table>
               </div>
             </div>
           </div>
-
         </div>
       </section>
     </div>
@@ -846,7 +894,13 @@
             /></label>
             <label
               >Temperatur
-              <input type="number" id="m_temp" step="0.1" min="20" max="45" placeholder="optional"
+              <input
+                type="number"
+                id="m_temp"
+                step="0.1"
+                min="20"
+                max="45"
+                placeholder="optional"
             /></label>
             <label
               >Erschöpfung <input type="number" id="m_ersch" min="0" max="10"
@@ -870,6 +924,7 @@
             <label
               >Atemnot <input type="number" id="m_atem" min="0" max="10"
             /></label>
+            <label> Anderes <input type="text" id="other" /> </label>
             <label
               >Mens
               <select id="m_mens">
@@ -996,8 +1051,7 @@
         const statusEl = $("status");
         statusEl.textContent = "…speichere";
         statusEl.style.color = "";
-        const day =
-          $("Datum").value || new Date().toISOString().split("T")[0];
+        const day = $("Datum").value || new Date().toISOString().split("T")[0];
 
         const payload = {
           day,
@@ -1011,6 +1065,7 @@
           atemnot: parseInt($("Atemnot").value, 10),
           mens: $("Mens").checked,
           notizen: $("Notizen").value?.trim() || null,
+          other: $("other").value?.trim() || null,
         };
 
         // Temperatur nur mitsenden, wenn gesetzt
@@ -1166,6 +1221,7 @@
         erschoepfung: "Erschöpfung",
         muskelschwaeche: "Muskelschwäche",
         temperatur: "Temperatur (°C)",
+        other: "Anderes",
       };
       const RIGHT_AXIS = new Set(["temperatur"]);
       function parseDateISO(d) {
@@ -1245,6 +1301,7 @@
             <td>${rr.atemnot ?? ""}</td>
             <td>${fmtTemp(rr.temperatur)}</td>
             <td>${rr.mens ? "ja" : "nein"}</td>
+            <td>${rr.other ?? ""}
           `;
           tbO.appendChild(tr);
         });
@@ -1362,6 +1419,7 @@
         $("m_atem").value = row.atemnot ?? 0;
         $("m_mens").value = row.mens ? "true" : "false";
         $("m_note").value = row.notizen || "";
+        $("other").value = row.other || "";
         $("modalBackdrop").style.display = "flex";
       }
       function closeModal() {
@@ -1385,6 +1443,7 @@
           atemnot: parseInt($("m_atem").value, 10),
           mens: $("m_mens").value === "true",
           notizen: $("m_note").value?.trim() || null,
+          other: $("other").value?.trim() || null,
         };
         // Temperatur nur mitsenden, wenn gesetzt
         const tRaw = $("m_temp").value;
@@ -1402,7 +1461,11 @@
           if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
           closeModal();
           await loadTable();
-          if (document.querySelector('[data-tab="stats"]').classList.contains("active")) {
+          if (
+            document
+              .querySelector('[data-tab="stats"]')
+              .classList.contains("active")
+          ) {
             updateChart();
           }
         } catch (e) {
@@ -1420,7 +1483,11 @@
           });
           if (!res.ok) throw new Error(`DELETE failed: ${res.status}`);
           await loadTable();
-          if (document.querySelector('[data-tab="stats"]').classList.contains("active")) {
+          if (
+            document
+              .querySelector('[data-tab="stats"]')
+              .classList.contains("active")
+          ) {
             await ensureListLoaded();
             updateChart();
           }
