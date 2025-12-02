@@ -1438,7 +1438,11 @@ footer .social a.iso-pro:focus-visible {
             try {
                 const r = await fetch('/api/discord/oauth-url', { credentials: 'include' });
                 if (!r.ok) { showMsg(msgMeta, 'Discord linking unavailable', false); return; }
-                const { url } = await r.json();
+                const { url, configured, reason } = await r.json();
+                if (!configured || !url) {
+                    showMsg(msgMeta, reason || 'Discord linking not configured', false);
+                    return;
+                }
                 const w = window.open(url, 'discord_link', 'width=520,height=720');
                 if (!w) showMsg(msgMeta, 'Allow popups to link Discord', false);
             } catch (e) {

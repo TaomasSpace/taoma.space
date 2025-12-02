@@ -305,9 +305,13 @@ logger = logging.getLogger("uvicorn.error")
 def _ensure_discord_config():
     if not (DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET and DISCORD_REDIRECT_URI):
         raise HTTPException(
-            400,
+            503,
             "Discord linking is not configured (set DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_REDIRECT_URI)",
         )
+
+
+def _discord_configured() -> bool:
+    return bool(DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET and DISCORD_REDIRECT_URI)
 
 
 def _new_discord_state(user_id: int) -> str:
@@ -1425,6 +1429,7 @@ def discord_status(current: dict = Depends(require_user)):
     linked = bool(acct)
     return {
         "linked": linked,
+        "configured": _discord_configured(),
         "discord_user_id": acct.get("discord_user_id") if linked else None,
         "username": acct.get("discord_username") if linked else None,
         "global_name": acct.get("discord_global_name") if linked else None,
@@ -1435,7 +1440,12 @@ def discord_status(current: dict = Depends(require_user)):
 @app.get("/api/discord/oauth-url")
 def discord_oauth_url(current: dict = Depends(require_user)):
     _ensure_pg()
-    _ensure_discord_config()
+    if not _discord_configured():
+        return {
+            "configured": False,
+            "url": None,
+            "reason": "Discord linking not configured on server",
+        }
     state = _new_discord_state(current["id"])
     scope_param = quote_plus(" ".join((DISCORD_OAUTH_SCOPES or "identify").split()))
     redirect = quote_plus(DISCORD_REDIRECT_URI)
@@ -1447,7 +1457,7 @@ def discord_oauth_url(current: dict = Depends(require_user)):
         f"&state={quote_plus(state)}"
         "&prompt=consent"
     )
-    return {"url": url, "state": state}
+    return {"url": url, "state": state, "configured": True}
 
 
 @app.get("/api/discord/callback", include_in_schema=False)
