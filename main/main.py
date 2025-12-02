@@ -304,7 +304,10 @@ logger = logging.getLogger("uvicorn.error")
 
 def _ensure_discord_config():
     if not (DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET and DISCORD_REDIRECT_URI):
-        raise HTTPException(503, "Discord linking is not configured")
+        raise HTTPException(
+            400,
+            "Discord linking is not configured (set DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_REDIRECT_URI)",
+        )
 
 
 def _new_discord_state(user_id: int) -> str:
