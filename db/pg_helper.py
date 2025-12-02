@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS health_data (
     notizen         TEXT
 );  --  <<<<<<<<<<<<<<  Semikolon!
 
-CREATE TABLE discord_accounts (
+CREATE TABLE IF NOT EXISTS discord_accounts (
     id                  SERIAL PRIMARY KEY,
     user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     discord_user_id     VARCHAR(32) NOT NULL, -- Snowflake als String
