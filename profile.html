@@ -863,7 +863,7 @@
         // --- Mobile menu
         const toggle = document.getElementById('mobileToggle');
         const menu = document.getElementById('primary-menu');
-        toggle?.addEventListener('click', () => { const open = menu.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); });
+        if (toggle) { toggle.addEventListener('click', () => { const open = menu.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); }); }
         // year
         document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -919,7 +919,7 @@
         let discordStatus = { linked: false };
         async function refreshSession() {
             const session = await fetchSession();
-            currentUser = session?.user || null;
+            currentUser = (session && session.user) ? session.user : null;
             return currentUser;
         }
 
@@ -992,7 +992,7 @@
                 const lt = await fetchMyLinktree();
                 const frameToggle = document.getElementById('inDiscordFrameProfile');
                 if (frameToggle) {
-                    frameToggle.checked = !!lt?.discord_frame_enabled;
+                    frameToggle.checked = !!(lt && lt.discord_frame_enabled);
                 }
                 updateDiscordUI();
 
@@ -1021,7 +1021,7 @@
                 try {
                     const r2 = await fetch('/api/users/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
                     if (r2.ok) { ok = true; } else { err = (await r2.text()) || err; }
-                } catch (e2) { err = e2?.message || err; }
+                } catch (e2) { err = (e2 && e2.message) ? e2.message : err; }
             }
 
             if (!ok) { showMsg(err || 'Update failed', false); return false; }
@@ -1043,11 +1043,11 @@
         document.getElementById('btnDiscordUnlink').addEventListener('click', unlinkDiscord);
         document.getElementById('inDiscordFrameProfile').addEventListener('change', toggleDiscordFrame);
         window.addEventListener('message', async (evt) => {
-            if (evt?.data?.type === 'discord-linked') {
+            if (evt && evt.data && evt.data.type === 'discord-linked') {
                 await loadDiscordStatus();
                 const lt = await fetchMyLinktree();
                 const frameToggle = document.getElementById('inDiscordFrameProfile');
-                if (frameToggle) frameToggle.checked = !!lt?.discord_frame_enabled;
+                if (frameToggle) frameToggle.checked = !!(lt && lt.discord_frame_enabled);
                 updateDiscordUI();
                 showMsg('Discord linked', true);
             }
@@ -1084,9 +1084,9 @@
             const toggleEl = document.getElementById('inDiscordFrameProfile');
             const linkBtn = document.getElementById('btnDiscordLink');
             const unlinkBtn = document.getElementById('btnDiscordUnlink');
-            const linked = !!discordStatus?.linked;
+            const linked = !!(discordStatus && discordStatus.linked);
             if (statusEl) {
-                const name = discordStatus?.global_name || discordStatus?.username || 'Discord user';
+                const name = (discordStatus && (discordStatus.global_name || discordStatus.username)) || 'Discord user';
                 statusEl.textContent = linked ? `Linked as ${name}` : 'Not linked';
             }
             if (linkBtn && unlinkBtn) {
@@ -1094,13 +1094,13 @@
                 unlinkBtn.style.display = linked ? 'inline-flex' : 'none';
             }
             if (toggleEl) {
-                toggleEl.disabled = !linked || !currentUser?.linktree_id;
+                toggleEl.disabled = !linked || !(currentUser && currentUser.linktree_id);
                 if (!linked) toggleEl.checked = false;
             }
             if (previewEl) {
                 previewEl.innerHTML = '';
                 previewEl.classList.remove('muted');
-                if (linked && discordStatus?.decoration_url) {
+                if (linked && discordStatus && discordStatus.decoration_url) {
                     const wrap = document.createElement('div');
                     wrap.className = 'pfp-preview';
                     const img = document.createElement('img');
@@ -1128,7 +1128,7 @@
         }
 
         async function fetchMyLinktree() {
-            if (!currentUser?.linktree_id) return null;
+            if (!(currentUser && currentUser.linktree_id)) return null;
             try {
                 const r = await fetch(`/api/linktrees/${currentUser.linktree_id}/manage`, { credentials: 'include' });
                 if (!r.ok) return null;
@@ -1171,8 +1171,8 @@
 
         async function toggleDiscordFrame(ev) {
             const enabled = !!ev.target.checked;
-            if (!currentUser?.linktree_id) { showMsg('Create a Linktree first', false); ev.target.checked = false; return; }
-            if (!discordStatus?.linked) { showMsg('Link Discord first', false); ev.target.checked = false; return; }
+            if (!(currentUser && currentUser.linktree_id)) { showMsg('Create a Linktree first', false); ev.target.checked = false; return; }
+            if (!(discordStatus && discordStatus.linked)) { showMsg('Link Discord first', false); ev.target.checked = false; return; }
             try {
                 const r = await fetch(`/api/linktrees/${currentUser.linktree_id}`, {
                     method: 'PATCH',
@@ -1215,7 +1215,7 @@
 
         // --- Avatar upload
         document.getElementById('btnUpload').addEventListener('click', async () => {
-            const f = document.getElementById('inFile').files?.[0];
+            const f = (document.getElementById('inFile').files || [])[0];
             if (!f) return showMsg('Choose a file first', false);
             if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(f.type)) {
                 return showMsg('Unsupported type', false);

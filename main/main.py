@@ -1692,6 +1692,19 @@ def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or 
         for r in lt["links"]
         if r.get("is_active", True)
     ]
+    frame_enabled = bool(lt.get("discord_frame_enabled", False))
+    if not frame_enabled and lt.get("device_type") == "mobile":
+        try:
+            with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+                cur.execute(
+                    "SELECT discord_frame_enabled FROM linktrees WHERE user_id=%s AND device_type='pc' LIMIT 1",
+                    (lt["user_id"],),
+                )
+                row = cur.fetchone()
+                if row and row.get("discord_frame_enabled"):
+                    frame_enabled = True
+        except Exception:
+            frame_enabled = frame_enabled
 
     return {
         "id": lt["id"],
@@ -1711,8 +1724,8 @@ def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or 
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": lt.get("link_bg_alpha", 100),
-        "discord_frame_enabled": bool(lt.get("discord_frame_enabled", False)),
-        "discord_decoration_url": decoration_url if lt.get("discord_frame_enabled") else None,
+        "discord_frame_enabled": frame_enabled,
+        "discord_decoration_url": decoration_url if frame_enabled else None,
         "profile_picture": user_pfp,  # <= jetzt dabei
         "user_username": user_username,  # <= jetzt dabei
         "links": links,

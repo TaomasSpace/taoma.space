@@ -1180,7 +1180,7 @@ footer .social a.iso-pro:focus-visible {
         // --- Mobile menu
         const toggle = document.getElementById('mobileToggle');
         const menu = document.getElementById('primary-menu');
-        toggle?.addEventListener('click', () => { const open = menu.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); });
+        if (toggle) { toggle.addEventListener('click', () => { const open = menu.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); }); }
         document.getElementById('year').textContent = new Date().getFullYear();
 
 
@@ -1245,7 +1245,7 @@ footer .social a.iso-pro:focus-visible {
             if (!slot) return null;
 
             const session = await fetchSession();
-            const user = session?.user || null;
+            const user = (session && session.user) ? session.user : null;
             const isAdmin = !!(user && user.admin);
             currentUser = user;
 
@@ -1321,7 +1321,7 @@ footer .social a.iso-pro:focus-visible {
             const isCustom = $('inDisplayName').value === 'custom';
             const input = $('inCustomName');
             input.disabled = !isCustom;
-            input.parentElement?.classList.toggle('muted', !isCustom);
+            if (input.parentElement) { input.parentElement.classList.toggle('muted', !isCustom); }
         }
 
         function renderLinks(links) {
@@ -1392,9 +1392,9 @@ footer .social a.iso-pro:focus-visible {
             const toggleEl = $('inDiscordFrame');
             const linkBtn = $('btnDiscordLink');
             const unlinkBtn = $('btnDiscordUnlink');
-            const linked = !!discordStatus?.linked;
+            const linked = !!(discordStatus && discordStatus.linked);
             if (statusEl) {
-                const name = discordStatus?.global_name || discordStatus?.username || 'Discord user';
+                const name = (discordStatus && (discordStatus.global_name || discordStatus.username)) || 'Discord user';
                 statusEl.textContent = linked ? `Linked as ${name}` : 'Not linked';
             }
             if (linkBtn && unlinkBtn) {
@@ -1408,7 +1408,7 @@ footer .social a.iso-pro:focus-visible {
             if (previewEl) {
                 previewEl.innerHTML = '';
                 previewEl.classList.remove('muted');
-                if (linked && discordStatus?.decoration_url) {
+                if (linked && discordStatus && discordStatus.decoration_url) {
                     const wrap = document.createElement('div');
                     wrap.className = 'pfp-preview';
                     const img = document.createElement('img');
@@ -1615,7 +1615,7 @@ footer .social a.iso-pro:focus-visible {
         }
 
         window.addEventListener('message', async (evt) => {
-            if (evt?.data?.type === 'discord-linked') {
+            if (evt && evt.data && evt.data.type === 'discord-linked') {
                 await loadDiscordStatus();
                 await refreshData();
                 showMsg(msgMeta, 'Discord linked', true);

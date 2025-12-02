@@ -80,9 +80,9 @@
 
       .pfp-frame {
         position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
+        inset: -8px;
+        width: calc(100% + 16px);
+        height: calc(100% + 16px);
         object-fit: contain;
         pointer-events: none;
         z-index: 2;
@@ -1017,10 +1017,12 @@
           } catch (_) {}
         }
 
-      soundBtn?.addEventListener("click", () => {
-        if (soundOn) turnSoundOff();
-        else turnSoundOn();
-      });
+      if (soundBtn) {
+        soundBtn.addEventListener("click", () => {
+          if (soundOn) turnSoundOff();
+          else turnSoundOn();
+        });
+      }
 
       function enterExperience() {
         showGate(false);
@@ -1041,13 +1043,15 @@
       }
 
       const gate = document.getElementById("enterOverlay");
-      gate?.addEventListener("click", enterExperience);
-      gate?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          enterExperience();
-        }
-      });
+      if (gate) {
+        gate.addEventListener("click", enterExperience);
+        gate.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            enterExperience();
+          }
+        });
+      }
 
         // Ein “erster User-Input” schaltet optional sofort Ton an
         const firstGesture = () => {
@@ -1092,7 +1096,7 @@
                   bgVideo = video;
                   needsGate = true;
                   document.addEventListener("visibilitychange", () => {
-                    if (!document.hidden && !gateActive) bgVideo?.play().catch(() => {});
+                    if (!document.hidden && !gateActive && bgVideo) bgVideo.play().catch(() => {});
                   });
                 } else {
                   const img = document.createElement("img");
@@ -1126,12 +1130,12 @@
               document.body.appendChild(bgAudio);
               bgAudio.play().catch(() => {});
               needsGate = true;
-              soundBtn?.classList.remove("hidden"); // Button zeigen - Nutzer kann unmute'n
+              if (soundBtn) soundBtn.classList.remove("hidden"); // Button zeigen - Nutzer kann unmute'n
             } else if (data.background_is_video && bgVideo) {
               // Kein Song -> Videoton anbieten
-              soundBtn?.classList.remove("hidden");
+              if (soundBtn) soundBtn.classList.remove("hidden");
             } else {
-              soundBtn?.classList.add("hidden"); // nichts abzuspielen
+              if (soundBtn) soundBtn.classList.add("hidden"); // nichts abzuspielen
             }
             if (needsGate) {
               showGate(true);
