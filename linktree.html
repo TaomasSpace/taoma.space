@@ -56,6 +56,13 @@
         padding: 3rem 1rem;
       }
 
+      .pfp-wrap {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 0 auto 8px;
+      }
+
       .pfp {
         width: 120px;
         height: 120px;
@@ -63,6 +70,15 @@
         border: 3px solid #fff3;
         box-shadow: var(--shadow);
         object-fit: cover;
+      }
+
+      .pfp-frame {
+        position: absolute;
+        inset: -10px;
+        width: calc(100% + 20px);
+        height: calc(100% + 20px);
+        object-fit: contain;
+        pointer-events: none;
       }
 
       .name {
@@ -774,14 +790,23 @@
   </button>
   <main>
     <div class="card" id="card">
-        <img
-          id="pfp"
-          class="pfp"
-          src="/static/icon.png"
-          alt="Profile picture"
-        />
+        <div class="pfp-wrap">
+          <img
+            id="pfp"
+            class="pfp"
+            src="/static/icon.png"
+            alt="Profile picture"
+          />
+          <img
+            id="pfpFrame"
+            class="pfp-frame"
+            src=""
+            alt=""
+            style="display:none"
+          />
+        </div>
         <div id="name" class="name">User</div>
-        <div id="quote" class="quote">—</div>
+        <div id="quote" class="quote">-</div>
         <div class="location" id="loc"></div>
         <div class="badges" id="badges"></div>
 
@@ -1128,10 +1153,20 @@
             );
             // Profil/Badges/Links wie gehabt
             const pfp = document.getElementById("pfp");
+            const pfpFrame = document.getElementById("pfpFrame");
             if (pfp) {
               const profileUrl =
                 safeMediaUrl(data.profile_picture) || "/static/icon.png";
               pfp.src = profileUrl;
+            }
+            if (pfpFrame) {
+              const frameUrl = safeMediaUrl(data.discord_decoration_url);
+              if (data.discord_frame_enabled && frameUrl) {
+                pfpFrame.src = frameUrl;
+                pfpFrame.style.display = "block";
+              } else {
+                pfpFrame.style.display = "none";
+              }
             }
             const nameEl = document.getElementById("name");
             if (nameEl) {

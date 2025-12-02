@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS linktrees (
     link_bg_color       TEXT,
     link_bg_alpha       SMALLINT NOT NULL DEFAULT 100
                         CHECK (link_bg_alpha BETWEEN 0 AND 100),
+    discord_frame_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ
 );
@@ -142,6 +143,24 @@ CREATE TABLE IF NOT EXISTS health_data (
     mens            BOOLEAN NOT NULL DEFAULT FALSE,
     notizen         TEXT
 );  --  <<<<<<<<<<<<<<  Semikolon!
+
+CREATE TABLE discord_accounts (
+    id                  SERIAL PRIMARY KEY,
+    user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    discord_user_id     VARCHAR(32) NOT NULL, -- Snowflake als String
+    discord_username    VARCHAR(100),         -- historisch name#0000
+    discord_global_name VARCHAR(100),         -- neuer "Global Name"
+    avatar_hash         VARCHAR(128),
+    avatar_decoration   JSONB,                -- Rohdaten, falls du sie speichern willst
+    access_token        TEXT NOT NULL,
+    refresh_token       TEXT NOT NULL,
+    token_expires_at    TIMESTAMP NOT NULL,
+    scopes              TEXT NOT NULL,        -- z.B. "identify"
+    linked_at           TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    UNIQUE (user_id),
+    UNIQUE (discord_user_id)
+);
 
 -- Saubere FK für users.linktree_id -> linktrees.id
 DO $$
@@ -281,6 +300,10 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ALTER COLUMN link_bg_alpha SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS discord_frame_enabled BOOLEAN NOT NULL DEFAULT FALSE;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -927,6 +950,72 @@ class PgGifDB:
             )
             return cur.fetchone()
 
+    # ---------------- Discord Accounts ----------------
+
+    def upsert_discord_account(
+        self,
+        user_id: int,
+        *,
+        discord_user_id: str,
+        discord_username: str | None = None,
+        discord_global_name: str | None = None,
+        avatar_hash: str | None = None,
+        avatar_decoration: Any | None = None,
+        access_token: str,
+        refresh_token: str,
+        token_expires_at,
+        scopes: str,
+    ) -> int:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO discord_accounts (
+                    user_id, discord_user_id, discord_username, discord_global_name,
+                    avatar_hash, avatar_decoration,
+                    access_token, refresh_token, token_expires_at, scopes
+                )
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (user_id) DO UPDATE SET
+                    discord_user_id = EXCLUDED.discord_user_id,
+                    discord_username = EXCLUDED.discord_username,
+                    discord_global_name = EXCLUDED.discord_global_name,
+                    avatar_hash = EXCLUDED.avatar_hash,
+                    avatar_decoration = EXCLUDED.avatar_decoration,
+                    access_token = EXCLUDED.access_token,
+                    refresh_token = EXCLUDED.refresh_token,
+                    token_expires_at = EXCLUDED.token_expires_at,
+                    scopes = EXCLUDED.scopes
+                RETURNING id
+                """,
+                (
+                    user_id,
+                    discord_user_id,
+                    discord_username,
+                    discord_global_name,
+                    avatar_hash,
+                    avatar_decoration,
+                    access_token,
+                    refresh_token,
+                    token_expires_at,
+                    scopes,
+                ),
+            )
+            new_id = cur.fetchone()[0]
+            conn.commit()
+            return new_id
+
+    def get_discord_account(self, user_id: int) -> dict | None:
+        with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT * FROM discord_accounts WHERE user_id = %s LIMIT 1", (user_id,)
+            )
+            return cur.fetchone()
+
+    def delete_discord_account(self, user_id: int) -> None:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute("DELETE FROM discord_accounts WHERE user_id = %s", (user_id,))
+            conn.commit()
+
     # ---------------- Linktrees ----------------
 
 
@@ -949,6 +1038,7 @@ class PgGifDB:
         link_color: str | None = None,
         link_bg_color: str | None = None,
         link_bg_alpha: int = 100,
+        discord_frame_enabled: bool = False,
     ) -> int:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
@@ -961,9 +1051,10 @@ class PgGifDB:
                     custom_display_name,
                     link_color,
                     link_bg_color,
-                    link_bg_alpha
+                    link_bg_alpha,
+                    discord_frame_enabled
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)   -- <-- + Platzhalter
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)   -- <-- + Platzhalter
                 RETURNING id
                 """,
                 (
@@ -975,6 +1066,7 @@ class PgGifDB:
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
+                    discord_frame_enabled,
                 ),
             )
             linktree_id = cur.fetchone()[0]
@@ -1004,6 +1096,7 @@ class PgGifDB:
             "link_color",
             "link_bg_color",
             "link_bg_alpha",
+            "discord_frame_enabled",
         }
         sets, vals = [], []
         for k, v in fields.items():
@@ -1046,8 +1139,8 @@ class PgGifDB:
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode, custom_display_name,
-                    link_color, link_bg_color, link_bg_alpha
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    link_color, link_bg_color, link_bg_alpha, discord_frame_enabled
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 RETURNING id
                 """,
                 (
@@ -1067,6 +1160,7 @@ class PgGifDB:
                     src.get("link_color"),
                     src.get("link_bg_color"),
                     src.get("link_bg_alpha", 100),
+                    src.get("discord_frame_enabled", False),
                 ),
             )
             new_id = cur.fetchone()["id"]

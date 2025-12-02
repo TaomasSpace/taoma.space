@@ -7,7 +7,7 @@ import os, httpx
 from dotenv import load_dotenv
 import logging
 import json, html
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import BackgroundTasks
 import asyncio, uuid
 from pydantic import BaseModel, Field
@@ -25,7 +25,8 @@ from fastapi import Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import threading
 from psycopg import errors as pg_errors
-import os, base64
+import os, base64, secrets
+from urllib.parse import quote_plus
 from fastapi import Path as PathParam
 from fastapi import UploadFile, File
 import pathlib
@@ -41,6 +42,55 @@ from fastapi import Request
 from datetime import date
 from pydantic import AliasChoices
 from fastapi import WebSocket, WebSocketDisconnect
+from sqlalchemy import (
+    Column, Integer, String, Text, DateTime, ForeignKey, UniqueConstraint
+)
+from sqlalchemy.orm import relationship, declarative_base
+from datetime import datetime
+
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String(255), unique=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    username = Column(String(100), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    discord_account = relationship(
+        "DiscordAccount",
+        uselist=False,
+        back_populates="user"
+    )
+
+
+class DiscordAccount(Base):
+    __tablename__ = "discord_accounts"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    discord_user_id = Column(String(32), nullable=False)
+    discord_username = Column(String(100))
+    discord_global_name = Column(String(100))
+    avatar_hash = Column(String(128))
+    avatar_decoration = Column(Text)  # oder JSON, je nach DB/Driver
+
+    access_token = Column(Text, nullable=False)
+    refresh_token = Column(Text, nullable=False)
+    token_expires_at = Column(DateTime, nullable=False)
+    scopes = Column(Text, nullable=False)
+    linked_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", back_populates="discord_account")
+
+    __table_args__ = (
+        UniqueConstraint("user_id"),
+        UniqueConstraint("discord_user_id"),
+    )
 
 DisplayNameMode = Literal["slug", "username", "custom"]
 DeviceType = Literal["pc", "mobile"]
@@ -243,7 +293,72 @@ def _extract_token(
 
 
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
+DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
+DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI")
+DISCORD_OAUTH_SCOPES = os.getenv("DISCORD_OAUTH_SCOPES", "identify")
+DISCORD_STATE_TTL = int(os.getenv("DISCORD_STATE_TTL", "600"))
+DISCORD_STATE_STORE: dict[str, dict] = {}
 logger = logging.getLogger("uvicorn.error")
+
+
+def _ensure_discord_config():
+    if not (DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET and DISCORD_REDIRECT_URI):
+        raise HTTPException(503, "Discord linking is not configured")
+
+
+def _new_discord_state(user_id: int) -> str:
+    token = secrets.token_urlsafe(32)
+    DISCORD_STATE_STORE[token] = {
+        "user_id": user_id,
+        "created_at": datetime.now(timezone.utc),
+    }
+    return token
+
+
+def _pop_discord_state(token: str) -> int | None:
+    data = DISCORD_STATE_STORE.pop(token, None)
+    if not data:
+        return None
+    created = data.get("created_at")
+    if not created or created < datetime.now(timezone.utc) - timedelta(
+        seconds=DISCORD_STATE_TTL
+    ):
+        return None
+    return data.get("user_id")
+
+
+def _decoration_to_url(decoration: Any) -> str | None:
+    if not decoration:
+        return None
+    data = decoration
+    if isinstance(decoration, str):
+        try:
+            data = json.loads(decoration)
+        except Exception:
+            data = {"asset": decoration}
+    if isinstance(data, dict):
+        asset = data.get("asset") or data.get("avatar_decoration") or data.get("hash")
+    elif isinstance(data, str):
+        asset = data
+    else:
+        return None
+    if not asset:
+        return None
+    return f"https://cdn.discordapp.com/avatar-decoration-presets/{asset}.png?size=320"
+
+
+def _load_discord_account(user_id: int) -> dict:
+    if not isinstance(db, PgGifDB):
+        return {}
+    try:
+        acct = db.get_discord_account(user_id)
+    except Exception:
+        return {}
+    if not acct:
+        return {}
+    acct["decoration_url"] = _decoration_to_url(acct.get("avatar_decoration"))
+    return acct
 
 ALLOWED_ORIGINS = [
     o.strip()
@@ -304,6 +419,7 @@ class LinktreeCreateIn(BaseModel):
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
+    discord_frame_enabled: bool = False
 
 
 class LinktreeUpdateIn(BaseModel):
@@ -324,6 +440,7 @@ class LinktreeUpdateIn(BaseModel):
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
+    discord_frame_enabled: Optional[bool] = None
 
 
 class LinkCreateIn(BaseModel):
@@ -360,6 +477,8 @@ class LinktreeOut(BaseModel):
     link_color: Optional[str] = None
     link_bg_color: Optional[str] = None
     link_bg_alpha: int = 100
+    discord_frame_enabled: bool = False
+    discord_decoration_url: Optional[str] = None
     profile_picture: Optional[str] = None  # NEU - fuer Avatar
     user_username: Optional[str] = None  # NEU - fuer "username"-Modus
     links: List[LinkOut]
@@ -757,7 +876,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    custom_display_name,
                    link_color,
                    link_bg_color,
-                   COALESCE(link_bg_alpha, 100)        AS link_bg_alpha
+                   COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
+                   COALESCE(discord_frame_enabled, false) AS discord_frame_enabled
               FROM linktrees
              WHERE id = %s
         """,
@@ -801,6 +921,9 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         )
         icons = cur.fetchall() or []
 
+    discord_acct = _load_discord_account(lt["user_id"])
+    decoration_url = discord_acct.get("decoration_url") if discord_acct else None
+
     return {
         "id": lt["id"],
         "user_id": lt["user_id"],
@@ -819,6 +942,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
+        "discord_frame_enabled": bool(lt.get("discord_frame_enabled", False)),
+        "discord_decoration_url": decoration_url,
         "profile_picture": user_pfp,
         "user_username": user_username,
         "links": [
@@ -1290,6 +1415,125 @@ def update_me(payload: MeUpdateIn, current: dict = Depends(require_user)):
     return row
 
 
+@app.get("/api/discord/status")
+def discord_status(current: dict = Depends(require_user)):
+    _ensure_pg()
+    acct = _load_discord_account(current["id"])
+    linked = bool(acct)
+    return {
+        "linked": linked,
+        "discord_user_id": acct.get("discord_user_id") if linked else None,
+        "username": acct.get("discord_username") if linked else None,
+        "global_name": acct.get("discord_global_name") if linked else None,
+        "decoration_url": acct.get("decoration_url") if linked else None,
+    }
+
+
+@app.get("/api/discord/oauth-url")
+def discord_oauth_url(current: dict = Depends(require_user)):
+    _ensure_pg()
+    _ensure_discord_config()
+    state = _new_discord_state(current["id"])
+    scope_param = quote_plus(" ".join((DISCORD_OAUTH_SCOPES or "identify").split()))
+    redirect = quote_plus(DISCORD_REDIRECT_URI)
+    url = (
+        "https://discord.com/oauth2/authorize"
+        f"?client_id={quote_plus(DISCORD_CLIENT_ID)}"
+        f"&response_type=code&redirect_uri={redirect}"
+        f"&scope={scope_param}"
+        f"&state={quote_plus(state)}"
+        "&prompt=consent"
+    )
+    return {"url": url, "state": state}
+
+
+@app.get("/api/discord/callback", include_in_schema=False)
+async def discord_callback(code: str | None = None, state: str | None = None):
+    if not code or not state:
+        raise HTTPException(400, "Missing code or state")
+    _ensure_pg()
+    _ensure_discord_config()
+    user_id = _pop_discord_state(state)
+    if not user_id:
+        raise HTTPException(400, "Invalid or expired state")
+
+    token_payload = {
+        "client_id": DISCORD_CLIENT_ID,
+        "client_secret": DISCORD_CLIENT_SECRET,
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": DISCORD_REDIRECT_URI,
+    }
+    async with httpx.AsyncClient() as client:
+        token_res = await client.post(
+            "https://discord.com/api/oauth2/token",
+            data=token_payload,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        if token_res.status_code >= 400:
+            raise HTTPException(token_res.status_code, token_res.text)
+        token_json = token_res.json()
+        access_token = token_json.get("access_token")
+        refresh_token = token_json.get("refresh_token", "")
+        expires_in = token_json.get("expires_in", 3600) or 3600
+        scopes = token_json.get("scope") or DISCORD_OAUTH_SCOPES or "identify"
+
+        user_res = await client.get(
+            "https://discord.com/api/users/@me",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        if user_res.status_code >= 400:
+            raise HTTPException(user_res.status_code, user_res.text)
+        data = user_res.json()
+
+    decoration = data.get("avatar_decoration_data") or data.get("avatar_decoration")
+    token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(expires_in))
+    db.upsert_discord_account(
+        user_id=user_id,
+        discord_user_id=data.get("id"),
+        discord_username=data.get("username"),
+        discord_global_name=data.get("global_name"),
+        avatar_hash=data.get("avatar"),
+        avatar_decoration=decoration,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_expires_at=token_expires_at,
+        scopes=scopes,
+    )
+
+    html_doc = """
+<!doctype html>
+<html><body style="font-family:system-ui;padding:16px;text-align:center;">
+<p>Discord connected. You can close this window.</p>
+<script>
+  try {
+    if (window.opener) {
+      window.opener.postMessage({ source: 'taoma', type: 'discord-linked', ok: true }, '*');
+    }
+  } catch (e) {}
+  window.close();
+</script>
+</body></html>
+"""
+    return HTMLResponse(content=html_doc)
+
+
+@app.delete("/api/discord/account")
+def discord_unlink(current: dict = Depends(require_user)):
+    _ensure_pg()
+    try:
+        db.delete_discord_account(current["id"])
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                "UPDATE linktrees SET discord_frame_enabled = FALSE, updated_at = NOW() WHERE user_id=%s",
+                (current["id"],),
+            )
+            conn.commit()
+    except Exception as e:
+        raise HTTPException(502, f"Failed to unlink Discord: {e}")
+    return {"ok": True}
+
+
 def _safe_image_bytes(b: bytes) -> str:
     """
     Validiert, dass b ein echtes Bild ist und gibt das ermittelte Format zurück
@@ -1402,6 +1646,12 @@ def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or 
         row = cur.fetchone()
         if row:
             user_username, user_pfp = row[0], row[1]
+    decoration_url = None
+    try:
+        acct = _load_discord_account(lt["user_id"])
+        decoration_url = acct.get("decoration_url") if acct else None
+    except Exception:
+        decoration_url = None
 
     icons = [
         {
@@ -1447,6 +1697,8 @@ def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or 
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": lt.get("link_bg_alpha", 100),
+        "discord_frame_enabled": bool(lt.get("discord_frame_enabled", False)),
+        "discord_decoration_url": decoration_url if lt.get("discord_frame_enabled") else None,
         "profile_picture": user_pfp,  # <= jetzt dabei
         "user_username": user_username,  # <= jetzt dabei
         "links": links,
@@ -1495,6 +1747,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             link_color=payload.link_color,
             link_bg_color=payload.link_bg_color,
             link_bg_alpha=payload.link_bg_alpha,
+            discord_frame_enabled=payload.discord_frame_enabled,
         )
     except pg_errors.UniqueViolation:
         raise HTTPException(409, "Slug already in use")

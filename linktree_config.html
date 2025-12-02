@@ -133,6 +133,40 @@
             box-shadow: var(--shadow)
         }
 
+        .discord-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .8rem;
+            border-radius: 14px;
+            border: 1px solid #ffffff1a;
+            background: #ffffff08;
+            flex-wrap: wrap;
+        }
+
+        .discord-preview {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-top: .35rem;
+        }
+
+        .pfp-preview {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #101327;
+            display: grid;
+            place-items: center;
+        }
+
+        .pfp-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
         .muted {
             color: var(--muted)
         }
@@ -1011,6 +1045,25 @@ footer .social a.iso-pro:focus-visible {
                         </select>
                     </div>
 
+                    <div class="field" style="grid-column:1 / -1">
+                        <label>Discord (optional)</label>
+                        <div class="discord-box">
+                            <div>
+                                <div id="discordStatusText" class="muted">Not linked</div>
+                                <div id="discordPreview" class="discord-preview muted">Link Discord to use your profile frame.</div>
+                            </div>
+                            <div class="row" style="gap:.5rem;flex-wrap:wrap">
+                                <button type="button" class="btn sm" id="btnDiscordLink">Link Discord</button>
+                                <button type="button" class="btn sm ghost" id="btnDiscordUnlink" style="display:none">Unlink</button>
+                            </div>
+                        </div>
+                        <label class="row" style="margin-top:.5rem;gap:.4rem;align-items:center">
+                            <input type="checkbox" id="inDiscordFrame">
+                            <span>Show my Discord profile frame around my avatar</span>
+                        </label>
+                        <div class="help">Optional. Uses your current Discord profile frame if available.</div>
+                    </div>
+
                     <div class="row" style="grid-column:1 / -1;margin-top:.4rem">
                         <button type="submit" class="btn sm" id="btnSaveMeta">Save</button>
                         <a class="btn sm ghost" id="btnOpenPublic" href="#" target="_blank" rel="noreferrer">Open
@@ -1227,6 +1280,7 @@ footer .social a.iso-pro:focus-visible {
         let currentTree = null; // {id, slug, ...}
         let linktreeId = null;
         let currentDevice = 'pc';
+        let discordStatus = { linked: false };
 
         const $ = (id) => document.getElementById(id);
         const msgMeta = $('msgMeta'), msgLinks = $('msgLinks');
@@ -1255,10 +1309,12 @@ footer .social a.iso-pro:focus-visible {
             $('inLinkColor').value = lt.link_color || DEFAULT_LINK_COLOR;
             $('inLinkBgColor').value = lt.link_bg_color || DEFAULT_LINK_BG_COLOR;
             $('inLinkBgAlpha').value = lt.link_bg_alpha ?? 100;
+            $('inDiscordFrame').checked = !!lt.discord_frame_enabled;
             toggleCustomNameField();
             const btnOpen = $('btnOpenPublic');
             btnOpen.href = `/tree/${encodeURIComponent(lt.slug)}`;
             btnOpen.textContent = `/tree/${lt.slug}`;
+            updateDiscordUI();
         }
 
         function toggleCustomNameField() {
@@ -1330,6 +1386,80 @@ footer .social a.iso-pro:focus-visible {
             });
         }
 
+        function updateDiscordUI() {
+            const statusEl = $('discordStatusText');
+            const previewEl = $('discordPreview');
+            const toggleEl = $('inDiscordFrame');
+            const linkBtn = $('btnDiscordLink');
+            const unlinkBtn = $('btnDiscordUnlink');
+            const linked = !!discordStatus?.linked;
+            if (statusEl) {
+                const name = discordStatus?.global_name || discordStatus?.username || 'Discord user';
+                statusEl.textContent = linked ? `Linked as ${name}` : 'Not linked';
+            }
+            if (linkBtn && unlinkBtn) {
+                linkBtn.style.display = linked ? 'none' : 'inline-flex';
+                unlinkBtn.style.display = linked ? 'inline-flex' : 'none';
+            }
+            if (toggleEl) {
+                toggleEl.disabled = !linked;
+                if (!linked) toggleEl.checked = false;
+            }
+            if (previewEl) {
+                previewEl.innerHTML = '';
+                previewEl.classList.remove('muted');
+                if (linked && discordStatus?.decoration_url) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'pfp-preview';
+                    const img = document.createElement('img');
+                    img.src = discordStatus.decoration_url;
+                    img.alt = 'Discord profile frame';
+                    img.loading = 'lazy';
+                    wrap.appendChild(img);
+                    previewEl.appendChild(wrap);
+                } else {
+                    previewEl.classList.add('muted');
+                    previewEl.textContent = linked ? 'No Discord profile frame detected on your account.' : 'Link Discord to use your Discord profile frame.';
+                }
+            }
+        }
+
+        async function loadDiscordStatus() {
+            try {
+                const r = await fetch('/api/discord/status', { credentials: 'include' });
+                discordStatus = r.ok ? await r.json() : { linked: false };
+            } catch (_) {
+                discordStatus = { linked: false };
+            }
+            updateDiscordUI();
+        }
+
+        async function startDiscordLink() {
+            try {
+                const r = await fetch('/api/discord/oauth-url', { credentials: 'include' });
+                if (!r.ok) { showMsg(msgMeta, 'Discord linking unavailable', false); return; }
+                const { url } = await r.json();
+                const w = window.open(url, 'discord_link', 'width=520,height=720');
+                if (!w) showMsg(msgMeta, 'Allow popups to link Discord', false);
+            } catch (e) {
+                showMsg(msgMeta, 'Discord link failed', false);
+            }
+        }
+
+        async function unlinkDiscord() {
+            try {
+                const r = await fetch('/api/discord/account', { method: 'DELETE', credentials: 'include' });
+                if (!r.ok) throw new Error(await r.text());
+                discordStatus = { linked: false };
+                $('inDiscordFrame').checked = false;
+                updateDiscordUI();
+                await refreshData();
+                showMsg(msgMeta, 'Discord disconnected', true);
+            } catch (e) {
+                showMsg(msgMeta, 'Unlink failed', false);
+            }
+        }
+
         // --- API helpers ---
         function headers() { return { 'Content-Type': 'application/json' }; }
 
@@ -1368,6 +1498,7 @@ footer .social a.iso-pro:focus-visible {
                 link_color: $('inLinkColor').value || null,
                 link_bg_color: $('inLinkBgColor').value || null,
                 link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
+                discord_frame_enabled: $('inDiscordFrame').checked,
             };
             if (!exists) {
                 const r = await fetch('/api/linktrees', { method: 'POST', headers: headers(), credentials: 'include', body: JSON.stringify(body) });
@@ -1421,6 +1552,8 @@ footer .social a.iso-pro:focus-visible {
             currentDevice = e.target.value || 'pc';
             await refreshData();
         });
+        $('btnDiscordLink').addEventListener('click', startDiscordLink);
+        $('btnDiscordUnlink').addEventListener('click', unlinkDiscord);
 
         $('formMeta').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1477,6 +1610,14 @@ footer .social a.iso-pro:focus-visible {
             renderBadges(lt.icons || []);
         }
 
+        window.addEventListener('message', async (evt) => {
+            if (evt?.data?.type === 'discord-linked') {
+                await loadDiscordStatus();
+                await refreshData();
+                showMsg(msgMeta, 'Discord linked', true);
+            }
+        });
+
         async function boot() {
             try {
                 const user = await renderAuthHeader();
@@ -1494,9 +1635,10 @@ footer .social a.iso-pro:focus-visible {
                 document.getElementById('btnOpenPublic').href = `/tree/${encodeURIComponent(preferred)}`;
                 currentDevice = 'pc';
                 document.getElementById('inDevice').value = 'pc';
+                await loadDiscordStatus();
                 await refreshData(); // will try preferred slug from the input
                 if (!currentTree) {
-                    showMsg(msgMeta, 'You don’t have a Linktree yet. Fill fields and Save to create it.', false);
+                    showMsg(msgMeta, 'You don't have a Linktree yet. Fill fields and Save to create it.', false);
                 }
             } catch (e) {
                 console.error('boot failed:', e);

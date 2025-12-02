@@ -349,6 +349,40 @@
             }
         }
 
+        .discord-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .75rem;
+            border-radius: 14px;
+            border: 1px solid #ffffff1a;
+            background: #ffffff08;
+            flex-wrap: wrap;
+        }
+
+        .discord-preview {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-top: .35rem;
+        }
+
+        .pfp-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #0f1331;
+            display: grid;
+            place-items: center;
+        }
+
+        .pfp-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
         .field {
             display: flex;
             flex-direction: column;
@@ -727,11 +761,31 @@
                         <input id="repPwd" class="input" type="password" minlength="8"
                             placeholder="Repeat new password">
                     </div>
-                    <div class="row">
-                        <button class="btn sm" type="submit">Change Password</button>
-                        <span class="help">You must enter your current password.</span>
+                <div class="row">
+                    <button class="btn sm" type="submit">Change Password</button>
+                    <span class="help">You must enter your current password.</span>
+                </div>
+            </form>
+            <div class="hr"></div>
+
+                <!-- Discord -->
+                <div class="field">
+                    <label>Discord (optional)</label>
+                    <div class="discord-box">
+                        <div>
+                            <div id="discordStatusText" class="muted">Not linked</div>
+                            <div id="discordPreview" class="discord-preview muted">Link Discord to use your profile frame.</div>
+                        </div>
+                        <div class="row" style="gap:.5rem;flex-wrap:wrap">
+                            <button type="button" class="btn sm" id="btnDiscordLink">Link Discord</button>
+                            <button type="button" class="btn sm ghost" id="btnDiscordUnlink" style="display:none">Unlink</button>
+                        </div>
                     </div>
-                </form>
+                    <div class="row" style="margin-top:.45rem;gap:.4rem;align-items:center">
+                        <input type="checkbox" id="inDiscordFrameProfile">
+                        <span class="help">Toggle to show your Discord profile frame in your Linktree (needs a linked account).</span>
+                    </div>
+                </div>
                 <div class="hr"></div>
 
                 <!-- Linktree -->
@@ -862,6 +916,7 @@
         }
 
         let currentUser = undefined;
+        let discordStatus = { linked: false };
         async function refreshSession() {
             const session = await fetchSession();
             currentUser = session?.user || null;
@@ -933,6 +988,13 @@
                 document.getElementById('inName').value = user.username || '';
                 document.getElementById('inPfp').value = user.profile_picture || '';
                 renderLinktreeSlot(user);
+                await loadDiscordStatus();
+                const lt = await fetchMyLinktree();
+                const frameToggle = document.getElementById('inDiscordFrameProfile');
+                if (frameToggle) {
+                    frameToggle.checked = !!lt?.discord_frame_enabled;
+                }
+                updateDiscordUI();
 
                 // Page visible
                 profileWrap.style.display = 'grid';
@@ -977,6 +1039,19 @@
         });
 
         document.getElementById('logoutBtn').addEventListener('click', doLogout, { passive: true });
+        document.getElementById('btnDiscordLink').addEventListener('click', startDiscordLink);
+        document.getElementById('btnDiscordUnlink').addEventListener('click', unlinkDiscord);
+        document.getElementById('inDiscordFrameProfile').addEventListener('change', toggleDiscordFrame);
+        window.addEventListener('message', async (evt) => {
+            if (evt?.data?.type === 'discord-linked') {
+                await loadDiscordStatus();
+                const lt = await fetchMyLinktree();
+                const frameToggle = document.getElementById('inDiscordFrameProfile');
+                if (frameToggle) frameToggle.checked = !!lt?.discord_frame_enabled;
+                updateDiscordUI();
+                showMsg('Discord linked', true);
+            }
+        });
         function renderLinktreeSlot(user) {
             const ltSlot = document.getElementById("linktreeSlot");
             if (!ltSlot) return;
@@ -1000,6 +1075,112 @@
                 create.className = 'btn sm';
                 create.textContent = 'Create Linktree';
                 ltSlot.appendChild(create);
+            }
+        }
+
+        function updateDiscordUI() {
+            const statusEl = document.getElementById('discordStatusText');
+            const previewEl = document.getElementById('discordPreview');
+            const toggleEl = document.getElementById('inDiscordFrameProfile');
+            const linkBtn = document.getElementById('btnDiscordLink');
+            const unlinkBtn = document.getElementById('btnDiscordUnlink');
+            const linked = !!discordStatus?.linked;
+            if (statusEl) {
+                const name = discordStatus?.global_name || discordStatus?.username || 'Discord user';
+                statusEl.textContent = linked ? `Linked as ${name}` : 'Not linked';
+            }
+            if (linkBtn && unlinkBtn) {
+                linkBtn.style.display = linked ? 'none' : 'inline-flex';
+                unlinkBtn.style.display = linked ? 'inline-flex' : 'none';
+            }
+            if (toggleEl) {
+                toggleEl.disabled = !linked || !currentUser?.linktree_id;
+                if (!linked) toggleEl.checked = false;
+            }
+            if (previewEl) {
+                previewEl.innerHTML = '';
+                previewEl.classList.remove('muted');
+                if (linked && discordStatus?.decoration_url) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'pfp-preview';
+                    const img = document.createElement('img');
+                    img.src = discordStatus.decoration_url;
+                    img.alt = 'Discord profile frame';
+                    img.loading = 'lazy';
+                    wrap.appendChild(img);
+                    previewEl.appendChild(wrap);
+                } else {
+                    previewEl.classList.add('muted');
+                    previewEl.textContent = linked ? 'No Discord profile frame detected.' : 'Link Discord to use your Discord frame.';
+                }
+            }
+        }
+
+        async function loadDiscordStatus() {
+            if (!currentUser) { discordStatus = { linked: false }; updateDiscordUI(); return; }
+            try {
+                const r = await fetch('/api/discord/status', { credentials: 'include' });
+                discordStatus = r.ok ? await r.json() : { linked: false };
+            } catch (_) {
+                discordStatus = { linked: false };
+            }
+            updateDiscordUI();
+        }
+
+        async function fetchMyLinktree() {
+            if (!currentUser?.linktree_id) return null;
+            try {
+                const r = await fetch(`/api/linktrees/${currentUser.linktree_id}/manage`, { credentials: 'include' });
+                if (!r.ok) return null;
+                return await r.json();
+            } catch (_) {
+                return null;
+            }
+        }
+
+        async function startDiscordLink() {
+            try {
+                const r = await fetch('/api/discord/oauth-url', { credentials: 'include' });
+                if (!r.ok) { showMsg('Discord linking unavailable', false); return; }
+                const { url } = await r.json();
+                const w = window.open(url, 'discord_link', 'width=520,height=720');
+                if (!w) showMsg('Allow popups to link Discord', false);
+            } catch (e) {
+                showMsg('Discord link failed', false);
+            }
+        }
+
+        async function unlinkDiscord() {
+            try {
+                const r = await fetch('/api/discord/account', { method: 'DELETE', credentials: 'include' });
+                if (!r.ok) throw new Error(await r.text());
+                discordStatus = { linked: false };
+                const toggle = document.getElementById('inDiscordFrameProfile');
+                if (toggle) toggle.checked = false;
+                await loadDiscordStatus();
+                showMsg('Discord disconnected', true);
+                await loadProfile();
+            } catch (e) {
+                showMsg('Unlink failed', false);
+            }
+        }
+
+        async function toggleDiscordFrame(ev) {
+            const enabled = !!ev.target.checked;
+            if (!currentUser?.linktree_id) { showMsg('Create a Linktree first', false); ev.target.checked = false; return; }
+            if (!discordStatus?.linked) { showMsg('Link Discord first', false); ev.target.checked = false; return; }
+            try {
+                const r = await fetch(`/api/linktrees/${currentUser.linktree_id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ discord_frame_enabled: enabled })
+                });
+                if (!r.ok) throw new Error(await r.text());
+                showMsg('Discord frame updated', true);
+            } catch (e) {
+                showMsg('Could not update Discord frame', false);
+                ev.target.checked = !enabled;
             }
         }
         // boot
