@@ -1197,7 +1197,7 @@ footer .social a.iso-pro:focus-visible {
                 const r = await fetch("/api/visits/value");
                 if (r.ok) {
                     const { total } = await r.json();
-                    if (countEl) countEl.textContent = String(total ?? 0);
+                    if (countEl) countEl.textContent = String((total !== undefined && total !== null) ? total : 0);
                 } else if (countEl) countEl.textContent = '—';
             } catch {
                 if (countEl) countEl.textContent = '—';
@@ -1205,7 +1205,7 @@ footer .social a.iso-pro:focus-visible {
         })();
         // --- Auth header (wie gehabt) ---
         function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+            return String(value !== undefined && value !== null ? value : '').replace(/[&<>"']/g, (ch) => ({
                 '&': '&amp;',
                 '<': '&lt;',
                 '>': '&gt;',
@@ -1303,12 +1303,12 @@ footer .social a.iso-pro:focus-visible {
             $('inVideo').value = String(!!lt.background_is_video);
             $('inDisplayName').value = lt.display_name_mode || 'slug';
             $('inCustomName').value = lt.custom_display_name || '';
-            $('inTrans').value = lt.transparency ?? 0;
+            $('inTrans').value = (lt.transparency !== undefined && lt.transparency !== null) ? lt.transparency : 0;
             $('inNameFx').value = lt.name_effect || 'none';
             $('inBgFx').value = lt.background_effect || 'none';
             $('inLinkColor').value = lt.link_color || DEFAULT_LINK_COLOR;
             $('inLinkBgColor').value = lt.link_bg_color || DEFAULT_LINK_BG_COLOR;
-            $('inLinkBgAlpha').value = lt.link_bg_alpha ?? 100;
+            $('inLinkBgAlpha').value = (lt.link_bg_alpha !== undefined && lt.link_bg_alpha !== null) ? lt.link_bg_alpha : 100;
             $('inDiscordFrame').checked = !!lt.discord_frame_enabled;
             toggleCustomNameField();
             const btnOpen = $('btnOpenPublic');
@@ -1718,7 +1718,7 @@ footer .social a.iso-pro:focus-visible {
 
             const res = await fetch("/api/visits/value");
             const { total } = await res.json();
-            document.getElementById("visitor-count").textContent = total ?? "0";
+            document.getElementById("visitor-count").textContent = (total !== undefined && total !== null) ? total : "0";
         })();
         document.getElementById('year').textContent = new Date().getFullYear();
 

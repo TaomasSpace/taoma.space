@@ -875,12 +875,12 @@
             if (shouldCount) { navigator.sendBeacon("/api/visits/increment"); localStorage.setItem(KEY, String(now)); }
             try {
                 const res = await fetch("/api/visits/value"); const { total } = await res.json();
-                document.getElementById("visitor-count").textContent = total ?? "0";
+                document.getElementById("visitor-count").textContent = (total !== undefined && total !== null) ? total : "0";
             } catch { }
         })();
 
         function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+            return String(value !== undefined && value !== null ? value : '').replace(/[&<>"']/g, (ch) => ({
                 '&': '&amp;',
                 '<': '&lt;',
                 '>': '&gt;',
