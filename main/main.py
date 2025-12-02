@@ -1501,13 +1501,14 @@ async def discord_callback(code: str | None = None, state: str | None = None):
 
     decoration = data.get("avatar_decoration_data") or data.get("avatar_decoration")
     token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(expires_in))
+    decoration_json = json.dumps(decoration) if decoration is not None else None
     db.upsert_discord_account(
         user_id=user_id,
         discord_user_id=data.get("id"),
         discord_username=data.get("username"),
         discord_global_name=data.get("global_name"),
         avatar_hash=data.get("avatar"),
-        avatar_decoration=decoration,
+        avatar_decoration=decoration_json,
         access_token=access_token,
         refresh_token=refresh_token,
         token_expires_at=token_expires_at,
