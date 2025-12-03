@@ -113,7 +113,18 @@ MEDIA_ROOT = UPLOAD_DIR.parent  # -> /var/data
 app.mount("/media", StaticFiles(directory=str(MEDIA_ROOT)), name="media")
 
 ALLOWED_AUDIO = {"audio/mpeg", "audio/ogg", "audio/wav"}
-MAX_AUDIO_BYTES = 10 * 1024 * 1024  # 10 MB
+ALLOWED_IMAGE_CT = {
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/gif",
+    "image/heic",
+    "image/heif",
+}
+ALLOWED_VIDEO_CT = {"video/mp4", "video/quicktime", "video/webm"}
+MAX_AUDIO_BYTES = 15 * 1024 * 1024  # 15 MB
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB (Avatare/Icons)
+MAX_BACKGROUND_BYTES = 50 * 1024 * 1024  # 50 MB (Hintergrund-Video/Bild)
 
 ALLOWED_USER_IDS = {
     int(x)
@@ -383,8 +394,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-Auth-Token"],
 )
 
-MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2 MB
-ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp", "image/gif"}
+ALLOWED_MIME = ALLOWED_IMAGE_CT
 
 
 EffectName = Literal["none", "glow", "neon", "rainbow"]
@@ -1548,35 +1558,77 @@ def discord_unlink(current: dict = Depends(require_user)):
     return {"ok": True}
 
 
-def _safe_image_bytes(b: bytes) -> str:
+HEIC_BRANDS = {
+    b"ftypheic",
+    b"ftypheix",
+    b"ftyphevc",
+    b"ftyphevx",
+    b"ftypheif",
+    b"ftypmif1",
+    b"ftypmsf1",
+}
+
+
+def _detect_image_ext(b: bytes) -> str:
     """
-    Validiert, dass b ein echtes Bild ist und gibt das ermittelte Format zurück
-    (z.B. 'PNG', 'JPEG', 'WEBP', 'GIF'). Wir re-encoden NICHT, um Animationen
-    (GIF/WEBP) zu erhalten – nur Validierung.
+    Verifiziert Image-Bytes (inkl. HEIC/HEIF Header) und gibt die Zielendung zurück.
+    Keine Re-Encodierung, nur Header-Check.
     """
+    fmt = ""
     try:
         with Image.open(io.BytesIO(b)) as img:
             img.verify()  # prüft Header & Konsistenz
             fmt = (img.format or "").upper()
-            return fmt
     except UnidentifiedImageError:
-        return ""
+        fmt = ""
     except Exception:
+        fmt = ""
+
+    if fmt == "JPEG":
+        return "jpg"
+    if fmt in {"PNG", "WEBP", "GIF"}:
+        return fmt.lower()
+
+    # Pillow ohne heif-Plugin -> selbst auf HEIC/HEIF Header prüfen
+    if len(b) >= 12 and b[4:12] in HEIC_BRANDS:
+        return "heic"
+    return ""
+
+
+def _detect_video_ext(b: bytes, content_type: str | None) -> str:
+    """Sehr defensiver Container-Check für MP4/MOV/WEBM, keine vollständige Demux."""
+    ct = (content_type or "").lower()
+    if ct == "video/webm":
+        if b.startswith(b"\x1a\x45\xdf\xa3"):
+            return "webm"
         return ""
+
+    if ct in {"video/mp4", "video/quicktime"}:
+        if len(b) < 12 or b[4:8] != b"ftyp":
+            return ""
+        brand = b[8:12]
+        if brand in {b"isom", b"iso2", b"avc1", b"mp41", b"mp42"}:
+            return "mp4"
+        if brand in {b"qt  ", b"MSNV"}:
+            return "mov"  # QuickTime / MOV
+        # Manche MOVs haben andere Brands; fallback: treat as mp4 if MP4 CT
+        if ct == "video/mp4":
+            return "mp4"
+    return ""
 
 
 @app.post("/api/users/me/avatar", response_model=UserOut)
 async def upload_avatar(
     file: UploadFile = File(...), current: dict = Depends(require_user)
 ):
-    if file.content_type not in ALLOWED_MIME:
+    if file.content_type not in ALLOWED_IMAGE_CT:
         raise HTTPException(415, "Unsupported media type")
     data = await file.read()
-    if len(data) > MAX_UPLOAD_BYTES:
-        raise HTTPException(413, "File too large (max 2MB)")
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(413, "File too large (max 5MB)")
 
-    detected = _safe_image_bytes(data)
-    if not detected:
+    ext = _detect_image_ext(data)
+    if not ext:
         raise HTTPException(400, "File is not a valid image")
 
     # Altes Bild merken (für Cleanup)
@@ -1591,12 +1643,6 @@ async def upload_avatar(
     except Exception:
         old_url = None
 
-    ext = {
-        "image/png": "png",
-        "image/jpeg": "jpg",
-        "image/webp": "webp",
-        "image/gif": "gif",
-    }[file.content_type]
     fname = f"user{current['id']}_{uuid.uuid4().hex}.{ext}"
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
@@ -2000,7 +2046,7 @@ async def upload_song(
         raise HTTPException(415, "Unsupported audio type")
     data = await file.read()
     if len(data) > MAX_AUDIO_BYTES:
-        raise HTTPException(413, "File too large (max 10MB)")
+        raise HTTPException(413, "File too large (max 15MB)")
 
     old_url = None
     try:
@@ -2019,8 +2065,15 @@ async def upload_song(
     except Exception:
         old_url = None
 
-    ext = file.filename.split(".")[-1].lower()
-    fname = f"user{current['id']}_song_{uuid.uuid4().hex}.{ext}"
+    audio_ext = {
+        "audio/mpeg": "mp3",
+        "audio/ogg": "ogg",
+        "audio/wav": "wav",
+    }.get(file.content_type)
+    if not audio_ext:
+        raise HTTPException(415, "Unsupported audio type")
+
+    fname = f"user{current['id']}_song_{uuid.uuid4().hex}.{audio_ext}"
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
@@ -2037,13 +2090,17 @@ async def upload_song(
 async def upload_background(
     file: UploadFile = File(...), current: dict = Depends(require_user)
 ):
-    if file.content_type not in ALLOWED_MIME and not file.content_type.startswith(
-        "video/"
-    ):
+    ct = file.content_type or ""
+    if ct not in ALLOWED_IMAGE_CT and ct not in ALLOWED_VIDEO_CT:
         raise HTTPException(415, "Unsupported background type")
     data = await file.read()
-    if len(data) > MAX_UPLOAD_BYTES * 5:
-        raise HTTPException(413, "File too large (max 10MB)")
+    if len(data) > MAX_BACKGROUND_BYTES:
+        raise HTTPException(413, "File too large (max 50MB)")
+
+    image_ext = _detect_image_ext(data)
+    video_ext = "" if image_ext else _detect_video_ext(data, ct)
+    if not image_ext and not video_ext:
+        raise HTTPException(400, "File is not a supported image or video")
 
     # Altes BG merken
     old_url = None
@@ -2063,12 +2120,12 @@ async def upload_background(
     except Exception:
         old_url = None
 
-    ext = file.filename.split(".")[-1].lower()
+    ext = image_ext or video_ext
     fname = f"user{current['id']}_bg_{uuid.uuid4().hex}.{ext}"
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
-    is_video = file.content_type.startswith("video/")
+    is_video = bool(video_ext)
 
     db.update_linktree_by_user(
         current["id"], background_url=url, background_is_video=is_video
@@ -2085,17 +2142,14 @@ async def upload_background(
 async def upload_linkicon(
     file: UploadFile = File(...), current: dict = Depends(require_user)
 ):
-    if file.content_type not in ALLOWED_MIME:
+    if file.content_type not in ALLOWED_IMAGE_CT:
         raise HTTPException(415, "Unsupported image type")
     data = await file.read()
-    if len(data) > MAX_UPLOAD_BYTES:
-        raise HTTPException(413, "File too large (max 2MB)")
-    ext = {
-        "image/png": "png",
-        "image/jpeg": "jpg",
-        "image/webp": "webp",
-        "image/gif": "gif",
-    }[file.content_type]
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(413, "File too large (max 5MB)")
+    ext = _detect_image_ext(data)
+    if not ext:
+        raise HTTPException(400, "File is not a valid image")
     fname = f"user{current['id']}_icon_{uuid.uuid4().hex}.{ext}"
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
