@@ -15,6 +15,10 @@ CREATE TABLE IF NOT EXISTS gifs (
     created_by  INTEGER,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Nachrüsten falls gifs bereits existiert
+ALTER TABLE gifs
+    ADD COLUMN IF NOT EXISTS created_by INTEGER;
+
 -- Falls deine PG-Version "CREATE INDEX IF NOT EXISTS" nicht kennt,
 -- werden wir die Indizes weiter unten per try/except anlegen.
 CREATE INDEX IF NOT EXISTS idx_gifs_title       ON gifs(title);
