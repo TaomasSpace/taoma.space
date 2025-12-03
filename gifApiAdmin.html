@@ -1,68 +1,218 @@
 <!doctype html>
 <html lang="de">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Anime GIF API – Admin</title>
+    <title>Anime GIF API - Admin</title>
+    <link rel="icon" type="image/png" href="/static/icon.png">
     <style>
         :root {
-            --bg: #0f1223;
-            --card: #161a34;
-            --ink: #e7e9ff;
-            --muted: #9aa3c7;
-            --acc: #7c9cff;
-            --ok: #2ecc71;
-            --err: #e74c3c
+            --bg: #0e1020;
+            --bg-soft: #141735;
+            --card: #171b3b;
+            --ink: #e9ebff;
+            --muted: #a2a9c8;
+            --acc: #85a3ff;
+            --acc-2: #5b7bff;
+            --ok: #35d79c;
+            --danger: #ff5a6a;
+            --ring: #85a3ff55;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .25);
+            --radius: 16px;
+            --space: clamp(16px, 2vw, 24px);
+            --container: 1100px;
         }
 
         * {
             box-sizing: border-box;
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Ubuntu, Arial, sans-serif
         }
 
         body {
             margin: 0;
-            background: linear-gradient(120deg, #0f1223 0%, #13183a 70%)
+            font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+            color: var(--ink);
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .wrap {
-            max-width: 980px;
-            margin: 32px auto;
-            padding: 0 16px
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
+                radial-gradient(1200px 700px at 80% 20%, #111533 0%, #111533 32%, transparent 60%),
+                linear-gradient(135deg, #0e1020 0%, #0b0d1c 100%);
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: saturate(1.1) blur(10px);
+            background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+            border-bottom: 1px solid #ffffff14;
+        }
+
+        .container {
+            width: min(100%, var(--container));
+            margin: 0 auto;
+            padding: 0 var(--space);
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            font-weight: 800;
+            letter-spacing: .4px;
+        }
+
+        .brand .logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .links a {
+            padding: .45rem .7rem;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            color: var(--ink);
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            border-color: #ffffff1f;
+            background: #ffffff0f;
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: transparent;
+            border: 1px solid #ffffff26;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            color: var(--ink);
+        }
+
+        @media (max-width:800px) {
+            .mobile-toggle {
+                display: inline-flex;
+            }
+
+            .links {
+                position: fixed;
+                inset: 64px 0 auto 0;
+                background: linear-gradient(180deg, #0b0f29, #0b0f2945);
+                padding: 1rem;
+                display: none;
+                flex-direction: column;
+            }
+
+            .links.open {
+                display: flex;
+            }
+        }
+
+        footer {
+            border-top: 1px solid #ffffff14;
+            padding-block: 24px;
+            margin-top: auto;
+        }
+
+        .foot {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .social {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .social a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid #ffffff26;
+            color: var(--ink);
+        }
+
+        main {
+            width: min(100%, var(--container));
+            margin: 0 auto;
+            padding: clamp(16px, 4vw, 28px);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
         h1 {
-            color: var(--ink);
-            font-weight: 800;
-            letter-spacing: .2px;
-            margin: 0 0 12px
+            margin: 12px 0 4px;
+            font-size: clamp(26px, 4vw, 34px);
         }
 
-        p {
+        h2 {
+            margin: 0 0 10px;
+        }
+
+        p,
+        .muted {
             color: var(--muted);
-            margin-top: 0
+            margin: 0 0 8px;
         }
 
         .card {
             background: var(--card);
-            border: 1px solid rgba(255, 255, 255, .06);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             padding: 18px;
-            margin: 16px 0
         }
 
         label {
             color: var(--ink);
             font-size: 14px;
-            font-weight: 600;
-            display: block;
-            margin: 12px 0 6px
+            font-weight: 700;
+            margin: 8px 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         input[type="text"],
         input[type="url"],
+        input[type="number"],
+        input[type="password"],
         select,
         textarea {
             width: 100%;
@@ -72,26 +222,62 @@
             background: #0e1330;
             color: var(--ink);
             outline: none;
-            transition: border-color .15s ease
         }
 
-        input[type="text"]:focus,
-        input[type="url"]:focus,
+        input:focus,
+        select:focus,
         textarea:focus {
-            border-color: var(--acc)
+            border-color: var(--acc);
+            box-shadow: 0 0 0 4px var(--ring);
         }
 
-        .row {
+        .btn {
+            cursor: pointer;
+            background: linear-gradient(120deg, var(--acc), var(--acc-2));
+            color: #080b1d;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 800;
+        }
+
+        .btn.secondary {
+            background: #25305e;
+            color: #cfe0ff;
+        }
+
+        .btn.danger {
+            background: #33161f;
+            color: #f8c0c9;
+            border: 1px solid #ff5a6a55;
+        }
+
+        .grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px
+            gap: 16px;
+        }
+
+        @media (min-width: 900px) {
+            .grid.two {
+                grid-template-columns: 1.2fr 1fr;
+            }
+        }
+
+        .pill {
+            display: inline-block;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #0b1030;
+            border: 1px solid rgba(255, 255, 255, .08);
+            color: #c7cffd;
         }
 
         .chips {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
-            margin-top: 8px
+            margin-top: 8px;
         }
 
         .chip {
@@ -102,76 +288,45 @@
             border-radius: 999px;
             display: inline-flex;
             align-items: center;
-            gap: 8px
+            gap: 8px;
         }
 
         .chip button {
             all: unset;
             cursor: pointer;
             font-weight: 800;
-            opacity: .8
-        }
-
-        .muted {
-            color: var(--muted);
-            font-size: 13px
-        }
-
-        .btn {
-            cursor: pointer;
-            background: var(--acc);
-            color: #080b1d;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 16px;
-            font-weight: 700
-        }
-
-        .btn.secondary {
-            background: #25305e;
-            color: #cfe0ff
-        }
-
-        .actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 12px
+            opacity: .8;
         }
 
         .preview {
             display: flex;
             gap: 16px;
-            align-items: flex-start
+            align-items: flex-start;
         }
 
         .preview img {
             max-width: 260px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, .1)
-        }
-
-        .pill {
-            display: inline-block;
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 999px;
-            background: #0b1030;
-            border: 1px solid rgba(255, 255, 255, .08);
-            color: #c7cffd
+            border: 1px solid rgba(255, 255, 255, .1);
         }
 
         .status {
             margin-top: 10px;
-            font-size: 14px
+            font-size: 14px;
         }
 
         .status.ok {
-            color: var(--ok)
+            color: var(--ok);
         }
 
         .status.err {
-            color: var(--err)
+            color: var(--danger);
+        }
+
+        .table-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         code {
@@ -179,212 +334,326 @@
             color: #cfe0ff;
             padding: 2px 6px;
             border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, .06)
+            border: 1px solid rgba(255, 255, 255, .06);
+        }
+
+        .badge {
+            background: #1f2449;
+            color: #cfe0ff;
+            border: 1px solid rgba(255, 255, 255, .08);
+            padding: 6px 10px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+
+        .section-title {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--acc);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 6px var(--ring);
         }
     </style>
 </head>
-
 <body>
-    <!-- Language picker -->
-    <div id="langPicker" style="position:fixed;top:12px;right:12px;z-index:20;display:flex;gap:8px;align-items:center">
-        <label for="lang" style="color:#cfe0ff;font-size:13px">🌐</label>
-        <select id="lang"
-            style="background:#0e1330;border:1px solid rgba(255,255,255,.2);color:#e7e9ff;border-radius:8px;padding:6px 8px">
-            <option value="de">Deutsch</option>
-            <option value="en">English</option>
-        </select>
-    </div>
-
-    <!-- Login modal -->
-    <div id="loginModal" class="card"
-        style="display:none; position:fixed; right:16px; bottom:16px; max-width:340px; z-index:10;">
-        <h3 data-i18n="admin.login.title" style="color:#e7e9ff;margin:0 0 8px;">Admin Login</h3>
-        <input type="password" id="adminPw" data-i18n-placeholder="admin.login.password" placeholder="Passwort" />
-        <div class="actions" style="margin-top:10px">
-            <button class="btn" id="btnLogin" data-i18n="admin.login.btnLogin">Login</button>
-            <button class="btn secondary" id="btnLogout" data-i18n="admin.login.btnLogout">Logout</button>
+    <header>
+        <div class="container nav" role="navigation" aria-label="Primary">
+            <div class="brand">
+                <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo"></a>
+                <a href="/" style="color:inherit;text-decoration:none;">TAOMAT</a>
+            </div>
+            <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu"
+                aria-expanded="false" aria-label="Toggle menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+            <nav id="primary-menu" class="links" aria-label="Site">
+                <a href="/">Home</a>
+                <a href="/projects">Projects</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+                <a href="/skills">Skills</a>
+                <a href="/api" aria-current="page">GIF API</a>
+            </nav>
+            <div id="authSlot" class="auth"></div>
         </div>
-        <div id="authMsg" class="status"></div>
-    </div>
-    <button class="btn" id="toggleLogin" style="position:fixed; right:16px; bottom:16px;">🔐</button>
+    </header>
 
-    <div class="wrap">
-        <h1 data-i18n="admin.title">Anime GIF API – Admin</h1>
-        <p class="muted" data-i18n="admin.intro">
-            Füllt das Formular aus und sendet es an <code>POST /gifs</code> eurer lokalen API. Das UI macht bei
-            identischer URL automatisch ein Update (wie eure API).
-        </p>
-        <p class="muted" id="whoami"></p>
-
-        <!-- Builder -->
-        <div class="card">
-            <form id="gifForm">
-                <label for="apiBase" data-i18n="label.base">API Base URL</label>
-                <input type="url" id="apiBase" value="https://taoma.space" data-i18n-placeholder="ph.base" required />
-                <span class="muted"><span data-i18n="admin.example">Beispiel:</span>
-                    <code>https://taoma.space</code></span>
-
-                <div class="row">
-                    <div>
-                        <label for="title" data-i18n="label.title">Title</label>
-                        <input type="text" id="title" data-i18n-placeholder="ph.title" placeholder="z. B. NazunaSmoke"
-                            required />
-                    </div>
-                    <div>
-                        <label for="anime" data-i18n="label.anime">Anime</label>
-                        <input type="text" id="anime" data-i18n-placeholder="ph.anime"
-                            placeholder="Call of the Night" />
-                    </div>
+    <main class="container">
+        <section class="card">
+            <div class="section-title">
+                <div>
+                    <p class="pill" id="whoami"></p>
+                    <h1>GIF API Admin</h1>
+                    <p>Verwalte GIFs, prüfe Badges und sperre/entsperre User für das GIF-Management.</p>
                 </div>
+                <div class="badge">Neues Feature: GIF Blacklist & Creator-Ownership</div>
+            </div>
+        </section>
 
-                <label for="url" data-i18n="admin.gifUrl">GIF URL</label>
-                <input type="url" id="url" placeholder="https://…/something.gif" required />
-
-                <div class="row">
-                    <div>
-                        <label data-i18n="label.nsfwShort">NSFW</label>
-                        <select id="nsfw">
-                            <option value="false" selected data-i18n="admin.sfw">sfw</option>
-                            <option value="true" data-i18n="admin.nsfw">nsfw</option>
+        <section class="grid two">
+            <div class="card">
+                <div class="section-title">
+                    <h2>Login</h2>
+                    <div id="langPicker" style="display:flex;gap:8px;align-items:center">
+                        <label for="lang" style="color:#cfe0ff;font-size:13px">🌐</label>
+                        <select id="lang"
+                            style="background:#0e1330;border:1px solid rgba(255,255,255,.2);color:#e7e9ff;border-radius:8px;padding:6px 8px">
+                            <option value="de">Deutsch</option>
+                            <option value="en">English</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="charInput" data-i18n="admin.addCharacter">Character hinzufügen</label>
-                        <div class="row" style="grid-template-columns: 1fr auto; gap:8px">
-                            <input type="text" id="charInput" data-i18n-placeholder="ph.character"
-                                placeholder="Nazuna" />
-                            <button class="btn secondary" id="addChar" type="button" data-i18n="btn.add">+ Add</button>
+                </div>
+                <label data-i18n="admin.base">API Base URL</label>
+                <input type="url" id="apiBase" value="" data-i18n-placeholder="ph.base"
+                    placeholder="https://your-api.tld" />
+                <label data-i18n="admin.password">Admin Passwort</label>
+                <input type="password" id="adminPw" placeholder="********" />
+                <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                    <button class="btn" id="btnLogin" data-i18n="admin.login">Login</button>
+                    <button class="btn secondary" id="btnLogout" data-i18n="admin.logout">Logout</button>
+                    <button class="btn secondary" id="toggleLogin" data-i18n="admin.toggleLogin">Modal zeigen /
+                        verstecken</button>
+                </div>
+                <div id="authMsg" class="status"></div>
+            </div>
+
+            <div class="card">
+                <h2 data-i18n="admin.quick">Schnelltest</h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn secondary" id="btnRandom" data-i18n="admin.random">Zufälliges GIF</button>
+                    <button class="btn secondary" id="btnTags" data-i18n="admin.tags">Alle Tags</button>
+                </div>
+                <pre id="quickOut"
+                    style="background:#0b1030;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;color:#cfe0ff;overflow:auto;margin-top:12px;min-height:80px"></pre>
+            </div>
+        </section>
+
+        <section class="grid two">
+            <div class="card">
+                <div class="section-title">
+                    <h2 data-i18n="admin.builder">GIF erstellen / bearbeiten</h2>
+                    <div class="pill" id="pillNSFW">sfw</div>
+                </div>
+                <p class="muted">Alle Felder sind Pflicht (Titel, Anime, Charakter(e), Tags).</p>
+                <form id="gifForm" class="grid" style="gap:12px">
+                    <label data-i18n="admin.title">Titel</label>
+                    <input type="text" id="title" required data-i18n-placeholder="ph.title" />
+                    <label data-i18n="admin.url">GIF URL</label>
+                    <input type="url" id="url" required placeholder="https://..." />
+                    <label data-i18n="admin.anime">Anime</label>
+                    <input type="text" id="anime" data-i18n-placeholder="ph.anime" required />
+                    <div class="grid" style="gap:12px">
+                        <div>
+                            <label data-i18n="admin.nsfw">NSFW?</label>
+                            <select id="nsfw">
+                                <option value="false">sfw</option>
+                                <option value="true">nsfw</option>
+                            </select>
                         </div>
-                        <div class="chips" id="chars"></div>
+                        <div>
+                            <label data-i18n="admin.character">Charakter</label>
+                            <div style="display:flex;gap:8px">
+                                <input type="text" id="charInput" data-i18n-placeholder="ph.character" />
+                                <button type="button" class="btn secondary" id="addChar"
+                                    data-i18n="admin.addChar">Add</button>
+                            </div>
+                            <div id="chars" class="chips"></div>
+                        </div>
+                        <div>
+                            <label data-i18n="admin.tags">Tags</label>
+                            <div style="display:flex;gap:8px">
+                                <input type="text" id="tagInput" placeholder="tag, mood, pose..." />
+                                <button type="button" class="btn secondary" id="addTag"
+                                    data-i18n="admin.addTag">Add</button>
+                            </div>
+                            <div id="tags" class="chips"></div>
+                        </div>
                     </div>
+                    <div class="preview" id="preview" style="display:none">
+                        <img id="gifPreview" alt="GIF preview" />
+                        <pre id="payloadBox"
+                            style="flex:1;min-height:180px;background:#0b1030;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;color:#cfe0ff;overflow:auto"></pre>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button type="submit" class="btn" data-i18n="admin.save">Speichern</button>
+                        <button type="button" class="btn secondary" id="fillDemo" data-i18n="admin.demo">Demo
+                            befüllen</button>
+                        <button type="button" class="btn secondary" id="clearAll" data-i18n="admin.clear">Alles
+                            leeren</button>
+                    </div>
+                    <div id="status" class="status"></div>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="section-title">
+                    <h2>GIF-Blacklist</h2>
+                    <span class="pill">Nur Admins</span>
                 </div>
-
-                <label for="tagInput" data-i18n="admin.addTag">Tag hinzufügen</label>
-                <div class="row" style="grid-template-columns: 1fr auto; gap:8px">
-                    <input type="text" id="tagInput" placeholder="smoking" />
-                    <button class="btn secondary" id="addTag" type="button" data-i18n="btn.add">+ Add</button>
+                <p class="muted">Gesperrte User können keine GIFs erstellen, bearbeiten oder löschen. Andere Website
+                    Features bleiben unberührt.</p>
+                <label for="blUserId">User ID</label>
+                <input type="number" id="blUserId" min="1" placeholder="123" />
+                <label for="blReason">Grund (optional)</label>
+                <input type="text" id="blReason" placeholder="Spam, Abuse, ...">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                    <button class="btn" id="blAdd">Sperren</button>
+                    <button class="btn secondary" id="blRemove">Entsperren</button>
+                    <button class="btn secondary" id="blReload">Liste neu laden</button>
                 </div>
-                <div class="chips" id="tags"></div>
+                <div id="blStatus" class="status"></div>
+                <div id="blList"
+                    style="margin-top:12px;display:flex;flex-direction:column;gap:8px;max-height:240px;overflow:auto"></div>
+            </div>
+        </section>
 
-                <div class="actions">
-                    <button class="btn" type="submit" data-i18n="btn.save">Speichern</button>
-                    <button class="btn secondary" type="button" id="fillDemo" data-i18n="btn.fillDemo">Demo
-                        ausfüllen</button>
-                    <button class="btn secondary" type="button" id="clearAll" data-i18n="btn.reset">Reset</button>
+        <section class="card">
+            <div class="section-title">
+                <h2 data-i18n="admin.list">GIFs durchsuchen</h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <input type="text" id="q" placeholder="Titel enthält..." style="min-width:200px" />
+                    <select id="nsfwList">
+                        <option value="true" data-i18n="admin.nsfwAll">beides</option>
+                        <option value="false" data-i18n="admin.onlySfw">nur sfw</option>
+                        <option value="only" data-i18n="admin.onlyNsfw">nur nsfw</option>
+                    </select>
+                    <button class="btn secondary" id="btnReload" data-i18n="admin.reload">Neu laden</button>
                 </div>
-                <div id="status" class="status"></div>
-            </form>
-        </div>
+            </div>
+            <div class="table-rows" id="tableWrap"></div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn secondary" id="more" data-i18n="admin.more">Mehr laden</button>
+            </div>
+        </section>
+    </main>
 
-        <!-- Admin list -->
-        <div class="card">
-            <h3 style="color:var(--ink);margin:0 0 8px" data-i18n="admin.manage">GIFs verwalten</h3>
-            <div class="row" style="grid-template-columns: 2fr 1fr auto; gap:8px; margin:8px 0 12px">
-                <input type="text" id="q" data-i18n-placeholder="admin.searchTitle"
-                    placeholder="Suche im Titel (leer = alle)" />
-                <select id="nsfwList">
-                    <option value="true" selected data-i18n="admin.both">sfw + nsfw</option>
-                    <option value="false" data-i18n="admin.onlySfw">nur sfw</option>
-                    <option value="only" data-i18n="admin.onlyNsfw">nur nsfw</option>
-                </select>
-                <button class="btn secondary" id="btnReload" data-i18n="btn.reload">Reload</button>
-            </div>
-            <div id="tableWrap" class="muted" data-i18n="admin.noData">Noch keine Daten.</div>
-            <div class="actions">
-                <button class="btn secondary" id="more" data-i18n="btn.more">Mehr laden</button>
+    <footer>
+        <div class="container foot">
+            <div class="muted">TAOMAT • Anime GIF API Admin</div>
+            <div class="social">
+                <a class="iso-pro is-gh" href="https://github.com/TAOMAT" aria-label="GitHub">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M12 .5C5.73.5.5 5.74.5 12.02c0 5.1 3.29 9.42 7.86 10.95.58.12.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.53-1.35-1.3-1.71-1.3-1.71-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.21 1.78 1.21 1.04 1.78 2.74 1.26 3.41.96.1-.76.41-1.26.75-1.55-2.56-.29-5.26-1.28-5.26-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.45.11-3.02 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.57.24 2.73.12 3.02.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.28 5.67.42.36.8 1.08.8 2.19 0 1.58-.02 2.85-.02 3.24 0 .31.21.69.8.57A10.53 10.53 0 0 0 23.5 12C23.5 5.74 18.27.5 12 .5Z" />
+                    </svg>
+                </a>
+                <a class="iso-pro is-mail" href="mailto:kontakt@taoma.space" aria-label="E-Mail">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M4 6 12 13 20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </a>
+                <a class="iso-pro is-discord" href="https://discord.gg/" aria-label="Discord">
+                    <svg width="18" height="18" viewBox="0 0 245 240" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M104.4 104.9c-5.7 0-10.2 5-10.2 11.1 0 6.1 4.6 11.1 10.2 11.1 5.7 0 10.2-5 10.2-11.1.1-6.1-4.5-11.1-10.2-11.1zm36.2 0c-5.7 0-10.2 5-10.2 11.1 0 6.1 4.6 11.1 10.2 11.1 5.7 0 10.2-5 10.2-11.1 0-6.1-4.5-11.1-10.2-11.1z" />
+                        <path
+                            d="M189.5 20h-134C44.2 20 35 29.2 35 40.7v135.2c0 11.5 9.2 20.7 20.5 20.7h113.4l-5.3-18.4 12.8 11.8 12.1 11.2 21.5 19V40.7c0-11.5-9.2-20.7-20.5-20.7zm-38.6 135s-3.6-4.3-6.6-8.1c13.1-3.7 18.1-11.8 18.1-11.8-4.1 2.7-8 4.6-11.5 5.9-5 2.1-9.8 3.4-14.5 4.3-9.6 1.8-18.4 1.3-25.9-.1-5.7-1.1-10.6-2.6-14.7-4.3-2.3-.9-4.8-2-7.4-3.4-.3-.2-.6-.3-.9-.5-.2-.1-.3-.2-.4-.3-1.8-1-2.8-1.7-2.8-1.7s4.8 7.9 17.5 11.7c-3 3.8-6.7 8.3-6.7 8.3-22.1-.7-30.5-15.2-30.5-15.2 0-32.1 14.4-58.1 14.4-58.1 14.4-10.8 28-10.5 28-10.5l1 1.2c-18 5.2-26.3 13.1-26.3 13.1s2.2-1.2 5.9-2.9c10.7-4.7 19.2-5.9 22.7-6.2.6-.1 1.1-.2 1.7-.2 6.1-.8 13-1 20.2-.2 9.5 1.1 19.7 3.9 30.1 9.6 0 0-7.9-7.5-24.9-12.7l1.4-1.6s13.7-.3 28 10.5c0 0 14.4 26 14.4 58.1 0-.1-8.5 14.4-30.6 15.1z" />
+                    </svg>
+                </a>
             </div>
         </div>
+    </footer>
 
-        <!-- Preview -->
-        <div class="card preview" id="preview" style="display:none">
-            <img id="gifPreview" alt="GIF preview" />
-            <div>
-                <div><span class="pill" id="pillNSFW">sfw</span></div>
-                <pre id="payloadBox" style="margin-top:10px;color:#cfe0ff"></pre>
-            </div>
+    <div id="loginModal" class="card"
+        style="display:none; position:fixed; right:16px; bottom:16px; max-width:340px; z-index:10;">
+        <div class="section-title">
+            <h3>Login</h3>
+            <button id="toggleLogin" class="btn secondary">×</button>
         </div>
-
-        <!-- Quick test -->
-        <div class="card">
-            <h3 style="color:var(--ink);margin:0 0 8px" data-i18n="admin.quick">Quick-Test</h3>
-            <div class="actions">
-                <button class="btn secondary" id="btnRandom" data-i18n="admin.btnRandom">GET /gifs</button>
-                <button class="btn secondary" id="btnTags" data-i18n="admin.btnTags">GET /gifs?list=tags</button>
-            </div>
-            <pre id="quickOut" class="muted" style="white-space:pre-wrap"></pre>
+        <p class="muted">Bitte Admin-Passwort eingeben, um GIFs zu speichern.</p>
+        <label>API Base URL</label>
+        <input type="url" id="apiBaseModal" placeholder="https://your-api.tld">
+        <label>Admin Passwort</label>
+        <input type="password" id="adminPwModal">
+        <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn" id="btnLoginModal">Login</button>
+            <button class="btn secondary" id="btnLogoutModal">Logout</button>
         </div>
+        <div id="authMsgModal" class="status"></div>
     </div>
 
     <script>
-        // --- i18n dictionary ---
+        const menu = document.getElementById('primary-menu');
+        const mobileToggle = document.getElementById('mobileToggle');
+        if (mobileToggle && menu) {
+            mobileToggle.addEventListener('click', () => {
+                const open = menu.classList.toggle('open');
+                mobileToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+        }
+
         const I18N = {
             de: {
-                "admin.title": "Anime GIF API – Admin",
-                "admin.intro": "Füllt das Formular aus und sendet es an <code>POST /gifs</code> eurer lokalen API. Das UI macht bei identischer URL automatisch ein Update (wie eure API).",
-                "admin.example": "Beispiel:",
-                "label.base": "API Base URL",
-                "label.title": "Title",
-                "label.anime": "Anime",
-                "label.nsfwShort": "NSFW",
-                "admin.gifUrl": "GIF URL",
-                "admin.sfw": "sfw",
-                "admin.nsfw": "nsfw",
-                "admin.addCharacter": "Character hinzufügen",
-                "admin.addTag": "Tag hinzufügen",
-                "btn.add": "+ Add",
-                "btn.save": "Speichern",
-                "btn.fillDemo": "Demo ausfüllen",
-                "btn.reset": "Reset",
-                "btn.reload": "Reload",
-                "btn.more": "Mehr laden",
-                "admin.manage": "GIFs verwalten",
-                "admin.noData": "Noch keine Daten.",
-                "admin.quick": "Quick-Test",
-                "admin.btnRandom": "GET /gifs",
-                "admin.btnTags": "GET /gifs?list=tags",
-                "admin.login.title": "Admin Login",
-                "admin.login.password": "Passwort",
-                "admin.login.btnLogin": "Login",
-                "admin.login.btnLogout": "Logout",
-                "admin.searchTitle": "Suche im Titel (leer = alle)",
-                "admin.both": "sfw + nsfw",
+                "admin.title": "Titel",
+                "admin.url": "GIF URL",
+                "admin.nsfw": "NSFW?",
+                "admin.anime": "Anime",
+                "admin.character": "Charakter",
+                "admin.tags": "Tags",
+                "admin.addChar": "Hinzufügen",
+                "admin.addTag": "Hinzufügen",
+                "admin.builder": "GIF erstellen / bearbeiten",
+                "admin.list": "GIFs durchsuchen",
+                "admin.login": "Login",
+                "admin.logout": "Logout",
+                "admin.toggleLogin": "Modal zeigen / verstecken",
+                "admin.save": "Speichern",
+                "admin.demo": "Demo befüllen",
+                "admin.clear": "Alles leeren",
+                "admin.quick": "Schnelltest",
+                "admin.random": "Zufälliges GIF",
+                "admin.tagsBtn": "Alle Tags",
+                "admin.base": "API Base URL",
+                "admin.password": "Admin Passwort",
+                "admin.reload": "Neu laden",
+                "admin.more": "Mehr laden",
+                "admin.nsfwAll": "sfw + nsfw",
                 "admin.onlySfw": "nur sfw",
                 "admin.onlyNsfw": "nur nsfw",
-                "ph.base": "https://deine-api.tld",
-                "ph.title": "z. B. NazunaSmoke",
+                "ph.base": "https://your-api.tld",
+                "ph.title": "z.B. NazunaSmoke",
                 "ph.anime": "Call of the Night",
                 "ph.character": "Nazuna"
             },
             en: {
-                "admin.title": "Anime GIF API – Admin",
-                "admin.intro": "Fill the form and send it to <code>POST /gifs</code> of your API. The UI updates automatically if a GIF with the same URL exists.",
-                "admin.example": "Example:",
-                "label.base": "API Base URL",
-                "label.title": "Title",
-                "label.anime": "Anime",
-                "label.nsfwShort": "NSFW",
-                "admin.gifUrl": "GIF URL",
-                "admin.sfw": "sfw",
-                "admin.nsfw": "nsfw",
-                "admin.addCharacter": "Add character",
-                "admin.addTag": "Add tag",
-                "btn.add": "+ Add",
-                "btn.save": "Save",
-                "btn.fillDemo": "Fill demo",
-                "btn.reset": "Reset",
-                "btn.reload": "Reload",
-                "btn.more": "Load more",
-                "admin.manage": "Manage GIFs",
-                "admin.noData": "No data yet.",
+                "admin.title": "Title",
+                "admin.url": "GIF URL",
+                "admin.nsfw": "NSFW?",
+                "admin.anime": "Anime",
+                "admin.character": "Character",
+                "admin.tags": "Tags",
+                "admin.addChar": "Add",
+                "admin.addTag": "Add",
+                "admin.builder": "Create / edit GIF",
+                "admin.list": "Browse GIFs",
+                "admin.login": "Login",
+                "admin.logout": "Logout",
+                "admin.toggleLogin": "Show / hide modal",
+                "admin.save": "Save",
+                "admin.demo": "Fill demo",
+                "admin.clear": "Clear all",
                 "admin.quick": "Quick test",
-                "admin.btnRandom": "GET /gifs",
-                "admin.btnTags": "GET /gifs?list=tags",
-                "admin.login.title": "Admin Login",
-                "admin.login.password": "Password",
-                "admin.login.btnLogin": "Login",
-                "admin.login.btnLogout": "Logout",
-                "admin.searchTitle": "Search in title (empty = all)",
-                "admin.both": "sfw + nsfw",
+                "admin.random": "Random GIF",
+                "admin.tagsBtn": "List tags",
+                "admin.base": "API Base URL",
+                "admin.password": "Admin password",
+                "admin.reload": "Reload",
+                "admin.more": "Load more",
+                "admin.nsfwAll": "sfw + nsfw",
                 "admin.onlySfw": "sfw only",
                 "admin.onlyNsfw": "nsfw only",
                 "ph.base": "https://your-api.tld",
@@ -393,11 +662,22 @@
                 "ph.character": "Nazuna"
             }
         };
-        function getLang() { const s = localStorage.getItem('gifapi_lang'); if (s) return s; const n = (navigator.language || 'en').toLowerCase(); return n.startsWith('de') ? 'de' : 'en' }
+        function getLang() {
+            const s = localStorage.getItem('gifapi_lang');
+            if (s) return s;
+            const n = (navigator.language || 'en').toLowerCase();
+            return n.startsWith('de') ? 'de' : 'en';
+        }
         function applyI18n(lang) {
             const dict = I18N[lang] || I18N.en;
-            document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.getAttribute('data-i18n'); if (dict[k] != null) el.innerHTML = dict[k]; });
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const k = el.getAttribute('data-i18n-placeholder'); if (dict[k] != null) el.setAttribute('placeholder', dict[k]); });
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const k = el.getAttribute('data-i18n');
+                if (dict[k] != null) el.innerHTML = dict[k];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const k = el.getAttribute('data-i18n-placeholder');
+                if (dict[k] != null) el.setAttribute('placeholder', dict[k]);
+            });
             const sel = document.getElementById('lang'); if (sel) sel.value = lang;
         }
         window.addEventListener('load', () => {
@@ -407,7 +687,6 @@
             picker.addEventListener('change', () => { const l = picker.value; localStorage.setItem('gifapi_lang', l); applyI18n(l); });
         });
 
-        // --- Admin logic (unchanged, but with "Load" support) ---
         const $ = sel => document.querySelector(sel);
         const chars = new Set(); const tags = new Set();
         function renderChips(containerId, valuesSet) {
@@ -420,7 +699,7 @@
                 el.appendChild(chip);
             });
         }
-        function buildPayload() { return { title: $('#title').value.trim(), url: $('#url').value.trim(), nsfw: $('#nsfw').value === 'true', anime: ($('#anime').value || '').trim() || null, characters: Array.from(chars), tags: Array.from(tags) } }
+        function buildPayload() { return { title: $('#title').value.trim(), url: $('#url').value.trim(), nsfw: $('#nsfw').value === 'true', anime: ($('#anime').value || '').trim(), characters: Array.from(chars), tags: Array.from(tags) }; }
         function showPreview() {
             const p = buildPayload();
             $('#preview').style.display = p.url ? 'flex' : 'none';
@@ -441,8 +720,9 @@
             renderChips('#chars', chars); renderChips('#tags', tags); showPreview();
         };
         $('#clearAll').onclick = () => { $('#gifForm').reset(); chars.clear(); tags.clear(); renderChips('#chars', chars); renderChips('#tags', tags); $('#preview').style.display = 'none'; $('#status').textContent = ''; };
+    </script>
 
-        // auth + calls
+    <script>
         let AUTH_TOKEN = null;
         const authHeaders = () => AUTH_TOKEN ? { 'X-Auth-Token': AUTH_TOKEN } : {};
         function requireTokenOrAsk() {
@@ -452,35 +732,70 @@
                 $('#authMsg').className = 'status err'; return false;
             } return true;
         }
-        $('#toggleLogin').onclick = () => { const vis = $('#loginModal').style.display !== 'none'; $('#loginModal').style.display = vis ? 'none' : 'block'; }
-        $('#btnLogin').onclick = async () => {
-            const base = $('#apiBase').value.replace(/\/$/, ''); const pw = $('#adminPw').value;
+        function syncBase() {
+            if ($('#apiBaseModal') && $('#apiBase') && $('#apiBaseModal').value) {
+                $('#apiBase').value = $('#apiBaseModal').value;
+            } else if ($('#apiBase') && $('#apiBaseModal') && $('#apiBase').value) {
+                $('#apiBaseModal').value = $('#apiBase').value;
+            }
+        }
+        $('#toggleLogin').onclick = () => { const vis = $('#loginModal').style.display !== 'none'; $('#loginModal').style.display = vis ? 'none' : 'block'; };
+        $('#btnLogin').onclick = async () => { await performLogin($('#adminPw').value, $('#apiBase').value, $('#authMsg')); };
+        $('#btnLoginModal').onclick = async () => { await performLogin($('#adminPwModal').value, $('#apiBaseModal').value, $('#authMsgModal')); };
+        async function performLogin(password, baseUrl, statusEl) {
+            const base = (baseUrl || '').replace(/\/$/, '');
+            if (!base) { statusEl.textContent = 'Base URL fehlt.'; statusEl.className = 'status err'; return; }
             try {
-                const r = await fetch(base + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+                const r = await fetch(base + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
                 const j = await r.json(); if (!r.ok) throw new Error(j.detail || 'Login failed');
                 AUTH_TOKEN = j.token;
-                $('#authMsg').textContent = (getLang() === 'de' ? 'Login ok. Token aktiv.' : 'Login ok. Token active.'); $('#authMsg').className = 'status ok';
-            } catch (err) { $('#authMsg').textContent = (getLang() === 'de' ? 'Login fehlgeschlagen: ' : 'Login failed: ') + err.message; $('#authMsg').className = 'status err'; }
-        };
-        $('#btnLogout').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); try { if (AUTH_TOKEN) { await fetch(base + '/api/auth/logout', { method: 'POST', headers: authHeaders() }); } } finally { AUTH_TOKEN = null; $('#authMsg').textContent = (getLang() === 'de' ? 'Ausgeloggt.' : 'Logged out.'); $('#authMsg').className = 'status'; } };
+                syncBase();
+                statusEl.textContent = (getLang() === 'de' ? 'Login ok. Token aktiv.' : 'Login ok. Token active.');
+                statusEl.className = 'status ok';
+                $('#loginModal').style.display = 'none';
+                ADMIN_OFFSET = 0; await loadAdminList(false); await verifyToken(); await loadBlacklist();
+            } catch (err) {
+                statusEl.textContent = (getLang() === 'de' ? 'Login fehlgeschlagen: ' : 'Login failed: ') + err.message;
+                statusEl.className = 'status err';
+            }
+        }
+        $('#btnLogout').onclick = async () => { await performLogout($('#authMsg')); };
+        $('#btnLogoutModal').onclick = async () => { await performLogout($('#authMsgModal')); };
+        async function performLogout(statusEl) {
+            const base = ($('#apiBase').value || '').replace(/\/$/, '');
+            try { if (AUTH_TOKEN && base) { await fetch(base + '/api/auth/logout', { method: 'POST', headers: authHeaders() }); } }
+            finally {
+                AUTH_TOKEN = null;
+                statusEl.textContent = (getLang() === 'de' ? 'Ausgeloggt.' : 'Logged out.');
+                statusEl.className = 'status';
+            }
+        }
+
         $('#gifForm').onsubmit = async (e) => {
             e.preventDefault(); if (!requireTokenOrAsk()) return;
             const base = $('#apiBase').value.replace(/\/$/, ''); const payload = buildPayload();
-            if (!payload.title || !payload.url) { $('#status').textContent = (getLang() === 'de' ? 'Title und URL sind Pflichtfelder.' : 'Title and URL are required.'); $('#status').className = 'status err'; return; }
+            if (!payload.title || !payload.url || !payload.anime || !payload.characters.length || !payload.tags.length) {
+                $('#status').textContent = (getLang() === 'de' ? 'Alle Felder sind Pflicht (Titel, Anime, Charaktere, Tags).' : 'All fields are required (title, anime, characters, tags).');
+                $('#status').className = 'status err'; return;
+            }
             try {
                 const res = await fetch(base + '/api/gifs', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(payload) });
                 if (res.status === 401) { $('#loginModal').style.display = 'block'; throw new Error(getLang() === 'de' ? 'Nicht autorisiert. Bitte einloggen.' : 'Unauthorized. Please log in.'); }
                 const data = await res.json(); if (!res.ok) throw new Error(data.detail || res.statusText);
-                $('#status').textContent = (getLang() === 'de' ? 'Gespeichert ✅ (ID ' : 'Saved ✅ (ID ') + data.id + ')'; $('#status').className = 'status ok';
+                $('#status').textContent = (getLang() === 'de' ? 'Gespeichert ✓ (ID ' : 'Saved ✓ (ID ') + data.id + ')'; $('#status').className = 'status ok';
             } catch (err) { $('#status').textContent = (getLang() === 'de' ? 'Fehler: ' : 'Error: ') + err.message; $('#status').className = 'status err'; }
         };
         $('#loginModal').style.display = 'none';
 
-        // verify + list + load + delete
         function setWhoAmI(text) { $('#whoami').textContent = text || ''; }
         async function verifyToken() {
             const base = $('#apiBase').value.replace(/\/$/, ''); if (!AUTH_TOKEN) return false;
-            try { const r = await fetch(base + '/api/auth/verify', { headers: authHeaders() }); if (!r.ok) return false; const j = await r.json(); setWhoAmI((getLang() === 'de' ? 'Eingeloggt. Token gültig' : 'Logged in. Token valid') + (j.expires_at ? ` (${getLang() === 'de' ? 'bis' : 'until'} ${j.expires_at})` : '')); return true; } catch { return false; }
+            try {
+                const r = await fetch(base + '/api/auth/verify', { headers: authHeaders() }); if (!r.ok) return false;
+                const j = await r.json();
+                setWhoAmI((getLang() === 'de' ? 'Eingeloggt. Token gültig' : 'Logged in. Token valid') + (j.expires_at ? ` (${getLang() === 'de' ? 'bis' : 'until'} ${j.expires_at})` : ''));
+                return true;
+            } catch { return false; }
         }
         async function ensureAuthUI() { const ok = await verifyToken(); if (!ok) { $('#loginModal').style.display = 'block'; setWhoAmI(getLang() === 'de' ? 'Nicht eingeloggt.' : 'Not logged in.'); } }
         let ADMIN_OFFSET = 0; const PAGE_SIZE = 25;
@@ -494,8 +809,8 @@
   <img src="${g.url}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.08)"/>
   <div>
     <div style="color:#e7e9ff;font-weight:700">${g.title}</div>
-    <div class="muted">#${g.id} • ${g.anime || '—'} • ${g.nsfw ? 'nsfw' : 'sfw'}</div>
-    <div class="muted">Tags: ${(g.tags || []).join(', ') || '—'} | Chars: ${(g.characters || []).join(', ') || '—'}</div>
+    <div class="muted">#${g.id} · ${g.anime || '-'} · ${g.nsfw ? 'nsfw' : 'sfw'} · ${g.created_by ? 'User ' + g.created_by : 'kein Owner'}</div>
+    <div class="muted">Tags: ${(g.tags || []).join(', ') || '-'} | Chars: ${(g.characters || []).join(', ') || '-'}</div>
   </div>
   <a class="btn secondary" href="${g.url}" target="_blank" rel="noopener">${getLang() === 'de' ? 'Open' : 'Open'}</a>
   <button class="btn secondary" data-load="${payload}">${getLang() === 'de' ? 'Load' : 'Load'}</button>
@@ -536,12 +851,88 @@
         $('#btnReload').onclick = async () => { ADMIN_OFFSET = 0; await loadAdminList(false); };
         $('#more').onclick = async () => { ADMIN_OFFSET += PAGE_SIZE; await loadAdminList(true); };
         const origLogin = $('#btnLogin').onclick;
-        $('#btnLogin').onclick = async (e) => { await origLogin(e); if (AUTH_TOKEN) { $('#loginModal').style.display = 'none'; ADMIN_OFFSET = 0; await loadAdminList(false); await verifyToken(); } };
-        window.addEventListener('load', async () => { await ensureAuthUI(); if (AUTH_TOKEN) { ADMIN_OFFSET = 0; await loadAdminList(false); } });
-        // quick test
+        $('#btnLogin').onclick = async (e) => { await origLogin(e); if (AUTH_TOKEN) { $('#loginModal').style.display = 'none'; ADMIN_OFFSET = 0; await loadAdminList(false); await verifyToken(); await loadBlacklist(); } };
+        window.addEventListener('load', async () => { await ensureAuthUI(); if (AUTH_TOKEN) { ADMIN_OFFSET = 0; await loadAdminList(false); await loadBlacklist(); } });
         $('#btnRandom').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/api/gifs'); const j = await r.json(); $('#quickOut').textContent = JSON.stringify(j, null, 2); };
         $('#btnTags').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/api/gifs?list=tags'); const j = await r.json(); $('#quickOut').textContent = JSON.stringify(j, null, 2); };
+
+        async function loadBlacklist() {
+            if (!AUTH_TOKEN) return;
+            const base = $('#apiBase').value.replace(/\/$/, '');
+            const statusEl = $('#blStatus');
+            statusEl.textContent = '';
+            try {
+                const r = await fetch(base + '/api/admin/gif-blacklist', { headers: authHeaders() });
+                if (!r.ok) throw new Error(r.statusText);
+                const list = await r.json();
+                const wrap = $('#blList');
+                wrap.innerHTML = '';
+                if (!list.length) {
+                    wrap.innerHTML = '<span class="muted">Keine Einträge.</span>';
+                    return;
+                }
+                list.forEach(entry => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.style.padding = '10px 12px';
+                    div.innerHTML = `
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+  <div>
+    <div style="font-weight:700;color:#e7e9ff">User #${entry.user_id}</div>
+    <div class="muted">${entry.reason ? entry.reason : 'kein Grund angegeben'}</div>
+    <div class="muted">${entry.created_at || ''}</div>
+  </div>
+  <button class="btn danger" data-unblock="${entry.user_id}">Entsperren</button>
+</div>`;
+                    wrap.appendChild(div);
+                });
+                wrap.querySelectorAll('[data-unblock]').forEach(btn => {
+                    btn.onclick = async () => {
+                        $('#blUserId').value = btn.getAttribute('data-unblock');
+                        await unblockUser();
+                        await loadBlacklist();
+                    };
+                });
+            } catch (err) {
+                statusEl.textContent = 'Fehler beim Laden: ' + err.message;
+                statusEl.className = 'status err';
+            }
+        }
+
+        async function blockUser() {
+            if (!requireTokenOrAsk()) return;
+            const base = $('#apiBase').value.replace(/\/$/, '');
+            const userId = Number($('#blUserId').value);
+            const reason = $('#blReason').value.trim() || null;
+            const statusEl = $('#blStatus');
+            if (!userId) { statusEl.textContent = 'User ID fehlt.'; statusEl.className = 'status err'; return; }
+            try {
+                const r = await fetch(`${base}/api/admin/gif-blacklist/${userId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ reason }) });
+                const j = await r.json(); if (!r.ok) throw new Error(j.detail || r.statusText);
+                statusEl.textContent = `User #${userId} gesperrt.`; statusEl.className = 'status ok';
+                await loadBlacklist();
+            } catch (err) {
+                statusEl.textContent = 'Fehler: ' + err.message; statusEl.className = 'status err';
+            }
+        }
+
+        async function unblockUser() {
+            if (!requireTokenOrAsk()) return;
+            const base = $('#apiBase').value.replace(/\/$/, '');
+            const userId = Number($('#blUserId').value);
+            const statusEl = $('#blStatus');
+            if (!userId) { statusEl.textContent = 'User ID fehlt.'; statusEl.className = 'status err'; return; }
+            try {
+                const r = await fetch(`${base}/api/admin/gif-blacklist/${userId}`, { method: 'DELETE', headers: authHeaders() });
+                if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.detail || r.statusText); }
+                statusEl.textContent = `User #${userId} entsperrt.`; statusEl.className = 'status ok';
+                await loadBlacklist();
+            } catch (err) { statusEl.textContent = 'Fehler: ' + err.message; statusEl.className = 'status err'; }
+        }
+
+        $('#blAdd').onclick = blockUser;
+        $('#blRemove').onclick = unblockUser;
+        $('#blReload').onclick = loadBlacklist;
     </script>
 </body>
-
 </html>

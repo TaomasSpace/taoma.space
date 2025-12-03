@@ -7,13 +7,16 @@
     <title>Anime GIF API – Explorer & Docs</title>
     <style>
         :root {
-            --bg: #0f1223;
-            --card: #161a34;
+            --bg: #0e1020;
+            --card: #171b3b;
             --ink: #e7e9ff;
-            --muted: #9aa3c7;
-            --acc: #7c9cff;
-            --ok: #2ecc71;
-            --err: #e74c3c
+            --muted: #a2a9c8;
+            --acc: #85a3ff;
+            --acc-2: #5b7bff;
+            --ok: #35d79c;
+            --err: #ff5a6a;
+            --ring: #85a3ff55;
+            --container: 1100px;
         }
 
         * {
@@ -23,11 +26,112 @@
 
         body {
             margin: 0;
-            background: linear-gradient(120deg, #0f1223 0%, #13183a 70%)
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
+                radial-gradient(1200px 700px at 80% 20%, #111533 0%, #111533 32%, transparent 60%),
+                linear-gradient(135deg, #0e1020 0%, #0b0d1c 100%);
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: saturate(1.1) blur(10px);
+            background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+            border-bottom: 1px solid #ffffff14;
+        }
+
+        .container {
+            width: min(100%, var(--container));
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            font-weight: 800;
+            letter-spacing: .4px;
+        }
+
+        .brand .logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+        }
+
+        .links {
+            display: flex;
+            gap: 1rem;
+            align-items: center
+        }
+
+        .links a {
+            padding: .45rem .7rem;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            color: var(--ink);
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            border-color: #ffffff1f;
+            background: #ffffff0f
+        }
+
+        .mobile-toggle {
+            display: none
+        }
+
+        @media (max-width:800px) {
+            .mobile-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                border: 1px solid #ffffff26;
+                background: transparent
+            }
+
+            .links {
+                position: fixed;
+                inset: 64px 0 auto 0;
+                background: linear-gradient(180deg, #0b0f29, #0b0f2945);
+                padding: 1rem;
+                display: none;
+                flex-direction: column
+            }
+
+            .links.open {
+                display: flex
+            }
         }
 
         .wrap {
-            max-width: 1100px;
+            max-width: var(--container);
             margin: 28px auto;
             padding: 0 16px
         }
@@ -243,10 +347,65 @@
             padding: 1px 6px;
             border-radius: 6px
         }
+
+        footer {
+            border-top: 1px solid #ffffff14;
+            padding-block: 24px;
+            margin-top: auto
+        }
+
+        .foot {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap
+        }
+
+        .social {
+            display: flex;
+            align-items: center;
+            gap: .6rem
+        }
+
+        .social a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid #ffffff26;
+            color: var(--ink)
+        }
     </style>
 </head>
 
 <body>
+    <header>
+        <div class="container nav" role="navigation" aria-label="Primary">
+            <div class="brand">
+                <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo"></a>
+                <a href="/" style="color:inherit;text-decoration:none;">TAOMAT</a>
+            </div>
+            <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu"
+                aria-expanded="false" aria-label="Toggle menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+            <nav id="primary-menu" class="links" aria-label="Site">
+                <a href="/">Home</a>
+                <a href="/projects">Projects</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+                <a href="/skills">Skills</a>
+                <a href="/api" aria-current="page">GIF API</a>
+            </nav>
+            <div id="authSlot" class="auth"></div>
+        </div>
+    </header>
+
     <div class="wrap">
         <h1 data-i18n="title.main">Anime GIF API – Explorer &amp; Docs</h1>
 
@@ -256,6 +415,18 @@
             unten die Regeln &amp; Beispiele. Wenn alles leer ist, verwenden wir <code>/gifs?</code> → ein zufälliges
             GIF.
         </p>
+
+        <div class="card">
+            <h2>Ownership &amp; Blacklist</h2>
+            <p class="muted">
+                Jeder kann GIFs abrufen. Anlegen, Ändern und Löschen ist nur für eingeloggte Nutzer erlaubt – jeweils
+                nur für ihre eigenen GIFs. Admins dürfen alle GIFs managen, User sperren/entsperren (Blacklist) und
+                vergeben automatisch Badges für Upload-Meilensteine.
+            </p>
+            <p class="muted">Neue GIFs akzeptieren nur vollständige Datensätze (Titel, Anime, Charaktere, Tags, URL,
+                NSFW-Flag). Blacklist wirkt nur auf GIF-Management, andere Website-Features bleiben frei.</p>
+            <p class="muted">Blacklisting und Badge-Checks laufen in der Admin-Oberfläche.</p>
+        </div>
 
         <div id="langPicker"
             style="position:fixed;top:12px;right:12px;z-index:20;display:flex;gap:8px;align-items:center">
@@ -510,7 +681,43 @@
         </div>
     </div>
 
+    <footer>
+        <div class="container foot">
+            <div class="muted">TAOMAT • Anime GIF API</div>
+            <div class="social">
+                <a class="iso-pro is-gh" href="https://github.com/TAOMAT" aria-label="GitHub">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 .5C5.73.5.5 5.74.5 12.02c0 5.1 3.29 9.42 7.86 10.95.58.12.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.53-1.35-1.3-1.71-1.3-1.71-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.21 1.78 1.21 1.04 1.78 2.74 1.26 3.41.96.1-.76.41-1.26.75-1.55-2.56-.29-5.26-1.28-5.26-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.45.11-3.02 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.57.24 2.73.12 3.02.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.28 5.67.42.36.8 1.08.8 2.19 0 1.58-.02 2.85-.02 3.24 0 .31.21.69.8.57A10.53 10.53 0 0 0 23.5 12C23.5 5.74 18.27.5 12 .5Z" />
+                    </svg>
+                </a>
+                <a class="iso-pro is-mail" href="mailto:kontakt@taoma.space" aria-label="E-Mail">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M4 6 12 13 20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </a>
+                <a class="iso-pro is-discord" href="https://discord.gg/" aria-label="Discord">
+                    <svg width="18" height="18" viewBox="0 0 245 240" fill="currentColor" aria-hidden="true">
+                        <path d="M104.4 104.9c-5.7 0-10.2 5-10.2 11.1 0 6.1 4.6 11.1 10.2 11.1 5.7 0 10.2-5 10.2-11.1.1-6.1-4.5-11.1-10.2-11.1zm36.2 0c-5.7 0-10.2 5-10.2 11.1 0 6.1 4.6 11.1 10.2 11.1 5.7 0 10.2-5 10.2-11.1 0-6.1-4.5-11.1-10.2-11.1z" />
+                        <path d="M189.5 20h-134C44.2 20 35 29.2 35 40.7v135.2c0 11.5 9.2 20.7 20.5 20.7h113.4l-5.3-18.4 12.8 11.8 12.1 11.2 21.5 19V40.7c0-11.5-9.2-20.7-20.5-20.7zm-38.6 135s-3.6-4.3-6.6-8.1c13.1-3.7 18.1-11.8 18.1-11.8-4.1 2.7-8 4.6-11.5 5.9-5 2.1-9.8 3.4-14.5 4.3-9.6 1.8-18.4 1.3-25.9-.1-5.7-1.1-10.6-2.6-14.7-4.3-2.3-.9-4.8-2-7.4-3.4-.3-.2-.6-.3-.9-.5-.2-.1-.3-.2-.4-.3-1.8-1-2.8-1.7-2.8-1.7s4.8 7.9 17.5 11.7c-3 3.8-6.7 8.3-6.7 8.3-22.1-.7-30.5-15.2-30.5-15.2 0-32.1 14.4-58.1 14.4-58.1 14.4-10.8 28-10.5 28-10.5l1 1.2c-18 5.2-26.3 13.1-26.3 13.1s2.2-1.2 5.9-2.9c10.7-4.7 19.2-5.9 22.7-6.2.6-.1 1.1-.2 1.7-.2 6.1-.8 13-1 20.2-.2 9.5 1.1 19.7 3.9 30.1 9.6 0 0-7.9-7.5-24.9-12.7l1.4-1.6s13.7-.3 28 10.5c0 0 14.4 26 14.4 58.1 0-.1-8.5 14.4-30.6 15.1z" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </footer>
+
     <script>
+        (function () {
+            const menu = document.getElementById('primary-menu');
+            const toggle = document.getElementById('mobileToggle');
+            if (menu && toggle) {
+                toggle.addEventListener('click', () => {
+                    const open = menu.classList.toggle('open');
+                    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                });
+            }
+        }());
+
         const $ = s => document.querySelector(s);
         const el = id => document.getElementById(id);
 
