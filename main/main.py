@@ -131,6 +131,12 @@ ALLOWED_USER_IDS = {
     for x in os.getenv("ALLOWED_USER_IDS", "1").replace(" ", "").split(",")
     if x
 }
+
+# GIF badge thresholds: (min_gifs, icon_code)
+GIF_BADGE_THRESHOLDS: list[tuple[int, str]] = [
+    (1, "266300"),
+    (50, "266301"),
+]
 def _ensure_pg():
     if not isinstance(db, PgGifDB):
         raise HTTPException(501, "Linktree features require PostgreSQL.")
@@ -532,8 +538,8 @@ class GifIn(BaseModel):
     url: HttpUrl
     nsfw: bool
     anime: Optional[str] = None
-    characters: List[str] = []
-    tags: List[str] = []
+    characters: List[str] = Field(default_factory=list)
+    tags: List[str] = Field(default_factory=list)
 
 
 class GifUpdate(BaseModel):
@@ -554,6 +560,11 @@ class GifOut(BaseModel):
     created_at: str
     characters: List[str]
     tags: List[str]
+    created_by: Optional[int] = None
+
+
+class GifBlacklistIn(BaseModel):
+    reason: Optional[str] = None
 
 
 class LoginIn(BaseModel):
@@ -831,6 +842,80 @@ def skills():
 
 
 # ------------ GIF API ------------ #
+
+
+def _clean_str_list(values: Optional[List[str]]) -> List[str]:
+    return [s for s in (str(v).strip() for v in (values or [])) if s]
+
+
+def _validate_gif_fields(
+    title: str | None, anime: str | None, characters: List[str] | None, tags: List[str] | None
+) -> tuple[str, str, List[str], List[str]]:
+    clean_title = (title or "").strip()
+    if not clean_title:
+        raise HTTPException(status_code=400, detail="title must be provided")
+    clean_anime = (anime or "").strip()
+    if not clean_anime:
+        raise HTTPException(status_code=400, detail="anime must be provided")
+    clean_characters = _clean_str_list(characters)
+    if not clean_characters:
+        raise HTTPException(status_code=400, detail="characters must not be empty")
+    clean_tags = _clean_str_list(tags)
+    if not clean_tags:
+        raise HTTPException(status_code=400, detail="tags must not be empty")
+    return clean_title, clean_anime, clean_characters, clean_tags
+
+
+def _ensure_gif_write_allowed(user: dict):
+    if user.get("admin"):
+        return
+    if db.is_user_blacklisted(user["id"]):
+        raise HTTPException(
+            status_code=403,
+            detail="You are blacklisted from creating, editing, or deleting GIFs.",
+        )
+
+
+def _ensure_gif_owner_or_admin(user: dict, gif: dict):
+    _ensure_gif_write_allowed(user)
+    if user.get("admin"):
+        return
+    if gif.get("created_by") != user["id"]:
+        raise HTTPException(status_code=403, detail="You can only manage your own GIFs.")
+
+
+def _maybe_award_gif_badges(user_id: int):
+    if not GIF_BADGE_THRESHOLDS or not isinstance(db, PgGifDB):
+        return
+    thresholds = sorted(GIF_BADGE_THRESHOLDS, key=lambda t: t[0])
+    try:
+        gif_count = db.count_user_gifs(user_id)
+    except Exception as e:
+        logger.warning("Failed to count gifs for badge assignment: %s", e)
+        return
+    eligible = [(t, code) for t, code in thresholds if gif_count >= t]
+    if not eligible:
+        return
+    top_threshold, top_code = eligible[-1]
+    try:
+        db.grant_icon(user_id, top_code, displayed=False)
+    except KeyError:
+        logger.warning("Configured GIF badge icon '%s' not found; skipping grant", top_code)
+    except Exception as e:
+        logger.warning("Failed to grant gif badge %s: %s", top_code, e)
+    lower_codes = [code for threshold, code in thresholds if threshold < top_threshold]
+    for code in lower_codes:
+        try:
+            db.revoke_icon(user_id, code)
+        except Exception:
+            continue
+
+
+def _ensure_target_user_exists(user_id: int):
+    if isinstance(db, PgGifDB):
+        target = db.getUser(user_id)
+        if not target:
+            raise HTTPException(status_code=404, detail="User not found")
 @app.get("/api/auth/verify")
 def verify(token: str = Depends(require_token)):
     user = db.get_token_user(token) or {}
@@ -1032,6 +1117,31 @@ def admin_list_gifs(
     return db.search_by_title(q or "", nsfw_mode=nsfw, limit=limit, offset=offset)
 
 
+@app.get("/api/admin/gif-blacklist", dependencies=[Depends(require_admin)])
+def list_gif_blacklist():
+    return db.list_gif_blacklist()
+
+
+@app.get("/api/admin/gif-blacklist/{user_id}", dependencies=[Depends(require_admin)])
+def get_gif_blacklist_entry(user_id: int):
+    return {"user_id": user_id, "blacklisted": db.is_user_blacklisted(user_id)}
+
+
+@app.post("/api/admin/gif-blacklist/{user_id}", dependencies=[Depends(require_admin)])
+def add_gif_blacklist(user_id: int, payload: GifBlacklistIn | None = None):
+    _ensure_target_user_exists(user_id)
+    reason = payload.reason if payload else None
+    db.add_to_gif_blacklist(user_id, reason)
+    return {"user_id": user_id, "blacklisted": True, "reason": reason}
+
+
+@app.delete("/api/admin/gif-blacklist/{user_id}", dependencies=[Depends(require_admin)])
+def remove_gif_blacklist(user_id: int):
+    _ensure_target_user_exists(user_id)
+    db.remove_from_gif_blacklist(user_id)
+    return {"user_id": user_id, "blacklisted": False}
+
+
 @app.post("/api/auth/login", response_model=LoginOut)
 def login(payload: LoginIn):
     if not ADMIN_PASSWORD:
@@ -1130,13 +1240,12 @@ def unified_get_gifs(
         raise HTTPException(status_code=404, detail="no gifs in database")
 
 
-@app.post(
-    "/api/gifs",
-    response_model=GifOut,
-    status_code=201,
-    dependencies=[Depends(require_user)],
-)
-def create_or_update_gif(payload: GifIn):
+@app.post("/api/gifs", response_model=GifOut, status_code=201)
+def create_or_update_gif(payload: GifIn, user: dict = Depends(require_user)):
+    _ensure_gif_write_allowed(user)
+    title, anime, characters, tags = _validate_gif_fields(
+        payload.title, payload.anime, payload.characters, payload.tags
+    )
     try:
         existing = None
         try:
@@ -1145,24 +1254,28 @@ def create_or_update_gif(payload: GifIn):
             pass
 
         if existing:
+            _ensure_gif_owner_or_admin(user, existing)
             db.update_gif(
                 existing["id"],
-                title=payload.title,
+                title=title,
+                url=str(payload.url),
                 nsfw=payload.nsfw,
-                anime=payload.anime,
-                characters=payload.characters,
-                tags=payload.tags,
+                anime=anime,
+                characters=characters,
+                tags=tags,
             )
             return db.get_gif(existing["id"])
 
         gif_id = db.insert_gif(
-            title=payload.title,
+            title=title,
             url=str(payload.url),
             nsfw=payload.nsfw,
-            anime=payload.anime,
-            characters=payload.characters,
-            tags=payload.tags,
+            anime=anime,
+            characters=characters,
+            tags=tags,
+            created_by=user["id"],
         )
+        _maybe_award_gif_badges(user["id"])
         return db.get_gif(gif_id)
 
     except Exception as e:
@@ -1177,33 +1290,42 @@ def read_gif(gif_id: int):
         raise HTTPException(status_code=404, detail="GIF not found")
 
 
-@app.patch(
-    "/api/gifs/{gif_id}", response_model=GifOut, dependencies=[Depends(require_user)]
-)
-def update_gif(gif_id: int, payload: GifUpdate):
+@app.patch("/api/gifs/{gif_id}", response_model=GifOut)
+def update_gif(gif_id: int, payload: GifUpdate, user: dict = Depends(require_user)):
     try:
-        _ = db.get_gif(gif_id)
+        gif = db.get_gif(gif_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="GIF not found")
 
+    _ensure_gif_owner_or_admin(user, gif)
+    title, anime, characters, tags = _validate_gif_fields(
+        payload.title if payload.title is not None else gif.get("title"),
+        payload.anime if payload.anime is not None else gif.get("anime"),
+        payload.characters if payload.characters is not None else gif.get("characters", []),
+        payload.tags if payload.tags is not None else gif.get("tags", []),
+    )
+    nsfw_value = payload.nsfw if payload.nsfw is not None else gif["nsfw"]
+    url_value = str(payload.url) if payload.url is not None else None
+
     db.update_gif(
         gif_id,
-        title=payload.title,
-        url=str(payload.url) if payload.url is not None else None,
-        nsfw=payload.nsfw,
-        anime=payload.anime,
-        characters=payload.characters,
-        tags=payload.tags,
+        title=title,
+        url=url_value,
+        nsfw=nsfw_value,
+        anime=anime,
+        characters=characters,
+        tags=tags,
     )
     return db.get_gif(gif_id)
 
 
-@app.delete("/api/gifs/{gif_id}", status_code=204, dependencies=[Depends(require_user)])
-def delete_gif(gif_id: int):
+@app.delete("/api/gifs/{gif_id}", status_code=204)
+def delete_gif(gif_id: int, user: dict = Depends(require_user)):
     try:
-        _ = db.get_gif(gif_id)  # 404, falls nicht vorhanden
+        gif = db.get_gif(gif_id)  # 404, falls nicht vorhanden
     except KeyError:
         raise HTTPException(status_code=404, detail="GIF not found")
+    _ensure_gif_owner_or_admin(user, gif)
     db.delete_gif(gif_id)
     return Response(status_code=204)
 

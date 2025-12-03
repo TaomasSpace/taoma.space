@@ -20,12 +20,14 @@ CREATE TABLE IF NOT EXISTS gifs (
     url         TEXT NOT NULL UNIQUE,                -- Links sollen eindeutig sein
     nsfw        INTEGER NOT NULL CHECK (nsfw IN (0,1)),
     anime       TEXT,
+    created_by  INTEGER,
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) -- UTC ISO-8601
 );
 
 CREATE INDEX IF NOT EXISTS idx_gifs_title       ON gifs(title);
 CREATE INDEX IF NOT EXISTS idx_gifs_anime       ON gifs(anime);
 CREATE INDEX IF NOT EXISTS idx_gifs_nsfw        ON gifs(nsfw);
+CREATE INDEX IF NOT EXISTS idx_gifs_created_by  ON gifs(created_by);
 CREATE INDEX IF NOT EXISTS idx_gifs_created_at  ON gifs(created_at);
 
 CREATE TABLE IF NOT EXISTS characters (
@@ -64,6 +66,12 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+
+CREATE TABLE IF NOT EXISTS gif_blacklist (
+    user_id    INTEGER PRIMARY KEY,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    reason     TEXT
+);
 """
 
 

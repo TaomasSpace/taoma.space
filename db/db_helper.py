@@ -94,11 +94,12 @@ class GifDB:
         characters: Optional[Iterable[str]] = None,
         tags: Optional[Iterable[str]] = None,
         created_at: Optional[str] = None,  # ISO-8601; sonst DEFAULT now()
+        created_by: Optional[int] = None,
     ) -> int:
         with self._connect() as conn:
             cur = conn.cursor()
-            fields = ["title", "url", "nsfw", "anime"]
-            vals: List[Any] = [title, url, 1 if nsfw else 0, anime]
+            fields = ["title", "url", "nsfw", "anime", "created_by"]
+            vals: List[Any] = [title, url, 1 if nsfw else 0, anime, created_by]
 
             if created_at is not None:
                 fields.append("created_at")
@@ -288,6 +289,7 @@ class GifDB:
                 "nsfw": bool(row["nsfw"]),
                 "anime": row["anime"],
                 "created_at": row["created_at"],
+                "created_by": row["created_by"] if "created_by" in row.keys() else None,
                 "characters": chars,
                 "tags": tags,
             }
@@ -444,6 +446,47 @@ class GifDB:
                 """
             ).fetchall()
             return [r["name"] for r in rows]
+
+    def count_user_gifs(self, user_id: int) -> int:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM gifs WHERE created_by = ?", (user_id,)
+            ).fetchone()
+            return int(row[0]) if row else 0
+
+    def is_user_blacklisted(self, user_id: int) -> bool:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT 1 FROM gif_blacklist WHERE user_id = ? LIMIT 1", (user_id,)
+            ).fetchone()
+            return row is not None
+
+    def add_to_gif_blacklist(self, user_id: int, reason: str | None = None) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO gif_blacklist(user_id, reason)
+                VALUES (?,?)
+                ON CONFLICT(user_id) DO UPDATE SET
+                    reason=excluded.reason,
+                    created_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')
+                """,
+                (user_id, reason),
+            )
+
+    def remove_from_gif_blacklist(self, user_id: int) -> None:
+        with self._connect() as conn:
+            conn.execute("DELETE FROM gif_blacklist WHERE user_id = ?", (user_id,))
+
+    def list_gif_blacklist(self) -> list[dict]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT user_id, created_at, reason FROM gif_blacklist ORDER BY created_at DESC"
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def revoke_icon(self, user_id: int, icon_code: str) -> None:
+        raise NotImplementedError("Icon management is not supported for SQLite backend")
 
     def create_token(self, hours_valid: int = 24) -> str:
         token = secrets.token_hex(32)  # 64 Zeichen

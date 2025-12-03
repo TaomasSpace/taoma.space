@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS gifs (
     url         TEXT NOT NULL UNIQUE,
     nsfw        BOOLEAN NOT NULL,
     anime       TEXT,
+    created_by  INTEGER,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 -- Falls deine PG-Version "CREATE INDEX IF NOT EXISTS" nicht kennt,
@@ -19,6 +20,7 @@ CREATE TABLE IF NOT EXISTS gifs (
 CREATE INDEX IF NOT EXISTS idx_gifs_title       ON gifs(title);
 CREATE INDEX IF NOT EXISTS idx_gifs_anime       ON gifs(anime);
 CREATE INDEX IF NOT EXISTS idx_gifs_nsfw        ON gifs(nsfw);
+CREATE INDEX IF NOT EXISTS idx_gifs_created_by  ON gifs(created_by);
 CREATE INDEX IF NOT EXISTS idx_gifs_created_at  ON gifs(created_at);
 
 CREATE TABLE IF NOT EXISTS characters (
@@ -126,6 +128,12 @@ CREATE TABLE IF NOT EXISTS user_icons (
     displayed   BOOLEAN NOT NULL DEFAULT FALSE,
     acquired_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (user_id, icon_id)
+);
+
+CREATE TABLE IF NOT EXISTS gif_blacklist (
+    user_id     INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    reason      TEXT
 );
 
 CREATE TABLE IF NOT EXISTS health_data (
@@ -404,6 +412,42 @@ class PgGifDB:
                 )
                 cur.execute(
                     """
+                    ALTER TABLE gifs
+                    ADD COLUMN IF NOT EXISTS created_by INTEGER
+                """
+                )
+                cur.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_gifs_created_by
+                    ON gifs(created_by)
+                """
+                )
+                cur.execute(
+                    """
+                    DO $$
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM information_schema.table_constraints
+                            WHERE table_name='gifs' AND constraint_name='fk_gifs_created_by'
+                        ) THEN
+                            ALTER TABLE gifs
+                            ADD CONSTRAINT fk_gifs_created_by
+                            FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+                        END IF;
+                    END$$;
+                    """
+                )
+                cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS gif_blacklist (
+                        user_id    INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                        reason     TEXT
+                    )
+                """
+                )
+                cur.execute(
+                    """
                     DO $$
                     BEGIN
                         IF EXISTS (
@@ -471,7 +515,13 @@ class PgGifDB:
             )
 
     def _compose_gif(self, cur, row) -> Dict[str, Any]:
-        gif_id, title, url, nsfw, anime, created_at = row
+        gif_id = row[0]
+        title = row[1]
+        url = row[2]
+        nsfw = row[3]
+        anime = row[4]
+        created_at = row[5]
+        created_by = row[6] if len(row) > 6 else None
         cur.execute(
             """
             SELECT c.name FROM characters c
@@ -499,6 +549,7 @@ class PgGifDB:
             "nsfw": bool(nsfw),
             "anime": anime,
             "created_at": created_at.isoformat(),
+            "created_by": created_by,
             "characters": chars,
             "tags": tags,
         }
@@ -514,10 +565,11 @@ class PgGifDB:
         characters: Optional[Iterable[str]] = None,
         tags: Optional[Iterable[str]] = None,
         created_at: Optional[str] = None,
+        created_by: Optional[int] = None,
     ) -> int:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
-            fields = ["title", "url", "nsfw", "anime"]
-            vals = [title, url, nsfw, anime]
+            fields = ["title", "url", "nsfw", "anime", "created_by"]
+            vals = [title, url, nsfw, anime, created_by]
             if created_at is not None:
                 fields.append("created_at")
                 vals.append(created_at)  # ISO-8601; Postgres parst TIMESTAMPTZ
@@ -599,7 +651,7 @@ class PgGifDB:
     def get_gif(self, gif_id: int) -> Dict[str, Any]:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
-                "SELECT id,title,url,nsfw,anime,created_at FROM gifs WHERE id=%s",
+                "SELECT id,title,url,nsfw,anime,created_at,created_by FROM gifs WHERE id=%s",
                 (gif_id,),
             )
             row = cur.fetchone()
@@ -610,7 +662,7 @@ class PgGifDB:
     def get_gif_by_url(self, gif_url: str) -> Dict[str, Any]:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
-                "SELECT id,title,url,nsfw,anime,created_at FROM gifs WHERE url=%s",
+                "SELECT id,title,url,nsfw,anime,created_at,created_by FROM gifs WHERE url=%s",
                 (gif_url,),
             )
             row = cur.fetchone()
@@ -632,7 +684,7 @@ class PgGifDB:
         elif m == "false":
             where.append("nsfw = FALSE")
 
-        sql = "SELECT id,title,url,nsfw,anime,created_at FROM gifs"
+        sql = "SELECT id,title,url,nsfw,anime,created_at,created_by FROM gifs"
         if where:
             sql += " WHERE " + " AND ".join(where)
         sql += " ORDER BY created_at DESC, id DESC LIMIT %s OFFSET %s"
@@ -649,7 +701,7 @@ class PgGifDB:
         )
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
-                f"SELECT id,title,url,nsfw,anime,created_at FROM gifs WHERE {cond} ORDER BY random() LIMIT 1"
+                f"SELECT id,title,url,nsfw,anime,created_at,created_by FROM gifs WHERE {cond} ORDER BY random() LIMIT 1"
             )
             row = cur.fetchone()
             if not row:
@@ -663,7 +715,7 @@ class PgGifDB:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
                 f"""
-                SELECT g.id,g.title,g.url,g.nsfw,g.anime,g.created_at
+                SELECT g.id,g.title,g.url,g.nsfw,g.anime,g.created_at,g.created_by
                   FROM gifs g
                   JOIN gif_tags gt ON gt.gif_id=g.id
                   JOIN tags t ON t.id=gt.tag_id
@@ -684,7 +736,7 @@ class PgGifDB:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
                 f"""
-                SELECT id,title,url,nsfw,anime,created_at
+                SELECT id,title,url,nsfw,anime,created_at,created_by
                   FROM gifs
                  WHERE anime ILIKE %s AND {cond}
               ORDER BY random() LIMIT 1
@@ -703,7 +755,7 @@ class PgGifDB:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
                 f"""
-                SELECT g.id,g.title,g.url,g.nsfw,g.anime,g.created_at
+                SELECT g.id,g.title,g.url,g.nsfw,g.anime,g.created_at,g.created_by
                   FROM gifs g
                   JOIN gif_characters gc ON gc.gif_id=g.id
                   JOIN characters c ON c.id=gc.character_id
@@ -733,6 +785,42 @@ class PgGifDB:
             """
             )
             return [r[0] for r in cur.fetchall()]
+
+    def count_user_gifs(self, user_id: int) -> int:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM gifs WHERE created_by=%s", (user_id,))
+            row = cur.fetchone()
+            return int(row[0]) if row else 0
+
+    def is_user_blacklisted(self, user_id: int) -> bool:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT 1 FROM gif_blacklist WHERE user_id=%s LIMIT 1", (user_id,)
+            )
+            return cur.fetchone() is not None
+
+    def add_to_gif_blacklist(self, user_id: int, reason: str | None = None) -> None:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO gif_blacklist(user_id, reason)
+                VALUES (%s,%s)
+                ON CONFLICT (user_id)
+                DO UPDATE SET reason=EXCLUDED.reason, created_at=now()
+                """,
+                (user_id, reason),
+            )
+            conn.commit()
+
+    def remove_from_gif_blacklist(self, user_id: int) -> None:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute("DELETE FROM gif_blacklist WHERE user_id=%s", (user_id,))
+            conn.commit()
+
+    def list_gif_blacklist(self) -> list[dict]:
+        with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+            cur.execute("SELECT user_id, created_at, reason FROM gif_blacklist ORDER BY created_at DESC")
+            return cur.fetchall() or []
 
     # --- Sessions (Tokens) ---
     def create_token(self, hours_valid: int = 24, user_id: int | None = None) -> str:
@@ -1325,6 +1413,18 @@ class PgGifDB:
                 ON CONFLICT (user_id, icon_id) DO UPDATE SET displayed=EXCLUDED.displayed
             """,
                 (user_id, icon_id, displayed),
+            )
+            conn.commit()
+
+    def revoke_icon(self, user_id: int, icon_code: str) -> None:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                DELETE FROM user_icons ui
+                USING icons i
+                WHERE ui.user_id=%s AND ui.icon_id=i.id AND i.code=%s
+                """,
+                (user_id, icon_code),
             )
             conn.commit()
 
