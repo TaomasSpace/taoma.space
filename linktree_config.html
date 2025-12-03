@@ -1032,8 +1032,11 @@
                 type="number"
                 min="0"
                 max="100"
-                value="0"
+                value="100"
               />
+              <div class="preview-note muted">
+                0 = transparent, 100 = opaque (matches link background slider).
+              </div>
             </div>
             <div class="field">
               <label for="inDisplayName">Display Name</label>
@@ -1544,10 +1547,11 @@
         $("inVideo").value = String(!!lt.background_is_video);
         $("inDisplayName").value = lt.display_name_mode || "slug";
         $("inCustomName").value = lt.custom_display_name || "";
-        $("inTrans").value =
+        const cardTrans =
           lt.transparency !== undefined && lt.transparency !== null
             ? lt.transparency
             : 0;
+        $("inTrans").value = 100 - Math.min(100, Math.max(0, cardTrans));
         $("inNameFx").value = lt.name_effect || "none";
         $("inBgFx").value = lt.background_effect || "none";
         $("inLinkColor").value = lt.link_color || DEFAULT_LINK_COLOR;
@@ -1799,6 +1803,10 @@
           100,
           Math.max(0, parseInt($("inLinkBgAlpha").value || "100", 10))
         );
+        const cardAlphaInput = Math.min(
+          100,
+          Math.max(0, parseInt($("inTrans").value || "100", 10))
+        );
         const body = {
           slug: $("inSlug").value.trim(),
           device_type: currentDevice,
@@ -1807,7 +1815,7 @@
           song_url: $("inSong").value.trim() || null,
           background_url: $("inBg").value.trim() || null,
           background_is_video: $("inVideo").value === "true",
-          transparency: parseInt($("inTrans").value || "0", 10),
+          transparency: 100 - cardAlphaInput,
           name_effect: $("inNameFx").value,
           background_effect: $("inBgFx").value,
           display_name_mode: $("inDisplayName").value,
