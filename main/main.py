@@ -1693,18 +1693,6 @@ def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or 
         if r.get("is_active", True)
     ]
     frame_enabled = bool(lt.get("discord_frame_enabled", False))
-    if not frame_enabled and lt.get("device_type") == "mobile":
-        try:
-            with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
-                cur.execute(
-                    "SELECT discord_frame_enabled FROM linktrees WHERE user_id=%s AND device_type='pc' LIMIT 1",
-                    (lt["user_id"],),
-                )
-                row = cur.fetchone()
-                if row and row.get("discord_frame_enabled"):
-                    frame_enabled = True
-        except Exception:
-            frame_enabled = frame_enabled
 
     return {
         "id": lt["id"],
