@@ -2080,7 +2080,12 @@
 
       $("fileSong").addEventListener("change", async () => {
         try {
-          const url = await uploadFile("fileSong", "/api/users/me/song");
+          const url = await uploadFile(
+            "fileSong",
+            `/api/users/me/song?device=${encodeURIComponent(
+              currentDevice || "pc"
+            )}`
+          );
           $("inSong").value = url;
           showMsg(msgMeta, "Song uploaded", true);
         } catch (e) {
@@ -2090,7 +2095,12 @@
 
       $("fileBg").addEventListener("change", async () => {
         try {
-          const res = await fetchUpload("fileBg", "/api/users/me/background");
+          const res = await fetchUpload(
+            "fileBg",
+            `/api/users/me/background?device=${encodeURIComponent(
+              currentDevice || "pc"
+            )}`
+          );
           $("inBg").value = res.url;
           if (res.is_video) $("inVideo").value = "true";
           showMsg(msgMeta, "Background uploaded", true);

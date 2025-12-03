@@ -2040,13 +2040,17 @@ def toggle_my_icon_displayed(
 
 @app.post("/api/users/me/song")
 async def upload_song(
-    file: UploadFile = File(...), current: dict = Depends(require_user)
+    file: UploadFile = File(...),
+    current: dict = Depends(require_user),
+    device: DeviceType | None = Query(None, description="pc or mobile"),
 ):
+    _ensure_pg()
     if file.content_type not in ALLOWED_AUDIO:
         raise HTTPException(415, "Unsupported audio type")
     data = await file.read()
     if len(data) > MAX_AUDIO_BYTES:
         raise HTTPException(413, "File too large (max 15MB)")
+    target_device = device or "pc"
 
     old_url = None
     try:
@@ -2055,13 +2059,16 @@ async def upload_song(
                 """
                 SELECT lt.song_url
                   FROM linktrees lt
-                  JOIN users u ON u.linktree_id = lt.id
-                 WHERE u.id = %s
+                 WHERE lt.user_id = %s AND lt.device_type = %s
             """,
-                (current["id"],),
+                (current["id"], target_device),
             )
             row = cur.fetchone()
             old_url = row[0] if row else None
+            if row is None:
+                raise HTTPException(404, "Linktree for device not found")
+    except HTTPException:
+        raise
     except Exception:
         old_url = None
 
@@ -2077,7 +2084,11 @@ async def upload_song(
     out_path = UPLOAD_DIR / fname
     out_path.write_bytes(data)
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
-    db.update_linktree_by_user(current["id"], song_url=url)
+    updated = db.update_linktree_by_user_and_device(
+        current["id"], target_device, song_url=url
+    )
+    if not updated:
+        raise HTTPException(404, "Linktree for device not found")
 
     # Cleanup
     if old_url and old_url != url:
@@ -2088,14 +2099,18 @@ async def upload_song(
 
 @app.post("/api/users/me/background")
 async def upload_background(
-    file: UploadFile = File(...), current: dict = Depends(require_user)
+    file: UploadFile = File(...),
+    current: dict = Depends(require_user),
+    device: DeviceType | None = Query(None, description="pc or mobile"),
 ):
+    _ensure_pg()
     ct = file.content_type or ""
     if ct not in ALLOWED_IMAGE_CT and ct not in ALLOWED_VIDEO_CT:
         raise HTTPException(415, "Unsupported background type")
     data = await file.read()
     if len(data) > MAX_BACKGROUND_BYTES:
         raise HTTPException(413, "File too large (max 50MB)")
+    target_device = device or "pc"
 
     image_ext = _detect_image_ext(data)
     video_ext = "" if image_ext else _detect_video_ext(data, ct)
@@ -2110,13 +2125,16 @@ async def upload_background(
                 """
                 SELECT lt.background_url
                   FROM linktrees lt
-                  JOIN users u ON u.linktree_id = lt.id
-                 WHERE u.id = %s
+                 WHERE lt.user_id = %s AND lt.device_type = %s
             """,
-                (current["id"],),
+                (current["id"], target_device),
             )
             row = cur.fetchone()
             old_url = row[0] if row else None
+            if row is None:
+                raise HTTPException(404, "Linktree for device not found")
+    except HTTPException:
+        raise
     except Exception:
         old_url = None
 
@@ -2127,9 +2145,14 @@ async def upload_background(
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
     is_video = bool(video_ext)
 
-    db.update_linktree_by_user(
-        current["id"], background_url=url, background_is_video=is_video
+    updated = db.update_linktree_by_user_and_device(
+        current["id"],
+        target_device,
+        background_url=url,
+        background_is_video=is_video,
     )
+    if not updated:
+        raise HTTPException(404, "Linktree for device not found")
 
     # Cleanup
     if old_url and old_url != url:

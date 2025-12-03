@@ -1363,6 +1363,27 @@ class PgGifDB:
             )
             conn.commit()
 
+    def update_linktree_by_user_and_device(
+        self, user_id: int, device_type: str, **fields
+    ) -> bool:
+        """Update the user's linktree for a specific device. Returns True if a row changed."""
+        if not fields:
+            return False
+        sets = [f"{k} = %s" for k in fields.keys()]
+        values = list(fields.values())
+        values.extend([user_id, device_type])
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                f"""
+                UPDATE linktrees
+                   SET {", ".join(sets)}, updated_at = now()
+                 WHERE user_id = %s AND device_type = %s
+                """,
+                values,
+            )
+            conn.commit()
+            return cur.rowcount > 0
+
 
 
     # ---------------- Health Data ----------------
