@@ -1017,9 +1017,6 @@
       $("#btnLoginModal").onclick = () => {
         window.location.href = "/login";
       };
-      $("#btnLogout").onclick = async () => {
-        await performLogout($("#authMsg"));
-      };
       $("#btnLogoutModal").onclick = async () => {
         await performLogout($("#authMsgModal"));
       };
