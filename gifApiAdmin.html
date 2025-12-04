@@ -417,7 +417,9 @@
                 <label data-i18n="admin.base">API Base URL</label>
                 <input type="url" id="apiBase" value="" data-i18n-placeholder="ph.base"
                     placeholder="https://your-api.tld" />
-                <label data-i18n="admin.password">Admin Passwort</label>
+                <label>Username</label>
+                <input type="text" id="adminUser" placeholder="admin" />
+                <label>Passwort</label>
                 <input type="password" id="adminPw" placeholder="********" />
                 <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
                     <button class="btn" id="btnLogin" data-i18n="admin.login">Login</button>
@@ -574,10 +576,12 @@
             <h3>Login</h3>
             <button id="toggleLogin" class="btn secondary">×</button>
         </div>
-        <p class="muted">Bitte Admin-Passwort eingeben, um GIFs zu speichern.</p>
+        <p class="muted">Mit deinem Account anmelden (nur Admin-User).</p>
         <label>API Base URL</label>
         <input type="url" id="apiBaseModal" placeholder="https://your-api.tld">
-        <label>Admin Passwort</label>
+        <label>Username</label>
+        <input type="text" id="adminUserModal">
+        <label>Passwort</label>
         <input type="password" id="adminPwModal">
         <div style="display:flex;gap:8px;margin-top:10px">
             <button class="btn" id="btnLoginModal">Login</button>
@@ -728,7 +732,7 @@
         function requireTokenOrAsk() {
             if (!AUTH_TOKEN) {
                 $('#loginModal').style.display = 'block';
-                $('#authMsg').textContent = (getLang() === 'de' ? 'Bitte Admin-Passwort eingeben, um zu speichern.' : 'Please enter admin password to save.');
+                $('#authMsg').textContent = (getLang() === 'de' ? 'Bitte Admin-Account einloggen.' : 'Please log in with your admin account.');
                 $('#authMsg').className = 'status err'; return false;
             } return true;
         }
@@ -740,13 +744,14 @@
             }
         }
         $('#toggleLogin').onclick = () => { const vis = $('#loginModal').style.display !== 'none'; $('#loginModal').style.display = vis ? 'none' : 'block'; };
-        $('#btnLogin').onclick = async () => { await performLogin($('#adminPw').value, $('#apiBase').value, $('#authMsg')); };
-        $('#btnLoginModal').onclick = async () => { await performLogin($('#adminPwModal').value, $('#apiBaseModal').value, $('#authMsgModal')); };
-        async function performLogin(password, baseUrl, statusEl) {
+        $('#btnLogin').onclick = async () => { await performLogin($('#adminUser').value, $('#adminPw').value, $('#apiBase').value, $('#authMsg')); };
+        $('#btnLoginModal').onclick = async () => { await performLogin($('#adminUserModal').value, $('#adminPwModal').value, $('#apiBaseModal').value, $('#authMsgModal')); };
+        async function performLogin(username, password, baseUrl, statusEl) {
             const base = (baseUrl || '').replace(/\/$/, '');
             if (!base) { statusEl.textContent = 'Base URL fehlt.'; statusEl.className = 'status err'; return; }
+            if (!username || !password) { statusEl.textContent = 'Username/Passwort fehlt.'; statusEl.className = 'status err'; return; }
             try {
-                const r = await fetch(base + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+                const r = await fetch(base + '/api/auth/login_user', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
                 const j = await r.json(); if (!r.ok) throw new Error(j.detail || 'Login failed');
                 AUTH_TOKEN = j.token;
                 syncBase();
