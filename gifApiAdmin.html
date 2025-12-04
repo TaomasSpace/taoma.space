@@ -417,10 +417,8 @@
                 <label data-i18n="admin.base">API Base URL</label>
                 <input type="url" id="apiBase" value="" data-i18n-placeholder="ph.base"
                     placeholder="https://your-api.tld" />
-                <label>Username</label>
-                <input type="text" id="adminUser" placeholder="admin" />
-                <label>Passwort</label>
-                <input type="password" id="adminPw" placeholder="********" />
+                <p class="muted">Nutze das normale Website-Login (oben rechts). Dein Session-Cookie wird hier
+                    wiederverwendet.</p>
                 <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
                     <button class="btn" id="btnLogin" data-i18n="admin.login">Login</button>
                     <button class="btn secondary" id="btnLogout" data-i18n="admin.logout">Logout</button>
@@ -579,12 +577,8 @@
         <p class="muted">Mit deinem Account anmelden (nur Admin-User).</p>
         <label>API Base URL</label>
         <input type="url" id="apiBaseModal" placeholder="https://your-api.tld">
-        <label>Username</label>
-        <input type="text" id="adminUserModal">
-        <label>Passwort</label>
-        <input type="password" id="adminPwModal">
         <div style="display:flex;gap:8px;margin-top:10px">
-            <button class="btn" id="btnLoginModal">Login</button>
+            <button class="btn" id="btnLoginModal">Zur Login-Seite</button>
             <button class="btn secondary" id="btnLogoutModal">Logout</button>
         </div>
         <div id="authMsgModal" class="status"></div>
@@ -728,7 +722,19 @@
 
     <script>
         let AUTH_TOKEN = null;
-        const authHeaders = () => AUTH_TOKEN ? { 'X-Auth-Token': AUTH_TOKEN } : {};
+        const authHeaders = () => (AUTH_TOKEN && AUTH_TOKEN !== 'cookie') ? { 'X-Auth-Token': AUTH_TOKEN } : {};
+        const _fetch = window.fetch;
+        window.fetch = (url, opts = {}) => _fetch(url, { credentials: 'include', ...opts });
+        const getBase = () => {
+            const v = ($('#apiBase') ? $('#apiBase').value : '') || window.location.origin;
+            return v.replace(/\/$/, '');
+        };
+        (function ensureBase() {
+            const inp = document.getElementById('apiBase');
+            if (inp && !inp.value) inp.value = window.location.origin;
+            const modal = document.getElementById('apiBaseModal');
+            if (modal && !modal.value) modal.value = window.location.origin;
+        }());
         function requireTokenOrAsk() {
             if (!AUTH_TOKEN) {
                 $('#loginModal').style.display = 'block';
@@ -744,31 +750,13 @@
             }
         }
         $('#toggleLogin').onclick = () => { const vis = $('#loginModal').style.display !== 'none'; $('#loginModal').style.display = vis ? 'none' : 'block'; };
-        $('#btnLogin').onclick = async () => { await performLogin($('#adminUser').value, $('#adminPw').value, $('#apiBase').value, $('#authMsg')); };
-        $('#btnLoginModal').onclick = async () => { await performLogin($('#adminUserModal').value, $('#adminPwModal').value, $('#apiBaseModal').value, $('#authMsgModal')); };
-        async function performLogin(username, password, baseUrl, statusEl) {
-            const base = (baseUrl || '').replace(/\/$/, '');
-            if (!base) { statusEl.textContent = 'Base URL fehlt.'; statusEl.className = 'status err'; return; }
-            if (!username || !password) { statusEl.textContent = 'Username/Passwort fehlt.'; statusEl.className = 'status err'; return; }
-            try {
-                const r = await fetch(base + '/api/auth/login_user', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
-                const j = await r.json(); if (!r.ok) throw new Error(j.detail || 'Login failed');
-                AUTH_TOKEN = j.token;
-                syncBase();
-                statusEl.textContent = (getLang() === 'de' ? 'Login ok. Token aktiv.' : 'Login ok. Token active.');
-                statusEl.className = 'status ok';
-                $('#loginModal').style.display = 'none';
-                ADMIN_OFFSET = 0; await loadAdminList(false); await verifyToken(); await loadBlacklist();
-            } catch (err) {
-                statusEl.textContent = (getLang() === 'de' ? 'Login fehlgeschlagen: ' : 'Login failed: ') + err.message;
-                statusEl.className = 'status err';
-            }
-        }
+        $('#btnLogin').onclick = () => { window.location.href = '/login'; };
+        $('#btnLoginModal').onclick = () => { window.location.href = '/login'; };
         $('#btnLogout').onclick = async () => { await performLogout($('#authMsg')); };
         $('#btnLogoutModal').onclick = async () => { await performLogout($('#authMsgModal')); };
         async function performLogout(statusEl) {
-            const base = ($('#apiBase').value || '').replace(/\/$/, '');
-            try { if (AUTH_TOKEN && base) { await fetch(base + '/api/auth/logout', { method: 'POST', headers: authHeaders() }); } }
+            const base = getBase();
+            try { await fetch(base + '/api/auth/logout', { method: 'POST', headers: authHeaders() }); }
             finally {
                 AUTH_TOKEN = null;
                 statusEl.textContent = (getLang() === 'de' ? 'Ausgeloggt.' : 'Logged out.');
@@ -778,7 +766,7 @@
 
         $('#gifForm').onsubmit = async (e) => {
             e.preventDefault(); if (!requireTokenOrAsk()) return;
-            const base = $('#apiBase').value.replace(/\/$/, ''); const payload = buildPayload();
+            const base = getBase(); const payload = buildPayload();
             if (!payload.title || !payload.url || !payload.anime || !payload.characters.length || !payload.tags.length) {
                 $('#status').textContent = (getLang() === 'de' ? 'Alle Felder sind Pflicht (Titel, Anime, Charaktere, Tags).' : 'All fields are required (title, anime, characters, tags).');
                 $('#status').className = 'status err'; return;
@@ -794,11 +782,16 @@
 
         function setWhoAmI(text) { $('#whoami').textContent = text || ''; }
         async function verifyToken() {
-            const base = $('#apiBase').value.replace(/\/$/, ''); if (!AUTH_TOKEN) return false;
+            const base = getBase();
             try {
                 const r = await fetch(base + '/api/auth/verify', { headers: authHeaders() }); if (!r.ok) return false;
                 const j = await r.json();
-                setWhoAmI((getLang() === 'de' ? 'Eingeloggt. Token gültig' : 'Logged in. Token valid') + (j.expires_at ? ` (${getLang() === 'de' ? 'bis' : 'until'} ${j.expires_at})` : ''));
+                AUTH_TOKEN = 'cookie';
+                if (!j.user || !j.user.admin) {
+                    setWhoAmI(getLang() === 'de' ? 'Kein Admin.' : 'Not an admin.');
+                    return false;
+                }
+                setWhoAmI((getLang() === 'de' ? 'Eingeloggt als ' : 'Logged in as ') + (j.user.username || 'user'));
                 return true;
             } catch { return false; }
         }
@@ -844,13 +837,13 @@
         }
         async function loadAdminList(append = false) {
             if (!AUTH_TOKEN) { $('#loginModal').style.display = 'block'; return; }
-            const base = $('#apiBase').value.replace(/\/$/, ''); const q = encodeURIComponent($('#q').value.trim()); const nsfw = $('#nsfwList').value;
+            const base = getBase(); const q = encodeURIComponent($('#q').value.trim()); const nsfw = $('#nsfwList').value;
             const url = `${base}/api/admin/gifs?q=${q}&nsfw=${nsfw}&limit=${PAGE_SIZE}&offset=${ADMIN_OFFSET}`;
             const r = await fetch(url, { headers: authHeaders() }); if (!r.ok) { $('#tableWrap').textContent = (getLang() === 'de' ? 'Fehler beim Laden: ' : 'Load error: ') + r.statusText; return; }
             const rows = await r.json(); renderTable(rows, append);
         }
         async function deleteGif(id) {
-            const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/api/gifs/' + id, { method: 'DELETE', headers: authHeaders() });
+            const base = getBase(); const r = await fetch(base + '/api/gifs/' + id, { method: 'DELETE', headers: authHeaders() });
             if (!r.ok && r.status !== 204) { const j = await r.json().catch(() => ({ detail: r.statusText })); alert((getLang() === 'de' ? 'Löschen fehlgeschlagen: ' : 'Delete failed: ') + (j.detail || r.statusText)); }
         }
         $('#btnReload').onclick = async () => { ADMIN_OFFSET = 0; await loadAdminList(false); };
@@ -858,12 +851,12 @@
         const origLogin = $('#btnLogin').onclick;
         $('#btnLogin').onclick = async (e) => { await origLogin(e); if (AUTH_TOKEN) { $('#loginModal').style.display = 'none'; ADMIN_OFFSET = 0; await loadAdminList(false); await verifyToken(); await loadBlacklist(); } };
         window.addEventListener('load', async () => { await ensureAuthUI(); if (AUTH_TOKEN) { ADMIN_OFFSET = 0; await loadAdminList(false); await loadBlacklist(); } });
-        $('#btnRandom').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/api/gifs'); const j = await r.json(); $('#quickOut').textContent = JSON.stringify(j, null, 2); };
-        $('#btnTags').onclick = async () => { const base = $('#apiBase').value.replace(/\/$/, ''); const r = await fetch(base + '/api/gifs?list=tags'); const j = await r.json(); $('#quickOut').textContent = JSON.stringify(j, null, 2); };
+        $('#btnRandom').onclick = async () => { const base = getBase(); const r = await fetch(base + '/api/gifs'); const j = await r.json(); $('#quickOut').textContent = JSON.stringify(j, null, 2); };
+        $('#btnTags').onclick = async () => { const base = getBase(); const r = await fetch(base + '/api/gifs?list=tags'); const j = await r.json(); $('#quickOut').textContent = JSON.stringify(j, null, 2); };
 
         async function loadBlacklist() {
             if (!AUTH_TOKEN) return;
-            const base = $('#apiBase').value.replace(/\/$/, '');
+            const base = getBase();
             const statusEl = $('#blStatus');
             statusEl.textContent = '';
             try {
@@ -906,7 +899,7 @@
 
         async function blockUser() {
             if (!requireTokenOrAsk()) return;
-            const base = $('#apiBase').value.replace(/\/$/, '');
+            const base = getBase();
             const userId = Number($('#blUserId').value);
             const reason = $('#blReason').value.trim() || null;
             const statusEl = $('#blStatus');
@@ -923,7 +916,7 @@
 
         async function unblockUser() {
             if (!requireTokenOrAsk()) return;
-            const base = $('#apiBase').value.replace(/\/$/, '');
+            const base = getBase();
             const userId = Number($('#blUserId').value);
             const statusEl = $('#blStatus');
             if (!userId) { statusEl.textContent = 'User ID fehlt.'; statusEl.className = 'status err'; return; }
