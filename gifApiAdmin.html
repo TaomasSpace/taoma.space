@@ -997,8 +997,7 @@
       function requireTokenOrAsk() {
         if (!AUTH_TOKEN) {
           $("#loginModal").style.display = "block";
-          $("#authMsg").textContent =
-            "Please log in with your admin account.";
+          $("#authMsg").textContent = "Please log in with your admin account.";
           $("#authMsg").className = "status err";
           return false;
         }
@@ -1014,9 +1013,6 @@
       $("#toggleLogin").onclick = () => {
         const vis = $("#loginModal").style.display !== "none";
         $("#loginModal").style.display = vis ? "none" : "block";
-      };
-      $("#btnLogin").onclick = () => {
-        window.location.href = "/login";
       };
       $("#btnLoginModal").onclick = () => {
         window.location.href = "/login";
@@ -1036,8 +1032,7 @@
           });
         } finally {
           AUTH_TOKEN = null;
-          statusEl.textContent =
-            "Logged out.";
+          statusEl.textContent = "Logged out.";
           statusEl.className = "status";
         }
       }
@@ -1067,20 +1062,14 @@
           });
           if (res.status === 401) {
             $("#loginModal").style.display = "block";
-            throw new Error(
-              "Unauthorized. Please log in."
-            );
+            throw new Error("Unauthorized. Please log in.");
           }
           const data = await res.json();
           if (!res.ok) throw new Error(data.detail || res.statusText);
-          $("#status").textContent =
-            ("Saved (ID ") +
-            data.id +
-            ")";
+          $("#status").textContent = "Saved (ID " + data.id + ")";
           $("#status").className = "status ok";
         } catch (err) {
-          $("#status").textContent =
-            ("Error: ") + err.message;
+          $("#status").textContent = "Error: " + err.message;
           $("#status").className = "status err";
         }
       };
@@ -1100,10 +1089,7 @@
           return false;
         }
         AUTH_TOKEN = "cookie";
-        setWhoAmI(
-          ("Logged in as ") +
-            (session.user.username || "user")
-        );
+        setWhoAmI("Logged in as " + (session.user.username || "user"));
         return true;
       }
       async function ensureAuthUI() {
@@ -1144,37 +1130,23 @@
             (g.characters || []).join(", ") || "-"
           }</div>
   </div>
-  <a class="btn secondary" href="${g.url}" target="_blank" rel="noopener">${
-            "Open"
-          }</a>
-  <button class="btn secondary" data-load="${payload}">${
-            "Load"
-          }</button>
-  <button class="btn" data-del="${g.id}">${
-            "Delete"
-          }</button>
+  <a class="btn secondary" href="${
+    g.url
+  }" target="_blank" rel="noopener">${"Open"}</a>
+  <button class="btn secondary" data-load="${payload}">${"Load"}</button>
+  <button class="btn" data-del="${g.id}">${"Delete"}</button>
 </div>`;
         };
         const html = rows.map(makeRow).join("");
         if (!append) wrap.innerHTML = "";
         wrap.insertAdjacentHTML(
           "beforeend",
-          html ||
-            `<span class="muted">${
-              "No results."
-            }</span>`
+          html || `<span class="muted">${"No results."}</span>`
         );
         wrap.querySelectorAll("button[data-del]").forEach((btn) => {
           btn.onclick = async () => {
             const id = btn.getAttribute("data-del");
-            if (
-              !confirm(
-                ("Really delete #") +
-                  id +
-                  "?"
-              )
-            )
-              return;
+            if (!confirm("Really delete #" + id + "?")) return;
             await deleteGif(id);
             ADMIN_OFFSET = 0;
             await loadAdminList(false);
@@ -1188,9 +1160,7 @@
               );
               loadIntoBuilder(g);
             } catch (e) {
-              alert(
-                ("Could not load into builder: ") + e.message
-              );
+              alert("Could not load into builder: " + e.message);
             }
           };
         });
@@ -1229,9 +1199,7 @@
         const url = `${base}/api/admin/gifs?q=${q}&nsfw=${nsfw}&limit=${PAGE_SIZE}&offset=${ADMIN_OFFSET}`;
         const r = await fetch(url, { headers: authHeaders() });
         if (!r.ok) {
-          $("#tableWrap").textContent =
-            ("Load error: ") +
-            r.statusText;
+          $("#tableWrap").textContent = "Load error: " + r.statusText;
           return;
         }
         const rows = await r.json();
@@ -1245,10 +1213,7 @@
         });
         if (!r.ok && r.status !== 204) {
           const j = await r.json().catch(() => ({ detail: r.statusText }));
-          alert(
-            ("Delete failed: ") +
-              (j.detail || r.statusText)
-          );
+          alert("Delete failed: " + (j.detail || r.statusText));
         }
       }
       $("#btnReload").onclick = async () => {
