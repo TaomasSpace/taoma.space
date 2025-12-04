@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -511,60 +511,21 @@
             <p class="pill" id="whoami"></p>
             <h1>GIF API Admin</h1>
             <p>
-              Manage GIFs, check badges, and lock/unlock users for GIF
-              management. GIF management.
+              Manage GIFs, check badges, and lock or unlock users who can edit
+              GIFs.
             </p>
           </div>
         </div>
       </section>
-      <!--
-        <section class="grid two">
-            <div class="card">
-                <div class="section-title">
-                    <h2>Login</h2>
-                    <div id="langPicker" style="display:flex;gap:8px;align-items:center">
-                        <label for="lang" style="color:#cfe0ff;font-size:13px">🌐</label>
-                        <select id="lang"
-                            style="background:#0e1330;border:1px solid rgba(255,255,255,.2);color:#e7e9ff;border-radius:8px;padding:6px 8px">
-                            <option value="de">Deutsch</option>
-                            <option value="en">English</option>
-                        </select>
-                    </div>
-                </div>
-                <label data-i18n="admin.base">API Base URL</label>
-                <input type="url" id="apiBase" value="" data-i18n-placeholder="ph.base"
-                    placeholder="https://your-api.tld" />
-                <p class="muted">Nutze das normale Website-Login (oben rechts). Dein Session-Cookie wird hier
-                    wiederverwendet.</p>
-                <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-                    <button class="btn" id="btnLogin" data-i18n="admin.login">Login</button>
-                    <button class="btn secondary" id="btnLogout" data-i18n="admin.logout">Logout</button>
-                    <button class="btn secondary" id="toggleLogin" data-i18n="admin.toggleLogin">Modal zeigen /
-                        verstecken</button>
-                </div>
-                <div id="authMsg" class="status"></div>
-            </div>
-
-            <div class="card">
-                <h2 data-i18n="admin.quick">Schnelltest</h2>
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <button class="btn secondary" id="btnRandom" data-i18n="admin.random">Zufälliges GIF</button>
-                    <button class="btn secondary" id="btnTags" data-i18n="admin.tags">Alle Tags</button>
-                </div>
-                <pre id="quickOut"
-                    style="background:#0b1030;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;color:#cfe0ff;overflow:auto;margin-top:12px;min-height:80px"></pre>
-            </div>
-        </section>
---->
       <section class="grid two">
         <div class="card">
           <div class="section-title">
-            <h2 data-i18n="admin.builder">Create / Edit gif</h2>
+            <h2 data-i18n="admin.builder">Create / Edit GIF</h2>
             <div class="pill" id="pillNSFW">sfw</div>
           </div>
-          <p class="muted">All fields are nessecary.</p>
+          <p class="muted">All fields are necessary.</p>
           <form id="gifForm" class="grid" style="gap: 12px">
-            <label data-i18n="admin.title">Titel</label>
+            <label data-i18n="admin.title">Title</label>
             <input
               type="text"
               id="title"
@@ -589,7 +550,7 @@
                 </select>
               </div>
               <div>
-                <label data-i18n="admin.character">Charakter</label>
+                <label data-i18n="admin.character">Character</label>
                 <div style="display: flex; gap: 8px">
                   <input
                     type="text"
@@ -674,7 +635,7 @@
             <span class="pill">Only Admins</span>
           </div>
           <p class="muted">
-            Blacklisted user can not create, edit or delete any gifs. Every
+            Blacklisted users cannot create, edit, or delete any GIFs. Every
             other feature of the website stays unchanged.
           </p>
           <label for="blUserId">User ID</label>
@@ -705,12 +666,12 @@
 
       <section class="card">
         <div class="section-title">
-          <h2 data-i18n="admin.list">search GIFs</h2>
+          <h2 data-i18n="admin.list">Search GIFs</h2>
           <div style="display: flex; gap: 8px; flex-wrap: wrap">
             <input
               type="text"
               id="q"
-              placeholder="Titel enthält..."
+              placeholder="Title contains..."
               style="min-width: 200px"
             />
             <select id="nsfwList">
@@ -738,7 +699,7 @@
 
     <footer>
       <div class="container foot">
-        <div class="muted">TAOMA • Anime GIF API Admin</div>
+        <div class="muted">TAOMA - Anime GIF API Admin</div>
         <div class="social">
           <a
             class="iso-pro is-gh"
@@ -823,13 +784,13 @@
     >
       <div class="section-title">
         <h3>Login</h3>
-        <button id="toggleLogin" class="btn secondary">×</button>
+        <button id="toggleLogin" class="btn secondary">X</button>
       </div>
-      <p class="muted">Mit deinem Account anmelden (nur Admin-User).</p>
+      <p class="muted">Log in with your account (admins only).</p>
       <label>API Base URL</label>
       <input type="url" id="apiBaseModal" placeholder="https://your-api.tld" />
       <div style="display: flex; gap: 8px; margin-top: 10px">
-        <button class="btn" id="btnLoginModal">Zur Login-Seite</button>
+        <button class="btn" id="btnLoginModal">Go to login page</button>
         <button class="btn secondary" id="btnLogoutModal">Logout</button>
       </div>
       <div id="authMsgModal" class="status"></div>
@@ -845,103 +806,6 @@
         });
       }
 
-      const I18N = {
-        de: {
-          "admin.title": "Titel",
-          "admin.url": "GIF URL",
-          "admin.nsfw": "NSFW?",
-          "admin.anime": "Anime",
-          "admin.character": "Charakter",
-          "admin.tags": "Tags",
-          "admin.addChar": "Hinzufügen",
-          "admin.addTag": "Hinzufügen",
-          "admin.builder": "GIF erstellen / bearbeiten",
-          "admin.list": "GIFs durchsuchen",
-          "admin.login": "Login",
-          "admin.logout": "Logout",
-          "admin.toggleLogin": "Modal zeigen / verstecken",
-          "admin.save": "Speichern",
-          "admin.demo": "Demo befüllen",
-          "admin.clear": "Alles leeren",
-          "admin.quick": "Schnelltest",
-          "admin.random": "Zufälliges GIF",
-          "admin.tagsBtn": "Alle Tags",
-          "admin.base": "API Base URL",
-          "admin.password": "Admin Passwort",
-          "admin.reload": "Neu laden",
-          "admin.more": "Mehr laden",
-          "admin.nsfwAll": "sfw + nsfw",
-          "admin.onlySfw": "nur sfw",
-          "admin.onlyNsfw": "nur nsfw",
-          "ph.base": "https://your-api.tld",
-          "ph.title": "z.B. NazunaSmoke",
-          "ph.anime": "Call of the Night",
-          "ph.character": "Nazuna",
-        },
-        en: {
-          "admin.title": "Title",
-          "admin.url": "GIF URL",
-          "admin.nsfw": "NSFW?",
-          "admin.anime": "Anime",
-          "admin.character": "Character",
-          "admin.tags": "Tags",
-          "admin.addChar": "Add",
-          "admin.addTag": "Add",
-          "admin.builder": "Create / edit GIF",
-          "admin.list": "Browse GIFs",
-          "admin.login": "Login",
-          "admin.logout": "Logout",
-          "admin.toggleLogin": "Show / hide modal",
-          "admin.save": "Save",
-          "admin.demo": "Fill demo",
-          "admin.clear": "Clear all",
-          "admin.quick": "Quick test",
-          "admin.random": "Random GIF",
-          "admin.tagsBtn": "List tags",
-          "admin.base": "API Base URL",
-          "admin.password": "Admin password",
-          "admin.reload": "Reload",
-          "admin.more": "Load more",
-          "admin.nsfwAll": "sfw + nsfw",
-          "admin.onlySfw": "sfw only",
-          "admin.onlyNsfw": "nsfw only",
-          "ph.base": "https://your-api.tld",
-          "ph.title": "e.g. NazunaSmoke",
-          "ph.anime": "Call of the Night",
-          "ph.character": "Nazuna",
-        },
-      };
-      function getLang() {
-        const s = localStorage.getItem("gifapi_lang");
-        if (s) return s;
-        const n = (navigator.language || "en").toLowerCase();
-        return n.startsWith("de") ? "de" : "en";
-      }
-      function applyI18n(lang) {
-        const dict = I18N[lang] || I18N.en;
-        document.querySelectorAll("[data-i18n]").forEach((el) => {
-          const k = el.getAttribute("data-i18n");
-          if (dict[k] != null) el.innerHTML = dict[k];
-        });
-        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
-          const k = el.getAttribute("data-i18n-placeholder");
-          if (dict[k] != null) el.setAttribute("placeholder", dict[k]);
-        });
-        const sel = document.getElementById("lang");
-        if (sel) sel.value = lang;
-      }
-      window.addEventListener("load", () => {
-        const lang = getLang();
-        applyI18n(lang);
-        const picker = document.getElementById("lang");
-        picker.value = lang;
-        picker.addEventListener("change", () => {
-          const l = picker.value;
-          localStorage.setItem("gifapi_lang", l);
-          applyI18n(l);
-        });
-      });
-
       const $ = (sel) => document.querySelector(sel);
       const chars = new Set();
       const tags = new Set();
@@ -951,7 +815,7 @@
         [...valuesSet].forEach((v) => {
           const chip = document.createElement("span");
           chip.className = "chip";
-          chip.innerHTML = `<span>${v}</span><button title="remove">×</button>`;
+          chip.innerHTML = `<span>${v}</span><button title="remove">X</button>`;
           chip.querySelector("button").onclick = () => {
             valuesSet.delete(v);
             renderChips(containerId, valuesSet);
@@ -1134,9 +998,7 @@
         if (!AUTH_TOKEN) {
           $("#loginModal").style.display = "block";
           $("#authMsg").textContent =
-            getLang() === "de"
-              ? "Please log in with your admin account."
-              : "Please log in with your admin account.";
+            "Please log in with your admin account.";
           $("#authMsg").className = "status err";
           return false;
         }
@@ -1175,7 +1037,7 @@
         } finally {
           AUTH_TOKEN = null;
           statusEl.textContent =
-            getLang() === "de" ? "Logged out." : "Logged out.";
+            "Logged out.";
           statusEl.className = "status";
         }
       }
@@ -1193,9 +1055,7 @@
           !payload.tags.length
         ) {
           $("#status").textContent =
-            getLang() === "de"
-              ? "All fields are required (title, anime, characters, tags)."
-              : "All fields are required (title, anime, characters, tags).";
+            "All fields are required (title, anime, characters, tags).";
           $("#status").className = "status err";
           return;
         }
@@ -1208,21 +1068,19 @@
           if (res.status === 401) {
             $("#loginModal").style.display = "block";
             throw new Error(
-              getLang() === "de"
-                ? "Unauthorized. Please log in."
-                : "Unauthorized. Please log in."
+              "Unauthorized. Please log in."
             );
           }
           const data = await res.json();
           if (!res.ok) throw new Error(data.detail || res.statusText);
           $("#status").textContent =
-            (getLang() === "de" ? "Saved ✓ (ID " : "Saved ✓ (ID ") +
+            ("Saved (ID ") +
             data.id +
             ")";
           $("#status").className = "status ok";
         } catch (err) {
           $("#status").textContent =
-            (getLang() === "de" ? "Error: " : "Error: ") + err.message;
+            ("Error: ") + err.message;
           $("#status").className = "status err";
         }
       };
@@ -1234,16 +1092,16 @@
       async function verifyToken() {
         const session = await fetchSession();
         if (!session || !session.user) {
-          setWhoAmI(getLang() === "de" ? "Not logged in." : "Not logged in.");
+          setWhoAmI("Not logged in.");
           return false;
         }
         if (!session.user.admin) {
-          setWhoAmI(getLang() === "de" ? "Not an admin." : "Not an admin.");
+          setWhoAmI("Not an admin.");
           return false;
         }
         AUTH_TOKEN = "cookie";
         setWhoAmI(
-          (getLang() === "de" ? "Logged in as " : "Logged in as ") +
+          ("Logged in as ") +
             (session.user.username || "user")
         );
         return true;
@@ -1252,7 +1110,7 @@
         const ok = await verifyToken();
         if (!ok) {
           $("#loginModal").style.display = "block";
-          setWhoAmI(getLang() === "de" ? "Not logged in" : "Not logged in.");
+          setWhoAmI("Not logged in.");
         }
       }
       let ADMIN_OFFSET = 0;
@@ -1279,21 +1137,21 @@
   }" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.08)"/>
   <div>
     <div style="color:#e7e9ff;font-weight:700">${g.title}</div>
-    <div class="muted">#${g.id} · ${g.anime || "-"} · ${
+    <div class="muted">#${g.id} | ${g.anime || "-"} | ${
             g.nsfw ? "nsfw" : "sfw"
-          } · ${g.created_by ? "User " + g.created_by : "kein Owner"}</div>
+          } | ${g.created_by ? "User " + g.created_by : "no owner"}</div>
     <div class="muted">Tags: ${(g.tags || []).join(", ") || "-"} | Chars: ${
             (g.characters || []).join(", ") || "-"
           }</div>
   </div>
   <a class="btn secondary" href="${g.url}" target="_blank" rel="noopener">${
-            getLang() === "de" ? "Open" : "Open"
+            "Open"
           }</a>
   <button class="btn secondary" data-load="${payload}">${
-            getLang() === "de" ? "Load" : "Load"
+            "Load"
           }</button>
   <button class="btn" data-del="${g.id}">${
-            getLang() === "de" ? "Delete" : "Delete"
+            "Delete"
           }</button>
 </div>`;
         };
@@ -1303,7 +1161,7 @@
           "beforeend",
           html ||
             `<span class="muted">${
-              getLang() === "de" ? "No results." : "No results."
+              "No results."
             }</span>`
         );
         wrap.querySelectorAll("button[data-del]").forEach((btn) => {
@@ -1311,7 +1169,7 @@
             const id = btn.getAttribute("data-del");
             if (
               !confirm(
-                (getLang() === "de" ? "Really delete #" : "Really delete #") +
+                ("Really delete #") +
                   id +
                   "?"
               )
@@ -1331,9 +1189,7 @@
               loadIntoBuilder(g);
             } catch (e) {
               alert(
-                (getLang() === "de"
-                  ? "Could not load into builder: "
-                  : "Could not load into builder: ") + e.message
+                ("Could not load into builder: ") + e.message
               );
             }
           };
@@ -1359,9 +1215,7 @@
           formCard.style.boxShadow = "";
         }, 800);
         $("#status").textContent =
-          getLang() === "de"
-            ? "Loaded from list. You can edit or save now."
-            : "Loaded from list. You can edit or save now.";
+          "Loaded from list. You can edit or save now.";
         $("#status").className = "status ok";
       }
       async function loadAdminList(append = false) {
@@ -1376,7 +1230,7 @@
         const r = await fetch(url, { headers: authHeaders() });
         if (!r.ok) {
           $("#tableWrap").textContent =
-            (getLang() === "de" ? "load error: " : "Load error: ") +
+            ("Load error: ") +
             r.statusText;
           return;
         }
@@ -1392,7 +1246,7 @@
         if (!r.ok && r.status !== 204) {
           const j = await r.json().catch(() => ({ detail: r.statusText }));
           alert(
-            (getLang() === "de" ? "Delete failed: " : "Delete failed: ") +
+            ("Delete failed: ") +
               (j.detail || r.statusText)
           );
         }
@@ -1414,19 +1268,6 @@
           await loadBlacklist();
         }
       });
-      $("#btnRandom").onclick = async () => {
-        const base = getBase();
-        const r = await fetch(base + "/api/gifs");
-        const j = await r.json();
-        $("#quickOut").textContent = JSON.stringify(j, null, 2);
-      };
-      $("#btnTags").onclick = async () => {
-        const base = getBase();
-        const r = await fetch(base + "/api/gifs?list=tags");
-        const j = await r.json();
-        $("#quickOut").textContent = JSON.stringify(j, null, 2);
-      };
-
       async function loadBlacklist() {
         if (!AUTH_TOKEN) return;
         const base = getBase();
@@ -1441,7 +1282,7 @@
           const wrap = $("#blList");
           wrap.innerHTML = "";
           if (!list.length) {
-            wrap.innerHTML = '<span class="muted">Keine Einträge.</span>';
+            wrap.innerHTML = '<span class="muted">No entries.</span>';
             return;
           }
           list.forEach((entry) => {
@@ -1469,7 +1310,7 @@
             };
           });
         } catch (err) {
-          statusEl.textContent = "Fehler beim Laden: " + err.message;
+          statusEl.textContent = "Error while loading: " + err.message;
           statusEl.className = "status err";
         }
       }
@@ -1508,7 +1349,7 @@
         const userId = Number($("#blUserId").value);
         const statusEl = $("#blStatus");
         if (!userId) {
-          statusEl.textContent = "missing User ID.";
+          statusEl.textContent = "User ID is missing.";
           statusEl.className = "status err";
           return;
         }

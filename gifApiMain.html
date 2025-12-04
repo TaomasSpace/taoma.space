@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Anime GIF API – Explorer & Docs</title>
+    <title>Anime GIF API - Explorer & Docs</title>
     <style>
       :root {
         --bg: #0e1020;
@@ -436,19 +436,19 @@
     </header>
 
     <div class="wrap">
-      <h1 data-i18n="title.main">Anime GIF API – Explorer &amp; Docs</h1>
+      <h1 data-i18n="title.main">Anime GIF API - Explorer &amp; Docs</h1>
 
       <p data-i18n="intro.main">
         Create requests to <code>/gifs</code>, see the URL, the code (Python
         &amp; cURL) and the answer. Learn the rules &amp; examples below. If
-        everything is empty, we use <code>/gifs?</code> → a random gif.
+        everything is empty, we call <code>/gifs?</code> for a random GIF.
       </p>
 
       <div class="card">
         <h2>Ownership &amp; Blacklist</h2>
         <p class="muted">
-          Everyone kan get & create gifs. And its possible to edit & delete your
-          own gifs. Admins can manage all gifs and set user on the blacklist.
+          Everyone can get and create GIFs. You can edit and delete your own
+          GIFs. Admins can manage all GIFs and add users to the blacklist.
         </p>
       </div>
 
@@ -458,13 +458,13 @@
 
         <div class="row cols-3">
           <div>
-            <label for="base" data-i18n="label.base">API-Basis-URL</label>
+            <label for="base" data-i18n="label.base">API Base URL</label>
             <input
               id="base"
               type="url"
               value="https://taoma.space"
               data-i18n-placeholder="ph.base"
-              placeholder="https://deine-api.tld"
+              placeholder="https://your-api.tld"
               required
             />
             <div class="hint" data-i18n="hint.base">
@@ -480,13 +480,13 @@
               <option value="only">only</option>
             </select>
             <div class="hint" data-i18n="hint.nsfw">
-              Standard ist <code>false</code>.
+              Default is <code>false</code>.
             </div>
           </div>
           <div>
-            <label for="list" data-i18n="label.list">Liste (list)</label>
+            <label for="list" data-i18n="label.list">List (list)</label>
             <select id="list">
-              <option value="">—</option>
+              <option value="">-</option>
               <option value="tags">tags</option>
             </select>
             <div class="hint" data-i18n="hint.list">
@@ -497,22 +497,22 @@
 
         <div class="row cols-3">
           <div>
-            <label for="q" data-i18n="label.q">Search in the titel (q)</label>
+            <label for="q" data-i18n="label.q">Search in the title (q)</label>
             <input
               id="q"
               type="text"
               data-i18n-placeholder="ph.q"
-              placeholder="z. B. Nazuna"
+              placeholder="e.g. Nazuna"
             />
             <div class="hint" data-i18n="hint.q">
-              If this is set, then dont use any tag/anime/character.
+              If this is set, don't use tag/anime/character.
             </div>
           </div>
           <div>
             <label for="tag" data-i18n="label.tag">Tag (tag)</label>
             <div class="actions">
               <select id="tag">
-                <option value="">—</option>
+                <option value="">-</option>
               </select>
               <button
                 id="refreshTags"
@@ -564,10 +564,10 @@
               min="1"
               max="200"
               data-i18n-placeholder="ph.limit"
-              placeholder="z. B. 50"
+              placeholder="e.g. 50"
             />
             <div class="hint" data-i18n="hint.limit">
-              The max amount of resulsts.
+              The max amount of results.
             </div>
           </div>
           <div>
@@ -577,10 +577,10 @@
               type="number"
               min="0"
               data-i18n-placeholder="ph.offset"
-              placeholder="z. B. 0"
+              placeholder="e.g. 0"
             />
             <div class="hint" data-i18n="hint.offset">
-              Startposition (Pagination).
+              Start position (pagination).
             </div>
           </div>
         </div>
@@ -660,7 +660,7 @@
       <!-- RESULT -->
       <div class="card">
         <h2 data-i18n="section.response">Answer</h2>
-        <div id="resultSummary" class="muted">—</div>
+        <div id="resultSummary" class="muted">-</div>
 
         <div id="singleView" style="display: none" class="row cols-2">
           <div>
@@ -702,14 +702,14 @@
 
         <div class="actions" style="margin-top: 10px">
           <button id="prevPage" class="btn secondary" data-i18n="btn.prev">
-            « Back
+            < Back
           </button>
           <button id="nextPage" class="btn secondary" data-i18n="btn.next">
-            next »
+            Next >
           </button>
         </div>
 
-        <pre id="rawBox" class="mono muted" style="margin-top: 12px">—</pre>
+        <pre id="rawBox" class="mono muted" style="margin-top: 12px">-</pre>
       </div>
 
       <!-- HISTORY -->
@@ -740,7 +740,7 @@
           </summary>
           <ul>
             <li data-i18n="docs.rule1">
-              <span class="kbd">q</span> (Titel search) is exclusive:
+              <span class="kbd">q</span> (title search) is exclusive:
               <b>Either</b> <span class="kbd">q</span> <b>or</b> exactly one of
               <span class="kbd">tag</span>/<span class="kbd">anime</span>/<span
                 class="kbd"
@@ -748,18 +748,17 @@
               >.
             </li>
             <li data-i18n="docs.rule2">
-              <span class="kbd">nsfw</span> ∈ {<code>false</code>,
-              <code>true</code>, <code>only</code>} – Standard
-              <code>false</code>.
+              <span class="kbd">nsfw</span> ? {<code>false</code>,
+              <code>true</code>, <code>only</code>} - Default: <code>false</code>.
             </li>
             <li data-i18n="docs.rule3">
               A request without any filter (<code>/gifs?</code>) returns a
-              random gif with the NSFW filter depending on <code>nsfw</code>
+              random GIF with the NSFW filter depending on <code>nsfw</code>.
             </li>
             <li data-i18n="docs.rule4">
-              <span class="kbd">l</span> &amp;
-              <span class="kbd">offset</span> are used for Pagination (only
-              useful for Titelsearch).
+              <span class="kbd">limit</span> &amp;
+              <span class="kbd">offset</span> are used for pagination (only
+              useful for title search).
             </li>
             <li data-i18n="docs.rule5">
               <code>list=tags</code> returns all tags (ignores other filters).
@@ -783,7 +782,7 @@
                 <td>string</td>
                 <td><code>q=Nazuna</code></td>
                 <td data-i18n="docs.row.q">
-                  Searched in <b>Titel</b>. without tag/anime/character.
+                  Searches the <b>title</b>; do not combine with tag/anime/character.
                 </td>
               </tr>
               <tr>
@@ -828,7 +827,7 @@
                 <td>int</td>
                 <td><code>limit=20</code></td>
                 <td data-i18n="docs.row.limit">
-                  Max. Results (1–200). for titelsearch.
+                  Max results (1-200) for title search.
                 </td>
               </tr>
               <tr>
@@ -836,7 +835,7 @@
                 <td>int</td>
                 <td><code>offset=20</code></td>
                 <td data-i18n="docs.row.offset">
-                  Startposition (Pagination). for titelsearch.
+                  Start position (pagination) for title search.
                 </td>
               </tr>
             </tbody>
@@ -854,7 +853,7 @@
 
     <footer>
       <div class="container foot">
-        <div class="muted">TAOMAT • Anime GIF API</div>
+        <div class="muted">TAOMAT - Anime GIF API</div>
         <div class="social">
           <a
             class="iso-pro is-gh"
@@ -980,7 +979,7 @@
         if (hasQ && singles.length > 0)
           return {
             ok: false,
-            msg: "Set either 'q' OR one of 'tag/anime/character' – NOT both.",
+            msg: "Set either 'q' OR one of 'tag/anime/character' - NOT both.",
           };
         if (!hasQ && singles.length > 1)
           return {
@@ -1151,7 +1150,7 @@ print(r.json())`;
           const tagsList = await r.json();
           const cur = tag.value;
           tag.innerHTML =
-            '<option value="">—</option>' +
+            '<option value="">-</option>' +
             (tagsList || []).map((t) => `<option>${t}</option>`).join("");
           if ([...tag.options].some((o) => o.value === cur)) tag.value = cur;
         } catch (e) {
@@ -1193,7 +1192,7 @@ print(r.json())`;
             <div class="actions">
               <button class="btn secondary" data-open="${
                 it.url
-              }">Öffnen</button>
+              }">Open</button>
               <button class="btn ghost" data-apply="${
                 it.url
               }">Load into Builder</button>
@@ -1262,18 +1261,18 @@ print(r.json())`;
           singleView.style.display = "none";
           listView.style.display = "none";
           if (Array.isArray(data)) {
-            resultSummary.textContent = `${data.length} Ergebnis(se).`;
+            resultSummary.textContent = `${data.length} result(s).`;
             listView.innerHTML = data
               .map(
                 (g) => `
             <div class="gifCard">
               <img src="${g.url || ""}" alt="">
               <div style="color:#e7e9ff;font-weight:700;margin-top:6px">${
-                g.title || "—"
+                g.title || "-"
               }</div>
-              <div class="muted" style="font-size:12px">#${g.id || "?"} • ${
-                  g.anime || "—"
-                } • ${g.nsfw ? "nsfw" : "sfw"}</div>
+              <div class="muted" style="font-size:12px">#${g.id || "?"} - ${
+                  g.anime || "-"
+                } - ${g.nsfw ? "nsfw" : "sfw"}</div>
               <div class="actions" style="margin-top:6px">
                 <a class="btn secondary" href="${
                   g.url || "#"
@@ -1299,21 +1298,21 @@ print(r.json())`;
             gifImg.src = data.url;
             openGif.href = data.url;
             gifMeta.innerHTML = `
-            <div><b>Title:</b> ${data.title || "—"}</div>
-            <div><b>ID:</b> ${data.id || "—"}</div>
-            <div><b>Anime:</b> ${data.anime || "—"} &nbsp; <span class="pill">${
+            <div><b>Title:</b> ${data.title || "-"}</div>
+            <div><b>ID:</b> ${data.id || "-"}</div>
+            <div><b>Anime:</b> ${data.anime || "-"} &nbsp; <span class="pill">${
               data.nsfw ? "nsfw" : "sfw"
             }</span></div>
-            <div><b>Tags:</b> ${(data.tags || []).join(", ") || "—"}</div>
+            <div><b>Tags:</b> ${(data.tags || []).join(", ") || "-"}</div>
             <div><b>Characters:</b> ${
-              (data.characters || []).join(", ") || "—"
+              (data.characters || []).join(", ") || "-"
             }</div>
-            <div class="muted">created_at: ${data.created_at || "—"}</div>`;
+            <div class="muted">created_at: ${data.created_at || "-"}</div>`;
             singleView.style.display = "";
           } else if (p.list === "tags" && Array.isArray(data)) {
             resultSummary.textContent = `${data.length} Tags.`;
           } else {
-            resultSummary.textContent = "Response recieved.";
+            resultSummary.textContent = "Response received.";
           }
 
           pushHistory(url);
@@ -1351,222 +1350,6 @@ print(r.json())`;
         renderHistory();
       });
 
-      /* ---------------- I18N ---------------- */
-      const I18N = {
-        de: {
-          "title.main": "Anime GIF API – Explorer & Docs",
-          "intro.main":
-            "Baue Anfragen an <code>/gifs</code>, sieh sofort die URL, den Code (Python &amp; cURL) und die Antwort. Wenn alles leer ist, verwenden wir <code>/gifs?</code> → ein zufälliges GIF.",
-          "section.builder": "Query Builder",
-          "label.base": "API-Basis-URL",
-          "hint.base": "Deine deployte Instanz. Kein Slash am Ende nötig.",
-          "label.nsfw": "NSFW-Modus",
-          "hint.nsfw": "Standard ist <code>false</code>.",
-          "label.list": "Liste (list)",
-          "hint.list":
-            "Mit <code>list=tags</code> bekommst du alle verfügbaren Tags.",
-          "label.q": "Suche im Titel (q)",
-          "hint.q": "Wenn gesetzt, dann kein tag/anime/character benutzen.",
-          "label.tag": "Tag (tag)",
-          "btn.refreshTags": "Tags neu laden",
-          "hint.tags": "Dropdown lädt mit <code>GET /gifs?list=tags</code>.",
-          "label.anime": "Anime (anime)",
-          "hint.anime": "Exakter Match (case-insensitive).",
-          "label.character": "Character (character)",
-          "hint.character": "Exakter Match (case-insensitive).",
-          "label.limit": "Limit (limit)",
-          "hint.limit": "Wie viele Ergebnisse maximal zurückgegeben werden.",
-          "label.offset": "Offset (offset)",
-          "hint.offset": "Startposition (Pagination).",
-          "btn.presetRandom": "Preset: Random",
-          "btn.presetSfw": "Preset: Random SFW",
-          "btn.presetTag": "Preset: Tag",
-          "btn.presetAnime": "Preset: Anime",
-          "btn.presetChar": "Preset: Character",
-          "btn.reset": "Zurücksetzen",
-          "label.finalUrl": "Fertige URL",
-          "btn.copy": "Kopieren",
-          "btn.share": "Share-Link",
-          "btn.run": "Ausführen",
-          "tab.py": "Python (requests)",
-          "tab.curl": "cURL",
-          "btn.copyCode": "Code kopieren",
-          "section.response": "Antwort",
-          "btn.openGif": "GIF öffnen",
-          "btn.copyGifUrl": "GIF-URL kopieren",
-          "btn.prev": "« Zurück",
-          "btn.next": "Weiter »",
-          "section.history": "History (local)",
-          "history.info":
-            "Zuletzt ausgeführte Anfragen. Klicke, um sie erneut zu laden.",
-          "btn.clearHistory": "History löschen",
-          "section.docs": "API-Dokumentation",
-          "docs.rules.title": "<b>Regeln &amp; Verhalten</b>",
-          "docs.rule1":
-            "<span class='kbd'>q</span> (Titelsuche) ist exklusiv: <b>Entweder</b> <span class='kbd'>q</span> <b>oder</b> genau eins von <span class='kbd'>tag</span>/<span class='kbd'>anime</span>/<span class='kbd'>character</span>.",
-          "docs.rule2":
-            "<span class='kbd'>nsfw</span> ∈ {<code>false</code>, <code>true</code>, <code>only</code>} – Standard <code>false</code>.",
-          "docs.rule3":
-            "Ohne Filter liefert <code>/gifs?</code> ein zufälliges GIF (mit NSFW-Filter laut <code>nsfw</code>).",
-          "docs.rule4":
-            "<span class='kbd'>limit</span> &amp; <span class='kbd'>offset</span> dienen der Pagination (nur bei Titelsuche sinnvoll).",
-          "docs.rule5":
-            "<code>list=tags</code> gibt alle Tags zurück (ignoriert andere Filter).",
-          "tbl.param": "Parameter",
-          "tbl.type": "Typ",
-          "tbl.example": "Beispiel",
-          "tbl.desc": "Beschreibung",
-          "docs.row.q":
-            "Suche im <b>Titel</b>. Nicht zusammen mit tag/anime/character.",
-          "docs.row.tag": "Random GIF mit diesem Tag.",
-          "docs.row.anime": "Random GIF aus diesem Anime.",
-          "docs.row.character": "Random GIF mit diesem Character.",
-          "docs.row.list": "Liste aller Tags.",
-          "docs.row.nsfw":
-            "<code>false</code>=nur SFW, <code>true</code>=beides, <code>only</code>=nur NSFW.",
-          "docs.row.limit": "Max. Ergebnisse (1–200). Für Titelsuche.",
-          "docs.row.offset": "Startposition (Pagination). Für Titelsuche.",
-          "docs.note":
-            "Hinweis: Bei Tippfehlern in <code>anime</code>/<code>character</code> liefert die API sinnvolle Vorschläge im Fehlerobjekt (HTTP 404, Feld <code>suggestions</code>).",
-          "ph.q": "z. B. Nazuna",
-          "ph.anime": "Call of the Night",
-          "ph.character": "Nazuna",
-          "ph.limit": "z. B. 50",
-          "ph.offset": "z. B. 0",
-          "ph.base": "https://deine-api.tld",
-        },
-        en: {
-          "title.main": "Anime GIF API – Explorer & Docs",
-          "intro.main":
-            "Build requests for <code>/gifs</code>, instantly see the URL, code (Python &amp; cURL) and the response. If everything is empty we call <code>/gifs?</code> → a random GIF.",
-          "section.builder": "Query Builder",
-          "label.base": "API Base URL",
-          "hint.base": "Your deployed instance. No trailing slash needed.",
-          "label.nsfw": "NSFW mode",
-          "hint.nsfw": "Default is <code>false</code>.",
-          "label.list": "List (list)",
-          "hint.list":
-            "Use <code>list=tags</code> to fetch all available tags.",
-          "label.q": "Search in title (q)",
-          "hint.q": "If set, do not use tag/anime/character.",
-          "label.tag": "Tag (tag)",
-          "btn.refreshTags": "Reload tags",
-          "hint.tags":
-            "Dropdown is loaded via <code>GET /gifs?list=tags</code>.",
-          "label.anime": "Anime (anime)",
-          "hint.anime": "Exact match (case-insensitive).",
-          "label.character": "Character (character)",
-          "hint.character": "Exact match (case-insensitive).",
-          "label.limit": "Limit (limit)",
-          "hint.limit": "Maximum number of results returned.",
-          "label.offset": "Offset (offset)",
-          "hint.offset": "Start position for pagination.",
-          "btn.presetRandom": "Preset: Random",
-          "btn.presetSfw": "Preset: Random SFW",
-          "btn.presetTag": "Preset: Tag",
-          "btn.presetAnime": "Preset: Anime",
-          "btn.presetChar": "Preset: Character",
-          "btn.reset": "Reset",
-          "label.finalUrl": "Final URL",
-          "btn.copy": "Copy",
-          "btn.share": "Share link",
-          "btn.run": "Run",
-          "tab.py": "Python (requests)",
-          "tab.curl": "cURL",
-          "btn.copyCode": "Copy code",
-          "section.response": "Response",
-          "btn.openGif": "Open GIF",
-          "btn.copyGifUrl": "Copy GIF URL",
-          "btn.prev": "« Prev",
-          "btn.next": "Next »",
-          "section.history": "History (local)",
-          "history.info": "Most recent requests. Click to replay.",
-          "btn.clearHistory": "Clear history",
-          "section.docs": "API Documentation",
-          "docs.rules.title": "<b>Rules &amp; Behaviour</b>",
-          "docs.rule1":
-            "<span class='kbd'>q</span> (title search) is exclusive: <b>either</b> <span class='kbd'>q</span> <b>or</b> exactly one of <span class='kbd'>tag</span>/<span class='kbd'>anime</span>/<span class='kbd'>character</span>.",
-          "docs.rule2":
-            "<span class='kbd'>nsfw</span> ∈ {<code>false</code>, <code>true</code>, <code>only</code>} – default <code>false</code>.",
-          "docs.rule3":
-            "With no filters <code>/gifs?</code> returns a random GIF (respecting <code>nsfw</code>).",
-          "docs.rule4":
-            "<span class='kbd'>limit</span> &amp; <span class='kbd'>offset</span> are for pagination (useful with title search).",
-          "docs.rule5":
-            "<code>list=tags</code> returns all tags (ignores other filters).",
-          "tbl.param": "Parameter",
-          "tbl.type": "Type",
-          "tbl.example": "Example",
-          "tbl.desc": "Description",
-          "docs.row.q":
-            "Search in <b>title</b>. Do not combine with tag/anime/character.",
-          "docs.row.tag": "Random GIF with this tag.",
-          "docs.row.anime": "Random GIF from this anime.",
-          "docs.row.character": "Random GIF with this character.",
-          "docs.row.list": "List of all tags.",
-          "docs.row.nsfw":
-            "<code>false</code>=SFW only, <code>true</code>=both, <code>only</code>=NSFW only.",
-          "docs.row.limit": "Max results (1–200). For title search.",
-          "docs.row.offset": "Start position (pagination). For title search.",
-          "docs.note":
-            "Note: When you misspell <code>anime</code>/<code>character</code>, the API returns suggestions in the error object (HTTP 404, field <code>suggestions</code>).",
-          "ph.q": "e.g. Nazuna",
-          "ph.anime": "Call of the Night",
-          "ph.character": "Nazuna",
-          "ph.limit": "e.g. 50",
-          "ph.offset": "e.g. 0",
-          "ph.base": "https://your-api.tld",
-        },
-      };
-
-      function getLang() {
-        const saved = localStorage.getItem("gifapi_lang");
-        if (saved) return saved;
-        const nav = (navigator.language || "en").toLowerCase();
-        return nav.startsWith("de") ? "de" : "en";
-      }
-
-      function applyI18n(lang) {
-        const dict = I18N[lang] || I18N.en;
-
-        // Set document title, too
-        if (dict["title.main"]) document.title = dict["title.main"];
-
-        document.querySelectorAll("[data-i18n]").forEach((n) => {
-          const k = n.getAttribute("data-i18n");
-          if (dict[k] != null) n.innerHTML = dict[k];
-        });
-        document.querySelectorAll("[data-i18n-placeholder]").forEach((n) => {
-          const k = n.getAttribute("data-i18n-placeholder");
-          if (dict[k] != null) n.setAttribute("placeholder", dict[k]);
-        });
-        document.querySelectorAll("[data-i18n-attr]").forEach((n) => {
-          n.getAttribute("data-i18n-attr")
-            .split("|")
-            .forEach((pair) => {
-              const [attr, k] = pair.split(":");
-              if (attr && k && dict[k] != null)
-                n.setAttribute(attr.trim(), dict[k]);
-            });
-        });
-
-        const select = document.getElementById("lang");
-        if (select) select.value = lang;
-      }
-
-      window.addEventListener("load", () => {
-        const lang = getLang();
-        applyI18n(lang);
-        const picker = document.getElementById("lang");
-        if (picker) {
-          picker.value = lang;
-          picker.addEventListener("change", () => {
-            const l = picker.value;
-            localStorage.setItem("gifapi_lang", l);
-            applyI18n(l);
-          });
-        }
-      });
     </script>
   </body>
 </html>
