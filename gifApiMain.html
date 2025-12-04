@@ -439,56 +439,17 @@
       <h1 data-i18n="title.main">Anime GIF API – Explorer &amp; Docs</h1>
 
       <p data-i18n="intro.main">
-        Baue Anfragen an <code>/gifs</code>, sieh sofort die URL, den Code
-        (Python &amp; cURL) und die Antwort. Lerne unten die Regeln &amp;
-        Beispiele. Wenn alles leer ist, verwenden wir <code>/gifs?</code> → ein
-        zufälliges GIF.
+        Create requests to <code>/gifs</code>, see the URL, the code (Python
+        &amp; cURL) and the answer. Learn the rules &amp; examples below. If
+        everything is empty, we use <code>/gifs?</code> → a random gif.
       </p>
 
       <div class="card">
         <h2>Ownership &amp; Blacklist</h2>
         <p class="muted">
-          Jeder kann GIFs abrufen. Anlegen, Ändern und Löschen ist nur für
-          eingeloggte Nutzer erlaubt – jeweils nur für ihre eigenen GIFs. Admins
-          dürfen alle GIFs managen, User sperren/entsperren (Blacklist) und
-          vergeben automatisch Badges für Upload-Meilensteine.
+          Everyone kan get & create gifs. And its possible to edit & delete your
+          own gifs. Admins can manage all gifs and set user on the blacklist.
         </p>
-        <p class="muted">
-          Neue GIFs akzeptieren nur vollständige Datensätze (Titel, Anime,
-          Charaktere, Tags, URL, NSFW-Flag). Blacklist wirkt nur auf
-          GIF-Management, andere Website-Features bleiben frei.
-        </p>
-        <p class="muted">
-          Blacklisting und Badge-Checks laufen in der Admin-Oberfläche.
-        </p>
-      </div>
-
-      <div
-        id="langPicker"
-        style="
-          position: fixed;
-          top: 12px;
-          right: 12px;
-          z-index: 20;
-          display: flex;
-          gap: 8px;
-          align-items: center;
-        "
-      >
-        <label for="lang" title="Language">🌐</label>
-        <select
-          id="lang"
-          style="
-            background: #0e1330;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #e7e9ff;
-            border-radius: 8px;
-            padding: 6px 8px;
-          "
-        >
-          <option value="de">Deutsch</option>
-          <option value="en">English</option>
-        </select>
       </div>
 
       <!-- BUILDER -->
@@ -507,11 +468,11 @@
               required
             />
             <div class="hint" data-i18n="hint.base">
-              Deine deployte Instanz. Kein Slash am Ende nötig.
+              Your deployed instance. No / needed at the end.
             </div>
           </div>
           <div>
-            <label for="nsfw" data-i18n="label.nsfw">NSFW-Modus</label
+            <label for="nsfw" data-i18n="label.nsfw">NSFW-mode</label
             >&nbsp;<span class="pill">false|true|only</span>
             <select id="nsfw">
               <option value="false" selected>false</option>
@@ -529,14 +490,14 @@
               <option value="tags">tags</option>
             </select>
             <div class="hint" data-i18n="hint.list">
-              Mit <code>list=tags</code> bekommst du alle verfügbaren Tags.
+              With <code>list=tags</code> you get a list of all avaiable tags.
             </div>
           </div>
         </div>
 
         <div class="row cols-3">
           <div>
-            <label for="q" data-i18n="label.q">Suche im Titel (q)</label>
+            <label for="q" data-i18n="label.q">Search in the titel (q)</label>
             <input
               id="q"
               type="text"
@@ -544,7 +505,7 @@
               placeholder="z. B. Nazuna"
             />
             <div class="hint" data-i18n="hint.q">
-              Wenn gesetzt, dann kein tag/anime/character benutzen.
+              If this is set, then dont use any tag/anime/character.
             </div>
           </div>
           <div>
@@ -559,11 +520,11 @@
                 type="button"
                 data-i18n="btn.refreshTags"
               >
-                Tags neu laden
+                Reload tags
               </button>
             </div>
             <div class="hint" data-i18n="hint.tags">
-              Dropdown lädt mit <code>GET /gifs?list=tags</code>.
+              Dropdown loads with <code>GET /gifs?list=tags</code>.
             </div>
           </div>
           <div>
@@ -575,7 +536,7 @@
               placeholder="Call of the Night"
             />
             <div class="hint" data-i18n="hint.anime">
-              Exakter Match (case-insensitive).
+              Exact Match (case-insensitive).
             </div>
           </div>
         </div>
@@ -592,7 +553,7 @@
               placeholder="Nazuna"
             />
             <div class="hint" data-i18n="hint.character">
-              Exakter Match (case-insensitive).
+              Exact Match (case-insensitive).
             </div>
           </div>
           <div>
@@ -606,7 +567,7 @@
               placeholder="z. B. 50"
             />
             <div class="hint" data-i18n="hint.limit">
-              Wie viele Ergebnisse maximal zurückgegeben werden.
+              The max amount of resulsts.
             </div>
           </div>
           <div>
@@ -657,21 +618,21 @@
             Preset: Character
           </button>
           <button id="clearAll" class="btn ghost" data-i18n="btn.reset">
-            Zurücksetzen
+            Reset
           </button>
         </div>
 
         <div style="margin-top: 14px">
-          <label data-i18n="label.finalUrl">Fertige URL</label>
+          <label data-i18n="label.finalUrl">Full URL</label>
           <div class="actions">
             <code id="outUrl" class="mono">/gifs?</code>
             <button id="copyUrl" class="btn secondary" data-i18n="btn.copy">
-              Kopieren
+              Copy
             </button>
             <button id="shareUrl" class="btn secondary" data-i18n="btn.share">
               Share-Link
             </button>
-            <button id="run" class="btn" data-i18n="btn.run">Ausführen</button>
+            <button id="run" class="btn" data-i18n="btn.run">Run</button>
           </div>
           <div id="ruleMsg" class="status"></div>
         </div>
@@ -690,7 +651,7 @@
               class="btn secondary"
               data-i18n="btn.copyCode"
             >
-              Code kopieren
+              Copy code
             </button>
           </div>
         </div>
@@ -698,7 +659,7 @@
 
       <!-- RESULT -->
       <div class="card">
-        <h2 data-i18n="section.response">Antwort</h2>
+        <h2 data-i18n="section.response">Answer</h2>
         <div id="resultSummary" class="muted">—</div>
 
         <div id="singleView" style="display: none" class="row cols-2">
@@ -723,7 +684,7 @@
                 target="_blank"
                 rel="noopener"
                 data-i18n="btn.openGif"
-                >GIF öffnen</a
+                >open GIF</a
               >
               <button
                 id="copyGifUrl"
@@ -731,7 +692,7 @@
                 type="button"
                 data-i18n="btn.copyGifUrl"
               >
-                GIF-URL kopieren
+                copy GIF-URL
               </button>
             </div>
           </div>
@@ -741,10 +702,10 @@
 
         <div class="actions" style="margin-top: 10px">
           <button id="prevPage" class="btn secondary" data-i18n="btn.prev">
-            « Zurück
+            « Back
           </button>
           <button id="nextPage" class="btn secondary" data-i18n="btn.next">
-            Weiter »
+            next »
           </button>
         </div>
 
@@ -755,7 +716,7 @@
       <div class="card">
         <h2 data-i18n="section.history">History (local)</h2>
         <p class="muted" data-i18n="history.info">
-          Zuletzt ausgeführte Anfragen. Klicke, um sie erneut zu laden.
+          Last few requests. Click to load them again.
         </p>
         <div id="history" class="grid"></div>
         <div class="actions" style="margin-top: 8px">
@@ -764,25 +725,27 @@
             class="btn ghost"
             data-i18n="btn.clearHistory"
           >
-            History löschen
+            delete history
           </button>
         </div>
       </div>
 
       <!-- DOCS -->
       <div class="card">
-        <h2 data-i18n="section.docs">API-Dokumentation</h2>
+        <h2 data-i18n="section.docs">API-Documentation</h2>
 
         <details open>
           <summary data-i18n="docs.rules.title">
-            <b>Regeln &amp; Verhalten</b>
+            <b>Rules &amp; Behaviour</b>
           </summary>
           <ul>
             <li data-i18n="docs.rule1">
-              <span class="kbd">q</span> (Titelsuche) ist exklusiv:
-              <b>Entweder</b> <span class="kbd">q</span> <b>oder</b> genau eins
-              von <span class="kbd">tag</span>/<span class="kbd">anime</span
-              >/<span class="kbd">character</span>.
+              <span class="kbd">q</span> (Titel search) is exclusive:
+              <b>Either</b> <span class="kbd">q</span> <b>or</b> exactly one of
+              <span class="kbd">tag</span>/<span class="kbd">anime</span>/<span
+                class="kbd"
+                >character</span
+              >.
             </li>
             <li data-i18n="docs.rule2">
               <span class="kbd">nsfw</span> ∈ {<code>false</code>,
@@ -790,17 +753,16 @@
               <code>false</code>.
             </li>
             <li data-i18n="docs.rule3">
-              Ohne Filter liefert <code>/gifs?</code> ein zufälliges GIF (mit
-              NSFW-Filter laut <code>nsfw</code>).
+              A request without any filter (<code>/gifs?</code>) returns a
+              random gif with the NSFW filter depending on <code>nsfw</code>
             </li>
             <li data-i18n="docs.rule4">
-              <span class="kbd">limit</span> &amp;
-              <span class="kbd">offset</span> dienen der Pagination (nur bei
-              Titelsuche sinnvoll).
+              <span class="kbd">l</span> &amp;
+              <span class="kbd">offset</span> are used for Pagination (only
+              useful for Titelsearch).
             </li>
             <li data-i18n="docs.rule5">
-              <code>list=tags</code> gibt alle Tags zurück (ignoriert andere
-              Filter).
+              <code>list=tags</code> returns all tags (ignores other filters).
             </li>
           </ul>
         </details>
@@ -810,9 +772,9 @@
             <thead>
               <tr>
                 <th data-i18n="tbl.param">Parameter</th>
-                <th data-i18n="tbl.type">Typ</th>
-                <th data-i18n="tbl.example">Beispiel</th>
-                <th data-i18n="tbl.desc">Beschreibung</th>
+                <th data-i18n="tbl.type">Type</th>
+                <th data-i18n="tbl.example">Example</th>
+                <th data-i18n="tbl.desc">Description</th>
               </tr>
             </thead>
             <tbody>
@@ -821,42 +783,44 @@
                 <td>string</td>
                 <td><code>q=Nazuna</code></td>
                 <td data-i18n="docs.row.q">
-                  Suche im <b>Titel</b>. Nicht zusammen mit tag/anime/character.
+                  Searched in <b>Titel</b>. without tag/anime/character.
                 </td>
               </tr>
               <tr>
                 <td><code>tag</code></td>
                 <td>string</td>
                 <td><code>tag=smoking</code></td>
-                <td data-i18n="docs.row.tag">Random GIF mit diesem Tag.</td>
+                <td data-i18n="docs.row.tag">
+                  Random GIF with the selected tag.
+                </td>
               </tr>
               <tr>
                 <td><code>anime</code></td>
                 <td>string</td>
                 <td><code>anime=Call of the Night</code></td>
-                <td data-i18n="docs.row.anime">Random GIF aus diesem Anime.</td>
+                <td data-i18n="docs.row.anime">Random GIF of this anime.</td>
               </tr>
               <tr>
                 <td><code>character</code></td>
                 <td>string</td>
                 <td><code>character=Nazuna</code></td>
                 <td data-i18n="docs.row.character">
-                  Random GIF mit diesem Character.
+                  Random GIF with the selected character.
                 </td>
               </tr>
               <tr>
                 <td><code>list</code></td>
                 <td>string</td>
                 <td><code>list=tags</code></td>
-                <td data-i18n="docs.row.list">Liste aller Tags.</td>
+                <td data-i18n="docs.row.list">List of all tags.</td>
               </tr>
               <tr>
                 <td><code>nsfw</code></td>
                 <td>enum</td>
                 <td><code>nsfw=false</code></td>
                 <td data-i18n="docs.row.nsfw">
-                  <code>false</code>=nur SFW, <code>true</code>=beides,
-                  <code>only</code>=nur NSFW.
+                  <code>false</code>=only SFW, <code>true</code>=both,
+                  <code>only</code>=only NSFW.
                 </td>
               </tr>
               <tr>
@@ -864,7 +828,7 @@
                 <td>int</td>
                 <td><code>limit=20</code></td>
                 <td data-i18n="docs.row.limit">
-                  Max. Ergebnisse (1–200). Für Titelsuche.
+                  Max. Results (1–200). for titelsearch.
                 </td>
               </tr>
               <tr>
@@ -872,7 +836,7 @@
                 <td>int</td>
                 <td><code>offset=20</code></td>
                 <td data-i18n="docs.row.offset">
-                  Startposition (Pagination). Für Titelsuche.
+                  Startposition (Pagination). for titelsearch.
                 </td>
               </tr>
             </tbody>
@@ -880,8 +844,9 @@
         </div>
 
         <p class="muted" style="margin-top: 8px" data-i18n="docs.note">
-          Hinweis: Bei Tippfehlern in <code>anime</code>/<code>character</code>
-          liefert die API sinnvolle Vorschläge im Fehlerobjekt (HTTP 404, Feld
+          Hint: For typos in <code>anime</code>/<code>character</code>
+          the API returns meaningful suggestions in the error object (HTTP 404,
+          field
           <code>suggestions</code>).
         </p>
       </div>
@@ -1015,12 +980,12 @@
         if (hasQ && singles.length > 0)
           return {
             ok: false,
-            msg: "Entweder 'q' ODER eins von 'tag/anime/character' setzen – nicht beides.",
+            msg: "Set either 'q' OR one of 'tag/anime/character' – NOT both.",
           };
         if (!hasQ && singles.length > 1)
           return {
             ok: false,
-            msg: "Bitte nur EINES von 'tag/anime/character' setzen.",
+            msg: "Please only set ONE of 'tag/anime/character'.",
           };
         return { ok: true, msg: "" };
       }
@@ -1190,7 +1155,7 @@ print(r.json())`;
             (tagsList || []).map((t) => `<option>${t}</option>`).join("");
           if ([...tag.options].some((o) => o.value === cur)) tag.value = cur;
         } catch (e) {
-          console.warn("Tags konnten nicht geladen werden", e);
+          console.warn("Tags could not be loaded.", e);
         }
       }
       el("refreshTags").onclick = loadTags;
@@ -1231,7 +1196,7 @@ print(r.json())`;
               }">Öffnen</button>
               <button class="btn ghost" data-apply="${
                 it.url
-              }">In Builder laden</button>
+              }">Load into Builder</button>
             </div>
           </div>`
             )
@@ -1330,7 +1295,7 @@ print(r.json())`;
             );
             listView.style.display = "";
           } else if (data && data.url) {
-            resultSummary.textContent = `1 Ergebnis.`;
+            resultSummary.textContent = `1 result.`;
             gifImg.src = data.url;
             openGif.href = data.url;
             gifMeta.innerHTML = `
@@ -1348,13 +1313,13 @@ print(r.json())`;
           } else if (p.list === "tags" && Array.isArray(data)) {
             resultSummary.textContent = `${data.length} Tags.`;
           } else {
-            resultSummary.textContent = "Antwort erhalten.";
+            resultSummary.textContent = "Response recieved.";
           }
 
           pushHistory(url);
           renderHistory();
         } catch (err) {
-          resultSummary.textContent = "Fehler: " + err.message;
+          resultSummary.textContent = "Error: " + err.message;
         }
       }
       el("run").onclick = (e) => {

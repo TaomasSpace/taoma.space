@@ -467,7 +467,7 @@
           <a href="/"
             ><img class="logo" src="/static/icon.png" alt="TAOMA logo"
           /></a>
-          <a href="/" style="color: inherit; text-decoration: none">TAOMAT</a>
+          <a href="/" style="color: inherit; text-decoration: none">TAOMA</a>
         </div>
         <button
           type="button"
@@ -511,12 +511,9 @@
             <p class="pill" id="whoami"></p>
             <h1>GIF API Admin</h1>
             <p>
-              Verwalte GIFs, prüfe Badges und sperre/entsperre User für das
-              GIF-Management.
+              Manage GIFs, check badges, and lock/unlock users for GIF
+              management. GIF management.
             </p>
-          </div>
-          <div class="badge">
-            Neues Feature: GIF Blacklist & Creator-Ownership
           </div>
         </div>
       </section>
@@ -562,12 +559,10 @@
       <section class="grid two">
         <div class="card">
           <div class="section-title">
-            <h2 data-i18n="admin.builder">GIF erstellen / bearbeiten</h2>
+            <h2 data-i18n="admin.builder">Create / Edit gif</h2>
             <div class="pill" id="pillNSFW">sfw</div>
           </div>
-          <p class="muted">
-            Alle Felder sind Pflicht (Titel, Anime, Charakter(e), Tags).
-          </p>
+          <p class="muted">All fields are nessecary.</p>
           <form id="gifForm" class="grid" style="gap: 12px">
             <label data-i18n="admin.title">Titel</label>
             <input
@@ -650,7 +645,7 @@
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap">
               <button type="submit" class="btn" data-i18n="admin.save">
-                Speichern
+                save
               </button>
               <button
                 type="button"
@@ -658,7 +653,7 @@
                 id="fillDemo"
                 data-i18n="admin.demo"
               >
-                Demo befüllen
+                fill with demo data
               </button>
               <button
                 type="button"
@@ -666,7 +661,7 @@
                 id="clearAll"
                 data-i18n="admin.clear"
               >
-                Alles leeren
+                Clear all
               </button>
             </div>
             <div id="status" class="status"></div>
@@ -676,22 +671,22 @@
         <div class="card">
           <div class="section-title">
             <h2>GIF-Blacklist</h2>
-            <span class="pill">Nur Admins</span>
+            <span class="pill">Only Admins</span>
           </div>
           <p class="muted">
-            Gesperrte User können keine GIFs erstellen, bearbeiten oder löschen.
-            Andere Website Features bleiben unberührt.
+            Blacklisted user can not create, edit or delete any gifs. Every
+            other feature of the website stays unchanged.
           </p>
           <label for="blUserId">User ID</label>
           <input type="number" id="blUserId" min="1" placeholder="123" />
-          <label for="blReason">Grund (optional)</label>
+          <label for="blReason">reason (optional)</label>
           <input type="text" id="blReason" placeholder="Spam, Abuse, ..." />
           <div
             style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px"
           >
-            <button class="btn" id="blAdd">Sperren</button>
-            <button class="btn secondary" id="blRemove">Entsperren</button>
-            <button class="btn secondary" id="blReload">Liste neu laden</button>
+            <button class="btn" id="blAdd">Blacklist user</button>
+            <button class="btn secondary" id="blRemove">remove</button>
+            <button class="btn secondary" id="blReload">reload list</button>
           </div>
           <div id="blStatus" class="status"></div>
           <div
@@ -710,7 +705,7 @@
 
       <section class="card">
         <div class="section-title">
-          <h2 data-i18n="admin.list">GIFs durchsuchen</h2>
+          <h2 data-i18n="admin.list">search GIFs</h2>
           <div style="display: flex; gap: 8px; flex-wrap: wrap">
             <input
               type="text"
@@ -719,23 +714,23 @@
               style="min-width: 200px"
             />
             <select id="nsfwList">
-              <option value="true" data-i18n="admin.nsfwAll">beides</option>
-              <option value="false" data-i18n="admin.onlySfw">nur sfw</option>
-              <option value="only" data-i18n="admin.onlyNsfw">nur nsfw</option>
+              <option value="true" data-i18n="admin.nsfwAll">both</option>
+              <option value="false" data-i18n="admin.onlySfw">only sfw</option>
+              <option value="only" data-i18n="admin.onlyNsfw">only nsfw</option>
             </select>
             <button
               class="btn secondary"
               id="btnReload"
               data-i18n="admin.reload"
             >
-              Neu laden
+              reload
             </button>
           </div>
         </div>
         <div class="table-rows" id="tableWrap"></div>
         <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap">
           <button class="btn secondary" id="more" data-i18n="admin.more">
-            Mehr laden
+            load more
           </button>
         </div>
       </section>
@@ -743,7 +738,7 @@
 
     <footer>
       <div class="container foot">
-        <div class="muted">TAOMAT • Anime GIF API Admin</div>
+        <div class="muted">TAOMA • Anime GIF API Admin</div>
         <div class="social">
           <a
             class="iso-pro is-gh"
@@ -1140,7 +1135,7 @@
           $("#loginModal").style.display = "block";
           $("#authMsg").textContent =
             getLang() === "de"
-              ? "Bitte Admin-Account einloggen."
+              ? "Please log in with your admin account."
               : "Please log in with your admin account.";
           $("#authMsg").className = "status err";
           return false;
@@ -1180,7 +1175,7 @@
         } finally {
           AUTH_TOKEN = null;
           statusEl.textContent =
-            getLang() === "de" ? "Ausgeloggt." : "Logged out.";
+            getLang() === "de" ? "Logged out." : "Logged out.";
           statusEl.className = "status";
         }
       }
@@ -1199,7 +1194,7 @@
         ) {
           $("#status").textContent =
             getLang() === "de"
-              ? "Alle Felder sind Pflicht (Titel, Anime, Charaktere, Tags)."
+              ? "All fields are required (title, anime, characters, tags)."
               : "All fields are required (title, anime, characters, tags).";
           $("#status").className = "status err";
           return;
@@ -1214,20 +1209,20 @@
             $("#loginModal").style.display = "block";
             throw new Error(
               getLang() === "de"
-                ? "Nicht autorisiert. Bitte einloggen."
+                ? "Unauthorized. Please log in."
                 : "Unauthorized. Please log in."
             );
           }
           const data = await res.json();
           if (!res.ok) throw new Error(data.detail || res.statusText);
           $("#status").textContent =
-            (getLang() === "de" ? "Gespeichert ✓ (ID " : "Saved ✓ (ID ") +
+            (getLang() === "de" ? "Saved ✓ (ID " : "Saved ✓ (ID ") +
             data.id +
             ")";
           $("#status").className = "status ok";
         } catch (err) {
           $("#status").textContent =
-            (getLang() === "de" ? "Fehler: " : "Error: ") + err.message;
+            (getLang() === "de" ? "Error: " : "Error: ") + err.message;
           $("#status").className = "status err";
         }
       };
@@ -1239,18 +1234,16 @@
       async function verifyToken() {
         const session = await fetchSession();
         if (!session || !session.user) {
-          setWhoAmI(
-            getLang() === "de" ? "Nicht eingeloggt." : "Not logged in."
-          );
+          setWhoAmI(getLang() === "de" ? "Not logged in." : "Not logged in.");
           return false;
         }
         if (!session.user.admin) {
-          setWhoAmI(getLang() === "de" ? "Kein Admin." : "Not an admin.");
+          setWhoAmI(getLang() === "de" ? "Not an admin." : "Not an admin.");
           return false;
         }
         AUTH_TOKEN = "cookie";
         setWhoAmI(
-          (getLang() === "de" ? "Eingeloggt als " : "Logged in as ") +
+          (getLang() === "de" ? "Logged in as " : "Logged in as ") +
             (session.user.username || "user")
         );
         return true;
@@ -1259,9 +1252,7 @@
         const ok = await verifyToken();
         if (!ok) {
           $("#loginModal").style.display = "block";
-          setWhoAmI(
-            getLang() === "de" ? "Nicht eingeloggt." : "Not logged in."
-          );
+          setWhoAmI(getLang() === "de" ? "Not logged in" : "Not logged in.");
         }
       }
       let ADMIN_OFFSET = 0;
@@ -1312,7 +1303,7 @@
           "beforeend",
           html ||
             `<span class="muted">${
-              getLang() === "de" ? "Keine Treffer." : "No results."
+              getLang() === "de" ? "No results." : "No results."
             }</span>`
         );
         wrap.querySelectorAll("button[data-del]").forEach((btn) => {
@@ -1320,9 +1311,7 @@
             const id = btn.getAttribute("data-del");
             if (
               !confirm(
-                (getLang() === "de"
-                  ? "Wirklich löschen #"
-                  : "Really delete #") +
+                (getLang() === "de" ? "Really delete #" : "Really delete #") +
                   id +
                   "?"
               )
@@ -1343,7 +1332,7 @@
             } catch (e) {
               alert(
                 (getLang() === "de"
-                  ? "Konnte Datensatz nicht in den Builder laden: "
+                  ? "Could not load into builder: "
                   : "Could not load into builder: ") + e.message
               );
             }
@@ -1371,7 +1360,7 @@
         }, 800);
         $("#status").textContent =
           getLang() === "de"
-            ? "Geladen aus Liste. Du kannst jetzt bearbeiten oder speichern."
+            ? "Loaded from list. You can edit or save now."
             : "Loaded from list. You can edit or save now.";
         $("#status").className = "status ok";
       }
@@ -1387,7 +1376,7 @@
         const r = await fetch(url, { headers: authHeaders() });
         if (!r.ok) {
           $("#tableWrap").textContent =
-            (getLang() === "de" ? "Fehler beim Laden: " : "Load error: ") +
+            (getLang() === "de" ? "load error: " : "Load error: ") +
             r.statusText;
           return;
         }
@@ -1403,9 +1392,8 @@
         if (!r.ok && r.status !== 204) {
           const j = await r.json().catch(() => ({ detail: r.statusText }));
           alert(
-            (getLang() === "de"
-              ? "Löschen fehlgeschlagen: "
-              : "Delete failed: ") + (j.detail || r.statusText)
+            (getLang() === "de" ? "Delete failed: " : "Delete failed: ") +
+              (j.detail || r.statusText)
           );
         }
       }
@@ -1465,11 +1453,11 @@
   <div>
     <div style="font-weight:700;color:#e7e9ff">User #${entry.user_id}</div>
     <div class="muted">${
-      entry.reason ? entry.reason : "kein Grund angegeben"
+      entry.reason ? entry.reason : "No reason provided"
     }</div>
     <div class="muted">${entry.created_at || ""}</div>
   </div>
-  <button class="btn danger" data-unblock="${entry.user_id}">Entsperren</button>
+  <button class="btn danger" data-unblock="${entry.user_id}">Remove</button>
 </div>`;
             wrap.appendChild(div);
           });
@@ -1493,7 +1481,7 @@
         const reason = $("#blReason").value.trim() || null;
         const statusEl = $("#blStatus");
         if (!userId) {
-          statusEl.textContent = "User ID fehlt.";
+          statusEl.textContent = "User ID is missing.";
           statusEl.className = "status err";
           return;
         }
@@ -1505,11 +1493,11 @@
           });
           const j = await r.json();
           if (!r.ok) throw new Error(j.detail || r.statusText);
-          statusEl.textContent = `User #${userId} gesperrt.`;
+          statusEl.textContent = `User #${userId} blacklisted.`;
           statusEl.className = "status ok";
           await loadBlacklist();
         } catch (err) {
-          statusEl.textContent = "Fehler: " + err.message;
+          statusEl.textContent = "Error: " + err.message;
           statusEl.className = "status err";
         }
       }
@@ -1520,7 +1508,7 @@
         const userId = Number($("#blUserId").value);
         const statusEl = $("#blStatus");
         if (!userId) {
-          statusEl.textContent = "User ID fehlt.";
+          statusEl.textContent = "missing User ID.";
           statusEl.className = "status err";
           return;
         }
@@ -1533,11 +1521,11 @@
             const j = await r.json().catch(() => ({}));
             throw new Error(j.detail || r.statusText);
           }
-          statusEl.textContent = `User #${userId} entsperrt.`;
+          statusEl.textContent = `User #${userId} removed.`;
           statusEl.className = "status ok";
           await loadBlacklist();
         } catch (err) {
-          statusEl.textContent = "Fehler: " + err.message;
+          statusEl.textContent = "Error: " + err.message;
           statusEl.className = "status err";
         }
       }
