@@ -890,6 +890,7 @@
     <script>
       let AUTH_TOKEN = null;
       let IS_ADMIN = false;
+      let CURRENT_USER = null;
       const authHeaders = () =>
         AUTH_TOKEN && AUTH_TOKEN !== "cookie"
           ? { "X-Auth-Token": AUTH_TOKEN }
@@ -965,6 +966,7 @@
 
         const session = await fetchSession();
         const user = session?.user || null;
+        CURRENT_USER = user;
         const isAdmin = !!(user && user.admin);
         IS_ADMIN = isAdmin;
 
@@ -1079,6 +1081,7 @@
         } finally {
           AUTH_TOKEN = null;
           IS_ADMIN = false;
+          CURRENT_USER = null;
           statusEl.textContent = "Logged out.";
           statusEl.className = "status";
         }
@@ -1129,10 +1132,12 @@
         const session = await fetchSession();
         if (!session || !session.user) {
           IS_ADMIN = false;
+          CURRENT_USER = null;
           setWhoAmI("Not logged in.");
           return false;
         }
         IS_ADMIN = !!session.user.admin;
+        CURRENT_USER = session.user;
         AUTH_TOKEN = "cookie";
         setWhoAmI("Logged in as " + (session.user.username || "user"));
         return true;
@@ -1149,7 +1154,20 @@
 
       function renderTable(rows, append = false) {
         const wrap = $("#tableWrap");
+        const currentUserId =
+          CURRENT_USER && CURRENT_USER.id != null
+            ? Number(CURRENT_USER.id)
+            : null;
         const makeRow = (g) => {
+          const ownerId =
+            g && Object.prototype.hasOwnProperty.call(g, "created_by")
+              ? Number(g.created_by)
+              : null;
+          const canEdit =
+            IS_ADMIN ||
+            (currentUserId !== null &&
+              ownerId !== null &&
+              Number(ownerId) === currentUserId);
           const payload = encodeURIComponent(
             JSON.stringify({
               id: g.id,
@@ -1161,6 +1179,12 @@
               tags: g.tags || [],
             })
           );
+          const loadCell = canEdit
+            ? `<button class="btn secondary" data-load="${payload}">${"Load"}</button>`
+            : `<div class="muted" style="text-align:right;font-size:.9rem" title="Only your own GIFs can be edited">View only</div>`;
+          const deleteCell = canEdit
+            ? `<button class="btn" data-del="${g.id}">${"Delete"}</button>`
+            : `<div></div>`;
           return `
 <div style="display:grid;grid-template-columns:64px 1fr auto auto auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)">
   <img src="${
@@ -1178,8 +1202,8 @@
   <a class="btn secondary" href="${
     g.url
   }" target="_blank" rel="noopener">${"Open"}</a>
-  <button class="btn secondary" data-load="${payload}">${"Load"}</button>
-  <button class="btn" data-del="${g.id}">${"Delete"}</button>
+  ${loadCell}
+  ${deleteCell}
 </div>`;
         };
         const html = rows.map(makeRow).join("");
@@ -1243,7 +1267,7 @@
         const nsfw = $("#nsfwList").value;
         const url = IS_ADMIN
           ? `${base}/api/admin/gifs?q=${q}&nsfw=${nsfw}&limit=${PAGE_SIZE}&offset=${ADMIN_OFFSET}`
-          : `${base}/api/my/gifs?q=${q}&nsfw=${nsfw}&limit=${PAGE_SIZE}&offset=${ADMIN_OFFSET}`;
+          : `${base}/api/gifs?q=${q}&nsfw=${nsfw}&limit=${PAGE_SIZE}&offset=${ADMIN_OFFSET}`;
         const r = await fetch(url, { headers: authHeaders() });
         if (!r.ok) {
           $("#tableWrap").textContent = "Load error: " + r.statusText;

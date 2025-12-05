@@ -248,6 +248,7 @@ class GifDB:
             "nsfw": bool(row["nsfw"]),
             "anime": row["anime"],
             "created_at": row["created_at"],
+            "created_by": row["created_by"] if "created_by" in row.keys() else None,
             "characters": chars,
             "tags": tags,
         }
