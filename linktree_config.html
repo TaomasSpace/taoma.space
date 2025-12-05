@@ -1015,6 +1015,18 @@
               <label for="fileBg">Upload Background</label>
               <input type="file" id="fileBg" accept="image/*,video/*" />
             </div>
+            <div class="field">
+              <label for="inCursor">Cursor URL (Desktop)</label>
+              <input id="inCursor" class="input" placeholder="https://…/cursor.png" />
+              <div class="preview-note muted">
+                Only applied on the desktop linktree.
+              </div>
+            </div>
+            <div class="field">
+              <label for="fileCursor">Upload Cursor (Desktop)</label>
+              <input type="file" id="fileCursor" accept="image/*" />
+              <div class="preview-note muted">Use a small PNG/WEBP for best results.</div>
+            </div>
 
             <div class="field">
               <label for="inVideo">Background is Video</label>
@@ -1065,6 +1077,31 @@
                 <option value="neon">neon</option>
                 <option value="rainbow">rainbow</option>
               </select>
+            </div>
+            <div class="field">
+              <label for="inTextColor">Text Color</label>
+              <input id="inTextColor" class="input" type="color" value="#e9ebff" />
+            </div>
+            <div class="field">
+              <label for="inMutedColor">Muted Text Color</label>
+              <input id="inMutedColor" class="input" type="color" value="#a2a9c8" />
+            </div>
+            <div class="field">
+              <label for="inNameColor">Name Color</label>
+              <input id="inNameColor" class="input" type="color" value="#e9ebff" />
+            </div>
+            <div class="field">
+              <label for="inLocationColor">Location Color</label>
+              <input
+                id="inLocationColor"
+                class="input"
+                type="color"
+                value="#a2a9c8"
+              />
+            </div>
+            <div class="field">
+              <label for="inQuoteColor">Quote Color</label>
+              <input id="inQuoteColor" class="input" type="color" value="#e9ebff" />
             </div>
             <div class="field">
               <label for="inLinkColor">Link Text Color</label>
@@ -1537,6 +1574,11 @@
 
       const DEFAULT_LINK_COLOR = "#e9ebff";
       const DEFAULT_LINK_BG_COLOR = "#171b3b";
+      const DEFAULT_TEXT_COLOR = "#e9ebff";
+      const DEFAULT_MUTED_COLOR = "#a2a9c8";
+      const DEFAULT_NAME_COLOR = "#e9ebff";
+      const DEFAULT_LOCATION_COLOR = "#a2a9c8";
+      const DEFAULT_QUOTE_COLOR = "#e9ebff";
 
       function fillMetaForm(lt) {
         $("inSlug").value = lt.slug || "";
@@ -1557,12 +1599,21 @@
         $("inTrans").value = 100 - Math.min(100, Math.max(0, cardTrans));
         $("inNameFx").value = lt.name_effect || "none";
         $("inBgFx").value = lt.background_effect || "none";
+        $("inTextColor").value = lt.text_color || DEFAULT_TEXT_COLOR;
+        $("inMutedColor").value = lt.muted_color || DEFAULT_MUTED_COLOR;
+        $("inNameColor").value =
+          lt.name_color || lt.link_color || DEFAULT_NAME_COLOR;
+        $("inLocationColor").value =
+          lt.location_color || lt.muted_color || DEFAULT_LOCATION_COLOR;
+        $("inQuoteColor").value =
+          lt.quote_color || lt.text_color || DEFAULT_QUOTE_COLOR;
         $("inLinkColor").value = lt.link_color || DEFAULT_LINK_COLOR;
         $("inLinkBgColor").value = lt.link_bg_color || DEFAULT_LINK_BG_COLOR;
         $("inLinkBgAlpha").value =
           lt.link_bg_alpha !== undefined && lt.link_bg_alpha !== null
             ? lt.link_bg_alpha
             : 100;
+        $("inCursor").value = lt.cursor_url || "";
         $("inDiscordFrame").checked = !!lt.discord_frame_enabled;
         toggleCustomNameField();
         const btnOpen = $("btnOpenPublic");
@@ -1823,9 +1874,15 @@
           background_effect: $("inBgFx").value,
           display_name_mode: $("inDisplayName").value,
           custom_display_name: $("inCustomName").value.trim() || null,
+          text_color: $("inTextColor").value || null,
+          muted_color: $("inMutedColor").value || null,
+          name_color: $("inNameColor").value || null,
+          location_color: $("inLocationColor").value || null,
+          quote_color: $("inQuoteColor").value || null,
           link_color: $("inLinkColor").value || null,
           link_bg_color: $("inLinkBgColor").value || null,
           link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
+          cursor_url: $("inCursor").value.trim() || null,
           discord_frame_enabled: $("inDiscordFrame").checked,
         };
         if (!exists) {
@@ -2117,6 +2174,30 @@
           showMsg(msgMeta, "Background uploaded", true);
         } catch (e) {
           showMsg(msgMeta, "Background upload failed", false);
+        }
+      });
+
+      $("fileCursor").addEventListener("change", async () => {
+        if (currentDevice !== "pc") {
+          showMsg(
+            msgMeta,
+            "Cursor upload is desktop-only. Switch to Desktop first.",
+            false
+          );
+          $("fileCursor").value = "";
+          return;
+        }
+        try {
+          const url = await uploadFile(
+            "fileCursor",
+            `/api/users/me/cursor?device=${encodeURIComponent(
+              currentDevice || "pc"
+            )}`
+          );
+          $("inCursor").value = url;
+          showMsg(msgMeta, "Cursor uploaded", true);
+        } catch (e) {
+          showMsg(msgMeta, "Cursor upload failed", false);
         }
       });
 

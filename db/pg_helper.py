@@ -97,6 +97,12 @@ CREATE TABLE IF NOT EXISTS linktrees (
     link_bg_color       TEXT,
     link_bg_alpha       SMALLINT NOT NULL DEFAULT 100
                         CHECK (link_bg_alpha BETWEEN 0 AND 100),
+    text_color          TEXT,
+    muted_color         TEXT,
+    name_color          TEXT,
+    location_color      TEXT,
+    quote_color         TEXT,
+    cursor_url          TEXT,
     discord_frame_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ
@@ -316,6 +322,30 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS discord_frame_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS text_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS muted_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS name_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS location_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS quote_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS cursor_url TEXT;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1160,6 +1190,12 @@ class PgGifDB:
         link_color: str | None = None,
         link_bg_color: str | None = None,
         link_bg_alpha: int = 100,
+        text_color: str | None = None,
+        muted_color: str | None = None,
+        name_color: str | None = None,
+        location_color: str | None = None,
+        quote_color: str | None = None,
+        cursor_url: str | None = None,
         discord_frame_enabled: bool = False,
     ) -> int:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
@@ -1174,9 +1210,15 @@ class PgGifDB:
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
+                    text_color,
+                    muted_color,
+                    name_color,
+                    location_color,
+                    quote_color,
+                    cursor_url,
                     discord_frame_enabled
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)   -- <-- + Platzhalter
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 RETURNING id
                 """,
                 (
@@ -1188,6 +1230,12 @@ class PgGifDB:
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
+                    text_color,
+                    muted_color,
+                    name_color,
+                    location_color,
+                    quote_color,
+                    cursor_url,
                     discord_frame_enabled,
                 ),
             )
@@ -1218,6 +1266,12 @@ class PgGifDB:
             "link_color",
             "link_bg_color",
             "link_bg_alpha",
+            "text_color",
+            "muted_color",
+            "name_color",
+            "location_color",
+            "quote_color",
+            "cursor_url",
             "discord_frame_enabled",
         }
         sets, vals = [], []
@@ -1261,8 +1315,9 @@ class PgGifDB:
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode, custom_display_name,
-                    link_color, link_bg_color, link_bg_alpha, discord_frame_enabled
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    link_color, link_bg_color, link_bg_alpha, text_color, muted_color,
+                    name_color, location_color, quote_color, cursor_url, discord_frame_enabled
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 RETURNING id
                 """,
                 (
@@ -1282,6 +1337,12 @@ class PgGifDB:
                     src.get("link_color"),
                     src.get("link_bg_color"),
                     src.get("link_bg_alpha", 100),
+                    src.get("text_color"),
+                    src.get("muted_color"),
+                    src.get("name_color"),
+                    src.get("location_color"),
+                    src.get("quote_color"),
+                    src.get("cursor_url"),
                     src.get("discord_frame_enabled", False),
                 ),
             )

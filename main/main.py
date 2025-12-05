@@ -444,6 +444,12 @@ class LinktreeCreateIn(BaseModel):
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
+    text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    muted_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    cursor_url: Optional[str] = None
     discord_frame_enabled: bool = False
 
 
@@ -465,6 +471,12 @@ class LinktreeUpdateIn(BaseModel):
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
+    text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    muted_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    cursor_url: Optional[str] = None
     discord_frame_enabled: Optional[bool] = None
 
 
@@ -502,6 +514,12 @@ class LinktreeOut(BaseModel):
     link_color: Optional[str] = None
     link_bg_color: Optional[str] = None
     link_bg_alpha: int = 100
+    text_color: Optional[str] = None
+    muted_color: Optional[str] = None
+    name_color: Optional[str] = None
+    location_color: Optional[str] = None
+    quote_color: Optional[str] = None
+    cursor_url: Optional[str] = None
     discord_frame_enabled: bool = False
     discord_decoration_url: Optional[str] = None
     profile_picture: Optional[str] = None  # NEU - fuer Avatar
@@ -1002,13 +1020,19 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    COALESCE(background_effect,'none')  AS background_effect,
                    device_type,
                    COALESCE(display_name_mode,'slug')  AS display_name_mode,
-                   custom_display_name,
-                   link_color,
-                   link_bg_color,
-                   COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
-                   COALESCE(discord_frame_enabled, false) AS discord_frame_enabled
-              FROM linktrees
-             WHERE id = %s
+                    custom_display_name,
+                    link_color,
+                    link_bg_color,
+                    COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
+                    text_color,
+                    muted_color,
+                    name_color,
+                    location_color,
+                    quote_color,
+                    cursor_url,
+                    COALESCE(discord_frame_enabled, false) AS discord_frame_enabled
+               FROM linktrees
+              WHERE id = %s
         """,
             (linktree_id,),
         )
@@ -1071,6 +1095,12 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
+        "text_color": lt.get("text_color"),
+        "muted_color": lt.get("muted_color"),
+        "name_color": lt.get("name_color"),
+        "location_color": lt.get("location_color"),
+        "quote_color": lt.get("quote_color"),
+        "cursor_url": lt.get("cursor_url"),
         "discord_frame_enabled": bool(lt.get("discord_frame_enabled", False)),
         "discord_decoration_url": decoration_url,
         "profile_picture": user_pfp,
@@ -1923,6 +1953,12 @@ def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or 
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": lt.get("link_bg_alpha", 100),
+        "text_color": lt.get("text_color"),
+        "muted_color": lt.get("muted_color"),
+        "name_color": lt.get("name_color"),
+        "location_color": lt.get("location_color"),
+        "quote_color": lt.get("quote_color"),
+        "cursor_url": lt.get("cursor_url"),
         "discord_frame_enabled": frame_enabled,
         "discord_decoration_url": decoration_url if frame_enabled else None,
         "profile_picture": user_pfp,  # <= jetzt dabei
@@ -1973,6 +2009,12 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             link_color=payload.link_color,
             link_bg_color=payload.link_bg_color,
             link_bg_alpha=payload.link_bg_alpha,
+            text_color=payload.text_color,
+            muted_color=payload.muted_color,
+            name_color=payload.name_color,
+            location_color=payload.location_color,
+            quote_color=payload.quote_color,
+            cursor_url=payload.cursor_url,
             discord_frame_enabled=payload.discord_frame_enabled,
         )
     except pg_errors.UniqueViolation:
@@ -2014,7 +2056,7 @@ def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
     # Sammle Owner und evtl. Medien-URLs (für Cleanup)
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
         cur.execute(
-            "SELECT user_id, song_url, background_url FROM linktrees WHERE id=%s",
+            "SELECT user_id, song_url, background_url, cursor_url FROM linktrees WHERE id=%s",
             (linktree_id,),
         )
         row = cur.fetchone()
@@ -2024,6 +2066,7 @@ def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
         owner_id = int(row["user_id"])
         song_url = row.get("song_url")
         bg_url = row.get("background_url")
+        cursor_url = row.get("cursor_url")
 
         # Icon-URLs der Links sammeln (können lokale Medien sein)
         cur.execute(
@@ -2044,7 +2087,7 @@ def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
         conn.commit()
 
     # Medien aufräumen (nur wenn nirgendwo mehr referenziert)
-    for url in [song_url, bg_url, *icon_urls]:
+    for url in [song_url, bg_url, cursor_url, *icon_urls]:
         if url:
             _delete_if_unreferenced(url)
 
@@ -2324,6 +2367,58 @@ async def upload_background(
         _delete_if_unreferenced(old_url)
 
     return {"url": url, "is_video": is_video}
+
+
+@app.post("/api/users/me/cursor")
+async def upload_cursor(
+    file: UploadFile = File(...),
+    current: dict = Depends(require_user),
+    device: DeviceType | None = Query(None, description="pc or mobile"),
+):
+    _ensure_pg()
+    target_device = device or "pc"
+    if target_device != "pc":
+        raise HTTPException(400, "Custom cursor is only available for desktop linktrees")
+    if file.content_type not in ALLOWED_IMAGE_CT:
+        raise HTTPException(415, "Unsupported image type for cursor")
+    data = await file.read()
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(413, "File too large (max 5MB)")
+    ext = _detect_image_ext(data)
+    if not ext:
+        raise HTTPException(400, "File is not a valid image")
+
+    old_url = None
+    try:
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT cursor_url FROM linktrees WHERE user_id=%s AND device_type=%s",
+                (current["id"], target_device),
+            )
+            row = cur.fetchone()
+            if row is None:
+                raise HTTPException(404, "Linktree for device not found")
+            old_url = row[0]
+    except HTTPException:
+        raise
+    except Exception:
+        old_url = None
+
+    fname = f"user{current['id']}_cursor_{uuid.uuid4().hex}.{ext}"
+    out_path = UPLOAD_DIR / fname
+    out_path.write_bytes(data)
+    url = f"/media/{UPLOAD_DIR.name}/{fname}"
+
+    updated = db.update_linktree_by_user_and_device(
+        current["id"], target_device, cursor_url=url
+    )
+    if not updated:
+        raise HTTPException(404, "Linktree for device not found")
+
+    if old_url and old_url != url:
+        _delete_if_unreferenced(old_url)
+
+    return {"url": url}
 
 
 @app.post("/api/users/me/linkicon")
