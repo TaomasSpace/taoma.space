@@ -1,644 +1,825 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TAOMA Space — GIF API & Linktree</title>
+    <meta
+      name="description"
+      content="Explore the Anime GIF API, add your own GIFs, and build a Linktree that actually converts."
+    />
+    <meta property="og:title" content="TAOMA Space — GIF API & Linktree" />
+    <meta
+      property="og:description"
+      content="Query the Anime GIF API, contribute new GIFs, and spin up a custom Linktree in minutes."
+    />
+    <meta name="theme-color" content="#0f1223" />
+    <link rel="icon" type="image/png" href="/static/icon.png" />
+    <style>
+      :root {
+        --bg: #0d1023;
+        --bg-2: #11163a;
+        --card: #171b3b;
+        --ink: #e9ebff;
+        --muted: #a5adcf;
+        --acc: #9b7bff;
+        --acc-2: #5fc7ff;
+        --success: #52d8a5;
+        --warning: #ffb347;
+        --ring: #9b7bff55;
+        --shadow: 0 16px 50px rgba(0, 0, 0, 0.35), 0 2px 10px rgba(0, 0, 0, 0.2);
+        --radius: 16px;
+        --space: clamp(16px, 2vw, 24px);
+        --container: 1100px;
+      }
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TAOMA Space — GIF API & Linktree</title>
-  <meta name="description" content="Explore the Anime GIF API, add your own GIFs, and build a Linktree that actually converts." />
-  <meta property="og:title" content="TAOMA Space — GIF API & Linktree" />
-  <meta property="og:description" content="Query the Anime GIF API, contribute new GIFs, and spin up a custom Linktree in minutes." />
-  <meta name="theme-color" content="#0f1223" />
-  <link rel="icon" type="image/png" href="/static/icon.png" />
-  <style>
-    :root {
-      --bg: #0d1023;
-      --bg-2: #11163a;
-      --card: #171b3b;
-      --ink: #e9ebff;
-      --muted: #a5adcf;
-      --acc: #9b7bff;
-      --acc-2: #5fc7ff;
-      --success: #52d8a5;
-      --warning: #ffb347;
-      --ring: #9b7bff55;
-      --shadow: 0 16px 50px rgba(0, 0, 0, .35), 0 2px 10px rgba(0, 0, 0, .2);
-      --radius: 16px;
-      --space: clamp(16px, 2vw, 24px);
-      --container: 1100px;
-    }
+      * {
+        box-sizing: border-box;
+        font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+          sans-serif;
+      }
 
-    * {
-      box-sizing: border-box;
-      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    }
+      body {
+        margin: 0;
+        background: radial-gradient(
+            1200px 900px at 12% -8%,
+            #1c214c 0%,
+            #1c214c 32%,
+            transparent 70%
+          ),
+          radial-gradient(
+            900px 700px at 86% 12%,
+            #112d62 0%,
+            #112d62 32%,
+            transparent 60%
+          ),
+          linear-gradient(145deg, #0b0d1d 0%, #0a0c18 30%, #0c1026 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
 
-    body {
-      margin: 0;
-      background: radial-gradient(1200px 900px at 12% -8%, #1c214c 0%, #1c214c 32%, transparent 70%),
-        radial-gradient(900px 700px at 86% 12%, #112d62 0%, #112d62 32%, transparent 60%),
-        linear-gradient(145deg, #0b0d1d 0%, #0a0c18 30%, #0c1026 100%);
-      color: var(--ink);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
+      .container {
+        width: min(100%, var(--container));
+        margin: 0 auto;
+        padding: 0 var(--space);
+      }
 
-    .container {
-      width: min(100%, var(--container));
-      margin: 0 auto;
-      padding: 0 var(--space);
-    }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: saturate(1.05) blur(10px);
+        background: linear-gradient(180deg, #0d1026e6 0%, #0d102600 100%);
+        border-bottom: 1px solid #ffffff1a;
+      }
 
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      backdrop-filter: saturate(1.05) blur(10px);
-      background: linear-gradient(180deg, #0d1026e6 0%, #0d102600 100%);
-      border-bottom: 1px solid #ffffff1a;
-    }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 68px;
+      }
 
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 68px;
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: .75rem;
-      font-weight: 800;
-      letter-spacing: .4px;
-    }
-
-    .brand .logo {
-      width: 30px;
-      height: 30px;
-      border-radius: 10px;
-    }
-
-    .links {
-      display: flex;
-      gap: .6rem;
-      align-items: center;
-    }
-
-    .links a {
-      padding: .55rem .8rem;
-      border-radius: 12px;
-      border: 1px solid transparent;
-      transition: all .15s ease;
-    }
-
-    .links a:hover {
-      border-color: #ffffff22;
-      background: #ffffff0d;
-    }
-
-    .links a[aria-current="page"] {
-      border-color: #ffffff30;
-      background: #ffffff14;
-    }
-
-    .auth {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .auth .btn.small {
-      padding: 0.5rem 0.7rem;
-      border-radius: 10px;
-      background: transparent;
-      color: var(--ink);
-      border: 1px solid #ffffff26;
-      box-shadow: none;
-      font-weight: 700;
-    }
-
-    .auth-box {
-      position: relative;
-    }
-
-    .avatar-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.35rem 0.5rem;
-      border-radius: 12px;
-      background: #ffffff0d;
-      border: 1px solid #ffffff1a;
-      color: var(--ink);
-      cursor: pointer;
-    }
-
-    .avatar {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .avatar-fallback {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: #ffffff1a;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      color: var(--ink);
-    }
-
-    .menu {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      background: #10142f;
-      border: 1px solid #ffffff22;
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      min-width: 180px;
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-      z-index: 20;
-    }
-
-    .menu.open {
-      display: flex;
-    }
-
-    .menu a,
-    .menu button {
-      padding: 0.65rem 0.9rem;
-      text-align: left;
-      background: transparent;
-      color: var(--ink);
-      border: 0;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .menu a:hover,
-    .menu button:hover {
-      background: #ffffff0f;
-    }
-
-    .mobile-toggle {
-      display: none;
-    }
-
-    @media (max-width: 820px) {
-      .mobile-toggle {
+      .brand {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
+        gap: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.4px;
+      }
+
+      .brand .logo {
+        width: 30px;
+        height: 30px;
         border-radius: 10px;
-        border: 1px solid #ffffff26;
-        background: transparent;
-        color: var(--ink);
       }
 
       .links {
-        position: fixed;
-        inset: 68px 0 auto 0;
-        padding: 1rem var(--space);
-        background: linear-gradient(180deg, #0b0f29f0, #0b0f29a5);
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+      }
+
+      .links a {
+        padding: 0.55rem 0.8rem;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        transition: all 0.15s ease;
+      }
+
+      .links a:hover {
+        border-color: #ffffff22;
+        background: #ffffff0d;
+      }
+
+      .links a[aria-current="page"] {
+        border-color: #ffffff30;
+        background: #ffffff14;
+      }
+
+      .auth {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .auth .btn.small {
+        padding: 0.5rem 0.7rem;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid #ffffff26;
+        box-shadow: none;
+        font-weight: 700;
+      }
+
+      .auth-box {
+        position: relative;
+      }
+
+      .avatar-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 12px;
+        background: #ffffff0d;
+        border: 1px solid #ffffff1a;
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .avatar-fallback {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #ffffff1a;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: var(--ink);
+      }
+
+      .menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: #10142f;
+        border: 1px solid #ffffff22;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        min-width: 180px;
+        display: none;
         flex-direction: column;
-        align-items: flex-start;
+        overflow: hidden;
+        z-index: 20;
+      }
+
+      .menu.open {
+        display: flex;
+      }
+
+      .menu a,
+      .menu button {
+        padding: 0.65rem 0.9rem;
+        text-align: left;
+        background: transparent;
+        color: var(--ink);
+        border: 0;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .menu a:hover,
+      .menu button:hover {
+        background: #ffffff0f;
+      }
+
+      .mobile-toggle {
         display: none;
       }
 
-      .links.open {
-        display: flex;
-      }
-    }
-
-    main {
-      flex: 1;
-      padding-bottom: 64px;
-    }
-
-    .hero {
-      padding: clamp(40px, 8vw, 100px) 0 clamp(30px, 6vw, 60px);
-      display: grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap: clamp(20px, 4vw, 36px);
-      align-items: center;
-    }
-
-    .hero h1 {
-      margin: 0 0 .6rem;
-      font-size: clamp(32px, 6vw, 56px);
-      line-height: 1.05;
-    }
-
-    .subtitle {
-      font-size: clamp(16px, 2.8vw, 20px);
-      color: var(--muted);
-      margin: 0 0 1.4rem;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: .4rem;
-      padding: .4rem .75rem;
-      border-radius: 999px;
-      background: color-mix(in oklab, var(--acc) 18%, transparent);
-      border: 1px solid #ffffff26;
-      font-weight: 700;
-      letter-spacing: .4px;
-      color: var(--ink);
-    }
-
-    .cta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .85rem;
-      align-items: center;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: .55rem;
-      padding: .85rem 1.2rem;
-      border-radius: 12px;
-      background: linear-gradient(120deg, var(--acc), var(--acc-2));
-      color: #0b0c18;
-      font-weight: 800;
-      border: 1px solid #ffffff26;
-      box-shadow: var(--shadow);
-      transition: transform .15s ease, filter .2s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-      filter: saturate(1.1);
-    }
-
-    .btn.ghost {
-      background: transparent;
-      color: var(--ink);
-      border: 1px solid #ffffff26;
-      box-shadow: none;
-    }
-
-    .tagline {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: .8rem;
-      margin-top: 1.4rem;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: .5rem;
-      padding: .6rem .8rem;
-      border-radius: 12px;
-      background: #ffffff10;
-      border: 1px solid #ffffff1a;
-      color: var(--ink);
-      font-weight: 700;
-    }
-
-    .card {
-      background: linear-gradient(180deg, #161b3a, #121633);
-      border: 1px solid #ffffff16;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: clamp(18px, 2vw, 22px);
-    }
-
-    .card h3 {
-      margin: 0 0 .35rem;
-      font-size: 1.1rem;
-      letter-spacing: .2px;
-    }
-
-    .card p {
-      margin: 0 0 .9rem;
-      color: var(--muted);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: clamp(14px, 2vw, 20px);
-    }
-
-    .chip-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .5rem;
-      margin-bottom: .8rem;
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: .35rem;
-      padding: .45rem .7rem;
-      border-radius: 999px;
-      background: #ffffff0d;
-      border: 1px solid #ffffff1a;
-      color: var(--ink);
-      font-weight: 600;
-      font-size: .95rem;
-    }
-
-    .section {
-      padding: clamp(30px, 5vw, 60px) 0;
-    }
-
-    .section h2 {
-      margin: 0 0 .6rem;
-      font-size: clamp(22px, 3vw, 28px);
-    }
-
-    .helper {
-      color: var(--muted);
-      margin: 0 0 1.2rem;
-    }
-
-    .code {
-      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
-      background: #0e132c;
-      color: #d8e0ff;
-      padding: .9rem 1rem;
-      border-radius: 14px;
-      border: 1px solid #ffffff1f;
-      box-shadow: var(--shadow);
-      overflow-x: auto;
-      font-size: .95rem;
-      white-space: pre;
-      margin: 0;
-    }
-
-    .mini-grid {
-      display: grid;
-      gap: .8rem;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    }
-
-    .notice {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-      padding: 1rem 1.2rem;
-      border-radius: 14px;
-      border: 1px dashed #ffffff30;
-      background: #ffffff08;
-      color: var(--muted);
-    }
-
-    @media (max-width: 900px) {
-      .hero {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <header>
-    <div class="container nav" role="navigation" aria-label="Primary">
-      <div class="brand">
-        <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="30" height="30" /></a>
-        <a href="/">TAOMAT</a>
-      </div>
-      <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu" aria-expanded="false"
-        aria-label="Toggle menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-        </svg>
-      </button>
-      <nav id="primary-menu" class="links" aria-label="Site">
-        <a href="/" aria-current="page">Home</a>
-        <a href="/api">GIF API</a>
-        <a href="/api/gif/admin">Add GIFs</a>
-        <a href="/linktree/config">Linktree</a>
-      </nav>
-      <div id="authSlot" class="auth"></div>
-    </div>
-  </header>
-
-  <main>
-    <div class="container">
-      <section class="hero">
-        <div>
-          <div class="eyebrow">User-first hub</div>
-          <h1>Ship GIFs. Share Links. Welcome in.</h1>
-          <p class="subtitle">
-            The Anime GIF API lets you query and contribute community-picked reactions. The Linktree builder gives you
-            a polished hub for everything you do. Start with the explorer, or jump straight into editing your tree.
-          </p>
-          <div class="cta-row">
-            <a class="btn" href="/api">Open GIF API explorer</a>
-            <a class="btn ghost" href="/linktree/config">Build your Linktree</a>
-            <a class="btn ghost" href="/api/gif/admin">Add a new GIF</a>
-          </div>
-          <div class="tagline">
-            <span class="pill">⚡ Fast explorer + code snippets</span>
-            <span class="pill">🧩 Add & moderate GIFs with tags</span>
-            <span class="pill">🌐 Linktree with avatars, music & effects</span>
-          </div>
-        </div>
-        <div class="card">
-          <div class="chip-row">
-            <span class="chip">REST · GET/POST/PATCH</span>
-            <span class="chip">Rate-limit aware</span>
-            <span class="chip">No-Nonsense JSON</span>
-          </div>
-          <h3>Preview the API</h3>
-          <p>Hit the endpoint directly. Swap params and keep moving.</p>
-          <pre class="code">fetch("/api/gifs?character=gojo&nsfw=false")
-  .then(res => res.json())
-  .then(data => console.log(data));</pre>
-          <div class="chip-row" style="margin-top:1rem">
-            <span class="chip" style="color: var(--success)">✓ Own what you add</span>
-            <span class="chip" style="color: var(--warning)">🚫 Blacklist supported</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" aria-labelledby="entry-points">
-        <div class="notice">
-          <div>
-            <strong>New navigation:</strong> Portfolio lives under <code>/portfolio</code>. Everything here points you
-            to the Linktree + GIF API tools.
-          </div>
-          <a class="btn ghost" href="/portfolio">Go to portfolio</a>
-        </div>
-      </section>
-
-      <section class="section" aria-labelledby="paths">
-        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem">
-          <h2 id="paths" style="margin:0">Choose your path</h2>
-          <span class="chip">Built for speed</span>
-        </div>
-        <p class="helper">Pick the surface you need. Everything stays dark, fast, and focused on shipping.</p>
-        <div class="grid">
-          <article class="card">
-            <h3>GIF API Explorer</h3>
-            <p>Query the Anime GIF API with instant previews and ready-to-copy requests.</p>
-            <div class="chip-row">
-              <span class="chip">Query builder</span>
-              <span class="chip">cURL & Python snippets</span>
-              <span class="chip">Random & filtered</span>
-            </div>
-            <a class="btn" href="/api">Open explorer</a>
-          </article>
-
-          <article class="card">
-            <h3>Add & manage GIFs</h3>
-            <p>Submit new GIFs, tag characters, set NSFW flags, and keep the library clean.</p>
-            <div class="chip-row">
-              <span class="chip">Owner-only edits</span>
-              <span class="chip">Admin moderation</span>
-              <span class="chip">Character + tag search</span>
-            </div>
-            <a class="btn" href="/api/gif/admin">Add a GIF</a>
-          </article>
-
-          <article class="card">
-            <h3>Linktree Builder</h3>
-            <p>Create a personal landing page with media, icons, and effects that match your vibe.</p>
-            <div class="chip-row">
-              <span class="chip">Avatars & backgrounds</span>
-              <span class="chip">Music & effects</span>
-              <span class="chip">Icons & ordering</span>
-            </div>
-            <a class="btn" href="/linktree/config">Configure Linktree</a>
-          </article>
-        </div>
-      </section>
-
-      <section class="section" aria-labelledby="why">
-        <h2 id="why" style="margin:0 0 .4rem">Why these tools?</h2>
-        <p class="helper">They're fast to try, easy to edit, and designed to be shared.</p>
-        <div class="mini-grid">
-          <div class="card">
-            <h3>Quick onboarding</h3>
-            <p>Open the explorer or Linktree editor—no docs hunt required. Inputs are labeled, guardrails included.</p>
-          </div>
-          <div class="card">
-            <h3>Shareable by default</h3>
-            <p>Copy API links, embed GIF URLs, or share your Linktree slug anywhere. Everything is HTTPS-ready.</p>
-          </div>
-          <div class="card">
-            <h3>Community-friendly</h3>
-            <p>GIF ownership, blacklists, and admin controls keep the library usable for everyone.</p>
-          </div>
-          <div class="card">
-            <h3>Still want the portfolio?</h3>
-            <p>It's one click away at <a href="/portfolio" style="color:inherit;text-decoration:underline">/portfolio</a>.
-              You keep the context, but the landing stays focused on you.</p>
-          </div>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <script>
-    const toggle = document.getElementById('mobileToggle');
-    const menu = document.getElementById('primary-menu');
-    toggle?.addEventListener('click', () => {
-      const open = menu.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-
-    function escapeHtml(value) {
-      const map = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;",
-      };
-      return String(value ?? "").replace(/[&<>"']/g, (ch) => map[ch] || ch);
-    }
-
-    function sanitizeUrl(raw) {
-      if (typeof raw !== "string") return "";
-      const trimmed = raw.trim();
-      if (!trimmed) return "";
-      if (trimmed.startsWith("javascript:")) return "";
-      try {
-        const u = new URL(trimmed, window.location.origin);
-        if (["http:", "https:"].includes(u.protocol)) {
-          return trimmed.startsWith("http://") || trimmed.startsWith("https://")
-            ? u.href
-            : trimmed;
+      @media (max-width: 820px) {
+        .mobile-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          border: 1px solid #ffffff26;
+          background: transparent;
+          color: var(--ink);
         }
-      } catch (_) {
-        if (trimmed.startsWith("/") && !trimmed.startsWith("//")) return trimmed;
-      }
-      return "";
-    }
 
-    async function safe(fn) {
-      try {
-        return await fn();
-      } catch (e) {
-        console.error(e);
-        return null;
-      }
-    }
+        .links {
+          position: fixed;
+          inset: 68px 0 auto 0;
+          padding: 1rem var(--space);
+          background: linear-gradient(180deg, #0b0f29f0, #0b0f29a5);
+          flex-direction: column;
+          align-items: flex-start;
+          display: none;
+        }
 
-    async function fetchSession() {
-      try {
-        const r = await safe(() => fetch("/api/auth/verify", { credentials: "include" }));
-        if (!r || !r.ok) return null;
-        return await r.json();
-      } catch {
-        return null;
-      }
-    }
-
-    async function renderAuthHeader() {
-      const slot = document.getElementById("authSlot");
-      if (!slot) return;
-
-      const session = await fetchSession();
-      const user = session && session.user ? session.user : null;
-      const isAdmin = !!(user && user.admin);
-
-      if (!user) {
-        slot.innerHTML = `<a class="btn small" href="/login?next=${encodeURIComponent(location.href)}">Login</a>
-      <a class="btn small" href="/register?next=${encodeURIComponent(location.href)}">Register</a>`;
-        return;
+        .links.open {
+          display: flex;
+        }
       }
 
-      const uname = user.username || "User";
-      const initials = uname.trim().slice(0, 2).toUpperCase() || "U";
-      const pfp = sanitizeUrl(user.profile_picture || "");
+      main {
+        flex: 1;
+        padding-bottom: 64px;
+      }
 
-      slot.innerHTML = `
+      .hero {
+        padding: clamp(40px, 8vw, 100px) 0 clamp(30px, 6vw, 60px);
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: clamp(20px, 4vw, 36px);
+        align-items: center;
+      }
+
+      .hero h1 {
+        margin: 0 0 0.6rem;
+        font-size: clamp(32px, 6vw, 56px);
+        line-height: 1.05;
+      }
+
+      .subtitle {
+        font-size: clamp(16px, 2.8vw, 20px);
+        color: var(--muted);
+        margin: 0 0 1.4rem;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        background: color-mix(in oklab, var(--acc) 18%, transparent);
+        border: 1px solid #ffffff26;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        color: var(--ink);
+      }
+
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+        align-items: center;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.85rem 1.2rem;
+        border-radius: 12px;
+        background: linear-gradient(120deg, var(--acc), var(--acc-2));
+        color: #0b0c18;
+        font-weight: 800;
+        border: 1px solid #ffffff26;
+        box-shadow: var(--shadow);
+        transition: transform 0.15s ease, filter 0.2s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        filter: saturate(1.1);
+      }
+
+      .btn.ghost {
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid #ffffff26;
+        box-shadow: none;
+      }
+
+      .tagline {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.8rem;
+        margin-top: 1.4rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 0.8rem;
+        border-radius: 12px;
+        background: #ffffff10;
+        border: 1px solid #ffffff1a;
+        color: var(--ink);
+        font-weight: 700;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #161b3a, #121633);
+        border: 1px solid #ffffff16;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: clamp(18px, 2vw, 22px);
+      }
+
+      .card h3 {
+        margin: 0 0 0.35rem;
+        font-size: 1.1rem;
+        letter-spacing: 0.2px;
+      }
+
+      .card p {
+        margin: 0 0 0.9rem;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: clamp(14px, 2vw, 20px);
+      }
+
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: #ffffff0d;
+        border: 1px solid #ffffff1a;
+        color: var(--ink);
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .section {
+        padding: clamp(30px, 5vw, 60px) 0;
+      }
+
+      .section h2 {
+        margin: 0 0 0.6rem;
+        font-size: clamp(22px, 3vw, 28px);
+      }
+
+      .helper {
+        color: var(--muted);
+        margin: 0 0 1.2rem;
+      }
+
+      .code {
+        font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+        background: #0e132c;
+        color: #d8e0ff;
+        padding: 0.9rem 1rem;
+        border-radius: 14px;
+        border: 1px solid #ffffff1f;
+        box-shadow: var(--shadow);
+        overflow-x: auto;
+        font-size: 0.95rem;
+        white-space: pre;
+        margin: 0;
+      }
+
+      .mini-grid {
+        display: grid;
+        gap: 0.8rem;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      }
+
+      .notice {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 1rem 1.2rem;
+        border-radius: 14px;
+        border: 1px dashed #ffffff30;
+        background: #ffffff08;
+        color: var(--muted);
+      }
+
+      @media (max-width: 900px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: saturate(1.1) blur(10px);
+        background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+        border-bottom: 1px solid #ffffff14;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.4px;
+      }
+
+      .brand .logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: block;
+      }
+
+      .links {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .links a {
+        padding: 0.45rem 0.7rem;
+        border-radius: 10px;
+        border: 1px solid transparent;
+      }
+
+      .links a:hover {
+        border-color: #ffffff1f;
+        background: #ffffff0f;
+      }
+
+      .mobile-toggle {
+        display: none;
+      }
+
+      @media (max-width: 800px) {
+        .mobile-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          border: 1px solid #ffffff26;
+          background: transparent;
+        }
+
+        .links {
+          position: fixed;
+          inset: 64px 0 auto 0;
+          background: linear-gradient(180deg, #0b0f29, #0b0f2945);
+          padding: 1rem;
+          display: none;
+          flex-direction: column;
+        }
+
+        .links.open {
+          display: flex;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div class="container nav" role="navigation" aria-label="Primary">
+        <div class="brand">
+          <a href="/"
+            ><img
+              class="logo"
+              src="/static/icon.png"
+              alt="TAOMA logo"
+              width="30"
+              height="30"
+          /></a>
+          <a href="/">TAOMAT</a>
+        </div>
+        <button
+          type="button"
+          class="mobile-toggle"
+          id="mobileToggle"
+          aria-controls="primary-menu"
+          aria-expanded="false"
+          aria-label="Toggle menu"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M4 6H20M4 12H20M4 18H20"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <nav id="primary-menu" class="links" aria-label="Site">
+          <a href="/" aria-current="page">Home</a>
+          <a href="/api">GIF API</a>
+          <a href="/api/gif/admin">Add GIFs</a>
+          <a href="/linktree/config">Linktree</a>
+        </nav>
+        <div id="authSlot" class="auth"></div>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <section class="hero">
+          <div>
+            <div class="eyebrow">User-first hub</div>
+            <h1>Ship GIFs. Share Links. Welcome in.</h1>
+            <p class="subtitle">
+              The Anime GIF API lets you query and contribute community-picked
+              reactions. The Linktree builder gives you a polished hub for
+              everything you do. Start with the explorer, or jump straight into
+              editing your tree.
+            </p>
+            <div class="cta-row">
+              <a class="btn" href="/api">Open GIF API explorer</a>
+              <a class="btn ghost" href="/linktree/config"
+                >Build your Linktree</a
+              >
+              <a class="btn ghost" href="/api/gif/admin">Add a new GIF</a>
+            </div>
+            <div class="tagline">
+              <span class="pill">⚡ Fast explorer + code snippets</span>
+              <span class="pill">🧩 Add & moderate GIFs with tags</span>
+              <span class="pill"
+                >🌐 Linktree with avatars, music & effects</span
+              >
+            </div>
+          </div>
+          <div class="card">
+            <div class="chip-row">
+              <span class="chip">REST · GET/POST/PATCH</span>
+              <span class="chip">Rate-limit aware</span>
+              <span class="chip">No-Nonsense JSON</span>
+            </div>
+            <h3>Preview the API</h3>
+            <p>Hit the endpoint directly. Swap params and keep moving.</p>
+            <pre class="code">
+fetch("/api/gifs?character=gojo&nsfw=false")
+  .then(res => res.json())
+  .then(data => console.log(data));</pre
+            >
+            <div class="chip-row" style="margin-top: 1rem">
+              <span class="chip" style="color: var(--success)"
+                >✓ Own what you add</span
+              >
+              <span class="chip" style="color: var(--warning)"
+                >🚫 Blacklist supported</span
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="entry-points">
+          <div class="notice">
+            <div>
+              <strong>New navigation:</strong> Portfolio lives under
+              <code>/portfolio</code>. Everything here points you to the
+              Linktree + GIF API tools.
+            </div>
+            <a class="btn ghost" href="/portfolio">Go to portfolio</a>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="paths">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 0.6rem;
+              flex-wrap: wrap;
+              margin-bottom: 0.6rem;
+            "
+          >
+            <h2 id="paths" style="margin: 0">Choose your path</h2>
+            <span class="chip">Built for speed</span>
+          </div>
+          <p class="helper">
+            Pick the surface you need. Everything stays dark, fast, and focused
+            on shipping.
+          </p>
+          <div class="grid">
+            <article class="card">
+              <h3>GIF API Explorer</h3>
+              <p>
+                Query the Anime GIF API with instant previews and ready-to-copy
+                requests.
+              </p>
+              <div class="chip-row">
+                <span class="chip">Query builder</span>
+                <span class="chip">cURL & Python snippets</span>
+                <span class="chip">Random & filtered</span>
+              </div>
+              <a class="btn" href="/api">Open explorer</a>
+            </article>
+
+            <article class="card">
+              <h3>Add & manage GIFs</h3>
+              <p>
+                Submit new GIFs, tag characters, set NSFW flags, and keep the
+                library clean.
+              </p>
+              <div class="chip-row">
+                <span class="chip">Owner-only edits</span>
+                <span class="chip">Admin moderation</span>
+                <span class="chip">Character + tag search</span>
+              </div>
+              <a class="btn" href="/api/gif/admin">Add a GIF</a>
+            </article>
+
+            <article class="card">
+              <h3>Linktree Builder</h3>
+              <p>
+                Create a personal landing page with media, icons, and effects
+                that match your vibe.
+              </p>
+              <div class="chip-row">
+                <span class="chip">Avatars & backgrounds</span>
+                <span class="chip">Music & effects</span>
+                <span class="chip">Icons & ordering</span>
+              </div>
+              <a class="btn" href="/linktree/config">Configure Linktree</a>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="why">
+          <h2 id="why" style="margin: 0 0 0.4rem">Why these tools?</h2>
+          <p class="helper">
+            They're fast to try, easy to edit, and designed to be shared.
+          </p>
+          <div class="mini-grid">
+            <div class="card">
+              <h3>Quick onboarding</h3>
+              <p>
+                Open the explorer or Linktree editor—no docs hunt required.
+                Inputs are labeled, guardrails included.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Shareable by default</h3>
+              <p>
+                Copy API links, embed GIF URLs, or share your Linktree slug
+                anywhere. Everything is HTTPS-ready.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Community-friendly</h3>
+              <p>
+                GIF ownership, blacklists, and admin controls keep the library
+                usable for everyone.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Still want the portfolio?</h3>
+              <p>
+                It's one click away at
+                <a
+                  href="/portfolio"
+                  style="color: inherit; text-decoration: underline"
+                  >/portfolio</a
+                >. You keep the context, but the landing stays focused on you.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const toggle = document.getElementById("mobileToggle");
+      const menu = document.getElementById("primary-menu");
+      toggle?.addEventListener("click", () => {
+        const open = menu.classList.toggle("open");
+        toggle.setAttribute("aria-expanded", String(open));
+      });
+
+      function escapeHtml(value) {
+        const map = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        };
+        return String(value ?? "").replace(/[&<>"']/g, (ch) => map[ch] || ch);
+      }
+
+      function sanitizeUrl(raw) {
+        if (typeof raw !== "string") return "";
+        const trimmed = raw.trim();
+        if (!trimmed) return "";
+        if (trimmed.startsWith("javascript:")) return "";
+        try {
+          const u = new URL(trimmed, window.location.origin);
+          if (["http:", "https:"].includes(u.protocol)) {
+            return trimmed.startsWith("http://") ||
+              trimmed.startsWith("https://")
+              ? u.href
+              : trimmed;
+          }
+        } catch (_) {
+          if (trimmed.startsWith("/") && !trimmed.startsWith("//"))
+            return trimmed;
+        }
+        return "";
+      }
+
+      async function safe(fn) {
+        try {
+          return await fn();
+        } catch (e) {
+          console.error(e);
+          return null;
+        }
+      }
+
+      async function fetchSession() {
+        try {
+          const r = await safe(() =>
+            fetch("/api/auth/verify", { credentials: "include" })
+          );
+          if (!r || !r.ok) return null;
+          return await r.json();
+        } catch {
+          return null;
+        }
+      }
+
+      async function renderAuthHeader() {
+        const slot = document.getElementById("authSlot");
+        if (!slot) return;
+
+        const session = await fetchSession();
+        const user = session && session.user ? session.user : null;
+        const isAdmin = !!(user && user.admin);
+
+        if (!user) {
+          slot.innerHTML = `<a class="btn small" href="/login?next=${encodeURIComponent(
+            location.href
+          )}">Login</a>
+      <a class="btn small" href="/register?next=${encodeURIComponent(
+        location.href
+      )}">Register</a>`;
+          return;
+        }
+
+        const uname = user.username || "User";
+        const initials = uname.trim().slice(0, 2).toUpperCase() || "U";
+        const pfp = sanitizeUrl(user.profile_picture || "");
+
+        slot.innerHTML = `
     <div class="auth-box">
       <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
         ${
           pfp
-            ? `<img class="avatar" src="${pfp}" alt="${escapeHtml(uname)}'s profile picture">`
-            : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(initials)}</span>`
+            ? `<img class="avatar" src="${pfp}" alt="${escapeHtml(
+                uname
+              )}'s profile picture">`
+            : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(
+                initials
+              )}</span>`
         }
-        <span class="uname" style="font-weight:700;font-size:.95rem">${escapeHtml(uname)}</span>
+        <span class="uname" style="font-weight:700;font-size:.95rem">${escapeHtml(
+          uname
+        )}</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
@@ -650,41 +831,48 @@
       </div>
     </div>`;
 
-      const btn = slot.querySelector("#avatarBtn");
-      const menu = slot.querySelector("#userMenu");
-      const logoutBtn = slot.querySelector("#logoutBtnHdr");
+        const btn = slot.querySelector("#avatarBtn");
+        const menu = slot.querySelector("#userMenu");
+        const logoutBtn = slot.querySelector("#logoutBtnHdr");
 
-      function closeMenu() {
-        menu?.classList.remove("open");
-        btn?.setAttribute("aria-expanded", "false");
+        function closeMenu() {
+          menu?.classList.remove("open");
+          btn?.setAttribute("aria-expanded", "false");
+        }
+
+        btn?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const open = menu?.classList.toggle("open");
+          btn.setAttribute("aria-expanded", String(open));
+        });
+
+        document.addEventListener("click", (e) => {
+          if (
+            menu &&
+            !menu.contains(e.target) &&
+            btn &&
+            !btn.contains(e.target)
+          ) {
+            closeMenu();
+          }
+        });
+
+        logoutBtn?.addEventListener(
+          "click",
+          async () => {
+            try {
+              await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: "include",
+              });
+            } catch {}
+            location.href = "/";
+          },
+          { passive: true }
+        );
       }
 
-      btn?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const open = menu?.classList.toggle("open");
-        btn.setAttribute("aria-expanded", String(open));
-      });
-
-      document.addEventListener("click", (e) => {
-        if (menu && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
-          closeMenu();
-        }
-      });
-
-      logoutBtn?.addEventListener(
-        "click",
-        async () => {
-          try {
-            await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-          } catch {}
-          location.href = "/";
-        },
-        { passive: true }
-      );
-    }
-
-    renderAuthHeader();
-  </script>
-</body>
-
+      renderAuthHeader();
+    </script>
+  </body>
 </html>
