@@ -847,6 +847,40 @@
     <footer>© <span id="year"></span> TAOMA™</footer>
 
     <script>
+      async function resizeCursorImage(url, size = 32) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+
+          img.crossOrigin = "anonymous"; // Wichtig, falls das PNG von deiner Domain kommt
+          img.onload = () => {
+            // Canvas erstellen
+            const canvas = document.createElement("canvas");
+            canvas.width = size;
+            canvas.height = size;
+
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, size, size);
+
+            // Bild proportional skalieren
+            const scale = Math.min(size / img.width, size / img.height);
+            const w = img.width * scale;
+            const h = img.height * scale;
+
+            const x = (size - w) / 2;
+            const y = (size - h) / 2;
+
+            ctx.drawImage(img, x, y, w, h);
+
+            // Base64 URL erzeugen
+            const resizedUrl = canvas.toDataURL("image/png");
+            resolve(resizedUrl);
+          };
+
+          img.onerror = reject;
+          img.src = url;
+        });
+      }
+
       (() => {
         "use strict";
 
@@ -1217,11 +1251,26 @@
             );
             const cursorUrl = safeMediaUrl(data.cursor_url);
             if (cursorUrl && device === "pc") {
-              const cursorDecl = `url("${cursorUrl}") 0 0, auto`;
-              document.documentElement.style.setProperty(
-                "--cursor",
-                cursorDecl
-              );
+              const cursorUrl = safeMediaUrl(data.cursor_url);
+
+              if (cursorUrl && device === "pc") {
+                resizeCursorImage(cursorUrl, 32)
+                  .then((resized) => {
+                    const cursorDecl = `url("${resized}") 0 0, auto`;
+                    document.documentElement.style.setProperty(
+                      "--cursor",
+                      cursorDecl
+                    );
+                  })
+                  .catch(() => {
+                    document.documentElement.style.setProperty(
+                      "--cursor",
+                      "auto"
+                    );
+                  });
+              } else {
+                document.documentElement.style.setProperty("--cursor", "auto");
+              }
             } else {
               document.documentElement.style.setProperty("--cursor", "auto");
             }
