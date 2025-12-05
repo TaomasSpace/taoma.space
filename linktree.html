@@ -223,7 +223,7 @@
         box-shadow: var(--shadow);
         font-weight: 700;
         user-select: none;
-        cursor: pointer;
+        cursor: var(--cursor, pointer);
         backdrop-filter: blur(6px) saturate(1.2);
       }
 
@@ -268,7 +268,7 @@
         color: var(--ink);
         text-align: center;
         min-width: 220px;
-        cursor: pointer;
+        cursor: var(--cursor, pointer);
         user-select: none;
       }
 
@@ -567,7 +567,7 @@
         box-shadow: var(--shadow);
         font-weight: 700;
         user-select: none;
-        cursor: pointer;
+        cursor: var(--cursor, pointer);
         backdrop-filter: blur(6px) saturate(1.2);
         font-size: 0.85rem;
       }
