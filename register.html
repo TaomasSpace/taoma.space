@@ -328,6 +328,13 @@
     </main>
 
     <script>
+        const params = new URLSearchParams(location.search);
+        const storedNext = sessionStorage.getItem('taoma_next');
+        const nextUrl = params.get('next') || storedNext || document.referrer || '/';
+        if (nextUrl) sessionStorage.setItem('taoma_next', nextUrl);
+        const backToLogin = document.querySelector('a[href="/login"]');
+        if (backToLogin) backToLogin.href = `/login?next=${encodeURIComponent(nextUrl)}`;
+
         const u = document.getElementById('username');
         const p = document.getElementById('password');
         const c = document.getElementById('confirm');
@@ -362,8 +369,8 @@
                     return;
                 }
                 if (!data?.token) { showErr("No token returned by server."); return; }
-                showOk("Account created. Redirecting…");
-                setTimeout(() => { window.location.href = '/' }, 400);
+                showOk("Account created. Redirecting...");
+                setTimeout(() => { window.location.href = nextUrl || '/'; }, 400);
             } catch (e) {
                 showErr("Network error: " + (e?.message || e));
             } finally {

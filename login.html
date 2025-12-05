@@ -460,6 +460,14 @@
             } catch { }
         })();
 
+        // Redirect target
+        const params = new URLSearchParams(location.search);
+        const storedNext = sessionStorage.getItem('taoma_next');
+        const nextUrl = params.get('next') || storedNext || document.referrer || '/';
+        if (nextUrl) sessionStorage.setItem('taoma_next', nextUrl);
+        const registerLink = document.querySelector('a[href="/register"]');
+        if (registerLink) registerLink.href = `/register?next=${encodeURIComponent(nextUrl)}`;
+
         // UI helpers
         const userEl = document.getElementById('username');
         const pw = document.getElementById('password');
@@ -507,15 +515,8 @@
                 const { token } = await res.json();
                 if (!token) { showErr("No token returned by server."); return; }
 
-                // verify + role-based redirect
-                const v = await fetch('/api/auth/verify', { credentials: 'include' });
-                let isAdmin = false;
-                if (v.ok) {
-                    const data = await v.json();
-                    isAdmin = !!(data && data.user && data.user.admin);
-                }
-                showOk("Login successful. Redirecting…");
-                setTimeout(() => { window.location.href = isAdmin ? '/' : '/'; }, 350);
+                showOk("Login successful. Redirecting...");
+                setTimeout(() => { window.location.href = nextUrl || '/'; }, 350);
 
             } catch (e) {
                 showErr("Network error: " + (e?.message || e));
