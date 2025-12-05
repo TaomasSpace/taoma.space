@@ -135,6 +135,9 @@ ALLOWED_USER_IDS = {
 # GIF badge thresholds: (min_gifs, icon_code)
 GIF_BADGE_THRESHOLDS: list[tuple[int, str]] = [
     (5, "753248"),
+    (100, "753249"),
+    (500, "753250"),
+    (1000, "753251"),
 ]
 def _ensure_pg():
     if not isinstance(db, PgGifDB):
