@@ -1023,6 +1023,37 @@
       const toISODate = (s) => s?.slice(0, 10);
       const fmtTemp = (v) => (v != null ? Number(v).toFixed(1) : "");
 
+      async function safe(fn) {
+        try {
+          return await fn();
+        } catch (e) {
+          console.error(e);
+          return null;
+        }
+      }
+
+      async function fetchSession() {
+        try {
+          const r = await safe(() =>
+            fetch("/api/auth/verify", { credentials: "include" })
+          );
+          if (!r || !r.ok) return null;
+          return await r.json();
+        } catch {
+          return null;
+        }
+      }
+
+      async function requireLogin() {
+        const session = await fetchSession();
+        if (!session || !session.user) {
+          const next = encodeURIComponent(location.href);
+          location.href = `/login?next=${next}`;
+          return null;
+        }
+        return session.user;
+      }
+
       // Tabs
       document.querySelectorAll(".tab").forEach((t) => {
         t.addEventListener("click", () => {
@@ -1566,10 +1597,14 @@
           });
       }
 
-      // Init
-      $("todayLabel").textContent = todayISO();
-      enhanceSlidersWithTicks();
-      wireRangeOutputs();
+      // Init (only when logged in)
+      (async () => {
+        const user = await requireLogin();
+        if (!user) return;
+        $("todayLabel").textContent = todayISO();
+        enhanceSlidersWithTicks();
+        wireRangeOutputs();
+      })();
     </script>
   </body>
 </html>
