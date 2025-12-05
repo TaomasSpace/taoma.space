@@ -36,6 +36,14 @@
         cursor: var(--cursor, auto);
       }
 
+      html,
+      body,
+      a,
+      button,
+      .link {
+        cursor: var(--cursor, auto);
+      }
+
       /* Background video/image */
       .bg {
         position: fixed;
@@ -905,7 +913,6 @@
         const DEFAULT_LINK_COLOR = "#e9ebff";
         const DEFAULT_LINK_BG = "#171b3b";
         const DEFAULT_TEXT_COLOR = "#e9ebff";
-        const DEFAULT_MUTED_COLOR = "#a2a9c8";
         const DEFAULT_NAME_COLOR = "#e9ebff";
         const DEFAULT_LOCATION_COLOR = "#a2a9c8";
         const DEFAULT_QUOTE_COLOR = "#e9ebff";
@@ -967,19 +974,19 @@
           const rootStyle = document.documentElement.style;
           const base =
             sanitizeHexColor(data?.text_color) || DEFAULT_TEXT_COLOR;
-          const muted =
-            sanitizeHexColor(data?.muted_color) || DEFAULT_MUTED_COLOR;
+          const location =
+            sanitizeHexColor(data?.location_color) ||
+            sanitizeHexColor(data?.text_color) ||
+            DEFAULT_LOCATION_COLOR;
           const name =
             sanitizeHexColor(data?.name_color) ||
             sanitizeHexColor(data?.link_color) ||
             DEFAULT_NAME_COLOR;
-          const location =
-            sanitizeHexColor(data?.location_color) || muted || DEFAULT_LOCATION_COLOR;
           const quote =
             sanitizeHexColor(data?.quote_color) || base || DEFAULT_QUOTE_COLOR;
 
           rootStyle.setProperty("--ink", base);
-          rootStyle.setProperty("--muted", muted);
+          rootStyle.setProperty("--muted", location);
           rootStyle.setProperty("--name-color", name);
           rootStyle.setProperty("--location-color", location);
           rootStyle.setProperty("--quote-color", quote);

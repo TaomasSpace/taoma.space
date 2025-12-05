@@ -445,7 +445,6 @@ class LinktreeCreateIn(BaseModel):
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
-    muted_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -472,7 +471,6 @@ class LinktreeUpdateIn(BaseModel):
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
-    muted_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -515,7 +513,6 @@ class LinktreeOut(BaseModel):
     link_bg_color: Optional[str] = None
     link_bg_alpha: int = 100
     text_color: Optional[str] = None
-    muted_color: Optional[str] = None
     name_color: Optional[str] = None
     location_color: Optional[str] = None
     quote_color: Optional[str] = None
@@ -1024,12 +1021,11 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                     link_color,
                     link_bg_color,
                     COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
-                    text_color,
-                    muted_color,
-                    name_color,
-                    location_color,
-                    quote_color,
-                    cursor_url,
+                   text_color,
+                   name_color,
+                   location_color,
+                   quote_color,
+                   cursor_url,
                     COALESCE(discord_frame_enabled, false) AS discord_frame_enabled
                FROM linktrees
               WHERE id = %s
@@ -1096,7 +1092,6 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
         "text_color": lt.get("text_color"),
-        "muted_color": lt.get("muted_color"),
         "name_color": lt.get("name_color"),
         "location_color": lt.get("location_color"),
         "quote_color": lt.get("quote_color"),
@@ -1954,7 +1949,6 @@ def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or 
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": lt.get("link_bg_alpha", 100),
         "text_color": lt.get("text_color"),
-        "muted_color": lt.get("muted_color"),
         "name_color": lt.get("name_color"),
         "location_color": lt.get("location_color"),
         "quote_color": lt.get("quote_color"),
@@ -2010,7 +2004,6 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             link_bg_color=payload.link_bg_color,
             link_bg_alpha=payload.link_bg_alpha,
             text_color=payload.text_color,
-            muted_color=payload.muted_color,
             name_color=payload.name_color,
             location_color=payload.location_color,
             quote_color=payload.quote_color,

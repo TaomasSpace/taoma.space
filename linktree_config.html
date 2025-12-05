@@ -1083,10 +1083,6 @@
               <input id="inTextColor" class="input" type="color" value="#e9ebff" />
             </div>
             <div class="field">
-              <label for="inMutedColor">Muted Text Color</label>
-              <input id="inMutedColor" class="input" type="color" value="#a2a9c8" />
-            </div>
-            <div class="field">
               <label for="inNameColor">Name Color</label>
               <input id="inNameColor" class="input" type="color" value="#e9ebff" />
             </div>
@@ -1575,7 +1571,6 @@
       const DEFAULT_LINK_COLOR = "#e9ebff";
       const DEFAULT_LINK_BG_COLOR = "#171b3b";
       const DEFAULT_TEXT_COLOR = "#e9ebff";
-      const DEFAULT_MUTED_COLOR = "#a2a9c8";
       const DEFAULT_NAME_COLOR = "#e9ebff";
       const DEFAULT_LOCATION_COLOR = "#a2a9c8";
       const DEFAULT_QUOTE_COLOR = "#e9ebff";
@@ -1600,11 +1595,10 @@
         $("inNameFx").value = lt.name_effect || "none";
         $("inBgFx").value = lt.background_effect || "none";
         $("inTextColor").value = lt.text_color || DEFAULT_TEXT_COLOR;
-        $("inMutedColor").value = lt.muted_color || DEFAULT_MUTED_COLOR;
         $("inNameColor").value =
           lt.name_color || lt.link_color || DEFAULT_NAME_COLOR;
         $("inLocationColor").value =
-          lt.location_color || lt.muted_color || DEFAULT_LOCATION_COLOR;
+          lt.location_color || lt.text_color || DEFAULT_LOCATION_COLOR;
         $("inQuoteColor").value =
           lt.quote_color || lt.text_color || DEFAULT_QUOTE_COLOR;
         $("inLinkColor").value = lt.link_color || DEFAULT_LINK_COLOR;
@@ -1875,7 +1869,6 @@
           display_name_mode: $("inDisplayName").value,
           custom_display_name: $("inCustomName").value.trim() || null,
           text_color: $("inTextColor").value || null,
-          muted_color: $("inMutedColor").value || null,
           name_color: $("inNameColor").value || null,
           location_color: $("inLocationColor").value || null,
           quote_color: $("inQuoteColor").value || null,
