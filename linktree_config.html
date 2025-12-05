@@ -1440,8 +1440,12 @@
         currentUser = user;
 
         if (!user) {
-          slot.innerHTML = `<a class="btn sm ghost" href="/login?next=${encodeURIComponent(location.href)}">Login</a>
-                                  <a class="btn sm ghost" href="/register?next=${encodeURIComponent(location.href)}">Register</a>`;
+          slot.innerHTML = `<a class="btn small" href="/login?next=${encodeURIComponent(
+            location.href
+          )}">Login</a>
+                                  <a class="btn small" href="/register?next=${encodeURIComponent(
+                                    location.href
+                                  )}">Register</a>`;
           return null;
         }
         const uname = user.username || "User";
