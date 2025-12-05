@@ -20,7 +20,7 @@ import os
 from fastapi import Depends, Header
 from db.db_helper import GifDB as SqliteGifDB
 from db.pg_helper import PgGifDB
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import threading
@@ -720,6 +720,31 @@ def home():
     return FileResponse("index.html")
 
 
+@app.get("/portfolio", include_in_schema=False)
+def portfolio():
+    return FileResponse("portfolio/index.html")
+
+
+@app.get("/portfolio/projects", include_in_schema=False)
+def portfolio_projects():
+    return FileResponse("portfolio/projects.html")
+
+
+@app.get("/portfolio/about", include_in_schema=False)
+def portfolio_about():
+    return FileResponse("portfolio/about.html")
+
+
+@app.get("/portfolio/contact", include_in_schema=False)
+def portfolio_contact():
+    return FileResponse("portfolio/contact.html")
+
+
+@app.get("/portfolio/skills", include_in_schema=False)
+def portfolio_skills():
+    return FileResponse("portfolio/skills.html")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -732,17 +757,17 @@ def favicon():
 
 @app.get("/projects", include_in_schema=False)
 def projects():
-    return FileResponse("projects.html")
+    return RedirectResponse(url="/portfolio/projects", status_code=308)
 
 
 @app.get("/about", include_in_schema=False)
 def about():
-    return FileResponse("about.html")
+    return RedirectResponse(url="/portfolio/about", status_code=308)
 
 
 @app.get("/contact", include_in_schema=False)
 def contact():
-    return FileResponse("contact.html")
+    return RedirectResponse(url="/portfolio/contact", status_code=308)
 
 
 async def notify_discord(p: Contact) -> bool:
@@ -840,7 +865,7 @@ async def job_status(job_id: str):
 
 @app.get("/skills", include_in_schema=False)
 def skills():
-    return FileResponse("skills.html")
+    return RedirectResponse(url="/portfolio/skills", status_code=308)
 
 
 # ------------ GIF API ------------ #

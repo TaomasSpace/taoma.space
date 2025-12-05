@@ -425,11 +425,9 @@
         </button>
         <nav id="primary-menu" class="links" aria-label="Site">
           <a href="/">Home</a>
-          <a href="/projects">Projects</a>
-          <a href="/about">About</a>
-          <a href="/contact">Contact</a>
-          <a href="/skills">Skills</a>
           <a href="/api" aria-current="page">GIF API</a>
+          <a href="/api/gif/admin">Add GIFs</a>
+          <a href="/linktree/config">Linktree</a>
         </nav>
         <div id="authSlot" class="auth"></div>
       </div>
@@ -502,7 +500,7 @@
               id="q"
               type="text"
               data-i18n-placeholder="ph.q"
-              placeholder="e.g. Nazuna"
+              placeholder="e.g. Nazuna Nanakusa"
             />
             <div class="hint" data-i18n="hint.q">
               If this is set, don't use tag/anime/character.
@@ -550,7 +548,7 @@
               id="character"
               type="text"
               data-i18n-placeholder="ph.character"
-              placeholder="Nazuna"
+              placeholder="Nazuna Nanakusa"
             />
             <div class="hint" data-i18n="hint.character">
               Exact Match (case-insensitive).
@@ -781,7 +779,7 @@
               <tr>
                 <td><code>q</code></td>
                 <td>string</td>
-                <td><code>q=Nazuna</code></td>
+                <td><code>q=Nazuna Nanakusa</code></td>
                 <td data-i18n="docs.row.q">
                   Searches the <b>title</b>; do not combine with
                   tag/anime/character.
@@ -804,7 +802,7 @@
               <tr>
                 <td><code>character</code></td>
                 <td>string</td>
-                <td><code>character=Nazuna</code></td>
+                <td><code>character=Nazuna Nanakusa</code></td>
                 <td data-i18n="docs.row.character">
                   Random GIF with the selected character.
                 </td>

@@ -930,10 +930,9 @@
 
         <nav id="primary-menu" class="links" aria-label="Site">
           <a href="/">Home</a>
-          <a href="/projects">Projects</a>
-          <a href="/about">About</a>
-          <a href="/contact">Contact</a>
-          <a href="/skills">Skills</a>
+          <a href="/api">GIF API</a>
+          <a href="/api/gif/admin">Add GIFs</a>
+          <a href="/linktree/config" aria-current="page">Linktree</a>
         </nav>
 
         <div id="authSlot" class="auth"></div>
@@ -945,7 +944,7 @@
 
       <div id="notLogged" class="alert err" style="display: none">
         Not logged in.
-        <a href="/login" class="btn sm ghost" style="margin-left: 0.6rem"
+        <a href="/login?next=${encodeURIComponent(location.href)}" class="btn sm ghost" style="margin-left: 0.6rem"
           >Go to Login</a
         >
       </div>
@@ -1441,8 +1440,8 @@
         currentUser = user;
 
         if (!user) {
-          slot.innerHTML = `<a class="btn sm ghost" href="/login">Login</a>
-                                  <a class="btn sm ghost" href="/register">Register</a>`;
+          slot.innerHTML = `<a class="btn sm ghost" href="/login?next=${encodeURIComponent(location.href)}">Login</a>
+                                  <a class="btn sm ghost" href="/register?next=${encodeURIComponent(location.href)}">Register</a>`;
           return null;
         }
         const uname = user.username || "User";

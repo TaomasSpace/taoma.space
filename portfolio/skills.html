@@ -1075,11 +1075,11 @@ footer .social a.iso-pro:focus-visible {
       </button>
 
       <nav id="primary-menu" class="links" aria-label="Site">
-        <a href="/">Home</a>
-        <a href="/projects">Projects</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-        <a href="/skills">Skills</a>
+        <a href="/portfolio">Portfolio</a>
+        <a href="/portfolio/projects">Projects</a>
+        <a href="/portfolio/about">About</a>
+        <a href="/portfolio/skills">Skills</a>
+        <a href="/portfolio/contact">Contact</a>
       </nav>
 
       <div id="authSlot" class="auth"></div>
@@ -1148,8 +1148,8 @@ footer .social a.iso-pro:focus-visible {
           Like what you see? I build fast, maintainable APIs and back-end tools.
         </p>
         <div class="row" style="margin-top:.6rem">
-          <a class="btn" href="/contact">Let’s work together</a>
-          <a class="btn ghost" href="/projects">See projects</a>
+          <a class="btn" href="/portfolio/contact">Let’s work together</a>
+          <a class="btn ghost" href="/portfolio/projects">See projects</a>
         </div>
       </div>
     </section>
@@ -1366,8 +1366,8 @@ footer .social a.iso-pro:focus-visible {
 
       if (!user) {
         slot.innerHTML = `
-        <a class="btn small" href="/login">Login</a>
-        <a class="btn small" href="/register">Register</a>
+        <a class="btn small" href="/login?next=${encodeURIComponent(location.href)}">Login</a>
+        <a class="btn small" href="/register?next=${encodeURIComponent(location.href)}">Register</a>
       `;
         return;
       }

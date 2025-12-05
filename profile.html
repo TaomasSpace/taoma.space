@@ -640,10 +640,9 @@
 
             <nav id="primary-menu" class="links" aria-label="Site">
                 <a href="/">Home</a>
-                <a href="/projects">Projects</a>
-                <a href="/about">About</a>
-                <a href="/contact">Contact</a>
-                <a href="/skills">Skills</a>
+                <a href="/api">GIF API</a>
+                <a href="/api/gif/admin">Add GIFs</a>
+                <a href="/linktree/config">Linktree</a>
             </nav>
 
             <div id="authSlot" class="auth"></div>
@@ -654,7 +653,7 @@
         <h1 class="section-title">Profile</h1>
 
         <!-- Not logged in state -->
-        <div id="notLogged" class="alert err" style="display:none">Not logged in. <a href="/login" class="btn sm ghost"
+        <div id="notLogged" class="alert err" style="display:none">Not logged in. <a href="/login?next=${encodeURIComponent(location.href)}" class="btn sm ghost"
                 style="margin-left:.6rem">Go to Login</a></div>
 
         <div class="profile-wrap" id="profileWrap" style="display:none">
@@ -927,7 +926,7 @@
             const slot = document.getElementById('authSlot'); if (!slot) return;
             const user = userOverride === undefined ? await refreshSession() : userOverride;
             if (!user) {
-                slot.innerHTML = `<a class="btn sm ghost" href="/login">Login</a><a class="btn sm ghost" href="/register">Register</a>`;
+                slot.innerHTML = `<a class="btn sm ghost" href="/login?next=${encodeURIComponent(location.href)}">Login</a><a class="btn sm ghost" href="/register?next=${encodeURIComponent(location.href)}">Register</a>`;
                 return;
             }
             const unameRaw = user.username || 'User';

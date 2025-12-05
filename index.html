@@ -2,1194 +2,481 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TAOMA™ — Portfolio</title>
-    <meta name="description"
-        content="TAOMA™ (シャドウ ストーム) — Apprentice software developer. Projects, about, and contact." />
-    <meta property="og:title" content="TAOMA™ — Portfolio" />
-    <meta property="og:description" content="Projects, skills, and contact." />
-    <meta name="theme-color" content="#0f1223" />
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-    <link rel="icon" type="image/png" href="/static/icon.png">
-    <style>
-        /* --- CSS Reset / Base --- */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box
-        }
-
-        :root {
-            --bg: #0e1020;
-            --bg-soft: #141735;
-            --card: #171b3b;
-            --ink: #e9ebff;
-            --muted: #a2a9c8;
-            --acc: #85a3ff;
-            --acc-2: #5b7bff;
-            --ok: #35d79c;
-            --danger: #ff5a6a;
-            --ring: #85a3ff55;
-            --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .25);
-            --radius: 16px;
-            --space: clamp(16px, 2vw, 24px);
-            --container: 1100px;
-        }
-
-        @media (prefers-color-scheme: light) {
-            :root {
-                --bg: #0e1020;
-                --bg-soft: #141735;
-                --card: #171b3b;
-                --ink: #e9ebff;
-                --muted: #a2a9c8;
-                --acc: #85a3ff;
-                --acc-2: #5b7bff;
-                --ring: #85a3ff55;
-                --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .25);
-            }
-        }
-
-        html,
-        body {
-            height: 100%
-        }
-
-        body {
-            margin: 0;
-            font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
-            color: var(--ink);
-            background: var(--bg);
-            position: relative;
-            min-height: 100dvh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            /* bleibt beim Scrollen stehen */
-            inset: 0;
-            z-index: -1;
-            pointer-events: none;
-
-            /* sanftere Stops + ein zusätzlicher Bottom-Glow */
-            background:
-                radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
-                radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
-                radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
-                linear-gradient(160deg, #0f1531 0%, #0e1020 72%);
-            will-change: transform;
-            /* günstiger fürs Compositing */
-        }
-
-        a {
-            color: inherit;
-            text-decoration: none
-        }
-
-        img {
-            max-width: 100%;
-            display: block
-        }
-
-        .container {
-            max-width: var(--container);
-            margin: 0 auto;
-            padding-inline: calc(var(--space));
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .6rem;
-            padding: .75rem 1rem;
-            border-radius: 12px;
-            background: var(--acc);
-            color: white;
-            font-weight: 600;
-            box-shadow: var(--shadow);
-            border: 1px solid #ffffff1a;
-            transition: .2s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            filter: saturate(1.1)
-        }
-
-        .btn.ghost {
-            background: transparent;
-            color: var(--ink);
-            border: 1px solid #ffffff26;
-            box-shadow: none
-        }
-
-        .chip {
-            display: inline-flex;
-            align-items: center;
-            gap: .4rem;
-            padding: .4rem .65rem;
-            border-radius: 999px;
-            background: color-mix(in oklab, var(--acc) 15%, transparent);
-            border: 1px solid #ffffff1a;
-            font-size: .9rem
-        }
-
-        .card {
-            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
-            border: 1px solid #ffffff1a;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow)
-        }
-
-        .muted {
-            color: var(--muted)
-        }
-
-        .visually-hidden {
-            position: absolute !important;
-            height: 1px;
-            width: 1px;
-            overflow: hidden;
-            clip: rect(1px, 1px, 1px, 1px);
-            white-space: nowrap
-        }
-
-        /* --- Header --- */
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            backdrop-filter: saturate(1.1) blur(10px);
-            background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
-            border-bottom: 1px solid #ffffff14
-        }
-
-        .nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 64px
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            font-weight: 800;
-            letter-spacing: .4px
-        }
-
-        .brand .logo {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            display: block;
-        }
-
-
-        .links {
-            display: flex;
-            gap: 1rem;
-            align-items: center
-        }
-
-        .links a {
-            padding: .45rem .7rem;
-            border-radius: 10px;
-            border: 1px solid transparent
-        }
-
-        .links a:hover {
-            border-color: #ffffff1f;
-            background: #ffffff0f
-        }
-
-        .mobile-toggle {
-            display: none
-        }
-
-        @media (max-width:800px) {
-            .mobile-toggle {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 40px;
-                height: 40px;
-                border-radius: 10px;
-                border: 1px solid #ffffff26;
-                background: transparent
-            }
-
-            .links {
-                position: fixed;
-                inset: 64px 0 auto 0;
-                background: linear-gradient(180deg, #0b0f29, #0b0f2945);
-                padding: 1rem;
-                display: none;
-                flex-direction: column
-            }
-
-            .links.open {
-                display: flex
-            }
-        }
-
-        /* --- Hero --- */
-        .hero {
-            padding-block: clamp(48px, 8vw, 120px) clamp(16px, 3vw, 28px);
-            text-align: center
-        }
-
-        .hero .title {
-            font-size: clamp(28px, 6vw, 56px);
-            line-height: 1.1;
-            margin: 0 0 .6rem 0
-        }
-
-        .hero .subtitle {
-            font-size: clamp(16px, 2.6vw, 20px);
-            margin: .25rem 0 1.5rem;
-            color: var(--muted)
-        }
-
-        .cta {
-            display: flex;
-            gap: .75rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 1.2rem
-        }
-
-        .hero-badges {
-            display: flex;
-            gap: .5rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 1rem
-        }
-
-        /* --- Sections --- */
-        section {
-            padding-block: clamp(40px, 6vw, 80px)
-        }
-
-        .section-title {
-            font-size: clamp(22px, 3vw, 28px);
-            margin: 0 0 1rem 0
-        }
-
-        /* --- Projects --- */
-        .grid {
-            display: grid;
-            gap: clamp(14px, 2vw, 22px)
-        }
-
-        .grid.cols-3 {
-            grid-template-columns: repeat(3, 1fr)
-        }
-
-        @media (max-width:950px) {
-            .grid.cols-3 {
-                grid-template-columns: repeat(2, 1fr)
-            }
-        }
-
-        @media (max-width:640px) {
-            .grid.cols-3 {
-                grid-template-columns: 1fr
-            }
-        }
-
-        .project {
-            padding-top: clamp(16px, 3vw, 28px);
-            padding: 1.1rem
-        }
-
-        .project .head {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            margin-bottom: .4rem
-        }
-
-        .project .icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: grid;
-            place-items: center;
-            background: #ffffff12;
-            border: 1px solid #ffffff22
-        }
-
-        .project h3 {
-            margin: .2rem 0 .25rem;
-            font-size: 1.05rem
-        }
-
-        .project p {
-            margin: .25rem 0 .75rem
-        }
-
-        .project .actions {
-            display: flex;
-            gap: .5rem
-        }
-
-        /* --- About --- */
-        .about {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem
-        }
-
-        .about .card {
-            padding: 1.25rem
-        }
-
-        .skills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .5rem
-        }
-
-        /* --- Footer --- */
-        footer {
-            border-top: 1px solid #ffffff14;
-            padding-block: 24px;
-            margin-top: auto
-        }
-
-        .foot {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap
-        }
-
-        .social {
-            display: flex;
-            align-items: center;
-            gap: .6rem
-        }
-
-        .social a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            border: 1px solid #ffffff26
-        }
-
-        /* --- Focus / Motion --- */
-        :focus-visible {
-            outline: 2px solid var(--acc);
-            outline-offset: 2px;
-            box-shadow: 0 0 0 6px var(--ring)
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                transition: none !important;
-                animation: none !important
-            }
-        }
-
-        /* --- Counter --- */
-
-        .timer {
-            padding: 1rem 1.25rem;
-            display: inline-block;
-            margin-bottom: 0;
-        }
-
-        .digits {
-            font: 600 clamp(18px, 3.2vw, 24px)/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-            font-variant-numeric: tabular-nums;
-            letter-spacing: .5px;
-        }
-
-        .digits .unit {
-            margin: 0 .3rem 0 .25rem;
-            color: var(--muted);
-            font-weight: 500
-        }
-
-        .since {
-            padding-block: clamp(24px, 5vw, 64px);
-        }
-
-
-        .since .kicker {
-            margin: 0 0 .75rem;
-        }
-
-        .big-counter {
-            display: inline-flex;
-            align-items: flex-end;
-            gap: clamp(12px, 2.8vw, 28px);
-            padding: clamp(16px, 3vw, 28px) clamp(18px, 4vw, 36px);
-            border-radius: var(--radius);
-            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 6%), var(--card));
-            box-shadow: var(--shadow);
-            max-width: 100%;
-        }
-
-        .big-counter .cell {
-            min-width: clamp(72px, 12vw, 160px);
-        }
-
-        .big-counter .num {
-            font: 800 clamp(40px, 10vw, 96px)/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-            font-variant-numeric: tabular-nums;
-            letter-spacing: 1px;
-        }
-
-        .big-counter .lbl {
-            margin-top: .5rem;
-            color: var(--muted);
-            font-weight: 600;
-            font-size: clamp(12px, 2.2vw, 14px);
-        }
-
-        .big-counter .sep {
-            font-weight: 800;
-            font-size: clamp(36px, 10vw, 84px);
-            line-height: 0.8;
-            color: color-mix(in oklab, var(--ink) 70%, transparent);
-            transform: translateY(-6%);
-        }
-
-        @media (max-width: 560px) {
-            .since {
-                padding-block: clamp(12px, 6vw, 28px);
-            }
-
-            .big-counter {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 10px;
-                padding: 12px 14px;
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            .big-counter .sep {
-                display: none;
-            }
-
-            .big-counter .cell {
-                min-width: 0;
-                /* kein Mindestbreiten-Zwang */
-                text-align: center;
-            }
-
-            .big-counter .num {
-                font-weight: 800;
-                font-size: clamp(24px, 8vw, 36px);
-                /* deutlich kleiner auf Mobile */
-                line-height: 1;
-                letter-spacing: .5px;
-            }
-
-            .big-counter .lbl {
-                margin-top: .35rem;
-                font-size: 11px;
-                font-weight: 600;
-            }
-        }
-
-        @media (min-width: 561px) and (max-width: 860px) {
-            .big-counter .cell {
-                min-width: 0;
-            }
-
-            .big-counter .num {
-                font-size: clamp(32px, 6vw, 56px);
-            }
-
-            .big-counter .lbl {
-                font-size: 12px;
-            }
-        }
-
-        .visitor-counter {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            font: 600 15px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
-            color: var(--ink);
-            padding: 0.25rem 0.6rem;
-            border-radius: 8px;
-            background: color-mix(in oklab, var(--card) 35%, transparent);
-            border: 1px solid #ffffff1a;
-        }
-
-        .visitor-counter svg {
-            width: 18px;
-            height: 18px;
-            flex-shrink: 0;
-            color: var(--muted);
-        }
-
-        .auth {
-            display: flex;
-            align-items: center;
-            gap: .5rem;
-        }
-
-        .auth .btn.small {
-            padding: .5rem .7rem;
-            border-radius: 10px;
-            background: transparent;
-            color: var(--ink);
-            border: 1px solid #ffffff26;
-            box-shadow: none;
-            font-weight: 600;
-        }
-
-        .avatar-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-            padding: .35rem .55rem;
-            border-radius: 999px;
-            background: #ffffff10;
-            border: 1px solid #ffffff26;
-            cursor: pointer;
-        }
-
-        .avatar {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            object-fit: cover;
-            display: block;
-            background: #0f1331;
-        }
-
-        .avatar-fallback {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            font: 700 12px/1 Inter, ui-sans-serif;
-            background: #25306a;
-            color: #e9ebff;
-        }
-
-        .menu {
-            position: absolute;
-            margin-top: .4rem;
-            right: 0;
-            min-width: 160px;
-            z-index: 60;
-            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
-            border: 1px solid #ffffff22;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            padding: .35rem;
-            display: none;
-        }
-
-        .menu.open {
-            display: block;
-        }
-
-        .menu a,
-        .menu button {
-            width: 100%;
-            text-align: left;
-            display: block;
-            background: transparent;
-            color: var(--ink);
-            padding: .55rem .65rem;
-            border: 0;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        .menu a:hover,
-        .menu button:hover {
-            background: #ffffff12;
-        }
-        /* === Footer social isometric hover (scoped) === */
-footer .social a.iso-pro {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  /* behält deine vorhandene Border aus .social a */
-  background: color-mix(in oklab, var(--card) 35%, transparent);
-  box-shadow:
-    inset 0 0 20px rgba(255,255,255,.20),
-    inset 0 0 5px rgba(255,255,255,.28),
-    0 5px 8px rgba(0,0,0,.18);
-  transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
-  overflow: visible; /* damit Tooltip/Spans sichtbar bleiben */
-}
-
-footer .social a.iso-pro:hover {
-  background: color-mix(in oklab, var(--card) 45%, transparent);
-  box-shadow:
-    inset 0 0 22px rgba(255,255,255,.22),
-    inset 0 0 6px rgba(255,255,255,.34),
-    0 8px 14px rgba(0,0,0,.22);
-}
-
-/* SVG im Button */
-footer .social a.iso-pro .svg,
-footer .social a.iso-pro svg {
-  width: 22px;
-  height: 22px;
-  transition: transform .3s ease, filter .3s ease, color .3s ease;
-  color: currentColor;           /* wie in deinem Beispiel */
-  fill: currentColor;
-}
-
-/* Isometrischer Versatz auf Hover */
-footer .social a.iso-pro:hover .svg,
-footer .social a.iso-pro:hover svg {
-  transform: translate(5px, -5px);
-}
-
-/* Wellenringe */
-footer .social a.iso-pro span {
-  opacity: 0;
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  height: 48px;
-  width: 48px;
-  border-radius: 50%;
-  border: 2px solid currentColor;   /* nutzt die Icon-Farbe */
-  box-shadow:
-    inset 0 0 20px rgba(255,255,255,.25),
-    inset 0 0 5px rgba(255,255,255,.35),
-    0 5px 5px rgba(0,0,0,.16);
-  transition: transform .3s ease, opacity .3s ease;
-  pointer-events: none;
-}
-
-footer .social a.iso-pro:hover span { opacity: 1; }
-footer .social a.iso-pro:hover span:nth-child(1) { opacity: .22; transform: translate(0px, 0px); }
-footer .social a.iso-pro:hover span:nth-child(2) { opacity: .42; transform: translate(4px, -4px); }
-footer .social a.iso-pro:hover span:nth-child(3) { opacity: .62; transform: translate(8px, -8px); }
-
-/* Tooltip */
-footer .social a.iso-pro .text {
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  transform: translate(10px, -50%) skew(-5deg);
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 10;
-
-  font: 600 12px/1.2 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
-  padding: 6px 8px;
-  border-radius: 6px;
-
-  color: currentColor;
-  background: rgba(255,255,255,.18);
-  border: 1px solid rgba(255,255,255,.28);
-  box-shadow:
-    -5px 0 1px rgba(153,153,153,.18),
-    -10px 0 1px rgba(153,153,153,.14),
-    inset 0 0 20px rgba(255,255,255,.24),
-    inset 0 0 5px rgba(255,255,255,.32),
-    0 5px 5px rgba(0,0,0,.12);
-  transition: opacity .25s ease, transform .25s ease;
-}
-
-footer .social a.iso-pro:hover .text {
-  opacity: 1;
-  transform: translate(18px, -50%) skew(-5deg);
-}
-
-/* Optionale Brand-Farben (ändern nur currentColor) */
-footer .social a.iso-pro.is-fb { color: #ffffff; }
-footer .social a.iso-pro.is-gh { color: #ffffff; }   /* GitHub neutral/weiß auf dark bg */
-footer .social a.iso-pro.is-mail { color: #ffffff; } /* Lila */
-footer .social a.iso-pro.is-discord { color: #ffffff; }
-
-/* Kleines Accessibility-Detail: Fokus */
-footer .social a.iso-pro:focus-visible {
-  outline: 2px solid var(--acc);
-  outline-offset: 3px;
-  box-shadow: 0 0 0 6px var(--ring);
-}
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TAOMA Space — GIF API & Linktree</title>
+  <meta name="description" content="Explore the Anime GIF API, add your own GIFs, and build a Linktree that actually converts." />
+  <meta property="og:title" content="TAOMA Space — GIF API & Linktree" />
+  <meta property="og:description" content="Query the Anime GIF API, contribute new GIFs, and spin up a custom Linktree in minutes." />
+  <meta name="theme-color" content="#0f1223" />
+  <link rel="icon" type="image/png" href="/static/icon.png" />
+  <style>
+    :root {
+      --bg: #0d1023;
+      --bg-2: #11163a;
+      --card: #171b3b;
+      --ink: #e9ebff;
+      --muted: #a5adcf;
+      --acc: #9b7bff;
+      --acc-2: #5fc7ff;
+      --success: #52d8a5;
+      --warning: #ffb347;
+      --ring: #9b7bff55;
+      --shadow: 0 16px 50px rgba(0, 0, 0, .35), 0 2px 10px rgba(0, 0, 0, .2);
+      --radius: 16px;
+      --space: clamp(16px, 2vw, 24px);
+      --container: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 900px at 12% -8%, #1c214c 0%, #1c214c 32%, transparent 70%),
+        radial-gradient(900px 700px at 86% 12%, #112d62 0%, #112d62 32%, transparent 60%),
+        linear-gradient(145deg, #0b0d1d 0%, #0a0c18 30%, #0c1026 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(100%, var(--container));
+      margin: 0 auto;
+      padding: 0 var(--space);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: saturate(1.05) blur(10px);
+      background: linear-gradient(180deg, #0d1026e6 0%, #0d102600 100%);
+      border-bottom: 1px solid #ffffff1a;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: .75rem;
+      font-weight: 800;
+      letter-spacing: .4px;
+    }
+
+    .brand .logo {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+    }
+
+    .links {
+      display: flex;
+      gap: .6rem;
+      align-items: center;
+    }
+
+    .links a {
+      padding: .55rem .8rem;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      transition: all .15s ease;
+    }
+
+    .links a:hover {
+      border-color: #ffffff22;
+      background: #ffffff0d;
+    }
+
+    .links a[aria-current="page"] {
+      border-color: #ffffff30;
+      background: #ffffff14;
+    }
+
+    .mobile-toggle {
+      display: none;
+    }
+
+    @media (max-width: 820px) {
+      .mobile-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid #ffffff26;
+        background: transparent;
+        color: var(--ink);
+      }
+
+      .links {
+        position: fixed;
+        inset: 68px 0 auto 0;
+        padding: 1rem var(--space);
+        background: linear-gradient(180deg, #0b0f29f0, #0b0f29a5);
+        flex-direction: column;
+        align-items: flex-start;
+        display: none;
+      }
+
+      .links.open {
+        display: flex;
+      }
+    }
+
+    main {
+      flex: 1;
+      padding-bottom: 64px;
+    }
+
+    .hero {
+      padding: clamp(40px, 8vw, 100px) 0 clamp(30px, 6vw, 60px);
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: clamp(20px, 4vw, 36px);
+      align-items: center;
+    }
+
+    .hero h1 {
+      margin: 0 0 .6rem;
+      font-size: clamp(32px, 6vw, 56px);
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      font-size: clamp(16px, 2.8vw, 20px);
+      color: var(--muted);
+      margin: 0 0 1.4rem;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .4rem .75rem;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--acc) 18%, transparent);
+      border: 1px solid #ffffff26;
+      font-weight: 700;
+      letter-spacing: .4px;
+      color: var(--ink);
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .85rem;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      padding: .85rem 1.2rem;
+      border-radius: 12px;
+      background: linear-gradient(120deg, var(--acc), var(--acc-2));
+      color: #0b0c18;
+      font-weight: 800;
+      border: 1px solid #ffffff26;
+      box-shadow: var(--shadow);
+      transition: transform .15s ease, filter .2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      filter: saturate(1.1);
+    }
+
+    .btn.ghost {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid #ffffff26;
+      box-shadow: none;
+    }
+
+    .tagline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: .8rem;
+      margin-top: 1.4rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .6rem .8rem;
+      border-radius: 12px;
+      background: #ffffff10;
+      border: 1px solid #ffffff1a;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .card {
+      background: linear-gradient(180deg, #161b3a, #121633);
+      border: 1px solid #ffffff16;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 2vw, 22px);
+    }
+
+    .card h3 {
+      margin: 0 0 .35rem;
+      font-size: 1.1rem;
+      letter-spacing: .2px;
+    }
+
+    .card p {
+      margin: 0 0 .9rem;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: clamp(14px, 2vw, 20px);
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-bottom: .8rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .45rem .7rem;
+      border-radius: 999px;
+      background: #ffffff0d;
+      border: 1px solid #ffffff1a;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: .95rem;
+    }
+
+    .section {
+      padding: clamp(30px, 5vw, 60px) 0;
+    }
+
+    .section h2 {
+      margin: 0 0 .6rem;
+      font-size: clamp(22px, 3vw, 28px);
+    }
+
+    .helper {
+      color: var(--muted);
+      margin: 0 0 1.2rem;
+    }
+
+    .code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      background: #0e132c;
+      color: #d8e0ff;
+      padding: .9rem 1rem;
+      border-radius: 14px;
+      border: 1px solid #ffffff1f;
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+      font-size: .95rem;
+      white-space: pre;
+      margin: 0;
+    }
+
+    .mini-grid {
+      display: grid;
+      gap: .8rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .notice {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding: 1rem 1.2rem;
+      border-radius: 14px;
+      border: 1px dashed #ffffff30;
+      background: #ffffff08;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <header>
-        <div class="container nav" role="navigation" aria-label="Primary">
-            <div class="brand">
-                <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
-                <a href="/"><span>TAOMA™</span></a>
-            </div>
-
-            <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu"
-                aria-expanded="false" aria-label="Toggle menu">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-            </button>
-
-            <nav id="primary-menu" class="links" aria-label="Site">
-                <a href="/">Home</a>
-                <a href="/projects">Projects</a>
-                <a href="/about">About</a>
-                <a href="/contact">Contact</a>
-                <a href="/skills">Skills</a>
-            </nav>
-
-            <div id="authSlot" class="auth"></div>
-        </div>
-    </header>
-
-    <main id="home" class="container">
-        <!-- Hero -->
-        <section class="hero">
-            <div class="hero-badges">
-                <span class="chip" title="Role">
-                    <!-- user icon -->
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true">
-                        <path
-                            d="M12 12c2.761 0 5-2.686 5-6s-2.239-6-5-6-5 2.686-5 6 2.239 6 5 6Zm0 3c-4.418 0-8 2.239-8 5v2h16v-2c0-2.761-3.582-5-8-5Z"
-                            fill="currentColor" />
-                    </svg>
-                    Apprentice Software Developer
-                </span>
-                <span class="chip" title="Location">
-                    <!-- map pin icon -->
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true">
-                        <path
-                            d="M12 2C7.582 2 4 5.582 4 10c0 5.25 6.272 11.33 7.039 12.055a1.4 1.4 0 0 0 1.923 0C13.728 21.33 20 15.25 20 10c0-4.418-3.582-8-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
-                            fill="currentColor" />
-                    </svg>
-                    Switzerland
-                </span>
-            </div>
-            <h1 class="title">Hi, I’m TAOMA™</h1>
-            <p class="subtitle">I build useful things for the web and Discord — from APIs and bots to desktop tools. I
-                love clean code, fast UIs, and shipping.
-            </p>
-            <div class="cta">
-                <a class="btn" href="/projects">
-                    <!-- rocket icon -->
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true">
-                        <path d="M14 4l6 6-6 6-2-2-3 1 1-3-2-2 6-6Z" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    View Projects
-                </a>
-                <a class="btn ghost" href="/contact">
-                    <!-- mail icon -->
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true">
-                        <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm16 0-8 7L4 6"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    Contact
-                </a>
-            </div>
-            <!-- Timer -->
-            <section id="since" class="since">
-                <p class="muted kicker">This Websites exists since: </p>
-
-                <div class="card big-counter" aria-live="polite">
-                    <div class="cell">
-                        <div id="cu-days" class="num">0</div>
-                        <div class="lbl">Days</div>
-                    </div>
-
-                    <span class="sep" aria-hidden="true">:</span>
-
-                    <div class="cell">
-                        <div id="cu-hours" class="num">00</div>
-                        <div class="lbl">Hours</div>
-                    </div>
-
-                    <span class="sep" aria-hidden="true">:</span>
-
-                    <div class="cell">
-                        <div id="cu-mins" class="num">00</div>
-                        <div class="lbl">Minutes</div>
-                    </div>
-
-                    <span class="sep" aria-hidden="true">:</span>
-
-                    <div class="cell">
-                        <div id="cu-secs" class="num">00</div>
-                        <div class="lbl">Seconds</div>
-                    </div>
-                </div>
-            </section>
-        </section>
-        <!-- Projects -->
-        <section id="projects">
-            <h2 class="section-title">Featured Projects</h2>
-            <div class="grid cols-3">
-                <!-- Project 1 -->
-                <article class="card project">
-                    <div class="head">
-                        <div class="icon" aria-hidden="true">
-                            <!-- code icon -->
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path d="M8 17L3 12l5-5M16 7l5 5-5 5M14 4l-4 16" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <h3>Clubhall Discord Bot</h3>
-                    </div>
-                    <p class="muted">Modular bot with economy, booster perks, anti‑raid, and rich logging. Built with
-                        Python + cloud hosting.</p>
-                    <div class="actions">
-                        <a class="btn ghost" href="https://top.gg/bot/1401961800504971316" aria-label="Open docs">
-                            <!-- external link icon -->
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path d="M14 3h7v7M10 14 21 3M21 13v7a2 2 0 0 1-2 2h-7" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            Top.gg
-                        </a>
-                    </div>
-                </article>
-                <!-- Project 2 -->
-                <article class="card project">
-                    <div class="head">
-                        <div class="icon" aria-hidden="true">
-                            <!-- db icon -->
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <ellipse cx="12" cy="5" rx="8" ry="3" stroke="currentColor" stroke-width="2" />
-                                <path
-                                    d="M4 5v6c0 1.657 3.582 3 8 3s8-1.343 8-3V5M4 11v6c0 1.657 3.582 3 8 3s8-1.343 8-3v-6"
-                                    stroke="currentColor" stroke-width="2" />
-                            </svg>
-                        </div>
-                        <h3>Anime GIF API</h3>
-                    </div>
-                    <p class="muted">A simple API with normalized schema and tags/characters search. FastAPI +
-                        SQLite/Postgres.</p>
-                    <div class="actions">
-                        <a class="btn ghost" href="https://taoma.space/api" aria-label="Open API explorer">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path d="M14 3h7v7M10 14 21 3M21 13v7a2 2 0 0 1-2 2h-7" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            Visit
-                        </a>
-                    </div>
-                </article>
-            </div>
-        </section>
-
-        <!-- About -->
-        <section id="about">
-            <h2 class="section-title">About</h2>
-            <div class="about">
-                <article class="card">
-                    <p class="muted" style="margin-top:0">I’m a Swiss apprentice (Informatiker EFZ — application
-                        development). I focus on practical, maintainable software and ship fast iterations. Interests:
-                        game dev, bots, and APIs. Everything that contains a Backend.</p>
-                    <div class="skills" aria-label="Skills">
-                        <span class="chip">Java</span>
-                        <span class="chip">JavaScript / TypeScript</span>
-                        <span class="chip">Python</span>
-                        <span class="chip">FastAPI</span>
-                        <span class="chip">React Native / Expo</span>
-                        <span class="chip">SQLite / Postgres</span>
-                        <span class="chip">Node & Express</span>
-                        <span class="chip">Discord Bots</span>
-                        <span class="chip">WordPress</span>
-                    </div>
-                </article>
-            </div>
-        </section>
-
-        <!-- Contact -->
-        <section id="contact">
-            <h2 class="section-title">Contact</h2>
-            <div class="card" style="padding:1.25rem">
-                <p class="muted" style="margin-top:0">Want to collaborate or just say hi? I’m open to interesting
-                    projects and ideas.</p>
-                <div class="cta">
-                    <a class="btn" href="mailto:Taoma.M@proton.me" aria-label="Email">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path
-                                d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm16 0-8 7L4 6"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        Email me
-                    </a>
-                    <a class="btn ghost" href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer"
-                        aria-label="GitHub profile">
-                        <!-- github icon -->
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path
-                                d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z"
-                                fill="currentColor" />
-                        </svg>
-                        GitHub
-                    </a>
-                    <a class="btn ghost" href="https://discord.gg/H3NDg7e3vD" target="_blank" rel="noreferrer"
-                        aria-label="Discord server">
-                        <!-- discord icon -->
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path
-                                d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z"
-                                fill="currentColor" />
-                        </svg>
-                        Discord
-                    </a>
-                </div>
-            </div>
-        </section>
-    </main>
-
-     <footer>
-    <div class="container foot">
-      <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved.</small>
-      <div class="visitor-counter">
-        <!-- Eye Icon -->
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  <header>
+    <div class="container nav" role="navigation" aria-label="Primary">
+      <div class="brand">
+        <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="30" height="30" /></a>
+        <a href="/">TAOMAT</a>
+      </div>
+      <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu" aria-expanded="false"
+        aria-label="Toggle menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         </svg>
-        <span id="visitor-count">0</span>
-      </div>
-      <div class="social">
-  <a href="https://guns.lol/taoma" target="_blank" rel="noreferrer" aria-label="guns.lol"
-     class="iso-pro is-fb">
-    <span></span><span></span><span></span>
-    <svg width="18" height="18" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
-         fill="currentColor" class="svg">
-      <path d="M256 32C132 32 32 132 32 256s100 224 224 224 224-100 224-224S380 32 256 32Zm80 160h32v32h-32v32h-32v-32h-32v-32h32v-32h32v32Z"/>
-    </svg>
-    <div class="text">guns.lol</div>
-  </a>
-
-  <a href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer" aria-label="GitHub"
-     class="iso-pro is-gh">
-    <span></span><span></span><span></span>
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg">
-      <path d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z"/>
-    </svg>
-    <div class="text">GitHub</div>
-  </a>
-
-<a href="mailto:Taoma.M@proton.me" aria-label="Email" class="iso-pro is-mail">
-  <span></span><span></span><span></span>
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg" aria-hidden="true">
-    <!-- Rahmen des Umschlags -->
-    <rect x="3" y="5" width="18" height="14" rx="2"
-          stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-    <!-- Klappe -->
-    <path d="M3 7l9 6 9-6"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-  <div class="text">Email</div>
-</a>
-
-  <a href="https://discord.gg/H3NDg7e3vD" target="_blank" rel="noreferrer" aria-label="Discord"
-     class="iso-pro is-discord">
-    <span></span><span></span><span></span>
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg">
-      <path d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z"/>
-    </svg>
-    <div class="text">Discord</div>
-  </a>
-</div>
+      </button>
+      <nav id="primary-menu" class="links" aria-label="Site">
+        <a href="/" aria-current="page">Home</a>
+        <a href="/api">GIF API</a>
+        <a href="/api/gif/admin">Add GIFs</a>
+        <a href="/linktree/config">Linktree</a>
+      </nav>
     </div>
-  </footer>
+  </header>
 
-    <script>
-        // mobile menu
-        const toggle = document.getElementById('mobileToggle');
-        const menu = document.getElementById('primary-menu');
-        toggle?.addEventListener('click', () => {
-            const open = menu.classList.toggle('open');
-            toggle.setAttribute('aria-expanded', String(open));
-        });
-
-        // current year
-        document.getElementById('year').textContent = new Date().getFullYear();
-
-        const START_ISO = "2025-09-26T16:07:00Z";  // Timer Start date
-        const start = new Date(START_ISO);
-
-        const el = {
-            d: document.getElementById("cu-days"),
-            h: document.getElementById("cu-hours"),
-            m: document.getElementById("cu-mins"),
-            s: document.getElementById("cu-secs"),
-        };
-
-        function pad2(n) { return String(n).padStart(2, "0"); }
-
-        function tick() {
-            const now = new Date();
-            let diff = now - start;
-            if (diff < 0) diff = 0; // If start is in the future
-
-            const SEC = 1000, MIN = 60 * SEC, HOUR = 60 * MIN, DAY = 24 * HOUR;
-            const days = Math.floor(diff / DAY);
-            const hours = Math.floor((diff % DAY) / HOUR);
-            const mins = Math.floor((diff % HOUR) / MIN);
-            const secs = Math.floor((diff % MIN) / SEC);
-
-            if (el.d) el.d.textContent = days;
-            if (el.h) el.h.textContent = pad2(hours);
-            if (el.m) el.m.textContent = pad2(mins);
-            if (el.s) el.s.textContent = pad2(secs);
-        }
-
-        tick();
-        setInterval(tick, 1000);     // every second
-
-        //visitor counter
-        (async () => {
-            const KEY = "taoma_last_counted_at";
-            const DAY = 24 * 60 * 60 * 1000;
-            const now = Date.now();
-            const last = parseInt(localStorage.getItem(KEY) || "0", 10);
-            const shouldCount = !last || (now - last) > DAY;
-
-            if (shouldCount) {
-                navigator.sendBeacon("/api/visits/increment");
-                localStorage.setItem(KEY, String(now));
-            }
-
-            const res = await fetch("/api/visits/value");
-            const { total } = await res.json();
-            document.getElementById("visitor-count").textContent = total ?? "0";
-        })();
-        function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;',
-            })[ch] || ch);
-        }
-
-        function sanitizeUrl(raw) {
-            if (typeof raw !== 'string') return '';
-            const trimmed = raw.trim();
-            if (!trimmed) return '';
-            if (trimmed.startsWith('javascript:')) return '';
-            try {
-                const u = new URL(trimmed, window.location.origin);
-                if (['http:', 'https:'].includes(u.protocol)) {
-                    return trimmed.startsWith('http://') || trimmed.startsWith('https://') ? u.href : trimmed;
-                }
-            } catch (_) {
-                if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed;
-            }
-            return '';
-        }
-
-        async function fetchSession() {
-            try {
-                const r = await fetch('/api/auth/verify', { credentials: 'include' });
-                if (!r.ok) return null;
-                return await r.json();
-            } catch (_) {
-                return null;
-            }
-        }
-
-        // === Auth header renderer ===
-        async function renderAuthHeader() {
-            const slot = document.getElementById('authSlot');
-            if (!slot) return;
-
-            const session = await fetchSession();
-            const user = session?.user || null;
-            const isAdmin = !!(user && user.admin);
-
-            if (!user) {
-                slot.innerHTML = `
-        <a class="btn small" href="/login">Login</a>
-        <a class="btn small" href="/register">Register</a>
-      `;
-                return;
-            }
-
-            const uname = escapeHtml(user.username || 'User');
-            const initials = (user.username || 'User').trim().slice(0, 2).toUpperCase() || 'U';
-            const pfp = sanitizeUrl(user.profile_picture ? String(user.profile_picture) : '');
-
-            slot.innerHTML = `
-      <div class="auth-box" style="position:relative">
-        <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
-          ${pfp ? `<img class="avatar" src="${pfp}" alt="${uname}'s profile picture">`
-                    : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(initials)}</span>`}
-          <span class="uname" style="font-weight:700;font-size:.95rem">${uname}</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <div class="menu" id="userMenu" role="menu" aria-label="User menu">
-          <a href="/profile" role="menuitem">Profile</a>
-          ${isAdmin ? `<a href="/admin" role="menuitem">Admin</a>` : ``}
-          <button id="logoutBtn" role="menuitem">Logout</button>
+  <main>
+    <div class="container">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">User-first hub</div>
+          <h1>Ship GIFs. Share Links. Welcome in.</h1>
+          <p class="subtitle">
+            The Anime GIF API lets you query and contribute community-picked reactions. The Linktree builder gives you
+            a polished hub for everything you do. Start with the explorer, or jump straight into editing your tree.
+          </p>
+          <div class="cta-row">
+            <a class="btn" href="/api">Open GIF API explorer</a>
+            <a class="btn ghost" href="/linktree/config">Build your Linktree</a>
+            <a class="btn ghost" href="/api/gif/admin">Add a new GIF</a>
+          </div>
+          <div class="tagline">
+            <span class="pill">⚡ Fast explorer + code snippets</span>
+            <span class="pill">🧩 Add & moderate GIFs with tags</span>
+            <span class="pill">🌐 Linktree with avatars, music & effects</span>
+          </div>
         </div>
-      </div>
-    `;
+        <div class="card">
+          <div class="chip-row">
+            <span class="chip">REST · GET/POST/PATCH</span>
+            <span class="chip">Rate-limit aware</span>
+            <span class="chip">No-Nonsense JSON</span>
+          </div>
+          <h3>Preview the API</h3>
+          <p>Hit the endpoint directly. Swap params and keep moving.</p>
+          <pre class="code">fetch("/api/gifs?character=gojo&nsfw=false")
+  .then(res => res.json())
+  .then(data => console.log(data));</pre>
+          <div class="chip-row" style="margin-top:1rem">
+            <span class="chip" style="color: var(--success)">✓ Own what you add</span>
+            <span class="chip" style="color: var(--warning)">🚫 Blacklist supported</span>
+          </div>
+        </div>
+      </section>
 
-            const btn = slot.querySelector('#avatarBtn');
-            const menu = slot.querySelector('#userMenu');
-            const logoutBtn = slot.querySelector('#logoutBtn');
+      <section class="section" aria-labelledby="entry-points">
+        <div class="notice">
+          <div>
+            <strong>New navigation:</strong> Portfolio lives under <code>/portfolio</code>. Everything here points you
+            to the Linktree + GIF API tools.
+          </div>
+          <a class="btn ghost" href="/portfolio">Go to portfolio</a>
+        </div>
+      </section>
 
-            function closeMenu() {
-                menu.classList.remove('open');
-                btn.setAttribute('aria-expanded', 'false');
-            }
+      <section class="section" aria-labelledby="paths">
+        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem">
+          <h2 id="paths" style="margin:0">Choose your path</h2>
+          <span class="chip">Built for speed</span>
+        </div>
+        <p class="helper">Pick the surface you need. Everything stays dark, fast, and focused on shipping.</p>
+        <div class="grid">
+          <article class="card">
+            <h3>GIF API Explorer</h3>
+            <p>Query the Anime GIF API with instant previews and ready-to-copy requests.</p>
+            <div class="chip-row">
+              <span class="chip">Query builder</span>
+              <span class="chip">cURL & Python snippets</span>
+              <span class="chip">Random & filtered</span>
+            </div>
+            <a class="btn" href="/api">Open explorer</a>
+          </article>
 
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const open = menu.classList.toggle('open');
-                btn.setAttribute('aria-expanded', String(open));
-            });
+          <article class="card">
+            <h3>Add & manage GIFs</h3>
+            <p>Submit new GIFs, tag characters, set NSFW flags, and keep the library clean.</p>
+            <div class="chip-row">
+              <span class="chip">Owner-only edits</span>
+              <span class="chip">Admin moderation</span>
+              <span class="chip">Character + tag search</span>
+            </div>
+            <a class="btn" href="/api/gif/admin">Add a GIF</a>
+          </article>
 
-            document.addEventListener('click', (e) => {
-                if (!menu.contains(e.target) && !btn.contains(e.target)) closeMenu();
-            });
+          <article class="card">
+            <h3>Linktree Builder</h3>
+            <p>Create a personal landing page with media, icons, and effects that match your vibe.</p>
+            <div class="chip-row">
+              <span class="chip">Avatars & backgrounds</span>
+              <span class="chip">Music & effects</span>
+              <span class="chip">Icons & ordering</span>
+            </div>
+            <a class="btn" href="/linktree/config">Configure Linktree</a>
+          </article>
+        </div>
+      </section>
 
-            logoutBtn.addEventListener('click', async () => {
-                try {
-                    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-                } catch { }
-                window.location.href = '/';
-            }, { passive: true });
-        }
+      <section class="section" aria-labelledby="why">
+        <h2 id="why" style="margin:0 0 .4rem">Why these tools?</h2>
+        <p class="helper">They're fast to try, easy to edit, and designed to be shared.</p>
+        <div class="mini-grid">
+          <div class="card">
+            <h3>Quick onboarding</h3>
+            <p>Open the explorer or Linktree editor—no docs hunt required. Inputs are labeled, guardrails included.</p>
+          </div>
+          <div class="card">
+            <h3>Shareable by default</h3>
+            <p>Copy API links, embed GIF URLs, or share your Linktree slug anywhere. Everything is HTTPS-ready.</p>
+          </div>
+          <div class="card">
+            <h3>Community-friendly</h3>
+            <p>GIF ownership, blacklists, and admin controls keep the library usable for everyone.</p>
+          </div>
+          <div class="card">
+            <h3>Still want the portfolio?</h3>
+            <p>It's one click away at <a href="/portfolio" style="color:inherit;text-decoration:underline">/portfolio</a>.
+              You keep the context, but the landing stays focused on you.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
 
-        // Render bei Load
-        renderAuthHeader();
-    </script>
+  <script>
+    const toggle = document.getElementById('mobileToggle');
+    const menu = document.getElementById('primary-menu');
+    toggle?.addEventListener('click', () => {
+      const open = menu.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+  </script>
 </body>
 
 </html>

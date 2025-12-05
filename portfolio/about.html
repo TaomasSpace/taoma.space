@@ -526,11 +526,11 @@ footer .social a.iso-pro:focus-visible {
             </button>
 
             <nav id="primary-menu" class="links" aria-label="Site">
-                <a href="/">Home</a>
-                <a href="/projects">Projects</a>
-                <a href="/about">About</a>
-                <a href="/contact">Contact</a>
-                <a href="/skills">Skills</a>
+                <a href="/portfolio">Portfolio</a>
+                <a href="/portfolio/projects">Projects</a>
+                <a href="/portfolio/about">About</a>
+                <a href="/portfolio/skills">Skills</a>
+                <a href="/portfolio/contact">Contact</a>
             </nav>
 
             <div id="authSlot" class="auth"></div>
@@ -614,7 +614,7 @@ footer .social a.iso-pro:focus-visible {
                             <li>Building and maintaining small tools & APIs that people actually use.</li>
                         </ul>
                         <p class="muted" style="margin:.6rem 0 0">More examples live on the <a
-                                href="/projects">Projects</a> page.</p>
+                                href="/portfolio/projects">Projects</a> page.</p>
                     </article>
 
                     <article class="card padded">
@@ -623,7 +623,7 @@ footer .social a.iso-pro:focus-visible {
                             cover domain & hosting. The final price depends on the scope and is negotiable.
                         </p>
                         <div class="cta" style="margin-top:.6rem">
-                            <a class="btn" href="/contact">Contact me</a>
+                            <a class="btn" href="/portfolio/contact">Contact me</a>
                             <a class="btn ghost" href="/#contact">More ways to reach me</a>
                         </div>
                     </article>
@@ -763,8 +763,8 @@ footer .social a.iso-pro:focus-visible {
 
             if (!user) {
                 slot.innerHTML = `
-        <a class="btn small" href="/login">Login</a>
-        <a class="btn small" href="/register">Register</a>
+        <a class="btn small" href="/login?next=${encodeURIComponent(location.href)}">Login</a>
+        <a class="btn small" href="/register?next=${encodeURIComponent(location.href)}">Register</a>
       `;
                 return;
             }

@@ -656,10 +656,9 @@
 
         <nav id="primary-menu" class="links" aria-label="Site">
           <a href="/">Home</a>
-          <a href="/projects">Projects</a>
-          <a href="/about">About</a>
-          <a href="/contact">Contact</a>
-          <a href="/skills">Skills</a>
+          <a href="/api">GIF API</a>
+          <a href="/api/gif/admin">Add GIFs</a>
+          <a href="/linktree/config">Linktree</a>
         </nav>
 
         <div id="authSlot" class="auth"></div>
@@ -976,7 +975,7 @@
         const user = session?.user || null;
         const isAdmin = !!(user && user.admin);
         if (!user) {
-          slot.innerHTML = `<a class="btn small" href="/login">Login</a><a class="btn small" href="/register">Register</a>`;
+          slot.innerHTML = `<a class="btn small" href="/login?next=${encodeURIComponent(location.href)}">Login</a><a class="btn small" href="/register?next=${encodeURIComponent(location.href)}">Register</a>`;
           return;
         }
         const uname = escapeHtml(user.username || "User");

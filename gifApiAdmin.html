@@ -494,11 +494,9 @@
         </button>
         <nav id="primary-menu" class="links" aria-label="Site">
           <a href="/">Home</a>
-          <a href="/projects">Projects</a>
-          <a href="/about">About</a>
-          <a href="/contact">Contact</a>
-          <a href="/skills">Skills</a>
-          <a href="/api" aria-current="page">GIF API</a>
+          <a href="/api">GIF API</a>
+          <a href="/api/gif/admin" aria-current="page">Add GIFs</a>
+          <a href="/linktree/config">Linktree</a>
         </nav>
         <div id="authSlot" class="auth"></div>
       </div>
@@ -871,7 +869,7 @@
         $("#nsfw").value = "false";
         chars.clear();
         tags.clear();
-        chars.add("Nazuna");
+        chars.add("Nazuna Nanakusa");
         tags.add("smoking");
         tags.add("night");
         renderChips("#chars", chars);
@@ -932,8 +930,12 @@
 
         if (!user) {
           slot.innerHTML = `
-        <a class="btn small" href="/login">Login</a>
-        <a class="btn small" href="/register">Register</a>
+        <a class="btn small" href="/login?next=${encodeURIComponent(
+          location.href
+        )}">Login</a>
+        <a class="btn small" href="/register?next=${encodeURIComponent(
+          location.href
+        )}">Register</a>
       `;
           return;
         }
@@ -991,7 +993,8 @@
                 credentials: "include",
               });
             } catch {}
-            window.location.href = "/login";
+            window.location.href =
+              "/login?next=" + encodeURIComponent(window.location.href);
           },
           { passive: true }
         );
@@ -1017,7 +1020,8 @@
         $("#loginModal").style.display = vis ? "none" : "block";
       };
       $("#btnLoginModal").onclick = () => {
-        window.location.href = "/login";
+        window.location.href =
+          "/login?next=" + encodeURIComponent(window.location.href);
       };
       $("#btnLogoutModal").onclick = async () => {
         await performLogout($("#authMsgModal"));
