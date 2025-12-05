@@ -699,6 +699,36 @@ class PgGifDB:
             rows = cur.fetchall()
             return [self._compose_gif(cur, r) for r in rows]
 
+    def search_user_gifs(
+        self,
+        user_id: int,
+        query: str = "",
+        nsfw_mode: str = "false",
+        limit: int = 50,
+        offset: int = 0,
+    ):
+        where = ["created_by = %s"]
+        params: List[Any] = [user_id]
+        if query:
+            where.append("title ILIKE %s")
+            params.append(f"%{query}%")
+        m = (nsfw_mode or "false").lower()
+        if m == "only":
+            where.append("nsfw = TRUE")
+        elif m == "false":
+            where.append("nsfw = FALSE")
+
+        sql = "SELECT id,title,url,nsfw,anime,created_at,created_by FROM gifs"
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += " ORDER BY created_at DESC, id DESC LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
+
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(sql, tuple(params))
+            rows = cur.fetchall()
+            return [self._compose_gif(cur, r) for r in rows]
+
     def get_random(self, nsfw_mode: str = "false"):
         cond = {"only": "nsfw=TRUE", "false": "nsfw=FALSE"}.get(
             (nsfw_mode or "false").lower(), "TRUE"

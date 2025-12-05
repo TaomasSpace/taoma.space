@@ -365,6 +365,30 @@ class GifDB:
             ).fetchall()
             return [self._compose_gif(conn, r) for r in rows]
 
+    def search_user_gifs(
+        self,
+        user_id: int,
+        query: str = "",
+        nsfw_mode: str = "false",
+        limit: int = 50,
+        offset: int = 0,
+    ):
+        like = f"%{query}%"
+        with self._connect() as conn:
+            cond = self._nsfw_condition(nsfw_mode, alias="gifs")
+            rows = conn.execute(
+                f"""
+                SELECT * FROM gifs
+                WHERE created_by = ?
+                AND title LIKE ? COLLATE NOCASE
+                AND {cond}
+                ORDER BY created_at DESC, id DESC
+                LIMIT ? OFFSET ?
+                """,
+                (user_id, like, limit, offset),
+            ).fetchall()
+            return [self._compose_gif(conn, r) for r in rows]
+
     def get_random(self, nsfw_mode: str = "false"):
         with self._connect() as conn:
             cond = self._nsfw_condition(nsfw_mode, alias="gifs")

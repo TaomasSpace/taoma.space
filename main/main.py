@@ -1092,10 +1092,9 @@ def get_linktree_manage_by_slug(
     return get_linktree_manage(lt["id"], user)
 
 
-@app.get(
-    "/api/gif/admin", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
-)
+@app.get("/api/gif/admin", response_class=HTMLResponse)
 def admin_page():
+    # Page is public, but actions on it are protected via the API endpoints.
     return FileResponse("gifApiAdmin.html")
 
 
@@ -1117,6 +1116,23 @@ def admin_list_gifs(
     offset: int = Query(0, ge=0),
 ):
     return db.search_by_title(q or "", nsfw_mode=nsfw, limit=limit, offset=offset)
+
+
+@app.get("/api/my/gifs")
+def list_my_gifs(
+    q: Optional[str] = Query("", description="Title contains filter"),
+    nsfw: str = Query("true", description="false|true|only"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    user: dict = Depends(require_user),
+):
+    return db.search_user_gifs(
+        user_id=user["id"],
+        query=q or "",
+        nsfw_mode=nsfw,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @app.get("/api/admin/gif-blacklist", dependencies=[Depends(require_admin)])

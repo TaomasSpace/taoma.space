@@ -629,7 +629,7 @@
           </form>
         </div>
 
-        <div class="card">
+        <div class="card" id="blacklistCard">
           <div class="section-title">
             <h2>GIF-Blacklist</h2>
             <span class="pill">Only Admins</span>
@@ -703,7 +703,7 @@
         <div class="social">
           <a
             class="iso-pro is-gh"
-            href="https://github.com/TAOMA™"
+            href="https://github.com/TAOMA"
             aria-label="GitHub"
           >
             <svg
@@ -786,7 +786,7 @@
         <h3>Login</h3>
         <button id="toggleLogin" class="btn secondary">X</button>
       </div>
-      <p class="muted">Log in with your account (admins only).</p>
+      <p class="muted">Log in with your account.</p>
       <label>API Base URL</label>
       <input type="url" id="apiBaseModal" placeholder="https://your-api.tld" />
       <div style="display: flex; gap: 8px; margin-top: 10px">
@@ -891,6 +891,7 @@
 
     <script>
       let AUTH_TOKEN = null;
+      let IS_ADMIN = false;
       const authHeaders = () =>
         AUTH_TOKEN && AUTH_TOKEN !== "cookie"
           ? { "X-Auth-Token": AUTH_TOKEN }
@@ -927,6 +928,7 @@
         const session = await fetchSession();
         const user = session?.user || null;
         const isAdmin = !!(user && user.admin);
+        IS_ADMIN = isAdmin;
 
         if (!user) {
           slot.innerHTML = `
@@ -997,7 +999,7 @@
       function requireTokenOrAsk() {
         if (!AUTH_TOKEN) {
           $("#loginModal").style.display = "block";
-          $("#authMsg").textContent = "Please log in with your admin account.";
+          $("#authMsg").textContent = "Please log in to manage GIFs.";
           $("#authMsg").className = "status err";
           return false;
         }
@@ -1029,6 +1031,7 @@
           });
         } finally {
           AUTH_TOKEN = null;
+          IS_ADMIN = false;
           statusEl.textContent = "Logged out.";
           statusEl.className = "status";
         }
@@ -1078,13 +1081,11 @@
       async function verifyToken() {
         const session = await fetchSession();
         if (!session || !session.user) {
+          IS_ADMIN = false;
           setWhoAmI("Not logged in.");
           return false;
         }
-        if (!session.user.admin) {
-          setWhoAmI("Not an admin.");
-          return false;
-        }
+        IS_ADMIN = !!session.user.admin;
         AUTH_TOKEN = "cookie";
         setWhoAmI("Logged in as " + (session.user.username || "user"));
         return true;
@@ -1193,7 +1194,9 @@
         const base = getBase();
         const q = encodeURIComponent($("#q").value.trim());
         const nsfw = $("#nsfwList").value;
-        const url = `${base}/api/admin/gifs?q=${q}&nsfw=${nsfw}&limit=${PAGE_SIZE}&offset=${ADMIN_OFFSET}`;
+        const url = IS_ADMIN
+          ? `${base}/api/admin/gifs?q=${q}&nsfw=${nsfw}&limit=${PAGE_SIZE}&offset=${ADMIN_OFFSET}`
+          : `${base}/api/my/gifs?q=${q}&nsfw=${nsfw}&limit=${PAGE_SIZE}&offset=${ADMIN_OFFSET}`;
         const r = await fetch(url, { headers: authHeaders() });
         if (!r.ok) {
           $("#tableWrap").textContent = "Load error: " + r.statusText;
@@ -1224,14 +1227,20 @@
       window.addEventListener("load", async () => {
         await renderAuthHeader();
         await ensureAuthUI();
+        const blacklistCard = document.getElementById("blacklistCard");
+        if (blacklistCard && !IS_ADMIN) {
+          blacklistCard.style.display = "none";
+        }
         if (AUTH_TOKEN) {
           ADMIN_OFFSET = 0;
           await loadAdminList(false);
-          await loadBlacklist();
+          if (IS_ADMIN) {
+            await loadBlacklist();
+          }
         }
       });
       async function loadBlacklist() {
-        if (!AUTH_TOKEN) return;
+        if (!AUTH_TOKEN || !IS_ADMIN) return;
         const base = getBase();
         const statusEl = $("#blStatus");
         statusEl.textContent = "";
