@@ -1308,6 +1308,29 @@ def unified_get_gifs(
         raise HTTPException(status_code=404, detail="no gifs in database")
 
 
+@app.get(
+    "/api/gifs/random/url",
+    response_class=Response,
+    summary="Get a random GIF URL only",
+)
+def random_gif_url(
+    nsfw: str = Query("false", description="false|true|only"),
+):
+    """
+    Returns only the URL (plain text) of a random GIF.
+    """
+    nsfw_mode = (nsfw or "false").lower()
+    if nsfw_mode not in {"false", "true", "only"}:
+        raise HTTPException(
+            status_code=400, detail="nsfw must be one of: false, true, only"
+        )
+    try:
+        gif = db.get_random(nsfw_mode=nsfw_mode)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="no gifs in database")
+    return Response(content=str(gif.get("url", "")), media_type="text/plain")
+
+
 @app.post("/api/gifs", response_model=GifOut, status_code=201)
 def create_or_update_gif(payload: GifIn, user: dict = Depends(require_user)):
     _ensure_gif_write_allowed(user)
