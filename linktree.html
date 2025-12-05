@@ -1218,12 +1218,17 @@
             );
             const cursorUrl = safeMediaUrl(data.cursor_url);
             if (cursorUrl && device === "pc") {
+              const cursorDecl = `url("${cursorUrl}") 0 0, auto`;
               document.documentElement.style.setProperty(
                 "--cursor",
-                `url("${cursorUrl}") 0 0, auto`
+                cursorDecl
               );
+              document.documentElement.style.cursor = cursorDecl;
+              if (document.body) document.body.style.cursor = cursorDecl;
             } else {
               document.documentElement.style.setProperty("--cursor", "auto");
+              document.documentElement.style.cursor = "auto";
+              if (document.body) document.body.style.cursor = "auto";
             }
             // Profil/Badges/Links wie gehabt
             const pfp = document.getElementById("pfp");
