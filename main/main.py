@@ -2380,6 +2380,20 @@ async def upload_cursor(
     ext = _detect_image_ext(data)
     if not ext:
         raise HTTPException(400, "File is not a valid image")
+    # Cursor-Kompatibilität: auf PNG normalisieren, falls anderes Format (z.B. WebP)
+    if ext != "png":
+        try:
+            with Image.open(io.BytesIO(data)) as img:
+                buf = io.BytesIO()
+                img.save(buf, format="PNG")
+                data = buf.getvalue()
+                ext = "png"
+                if len(data) > MAX_IMAGE_BYTES:
+                    raise HTTPException(413, "Converted cursor is too large (>5MB)")
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(400, "Cursor could not be converted to PNG")
 
     old_url = None
     try:
