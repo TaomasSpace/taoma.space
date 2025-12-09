@@ -26,7 +26,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import threading
 from psycopg import errors as pg_errors
 import os, base64, secrets
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlparse, urlunparse
 from fastapi import Path as PathParam
 from fastapi import UploadFile, File
 import pathlib
@@ -890,6 +890,104 @@ def _clean_str_list(values: Optional[List[str]]) -> List[str]:
     return [s for s in (str(v).strip() for v in (values or [])) if s]
 
 
+def _normalize_gif_url(raw_url: str, *, error_on_invalid: bool = True) -> str | None:
+    """
+    Accepts URLs ending with .gif (case-insensitive).
+    .gifv is allowed but converted to .gif.
+    Returns normalized URL or None if invalid and error_on_invalid=False.
+    """
+    if not isinstance(raw_url, str):
+        if error_on_invalid:
+            raise HTTPException(status_code=400, detail="GIF URL must end with .gif")
+        return None
+
+    candidate = raw_url.strip()
+    try:
+        parsed = urlparse(candidate)
+    except Exception:
+        if error_on_invalid:
+            raise HTTPException(status_code=400, detail="Invalid GIF URL")
+        return None
+
+    path = parsed.path or ""
+    lower_path = path.lower()
+
+    if lower_path.endswith(".gifv"):
+        path = path[:-1]  # drop trailing "v"
+    elif not lower_path.endswith(".gif"):
+        if error_on_invalid:
+            raise HTTPException(
+                status_code=400,
+                detail="GIF URL must end with .gif ('.gifv' is auto-converted).",
+            )
+        return None
+
+    return urlunparse(parsed._replace(path=path))
+
+
+def _cleanup_gif_urls_on_startup():
+    """
+    Drop GIF rows with unsupported URLs and normalize .gifv -> .gif.
+    Runs once during application startup for both backends.
+    """
+    updated_ids: list[int] = []
+    deleted_ids: list[int] = []
+    try:
+        if isinstance(db, PgGifDB):
+            with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+                cur.execute("SELECT id, url FROM gifs ORDER BY id")
+                rows = cur.fetchall()
+                seen: set[str] = set()
+                for row in rows:
+                    normalized = _normalize_gif_url(row.get("url", ""), error_on_invalid=False)
+                    if not normalized:
+                        cur.execute("DELETE FROM gifs WHERE id=%s", (row["id"],))
+                        deleted_ids.append(row["id"])
+                        continue
+                    key = normalized.lower()
+                    if key in seen:
+                        cur.execute("DELETE FROM gifs WHERE id=%s", (row["id"],))
+                        deleted_ids.append(row["id"])
+                        continue
+                    seen.add(key)
+                    if normalized != (row.get("url") or "").strip():
+                        cur.execute("UPDATE gifs SET url=%s WHERE id=%s", (normalized, row["id"]))
+                        updated_ids.append(row["id"])
+                conn.commit()
+        else:
+            with db._connect() as conn:  # type: ignore[attr-defined]
+                rows = conn.execute("SELECT id, url FROM gifs ORDER BY id").fetchall()
+                seen: set[str] = set()
+                for row in rows:
+                    normalized = _normalize_gif_url(row["url"], error_on_invalid=False)
+                    if not normalized:
+                        conn.execute("DELETE FROM gifs WHERE id = ?", (row["id"],))
+                        deleted_ids.append(row["id"])
+                        continue
+                    key = normalized.lower()
+                    if key in seen:
+                        conn.execute("DELETE FROM gifs WHERE id = ?", (row["id"],))
+                        deleted_ids.append(row["id"])
+                        continue
+                    seen.add(key)
+                    if normalized != (row["url"] or "").strip():
+                        conn.execute("UPDATE gifs SET url = ? WHERE id = ?", (normalized, row["id"]))
+                        updated_ids.append(row["id"])
+                conn.commit()
+    except Exception as exc:
+        logger.warning("GIF URL cleanup failed: %s", exc)
+        return
+
+    if updated_ids or deleted_ids:
+        logger.info(
+            "GIF URL cleanup completed (updated=%d, deleted=%d)",
+            len(updated_ids),
+            len(deleted_ids),
+        )
+
+_cleanup_gif_urls_on_startup()
+
+
 def _validate_gif_fields(
     title: str | None, anime: str | None, characters: List[str] | None, tags: List[str] | None
 ) -> tuple[str, str, List[str], List[str]]:
@@ -1337,10 +1435,11 @@ def create_or_update_gif(payload: GifIn, user: dict = Depends(require_user)):
     title, anime, characters, tags = _validate_gif_fields(
         payload.title, payload.anime, payload.characters, payload.tags
     )
+    normalized_url = _normalize_gif_url(str(payload.url))
     try:
         existing = None
         try:
-            existing = db.get_gif_by_url(str(payload.url))
+            existing = db.get_gif_by_url(normalized_url)
         except KeyError:
             pass
 
@@ -1349,7 +1448,7 @@ def create_or_update_gif(payload: GifIn, user: dict = Depends(require_user)):
             db.update_gif(
                 existing["id"],
                 title=title,
-                url=str(payload.url),
+                url=normalized_url,
                 nsfw=payload.nsfw,
                 anime=anime,
                 characters=characters,
@@ -1359,7 +1458,7 @@ def create_or_update_gif(payload: GifIn, user: dict = Depends(require_user)):
 
         gif_id = db.insert_gif(
             title=title,
-            url=str(payload.url),
+            url=normalized_url,
             nsfw=payload.nsfw,
             anime=anime,
             characters=characters,
@@ -1396,7 +1495,9 @@ def update_gif(gif_id: int, payload: GifUpdate, user: dict = Depends(require_use
         payload.tags if payload.tags is not None else gif.get("tags", []),
     )
     nsfw_value = payload.nsfw if payload.nsfw is not None else gif["nsfw"]
-    url_value = str(payload.url) if payload.url is not None else None
+    url_value = (
+        _normalize_gif_url(str(payload.url)) if payload.url is not None else None
+    )
 
     db.update_gif(
         gif_id,
