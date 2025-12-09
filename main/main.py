@@ -450,6 +450,7 @@ class LinktreeCreateIn(BaseModel):
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
     discord_frame_enabled: bool = False
+    show_visit_counter: bool = False
 
 
 class LinktreeUpdateIn(BaseModel):
@@ -476,6 +477,7 @@ class LinktreeUpdateIn(BaseModel):
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
     discord_frame_enabled: Optional[bool] = None
+    show_visit_counter: Optional[bool] = None
 
 
 class LinkCreateIn(BaseModel):
@@ -521,8 +523,66 @@ class LinktreeOut(BaseModel):
     discord_decoration_url: Optional[str] = None
     profile_picture: Optional[str] = None  # NEU - fuer Avatar
     user_username: Optional[str] = None  # NEU - fuer "username"-Modus
+    show_visit_counter: bool = False
+    visit_count: int = 0
     links: List[LinkOut]
     icons: List[IconOut]
+
+VISIT_COOKIE_MAX_AGE = 365 * 24 * 3600  # 1 Jahr
+
+
+def _visit_cookie_name(linktree_id: int) -> str:
+    return f"ltv_{linktree_id}"
+
+
+def _get_canonical_linktree_id(slug: str) -> int | None:
+    if not isinstance(db, PgGifDB) or not slug:
+        return None
+    try:
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT MIN(id) FROM linktrees WHERE lower(slug)=lower(%s)",
+                (slug,),
+            )
+            row = cur.fetchone()
+            return int(row[0]) if row and row[0] is not None else None
+    except Exception as exc:
+        logger.warning("Failed to resolve canonical linktree id for %s: %s", slug, exc)
+        return None
+
+
+def _record_linktree_visit(lt: dict, request: Request, response: Response) -> int:
+    """Counts unique visits per linktree using a cookie-based token."""
+    if not isinstance(db, PgGifDB):
+        return 0
+    canonical_id = _get_canonical_linktree_id(str(lt.get("slug", ""))) or int(lt["id"])
+    cookie_name = _visit_cookie_name(canonical_id)
+    token = request.cookies.get(cookie_name) or ""
+    is_new_token = False
+    if not token:
+        token = uuid.uuid4().hex
+        is_new_token = True
+
+    try:
+        db.record_linktree_visit(canonical_id, token)
+    except Exception as exc:
+        logger.warning("Failed to record linktree visit: %s", exc)
+    else:
+        if is_new_token:
+            response.set_cookie(
+                cookie_name,
+                token,
+                max_age=VISIT_COOKIE_MAX_AGE,
+                httponly=False,
+                secure=True,
+                samesite="lax",
+            )
+
+    try:
+        return db.get_linktree_visit_count(canonical_id)
+    except Exception as exc:
+        logger.warning("Failed to fetch linktree visit count: %s", exc)
+        return 0
 
 class IconUpsertIn(BaseModel):
     code: str = Field(..., min_length=2, max_length=64, pattern=r"^[a-z0-9_\-]+$")
@@ -1124,7 +1184,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    location_color,
                    quote_color,
                    cursor_url,
-                    COALESCE(discord_frame_enabled, false) AS discord_frame_enabled
+                    COALESCE(discord_frame_enabled, false) AS discord_frame_enabled,
+                    COALESCE(show_visit_counter, false) AS show_visit_counter
                FROM linktrees
               WHERE id = %s
         """,
@@ -1168,6 +1229,13 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         )
         icons = cur.fetchall() or []
 
+    visit_count = 0
+    try:
+        canonical_id = _get_canonical_linktree_id(lt.get("slug", "")) or lt["id"]
+        visit_count = db.get_linktree_visit_count(canonical_id)
+    except Exception:
+        visit_count = 0
+
     discord_acct = _load_discord_account(lt["user_id"])
     decoration_url = discord_acct.get("decoration_url") if discord_acct else None
 
@@ -1198,6 +1266,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "discord_decoration_url": decoration_url,
         "profile_picture": user_pfp,
         "user_username": user_username,
+        "show_visit_counter": bool(lt.get("show_visit_counter", False)),
+        "visit_count": int(visit_count or 0),
         "links": [
             {
                 "id": r["id"],
@@ -2002,11 +2072,17 @@ def linktree_config_page():
 
 
 @app.get("/api/linktrees/{slug}", response_model=LinktreeOut)
-def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or mobile")):
+def get_linktree(
+    slug: str,
+    device: DeviceType = Query("pc", description="pc or mobile"),
+    request: Request = None,
+    response: Response = None,
+):
     _ensure_pg()
     lt = db.get_linktree_by_slug(slug, device)
     if not lt and device == "mobile":
         lt = db.get_linktree_by_slug(slug, "pc")  # fallback
+        device = "pc"
     if not lt:
         raise HTTPException(404, "Linktree not found")
 
@@ -2053,6 +2129,18 @@ def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or 
         if r.get("is_active", True)
     ]
     frame_enabled = bool(lt.get("discord_frame_enabled", False))
+    visit_count = 0
+    if request is not None and response is not None:
+        visit_count = _record_linktree_visit(lt, request, response)
+    else:
+        try:
+            if isinstance(db, PgGifDB):
+                canonical_id = _get_canonical_linktree_id(lt.get("slug", "")) or lt["id"]
+                visit_count = db.get_linktree_visit_count(canonical_id)
+            else:
+                visit_count = 0
+        except Exception:
+            visit_count = 0
 
     return {
         "id": lt["id"],
@@ -2081,6 +2169,8 @@ def get_linktree(slug: str, device: DeviceType = Query("pc", description="pc or 
         "discord_decoration_url": decoration_url if frame_enabled else None,
         "profile_picture": user_pfp,  # <= jetzt dabei
         "user_username": user_username,  # <= jetzt dabei
+        "show_visit_counter": bool(lt.get("show_visit_counter", False)),
+        "visit_count": int(visit_count or 0),
         "links": links,
         "icons": icons,
     }
@@ -2133,6 +2223,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             quote_color=payload.quote_color,
             cursor_url=payload.cursor_url,
             discord_frame_enabled=payload.discord_frame_enabled,
+            show_visit_counter=payload.show_visit_counter,
         )
     except pg_errors.UniqueViolation:
         raise HTTPException(409, "Slug already in use")

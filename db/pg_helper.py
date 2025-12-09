@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS linktrees (
     quote_color         TEXT,
     cursor_url          TEXT,
     discord_frame_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    show_visit_counter  BOOLEAN NOT NULL DEFAULT FALSE,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ
 );
@@ -121,6 +122,16 @@ CREATE TABLE IF NOT EXISTS linktree_links (
 );
 CREATE INDEX IF NOT EXISTS idx_ltree_links_tree_pos
     ON linktree_links(linktree_id, position);
+
+-- Besucher-Tracking pro Linktree (unique per visitor_token)
+CREATE TABLE IF NOT EXISTS linktree_visits (
+    id           SERIAL PRIMARY KEY,
+    linktree_id  INTEGER NOT NULL REFERENCES linktrees(id) ON DELETE CASCADE,
+    visitor_token TEXT NOT NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (linktree_id, visitor_token)
+);
+CREATE INDEX IF NOT EXISTS idx_linktree_visits_tree ON linktree_visits(linktree_id);
 
 -- Verdienbare / freischaltbare Icons (Katalog)
 CREATE TABLE IF NOT EXISTS icons (
@@ -324,6 +335,10 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS show_visit_counter BOOLEAN NOT NULL DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS text_color TEXT;
                 """)
                 cur.execute("""
@@ -496,6 +511,23 @@ class PgGifDB:
                         reason     TEXT
                     )
                 """
+                )
+                cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS linktree_visits (
+                        id            SERIAL PRIMARY KEY,
+                        linktree_id   INTEGER NOT NULL REFERENCES linktrees(id) ON DELETE CASCADE,
+                        visitor_token TEXT NOT NULL,
+                        created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+                        UNIQUE (linktree_id, visitor_token)
+                    )
+                    """
+                )
+                cur.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_linktree_visits_tree
+                    ON linktree_visits(linktree_id)
+                    """
                 )
                 cur.execute(
                     """
@@ -1213,6 +1245,7 @@ class PgGifDB:
         quote_color: str | None = None,
         cursor_url: str | None = None,
         discord_frame_enabled: bool = False,
+        show_visit_counter: bool = False,
     ) -> int:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
@@ -1231,9 +1264,10 @@ class PgGifDB:
                     location_color,
                     quote_color,
                     cursor_url,
-                    discord_frame_enabled
+                    discord_frame_enabled,
+                    show_visit_counter
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 RETURNING id
                 """,
                 (
@@ -1251,6 +1285,7 @@ class PgGifDB:
                     quote_color,
                     cursor_url,
                     discord_frame_enabled,
+                    show_visit_counter,
                 ),
             )
             linktree_id = cur.fetchone()[0]
@@ -1286,6 +1321,7 @@ class PgGifDB:
             "quote_color",
             "cursor_url",
             "discord_frame_enabled",
+            "show_visit_counter",
         }
         sets, vals = [], []
         for k, v in fields.items():
@@ -1329,8 +1365,8 @@ class PgGifDB:
                     transparency, name_effect, background_effect,
                     display_name_mode, custom_display_name,
                     link_color, link_bg_color, link_bg_alpha, text_color,
-                    name_color, location_color, quote_color, cursor_url, discord_frame_enabled
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    name_color, location_color, quote_color, cursor_url, discord_frame_enabled, show_visit_counter
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 RETURNING id
                 """,
                 (
@@ -1356,6 +1392,7 @@ class PgGifDB:
                     src.get("quote_color"),
                     src.get("cursor_url"),
                     src.get("discord_frame_enabled", False),
+                    src.get("show_visit_counter", False),
                 ),
             )
             new_id = cur.fetchone()["id"]
@@ -1427,6 +1464,37 @@ class PgGifDB:
             lt["links"] = links
             lt["icons"] = icons
             return lt
+
+    def record_linktree_visit(self, linktree_id: int, visitor_token: str) -> bool:
+        """
+        Returns True if a new unique visit was recorded.
+        """
+        if not visitor_token:
+            return False
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO linktree_visits(linktree_id, visitor_token)
+                VALUES (%s, %s)
+                ON CONFLICT DO NOTHING
+                RETURNING id
+                """,
+                (linktree_id, visitor_token),
+            )
+            inserted = cur.fetchone()
+            if inserted:
+                conn.commit()
+                return True
+            return False
+
+    def get_linktree_visit_count(self, linktree_id: int) -> int:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT COUNT(*) FROM linktree_visits WHERE linktree_id=%s",
+                (linktree_id,),
+            )
+            row = cur.fetchone()
+            return int(row[0] or 0)
 
 
     # ---------------- Links ----------------
