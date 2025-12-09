@@ -451,6 +451,9 @@ class LinktreeCreateIn(BaseModel):
     cursor_url: Optional[str] = None
     discord_frame_enabled: bool = False
     show_visit_counter: bool = False
+    visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    visit_counter_bg_alpha: int = Field(20, ge=0, le=100)
 
 
 class LinktreeUpdateIn(BaseModel):
@@ -478,6 +481,9 @@ class LinktreeUpdateIn(BaseModel):
     cursor_url: Optional[str] = None
     discord_frame_enabled: Optional[bool] = None
     show_visit_counter: Optional[bool] = None
+    visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    visit_counter_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
 
 
 class LinkCreateIn(BaseModel):
@@ -525,6 +531,9 @@ class LinktreeOut(BaseModel):
     user_username: Optional[str] = None  # NEU - fuer "username"-Modus
     show_visit_counter: bool = False
     visit_count: int = 0
+    visit_counter_color: Optional[str] = None
+    visit_counter_bg_color: Optional[str] = None
+    visit_counter_bg_alpha: int = 20
     links: List[LinkOut]
     icons: List[IconOut]
 
@@ -1184,8 +1193,11 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    location_color,
                    quote_color,
                    cursor_url,
-                    COALESCE(discord_frame_enabled, false) AS discord_frame_enabled,
-                    COALESCE(show_visit_counter, false) AS show_visit_counter
+                   COALESCE(discord_frame_enabled, false) AS discord_frame_enabled,
+                    COALESCE(show_visit_counter, false) AS show_visit_counter,
+                    visit_counter_color,
+                    visit_counter_bg_color,
+                    COALESCE(visit_counter_bg_alpha, 20) AS visit_counter_bg_alpha
                FROM linktrees
               WHERE id = %s
         """,
@@ -1268,6 +1280,9 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "user_username": user_username,
         "show_visit_counter": bool(lt.get("show_visit_counter", False)),
         "visit_count": int(visit_count or 0),
+        "visit_counter_color": lt.get("visit_counter_color"),
+        "visit_counter_bg_color": lt.get("visit_counter_bg_color"),
+        "visit_counter_bg_alpha": int(lt.get("visit_counter_bg_alpha", 20) or 20),
         "links": [
             {
                 "id": r["id"],
@@ -2171,6 +2186,9 @@ def get_linktree(
         "user_username": user_username,  # <= jetzt dabei
         "show_visit_counter": bool(lt.get("show_visit_counter", False)),
         "visit_count": int(visit_count or 0),
+        "visit_counter_color": lt.get("visit_counter_color"),
+        "visit_counter_bg_color": lt.get("visit_counter_bg_color"),
+        "visit_counter_bg_alpha": int(lt.get("visit_counter_bg_alpha", 20) or 20),
         "links": links,
         "icons": icons,
     }
@@ -2224,6 +2242,9 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             cursor_url=payload.cursor_url,
             discord_frame_enabled=payload.discord_frame_enabled,
             show_visit_counter=payload.show_visit_counter,
+            visit_counter_color=payload.visit_counter_color,
+            visit_counter_bg_color=payload.visit_counter_bg_color,
+            visit_counter_bg_alpha=payload.visit_counter_bg_alpha,
         )
     except pg_errors.UniqueViolation:
         raise HTTPException(409, "Slug already in use")

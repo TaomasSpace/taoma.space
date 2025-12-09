@@ -1185,6 +1185,20 @@
                 Counts unique visitors (shared desktop/mobile).
                 Current: <strong id="inVisitCount">0</strong>
               </div>
+              <div class="grid cols-2" style="margin-top: 0.75rem">
+                <div class="field">
+                  <label for="inCounterColor">Counter Text/Icon Color</label>
+                  <input id="inCounterColor" class="input" type="color" value="#e9ebff" />
+                </div>
+                <div class="field">
+                  <label for="inCounterBgColor">Counter Background Color</label>
+                  <input id="inCounterBgColor" class="input" type="color" value="#ffffff" />
+                </div>
+                <div class="field">
+                  <label for="inCounterBgAlpha">Counter Background Transparency (0-100)</label>
+                  <input id="inCounterBgAlpha" class="input" type="number" min="0" max="100" value="20" />
+                </div>
+              </div>
             </div>
 
             <div class="row" style="grid-column: 1 / -1; margin-top: 0.4rem">
@@ -1624,6 +1638,12 @@
         $("inShowCounter").checked = !!lt.show_visit_counter;
         const vcEl = document.getElementById("inVisitCount");
         if (vcEl) vcEl.textContent = Number(lt.visit_count || 0).toLocaleString();
+        $("inCounterColor").value = lt.visit_counter_color || "#e9ebff";
+        $("inCounterBgColor").value = lt.visit_counter_bg_color || "#ffffff";
+        $("inCounterBgAlpha").value =
+          lt.visit_counter_bg_alpha !== undefined && lt.visit_counter_bg_alpha !== null
+            ? lt.visit_counter_bg_alpha
+            : 20;
         toggleCustomNameField();
         const btnOpen = $("btnOpenPublic");
         btnOpen.href = `/tree/${encodeURIComponent(lt.slug)}`;
@@ -1893,6 +1913,12 @@
           cursor_url: $("inCursor").value.trim() || null,
           discord_frame_enabled: $("inDiscordFrame").checked,
           show_visit_counter: $("inShowCounter").checked,
+          visit_counter_color: $("inCounterColor").value || null,
+          visit_counter_bg_color: $("inCounterBgColor").value || null,
+          visit_counter_bg_alpha: Math.min(
+            100,
+            Math.max(0, parseInt($("inCounterBgAlpha").value || "20", 10))
+          ),
         };
         if (!exists) {
           const r = await fetch("/api/linktrees", {

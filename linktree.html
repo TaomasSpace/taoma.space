@@ -974,11 +974,24 @@
           return "";
         }
 
-        const safeMediaUrl = (raw) =>
-          safeUrl(raw, {
-            allowRelative: true,
-            allowedProtocols: ["http:", "https:"],
-          });
+      const safeMediaUrl = (raw) =>
+        safeUrl(raw, {
+          allowRelative: true,
+          allowedProtocols: ["http:", "https:"],
+        });
+
+      function hexToRgba(hex, alpha = 1) {
+        const m = /^#?([a-fA-F0-9]{3}|[a-fA-F0-9]{6})$/.exec((hex || "").trim());
+        if (!m) return null;
+        let h = m[1];
+        if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+        const int = parseInt(h, 16);
+        const r = (int >> 16) & 255;
+        const g = (int >> 8) & 255;
+        const b = int & 255;
+        const a = Math.min(1, Math.max(0, alpha));
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      }
         const safeLinkUrl = (raw) =>
           safeUrl(raw, {
             allowRelative: false,
@@ -1423,6 +1436,20 @@
                 visitValue.textContent = Number(
                   data.visit_count || 0
                 ).toLocaleString();
+                const textColor =
+                  hexToRgba(data.visit_counter_color, 1) ||
+                  hexToRgba(data.text_color, 1) ||
+                  null;
+                if (textColor) visitBox.style.color = textColor;
+                const bgAlpha = Number.isFinite(Number(data.visit_counter_bg_alpha))
+                  ? Number(data.visit_counter_bg_alpha)
+                  : 20;
+                const bgColor =
+                  hexToRgba(
+                    data.visit_counter_bg_color || "#ffffff",
+                    Math.min(1, Math.max(0, bgAlpha / 100))
+                  ) || "rgba(255,255,255,0.14)";
+                visitBox.style.backgroundColor = bgColor;
                 visitBox.style.display = "inline-flex";
               } else {
                 visitBox.style.display = "none";

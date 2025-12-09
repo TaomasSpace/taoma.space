@@ -104,6 +104,10 @@ CREATE TABLE IF NOT EXISTS linktrees (
     cursor_url          TEXT,
     discord_frame_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     show_visit_counter  BOOLEAN NOT NULL DEFAULT FALSE,
+    visit_counter_color TEXT,
+    visit_counter_bg_color TEXT,
+    visit_counter_bg_alpha SMALLINT NOT NULL DEFAULT 20
+                        CHECK (visit_counter_bg_alpha BETWEEN 0 AND 100),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ
 );
@@ -336,6 +340,40 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS show_visit_counter BOOLEAN NOT NULL DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS visit_counter_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS visit_counter_bg_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS visit_counter_bg_alpha SMALLINT;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET visit_counter_bg_alpha = 20
+   WHERE visit_counter_bg_alpha IS NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN visit_counter_bg_alpha SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN visit_counter_bg_alpha SET DEFAULT 20;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_visit_counter_bg_alpha_range;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_visit_counter_bg_alpha_range
+  CHECK (visit_counter_bg_alpha BETWEEN 0 AND 100);
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1246,6 +1284,9 @@ class PgGifDB:
         cursor_url: str | None = None,
         discord_frame_enabled: bool = False,
         show_visit_counter: bool = False,
+        visit_counter_color: str | None = None,
+        visit_counter_bg_color: str | None = None,
+        visit_counter_bg_alpha: int = 20,
     ) -> int:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
@@ -1265,9 +1306,12 @@ class PgGifDB:
                     quote_color,
                     cursor_url,
                     discord_frame_enabled,
-                    show_visit_counter
+                    show_visit_counter,
+                    visit_counter_color,
+                    visit_counter_bg_color,
+                    visit_counter_bg_alpha
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 RETURNING id
                 """,
                 (
@@ -1286,6 +1330,9 @@ class PgGifDB:
                     cursor_url,
                     discord_frame_enabled,
                     show_visit_counter,
+                    visit_counter_color,
+                    visit_counter_bg_color,
+                    visit_counter_bg_alpha,
                 ),
             )
             linktree_id = cur.fetchone()[0]
@@ -1322,6 +1369,9 @@ class PgGifDB:
             "cursor_url",
             "discord_frame_enabled",
             "show_visit_counter",
+            "visit_counter_color",
+            "visit_counter_bg_color",
+            "visit_counter_bg_alpha",
         }
         sets, vals = [], []
         for k, v in fields.items():
@@ -1365,8 +1415,9 @@ class PgGifDB:
                     transparency, name_effect, background_effect,
                     display_name_mode, custom_display_name,
                     link_color, link_bg_color, link_bg_alpha, text_color,
-                    name_color, location_color, quote_color, cursor_url, discord_frame_enabled, show_visit_counter
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    name_color, location_color, quote_color, cursor_url, discord_frame_enabled, show_visit_counter,
+                    visit_counter_color, visit_counter_bg_color, visit_counter_bg_alpha
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 RETURNING id
                 """,
                 (
@@ -1393,6 +1444,9 @@ class PgGifDB:
                     src.get("cursor_url"),
                     src.get("discord_frame_enabled", False),
                     src.get("show_visit_counter", False),
+                    src.get("visit_counter_color"),
+                    src.get("visit_counter_bg_color"),
+                    src.get("visit_counter_bg_alpha", 20),
                 ),
             )
             new_id = cur.fetchone()["id"]
