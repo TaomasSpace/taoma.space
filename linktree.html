@@ -40,6 +40,26 @@
       body,
       a,
       button,
+
+      .visit-counter {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-top: 1rem;
+        padding: 0.55rem 0.9rem;
+        border-radius: 999px;
+        background: #ffffff14;
+        color: var(--ink);
+        font-weight: 600;
+        border: 1px solid #ffffff26;
+        box-shadow: var(--shadow);
+      }
+
+      .visit-counter svg {
+        width: 18px;
+        height: 18px;
+      }
+
       .link {
         cursor: var(--cursor, auto);
       }
@@ -841,6 +861,28 @@
         <div class="badges" id="badges"></div>
 
         <div class="links" id="links"></div>
+        <div id="visitCounter" class="visit-counter" style="display: none">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
+          </svg>
+          <span id="visitCounterValue">0</span>
+        </div>
       </div>
     </main>
 
@@ -1373,6 +1415,16 @@
                 a.appendChild(span);
                 linksEl.appendChild(a);
               });
+            }
+            const visitBox = document.getElementById("visitCounter");
+            const visitValue = document.getElementById("visitCounterValue");
+            if (visitBox && visitValue) {
+              if (data.show_visit_counter) {
+                visitValue.textContent = Number(data.visit_count || 0).toLocaleString();
+                visitBox.style.display = "inline-flex";
+              } else {
+                visitBox.style.display = "none";
+              }
             }
           } catch (e) {
             console.error("loadTree failed:", e);

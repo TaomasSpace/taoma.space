@@ -1173,6 +1173,18 @@
               <div class="help">
                 Optional. Uses your current Discord profile frame if available.
               </div>
+
+              <label
+                class="row"
+                style="margin-top: 0.75rem; gap: 0.4rem; align-items: center"
+              >
+                <input type="checkbox" id="inShowCounter" />
+                <span>Show visitor counter on my profile</span>
+              </label>
+              <div class="help">
+                Counts unique visitors per linktree (shared across desktop/mobile).
+                Current: <strong id="inVisitCount">0</strong>
+              </div>
             </div>
 
             <div class="row" style="grid-column: 1 / -1; margin-top: 0.4rem">
@@ -1609,6 +1621,9 @@
             : 100;
         $("inCursor").value = lt.cursor_url || "";
         $("inDiscordFrame").checked = !!lt.discord_frame_enabled;
+        $("inShowCounter").checked = !!lt.show_visit_counter;
+        const vcEl = $("inVisitCount");
+        if (vcEl) vcEl.textContent = Number(lt.visit_count || 0).toLocaleString();
         toggleCustomNameField();
         const btnOpen = $("btnOpenPublic");
         btnOpen.href = `/tree/${encodeURIComponent(lt.slug)}`;
@@ -1877,6 +1892,7 @@
           link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
           cursor_url: $("inCursor").value.trim() || null,
           discord_frame_enabled: $("inDiscordFrame").checked,
+          show_visit_counter: $("inShowCounter").checked,
         };
         if (!exists) {
           const r = await fetch("/api/linktrees", {
