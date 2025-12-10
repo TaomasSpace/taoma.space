@@ -430,6 +430,12 @@
         max-width: 100%;
       }
 
+      .link-item.dragging {
+        opacity: 0.7;
+        border-color: var(--acc);
+        background: #ffffff0a;
+      }
+
       .link-item input {
         flex: 1;
         min-width: 120px;
@@ -1660,12 +1666,91 @@
         }
       }
 
+      let dragStartOrder = "";
+
+      function domOrderKey(container) {
+        return Array.from(container.querySelectorAll(".link-item"))
+          .map((el) => el.dataset.id || "")
+          .join("|");
+      }
+
+      function getDragAfterElement(container, y) {
+        const els = Array.from(
+          container.querySelectorAll(".link-item:not(.dragging)")
+        );
+        let closest = { offset: Number.NEGATIVE_INFINITY, el: null };
+        els.forEach((el) => {
+          const box = el.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
+          if (offset < 0 && offset > closest.offset) {
+            closest = { offset, el };
+          }
+        });
+        return closest.el;
+      }
+
+      function ensureLinksDrag(container) {
+        if (!container || container.dataset.dragBound === "1") return;
+        container.dataset.dragBound = "1";
+        container.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          const after = getDragAfterElement(container, e.clientY);
+          const dragging = container.querySelector(".dragging");
+          if (!dragging) return;
+          if (!after) {
+            container.appendChild(dragging);
+          } else {
+            container.insertBefore(dragging, after);
+          }
+        });
+      }
+
+      async function persistLinkOrder(container) {
+        const wrap = container || $("linksList");
+        if (!wrap) return;
+        const rows = Array.from(wrap.querySelectorAll(".link-item"));
+        if (!rows.length) return;
+        const results = await Promise.all(
+          rows.map((row, idx) =>
+            apiUpdateLink(
+              Number(row.dataset.id),
+              { position: idx },
+              { silent: true, skipRefresh: true }
+            )
+          )
+        );
+        if (results.some((ok) => ok === false)) {
+          showMsg(msgLinks, "Reorder failed", false);
+          await refreshData();
+          return;
+        }
+        await refreshData();
+        showMsg(msgLinks, "Order updated", true);
+      }
+
+      function moveLinkRow(row, direction = 0) {
+        if (!direction || !row || !row.parentElement) return;
+        const wrap = row.parentElement;
+        if (direction < 0 && row.previousElementSibling) {
+          wrap.insertBefore(row, row.previousElementSibling);
+        } else if (direction > 0 && row.nextElementSibling) {
+          wrap.insertBefore(row.nextElementSibling, row);
+        } else {
+          return;
+        }
+        persistLinkOrder(wrap);
+      }
+
       function renderLinks(links) {
         const wrap = $("linksList");
         wrap.innerHTML = "";
+        ensureLinksDrag(wrap);
         (links || []).forEach((l, idx) => {
           const row = document.createElement("div");
           row.className = "link-item";
+          row.dataset.id = l.id;
+          row.dataset.position = idx;
+          row.draggable = true;
           row.innerHTML = `
         <span class="handle" title="Move" aria-hidden="true">☰</span>
         <input class="input" data-k="label" placeholder="Label" value="${(
@@ -1691,6 +1776,7 @@
           row
             .querySelector('[data-act="save"]')
             .addEventListener("click", async () => {
+              const currentPosition = Array.from(wrap.children).indexOf(row);
               const body = {
                 label:
                   row.querySelector('[data-k="label"]').value.trim() || null,
@@ -1699,7 +1785,7 @@
                   row.querySelector('[data-k="icon_url"]').value.trim() || null,
                 is_active:
                   row.querySelector('[data-k="is_active"]').value === "true",
-                position: idx,
+                position: currentPosition,
               };
               await apiUpdateLink(l.id, body);
             });
@@ -1712,13 +1798,28 @@
           row
             .querySelector('[data-act="up"]')
             .addEventListener("click", async () => {
-              await apiUpdateLink(l.id, { position: Math.max(0, idx - 1) });
+              moveLinkRow(row, -1);
             });
           row
             .querySelector('[data-act="down"]')
             .addEventListener("click", async () => {
-              await apiUpdateLink(l.id, { position: idx + 1 });
+              moveLinkRow(row, 1);
             });
+          row.addEventListener("dragstart", (evt) => {
+            dragStartOrder = domOrderKey(wrap);
+            row.classList.add("dragging");
+            if (evt.dataTransfer) {
+              evt.dataTransfer.effectAllowed = "move";
+              evt.dataTransfer.setData("text/plain", String(l.id));
+            }
+          });
+          row.addEventListener("dragend", async () => {
+            row.classList.remove("dragging");
+            const orderAfter = domOrderKey(wrap);
+            if (orderAfter !== dragStartOrder) {
+              await persistLinkOrder(wrap);
+            }
+          });
           wrap.appendChild(row);
         });
       }
@@ -1962,7 +2063,9 @@
         return await r.json();
       }
 
-      async function apiUpdateLink(linkId, body) {
+      async function apiUpdateLink(linkId, body, opts = {}) {
+        const silent = !!opts.silent;
+        const skipRefresh = !!opts.skipRefresh;
         const r = await fetch(`/api/links/${linkId}`, {
           method: "PATCH",
           headers: headers(),
@@ -1970,11 +2073,12 @@
           body: JSON.stringify(body),
         });
         if (!r.ok) {
-          showMsg(msgLinks, "Update failed", false);
-          return;
+          if (!silent) showMsg(msgLinks, "Update failed", false);
+          return false;
         }
-        showMsg(msgLinks, "Saved", true);
-        await refreshData();
+        if (!silent) showMsg(msgLinks, "Saved", true);
+        if (!skipRefresh) await refreshData();
+        return true;
       }
 
       async function apiDeleteLink(linkId) {
