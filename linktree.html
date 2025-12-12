@@ -226,6 +226,15 @@
         color: var(--muted);
       }
 
+      footer a {
+        color: inherit;
+        font-weight: 700;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
       .sound-toggle {
         position: fixed;
         right: 14px;
@@ -885,7 +894,7 @@
       </div>
     </main>
 
-    <footer>© <span id="year"></span> TAOMA™</footer>
+    <footer>© <span id="year"></span> TAOMA™ · <a href="/datenschutz.html">Datenschutz</a></footer>
 
     <script>
       async function resizeCursorImage(url, size = 32) {

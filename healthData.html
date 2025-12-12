@@ -75,6 +75,24 @@
         padding: var(--space-6) var(--space-4) var(--space-7);
       }
 
+      .site-footer {
+        max-width: 1100px;
+        margin: 0 auto var(--space-6);
+        padding: var(--space-4) var(--space-4) 0;
+        color: var(--muted);
+        text-align: center;
+        border-top: 1px solid var(--line);
+      }
+
+      .site-footer a {
+        color: inherit;
+        font-weight: 700;
+      }
+
+      .site-footer a:hover {
+        text-decoration: underline;
+      }
+
       header.page {
         display: flex;
         align-items: center;
@@ -943,10 +961,14 @@
           <button id="btnDelete" class="btn danger">Löschen</button>
           <span style="flex: 1"></span>
           <button id="btnCancel" class="btn">Abbrechen</button>
-          <button id="btnSaveEdit" class="btn primary">Speichern</button>
+      <button id="btnSaveEdit" class="btn primary">Speichern</button>
         </footer>
       </div>
     </div>
+
+    <footer class="site-footer">
+      © <span id="year"></span> TAOMA™ · <a href="/datenschutz.html">Datenschutz</a>
+    </footer>
 
     <template id="borg-fallback">
       <div style="font-size: 0.95rem; line-height: 1.35">
@@ -967,6 +989,11 @@
         >
       </div>
     </template>
+
+    <script>
+      const yearEl = document.getElementById("year");
+      if (yearEl) yearEl.textContent = new Date().getFullYear();
+    </script>
 
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>

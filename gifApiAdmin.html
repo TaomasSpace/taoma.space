@@ -152,6 +152,16 @@
         margin-top: auto;
       }
 
+      footer a {
+        color: inherit;
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
       .foot {
         display: flex;
         gap: 1rem;
@@ -697,7 +707,9 @@
 
     <footer>
       <div class="container foot">
-        <div class="muted">TAOMA - Anime GIF API Admin</div>
+        <div class="muted">
+          TAOMA - Anime GIF API Admin · <a href="/datenschutz.html">Datenschutz</a>
+        </div>
         <div class="social">
           <a
             class="iso-pro is-gh"
