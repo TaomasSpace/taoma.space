@@ -2871,6 +2871,10 @@ async def global_chat_socket(websocket: WebSocket) -> None:
 def globalChat():
     return FileResponse("globalChat.html")
 
+@app.get("/datenschutz.html", include_in_schema=False)
+def privacyPolicy():
+    return FileResponse("datenschutz.html")
+
 @app.patch("/api/linktrees/{linktree_id}", response_model=dict)
 def update_linktree_ep(
     linktree_id: int,
