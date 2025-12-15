@@ -30,7 +30,11 @@
     <style>
       :root {
         --bg: #0d1023;
-        --bg-2: linear-gradient(140deg, rgba(90, 110, 255, 0.14), rgba(95, 199, 255, 0.06));
+        --bg-2: linear-gradient(
+          140deg,
+          rgba(90, 110, 255, 0.14),
+          rgba(95, 199, 255, 0.06)
+        );
         --card: #171b3b;
         --card-soft: #11162e;
         --ink: #e9ebff;
@@ -52,7 +56,8 @@
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        font: 16px/1.65 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+        font: 16px/1.65 "Inter", system-ui, -apple-system, "Segoe UI",
+          sans-serif;
         min-height: 100vh;
       }
 
@@ -68,9 +73,16 @@
 
       .hero {
         padding: clamp(28px, 6vw, 72px) clamp(18px, 5vw, 48px);
-        background:
-          radial-gradient(900px 600px at 10% 0%, rgba(159, 132, 255, 0.25), transparent 65%),
-          radial-gradient(900px 700px at 92% 2%, rgba(95, 199, 255, 0.2), transparent 60%),
+        background: radial-gradient(
+            900px 600px at 10% 0%,
+            rgba(159, 132, 255, 0.25),
+            transparent 65%
+          ),
+          radial-gradient(
+            900px 700px at 92% 2%,
+            rgba(95, 199, 255, 0.2),
+            transparent 60%
+          ),
           linear-gradient(160deg, #0f1531, #0c1024 62%, #0d1023);
         border-bottom: 1px solid var(--line);
       }
@@ -156,7 +168,11 @@
       }
 
       .card {
-        background: linear-gradient(180deg, var(--card) 0%, var(--card-soft) 100%);
+        background: linear-gradient(
+          180deg,
+          var(--card) 0%,
+          var(--card-soft) 100%
+        );
         border: 1px solid var(--line);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
@@ -227,7 +243,7 @@
             "@type": "ImageObject",
             "url": "https://taoma.space/static/icon.png"
           },
-          "email": "mailto:kontakt@taoma.space"
+          "email": "mailto:taoma.m@proton.me"
         }
       }
     </script>
@@ -239,14 +255,16 @@
           <span class="brand-dot" aria-hidden="true"></span>
           TAOMA Space
         </a>
-        <a class="chip" href="mailto:kontakt@taoma.space">kontakt@taoma.space</a>
+        <a class="chip" href="mailto:taoma.m@proton.me">taoma.m@proton.me</a>
       </div>
       <div class="hero-text">
         <div class="eyebrow">Transparency & Privacy</div>
         <h1>Privacy Policy</h1>
         <p class="lede">
-          This page explains what personal data is processed on taoma.space and related services (including Linktree,
-          GIF API, Global Chat, Health Data, and login areas), for which purposes, and which rights you can exercise.
+          This page explains what personal data is processed on taoma.space and
+          related services (including Linktree, GIF API, Global Chat, Health
+          Data, and login areas), for which purposes, and which rights you can
+          exercise.
         </p>
         <div class="meta">
           <span>Effective: December 9, 2025</span>
@@ -259,56 +277,107 @@
       <section class="card">
         <h2>1. Controller</h2>
         <p>
-          The controller for this website and its functions is TAOMA (Taoma M.), email:
-          <a href="mailto:kontakt@taoma.space">kontakt@taoma.space</a>.
+          The controller for this website and its functions is TAOMA (Taoma M.),
+          email:
+          <a href="mailto:taoma.m@proton.me">taoma.m@proton.me</a>.
         </p>
-        <p>If you have privacy questions, contact us anytime at this address.</p>
+        <p>
+          If you have privacy questions, contact us anytime at this address.
+        </p>
       </section>
 
       <section class="card">
         <h2>2. Core Principles</h2>
         <ul>
-          <li>We only process data that is necessary to provide the features.</li>
-          <li>No advertising or tracking cookies; only technically required cookies or local storage.</li>
-          <li>No sharing with third parties without a legal basis. No selling of data.</li>
-          <li>Transport encryption (TLS/HTTPS) and role-based access in protected areas.</li>
+          <li>
+            We only process data that is necessary to provide the features.
+          </li>
+          <li>
+            No advertising or tracking cookies; only technically required
+            cookies or local storage.
+          </li>
+          <li>
+            No sharing with third parties without a legal basis. No selling of
+            data.
+          </li>
+          <li>
+            Transport encryption (TLS/HTTPS) and role-based access in protected
+            areas.
+          </li>
         </ul>
       </section>
 
       <section class="card">
         <h2>3. What Data We Process</h2>
         <h3>3.1 Visiting the website</h3>
-        <p>Server logs are generated (e.g., IP address, timestamp, requested URL, user agent, possible error codes) to ensure uptime and troubleshoot issues.</p>
+        <p>
+          Server logs are generated (e.g., IP address, timestamp, requested URL,
+          user agent, possible error codes) to ensure uptime and troubleshoot
+          issues.
+        </p>
 
         <h3>3.2 Account, login, and protected areas</h3>
-        <p>For registration, login, profiles, or admin functions we process the details you provide (e.g., username, email, password hash) plus authentication data (tokens/session identifiers). These are required to enable and secure access.</p>
+        <p>
+          For registration, login, profiles, or admin functions we process the
+          details you provide (e.g., username, email, password hash) plus
+          authentication data (tokens/session identifiers). These are required
+          to enable and secure access.
+        </p>
 
         <h3>3.3 Linktree and public profiles</h3>
-        <p>For Linktree/profile pages we store the links, descriptions, avatars, or other content you voluntarily publish.</p>
+        <p>
+          For Linktree/profile pages we store the links, descriptions, avatars,
+          or other content you voluntarily publish.
+        </p>
 
         <h3>3.4 GIF API and uploads</h3>
-        <p>When adding GIFs or using the API we process content and metadata (title, tags, file URL, possibly user ID) plus technical logs to prevent abuse.</p>
+        <p>
+          When adding GIFs or using the API we process content and metadata
+          (title, tags, file URL, possibly user ID) plus technical logs to
+          prevent abuse.
+        </p>
 
         <h3>3.5 Global Chat and communication</h3>
-        <p>Messages in the chat are processed to provide the service, for moderation, and for security. Abuse and spam protection can trigger server-side checks.</p>
+        <p>
+          Messages in the chat are processed to provide the service, for
+          moderation, and for security. Abuse and spam protection can trigger
+          server-side checks.
+        </p>
 
         <h3>3.6 Health Data (special categories)</h3>
-        <p>If you enter health or other sensitive data, this happens solely on the basis of your explicit consent (Art. 9(2)(a) GDPR). You can delete this data at any time; without consent it will not be stored.</p>
+        <p>
+          If you enter health or other sensitive data, this happens solely on
+          the basis of your explicit consent (Art. 9(2)(a) GDPR). You can delete
+          this data at any time; without consent it will not be stored.
+        </p>
 
         <h3>3.7 Contact</h3>
-        <p>If you contact us by email, we process your message and the contact details you provide to handle your request.</p>
+        <p>
+          If you contact us by email, we process your message and the contact
+          details you provide to handle your request.
+        </p>
 
         <div class="note">
-          No third-party analytics tools are used. External resources are integrated locally or as data-minimizing as possible.
+          No third-party analytics tools are used. External resources are
+          integrated locally or as data-minimizing as possible.
         </div>
       </section>
 
       <section class="card">
         <h2>4. Legal Bases</h2>
         <ul>
-          <li>Art. 6(1)(b) GDPR — contract performance and pre-contractual steps (e.g., account, Linktree, API, chat).</li>
-          <li>Art. 6(1)(f) GDPR — legitimate interests (operation, security, fraud and abuse prevention, troubleshooting).</li>
-          <li>Art. 6(1)(a) GDPR — consent (e.g., voluntary content, newsletters if offered, processing of special data).</li>
+          <li>
+            Art. 6(1)(b) GDPR — contract performance and pre-contractual steps
+            (e.g., account, Linktree, API, chat).
+          </li>
+          <li>
+            Art. 6(1)(f) GDPR — legitimate interests (operation, security, fraud
+            and abuse prevention, troubleshooting).
+          </li>
+          <li>
+            Art. 6(1)(a) GDPR — consent (e.g., voluntary content, newsletters if
+            offered, processing of special data).
+          </li>
           <li>Art. 9(2)(a) GDPR — consent for health/special-category data.</li>
           <li>Art. 6(1)(c) GDPR — legal obligations where applicable.</li>
         </ul>
@@ -317,54 +386,89 @@
       <section class="card">
         <h2>5. Storage Period</h2>
         <ul>
-          <li>Log data is usually kept short-term and used for security and diagnostics.</li>
-          <li>Account and content data remain until you delete them or remove your account.</li>
-          <li>Health data is stored only while your consent is valid; you can delete it at any time.</li>
+          <li>
+            Log data is usually kept short-term and used for security and
+            diagnostics.
+          </li>
+          <li>
+            Account and content data remain until you delete them or remove your
+            account.
+          </li>
+          <li>
+            Health data is stored only while your consent is valid; you can
+            delete it at any time.
+          </li>
           <li>Statutory retention duties remain unaffected.</li>
         </ul>
       </section>
 
       <section class="card">
         <h2>6. Recipients and International Transfers</h2>
-        <p>We only share data when necessary for contract performance, security, or to comply with legal duties. Transfers to third countries occur only where adequate safeguards exist. No tracking or advertising providers are currently used.</p>
+        <p>
+          We only share data when necessary for contract performance, security,
+          or to comply with legal duties. Transfers to third countries occur
+          only where adequate safeguards exist. No tracking or advertising
+          providers are currently used.
+        </p>
       </section>
 
       <section class="card">
         <h2>7. Security</h2>
-        <p>Data is transmitted via TLS/HTTPS. Access to administrative areas is protected by roles. Regular updates and (where implemented) backups support availability and integrity.</p>
+        <p>
+          Data is transmitted via TLS/HTTPS. Access to administrative areas is
+          protected by roles. Regular updates and (where implemented) backups
+          support availability and integrity.
+        </p>
       </section>
 
       <section class="card">
         <h2>8. Your Rights</h2>
         <ul>
-          <li>Access, rectification, erasure, and restriction of processing.</li>
+          <li>
+            Access, rectification, erasure, and restriction of processing.
+          </li>
           <li>Data portability (Art. 20 GDPR).</li>
           <li>Objection to processing based on Art. 6(1)(f) GDPR.</li>
           <li>Withdrawal of consent with future effect.</li>
           <li>Right to lodge a complaint with a data protection authority.</li>
         </ul>
-        <div class="note">Email <a href="mailto:kontakt@taoma.space">kontakt@taoma.space</a> if you want to exercise any of these rights.</div>
+        <div class="note">
+          Email <a href="mailto:taoma.m@proton.me">taoma.m@proton.me</a> if you
+          want to exercise any of these rights.
+        </div>
       </section>
 
       <section class="card">
         <h2>9. Obligation to Provide Data</h2>
-        <p>You only need to provide the data required for each feature. Without essential details (e.g., login credentials) protected areas cannot be used.</p>
+        <p>
+          You only need to provide the data required for each feature. Without
+          essential details (e.g., login credentials) protected areas cannot be
+          used.
+        </p>
       </section>
 
       <section class="card">
         <h2>10. Automated Decisions</h2>
-        <p>No automated decision-making or profiling under Art. 22 GDPR takes place.</p>
+        <p>
+          No automated decision-making or profiling under Art. 22 GDPR takes
+          place.
+        </p>
       </section>
 
       <section class="card">
         <h2>11. Changes</h2>
-        <p>We will update this Privacy Policy when new features, legal requirements, or technical changes require it. The current version published here is authoritative.</p>
+        <p>
+          We will update this Privacy Policy when new features, legal
+          requirements, or technical changes require it. The current version
+          published here is authoritative.
+        </p>
       </section>
     </main>
 
     <footer class="page-footer">
-      © <span id="year"></span> TAOMA™ · <a href="/datenschutz.html">Privacy Policy</a> ·
-      <a href="mailto:kontakt@taoma.space">Contact</a>
+      © <span id="year"></span> TAOMA™ ·
+      <a href="/datenschutz.html">Privacy Policy</a> ·
+      <a href="mailto:taoma.m@proton.me">Contact</a>
     </footer>
 
     <script>
