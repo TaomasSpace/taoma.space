@@ -2946,9 +2946,22 @@ def update_linktree_ep(
 
     return {"ok": True}
 
-firestoreDB = get_firestore_client()
+firestoreDB: Any | None = None
 TEMPLATE_COLLECTION = "LinktreeTemplate"
 TEMPLATE_SAVES_COLLECTION = "LinktreeTemplateSaves"
+
+
+def _fs():
+    """Lazy Firestore client with clear error when credentials are missing."""
+    global firestoreDB
+    if firestoreDB is not None:
+        return firestoreDB
+    try:
+        firestoreDB = get_firestore_client()
+    except Exception as exc:
+        logger.error("Firestore unavailable: %s", exc)
+        raise HTTPException(503, "Firestore is not configured")
+    return firestoreDB
 
 
 class TemplateLinkIn(BaseModel):
@@ -3078,7 +3091,7 @@ def _template_doc_to_detail(doc) -> TemplateDetailOut:
 
 
 def _get_template_doc(template_id: str, *, user: dict) -> Any:
-    doc = firestoreDB.collection(TEMPLATE_COLLECTION).document(template_id).get()
+    doc = _fs().collection(TEMPLATE_COLLECTION).document(template_id).get()
     if not doc.exists:
         raise HTTPException(404, "Template not found")
     data = doc.to_dict() or {}
@@ -3173,7 +3186,7 @@ def list_public_templates(
     user: dict = Depends(require_user),
 ):
     query = (
-        firestoreDB.collection(TEMPLATE_COLLECTION)
+        _fs().collection(TEMPLATE_COLLECTION)
         .where("is_public", "==", True)
         .order_by("created_at", direction=firestore.Query.DESCENDING)
         .limit(limit)
@@ -3188,7 +3201,7 @@ def list_my_templates(
     user: dict = Depends(require_user),
 ):
     query = (
-        firestoreDB.collection(TEMPLATE_COLLECTION)
+        _fs().collection(TEMPLATE_COLLECTION)
         .where("owner_id", "==", int(user["id"]))
         .order_by("created_at", direction=firestore.Query.DESCENDING)
         .limit(limit)
@@ -3200,7 +3213,7 @@ def list_my_templates(
 @app.get("/api/marketplace/templates/saved", response_model=List[TemplateListOut])
 def list_saved_templates(user: dict = Depends(require_user)):
     saves = (
-        firestoreDB.collection(TEMPLATE_SAVES_COLLECTION)
+        _fs().collection(TEMPLATE_SAVES_COLLECTION)
         .where("user_id", "==", int(user["id"]))
         .stream()
     )
@@ -3210,7 +3223,7 @@ def list_saved_templates(user: dict = Depends(require_user)):
         template_id = data.get("template_id")
         if not template_id:
             continue
-        doc = firestoreDB.collection(TEMPLATE_COLLECTION).document(template_id).get()
+        doc = _fs().collection(TEMPLATE_COLLECTION).document(template_id).get()
         if not doc.exists:
             continue
         tdata = doc.to_dict() or {}
@@ -3234,7 +3247,7 @@ def get_template_detail(
 def create_template(payload: TemplateCreateIn, user: dict = Depends(require_user)):
     data = _normalize_template_data(payload.data)
     preview = payload.preview_image_url or data.get("profile_picture") or "/static/icon.png"
-    doc_ref = firestoreDB.collection(TEMPLATE_COLLECTION).document()
+    doc_ref = _fs().collection(TEMPLATE_COLLECTION).document()
     now = firestore.SERVER_TIMESTAMP
     doc_ref.set(
         {
@@ -3258,7 +3271,7 @@ def create_template(payload: TemplateCreateIn, user: dict = Depends(require_user
 def update_template(
     template_id: str, payload: TemplateUpdateIn, user: dict = Depends(require_user)
 ):
-    doc_ref = firestoreDB.collection(TEMPLATE_COLLECTION).document(template_id)
+    doc_ref = _fs().collection(TEMPLATE_COLLECTION).document(template_id)
     doc = doc_ref.get()
     if not doc.exists:
         raise HTTPException(404, "Template not found")
@@ -3300,7 +3313,7 @@ def delete_template(template_id: str, user: dict = Depends(require_user)):
 def save_template(template_id: str, user: dict = Depends(require_user)):
     doc = _get_template_doc(template_id, user=user)
     save_id = f"{user['id']}_{doc.id}"
-    firestoreDB.collection(TEMPLATE_SAVES_COLLECTION).document(save_id).set(
+    _fs().collection(TEMPLATE_SAVES_COLLECTION).document(save_id).set(
         {
             "user_id": int(user["id"]),
             "template_id": doc.id,
@@ -3314,7 +3327,7 @@ def save_template(template_id: str, user: dict = Depends(require_user)):
 @app.delete("/api/marketplace/templates/{template_id}/save", status_code=204)
 def unsave_template(template_id: str, user: dict = Depends(require_user)):
     save_id = f"{user['id']}_{template_id}"
-    firestoreDB.collection(TEMPLATE_SAVES_COLLECTION).document(save_id).delete()
+    _fs().collection(TEMPLATE_SAVES_COLLECTION).document(save_id).delete()
     return Response(status_code=204)
 
 
