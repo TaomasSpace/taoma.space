@@ -1238,17 +1238,40 @@
 
         async function loadTree() {
           try {
-            const slug = decodeURIComponent(
-              location.pathname.split("/").pop() || ""
-            );
+            const params = new URLSearchParams(location.search);
+            let templateId = params.get("template_id");
+            const parts = location.pathname.split("/").filter(Boolean);
+            if (!templateId && parts[0] === "marketplace" && parts[1] === "templates") {
+              templateId = parts[2] || null;
+            }
             const device = window.matchMedia("(max-width: 720px)").matches
               ? "mobile"
               : "pc";
-            const r = await fetch(
-              `/api/linktrees/${encodeURIComponent(slug)}?device=${device}`
-            );
-            if (!r.ok) return;
-            const data = await r.json();
+            let data = null;
+            if (templateId) {
+              const r = await fetch(
+                `/api/marketplace/templates/${encodeURIComponent(templateId)}`,
+                { credentials: "include" }
+              );
+              if (!r.ok) return;
+              const tpl = await r.json();
+              data = tpl.data || {};
+              data.slug = data.slug || tpl.name || "Template";
+              data.user_username =
+                data.user_username || tpl.owner_username || "Template";
+              data.profile_picture =
+                data.profile_picture || tpl.preview_image_url || "/static/icon.png";
+            } else {
+              const slug = decodeURIComponent(
+                location.pathname.split("/").pop() || ""
+              );
+              const r = await fetch(
+                `/api/linktrees/${encodeURIComponent(slug)}?device=${device}`
+              );
+              if (!r.ok) return;
+              data = await r.json();
+            }
+            if (!data) return;
             let needsGate = false;
 
             // Background (Video oder Bild)

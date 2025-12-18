@@ -47,6 +47,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
+from firepbase import get_firestore_client
+from google.cloud import firestore
 
 
 Base = declarative_base()
@@ -2943,3 +2945,441 @@ def update_linktree_ep(
         _delete_if_unreferenced(old_bg)
 
     return {"ok": True}
+
+firestoreDB = get_firestore_client()
+TEMPLATE_COLLECTION = "LinktreeTemplate"
+TEMPLATE_SAVES_COLLECTION = "LinktreeTemplateSaves"
+
+
+class TemplateLinkIn(BaseModel):
+    url: HttpUrl
+    label: Optional[str] = None
+    icon_url: Optional[str] = None
+    position: Optional[int] = None
+    is_active: bool = True
+
+
+class TemplateDataIn(BaseModel):
+    device_type: Optional[DeviceType] = None
+    location: Optional[str] = None
+    quote: Optional[str] = None
+    song_url: Optional[str] = None
+    background_url: Optional[str] = None
+    background_is_video: Optional[bool] = None
+    transparency: Optional[int] = Field(None, ge=0, le=100)
+    name_effect: Optional[EffectName] = None
+    background_effect: Optional[BgEffectName] = None
+    display_name_mode: Optional[DisplayNameMode] = None
+    custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
+    link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
+    text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    cursor_url: Optional[str] = None
+    discord_frame_enabled: Optional[bool] = None
+    show_visit_counter: Optional[bool] = None
+    visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    visit_counter_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
+    profile_picture: Optional[str] = None
+    links: List[TemplateLinkIn] = Field(default_factory=list)
+
+
+class TemplateCreateIn(BaseModel):
+    name: str = Field(..., min_length=2, max_length=64)
+    description: Optional[str] = Field(None, max_length=500)
+    preview_image_url: Optional[str] = Field(None, max_length=500)
+    is_public: bool = True
+    data: TemplateDataIn
+
+
+class TemplateUpdateIn(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=64)
+    description: Optional[str] = Field(None, max_length=500)
+    preview_image_url: Optional[str] = Field(None, max_length=500)
+    is_public: Optional[bool] = None
+    data: Optional[TemplateDataIn] = None
+
+
+class TemplateListOut(BaseModel):
+    id: str
+    name: str
+    description: Optional[str] = None
+    preview_image_url: Optional[str] = None
+    owner_id: int
+    owner_username: Optional[str] = None
+    is_public: bool
+    device_type: Optional[DeviceType] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class TemplateDetailOut(TemplateListOut):
+    data: dict
+
+
+def _doc_time_iso(value: Any) -> Optional[str]:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return value if value else None
+
+
+def _normalize_template_data(payload: TemplateDataIn) -> dict:
+    data = payload.model_dump(exclude_none=True)
+    links = data.pop("links", [])
+    if links:
+        if len(links) > 100:
+            raise HTTPException(413, "Too many links in template")
+        normalized = []
+        for idx, link in enumerate(links):
+            item = link.model_dump(exclude_none=True)
+            if item.get("position") is None:
+                item["position"] = idx
+            normalized.append(item)
+        data["links"] = normalized
+    else:
+        data["links"] = []
+    return data
+
+
+def _template_doc_to_list(doc) -> TemplateListOut:
+    data = doc.to_dict() or {}
+    return TemplateListOut(
+        id=doc.id,
+        name=data.get("name") or "",
+        description=data.get("description"),
+        preview_image_url=data.get("preview_image_url"),
+        owner_id=int(data.get("owner_id") or 0),
+        owner_username=data.get("owner_username"),
+        is_public=bool(data.get("is_public", False)),
+        device_type=data.get("device_type"),
+        created_at=_doc_time_iso(data.get("created_at")),
+        updated_at=_doc_time_iso(data.get("updated_at")),
+    )
+
+
+def _template_doc_to_detail(doc) -> TemplateDetailOut:
+    data = doc.to_dict() or {}
+    return TemplateDetailOut(
+        id=doc.id,
+        name=data.get("name") or "",
+        description=data.get("description"),
+        preview_image_url=data.get("preview_image_url"),
+        owner_id=int(data.get("owner_id") or 0),
+        owner_username=data.get("owner_username"),
+        is_public=bool(data.get("is_public", False)),
+        created_at=_doc_time_iso(data.get("created_at")),
+        updated_at=_doc_time_iso(data.get("updated_at")),
+        data=data.get("data") or {},
+    )
+
+
+def _get_template_doc(template_id: str, *, user: dict) -> Any:
+    doc = firestoreDB.collection(TEMPLATE_COLLECTION).document(template_id).get()
+    if not doc.exists:
+        raise HTTPException(404, "Template not found")
+    data = doc.to_dict() or {}
+    owner_id = int(data.get("owner_id") or 0)
+    if not data.get("is_public") and owner_id != int(user["id"]):
+        raise HTTPException(403, "Template is private")
+    return doc
+
+
+def _resolve_user_slug(user: dict) -> str:
+    slug = (user.get("linktree_slug") or "").strip()
+    if slug:
+        return slug
+    if isinstance(db, PgGifDB):
+        try:
+            with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+                cur.execute(
+                    "SELECT slug FROM linktrees WHERE user_id=%s ORDER BY id LIMIT 1",
+                    (user["id"],),
+                )
+                row = cur.fetchone()
+                if row and row[0]:
+                    return row[0]
+        except Exception:
+            pass
+    raw = (user.get("username") or "").lower()
+    slug = "".join(ch for ch in raw if ch.isalnum() or ch in "-_")
+    if len(slug) < 2:
+        slug = f"user{user['id']}"
+    return slug[:48]
+
+
+def _ensure_slug_unique(slug: str, user_id: int) -> str:
+    if not isinstance(db, PgGifDB):
+        return slug
+    candidate = slug
+    with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+        for _ in range(5):
+            cur.execute(
+                "SELECT 1 FROM linktrees WHERE lower(slug)=lower(%s) AND user_id<>%s LIMIT 1",
+                (candidate, user_id),
+            )
+            if not cur.fetchone():
+                return candidate
+            candidate = f"{slug}-{secrets.token_hex(2)}"
+    return candidate
+
+
+def _extract_linktree_fields(data: dict) -> dict:
+    allowed = {
+        "device_type",
+        "location",
+        "quote",
+        "song_url",
+        "background_url",
+        "background_is_video",
+        "transparency",
+        "name_effect",
+        "background_effect",
+        "display_name_mode",
+        "custom_display_name",
+        "link_color",
+        "link_bg_color",
+        "link_bg_alpha",
+        "text_color",
+        "name_color",
+        "location_color",
+        "quote_color",
+        "cursor_url",
+        "discord_frame_enabled",
+        "show_visit_counter",
+        "visit_counter_color",
+        "visit_counter_bg_color",
+        "visit_counter_bg_alpha",
+    }
+    return {k: v for k, v in data.items() if k in allowed}
+
+
+@app.get("/marketplace", include_in_schema=False)
+def marketplace_page():
+    return FileResponse("marketplace.html")
+
+
+@app.get("/marketplace/templates/{template_id}/demo", include_in_schema=False)
+def marketplace_template_demo(template_id: str):
+    return FileResponse("linktree.html")
+
+
+@app.get("/api/marketplace/templates", response_model=List[TemplateListOut])
+def list_public_templates(
+    limit: int = Query(50, ge=1, le=100),
+    user: dict = Depends(require_user),
+):
+    query = (
+        firestoreDB.collection(TEMPLATE_COLLECTION)
+        .where("is_public", "==", True)
+        .order_by("created_at", direction=firestore.Query.DESCENDING)
+        .limit(limit)
+    )
+    docs = query.stream()
+    return [_template_doc_to_list(doc) for doc in docs]
+
+
+@app.get("/api/marketplace/templates/mine", response_model=List[TemplateListOut])
+def list_my_templates(
+    limit: int = Query(100, ge=1, le=200),
+    user: dict = Depends(require_user),
+):
+    query = (
+        firestoreDB.collection(TEMPLATE_COLLECTION)
+        .where("owner_id", "==", int(user["id"]))
+        .order_by("created_at", direction=firestore.Query.DESCENDING)
+        .limit(limit)
+    )
+    docs = query.stream()
+    return [_template_doc_to_list(doc) for doc in docs]
+
+
+@app.get("/api/marketplace/templates/saved", response_model=List[TemplateListOut])
+def list_saved_templates(user: dict = Depends(require_user)):
+    saves = (
+        firestoreDB.collection(TEMPLATE_SAVES_COLLECTION)
+        .where("user_id", "==", int(user["id"]))
+        .stream()
+    )
+    out = []
+    for save in saves:
+        data = save.to_dict() or {}
+        template_id = data.get("template_id")
+        if not template_id:
+            continue
+        doc = firestoreDB.collection(TEMPLATE_COLLECTION).document(template_id).get()
+        if not doc.exists:
+            continue
+        tdata = doc.to_dict() or {}
+        if not tdata.get("is_public") and int(tdata.get("owner_id") or 0) != int(
+            user["id"]
+        ):
+            continue
+        out.append(_template_doc_to_list(doc))
+    return out
+
+
+@app.get("/api/marketplace/templates/{template_id}", response_model=TemplateDetailOut)
+def get_template_detail(
+    template_id: str, user: dict = Depends(require_user)
+):
+    doc = _get_template_doc(template_id, user=user)
+    return _template_doc_to_detail(doc)
+
+
+@app.post("/api/marketplace/templates", response_model=TemplateDetailOut, status_code=201)
+def create_template(payload: TemplateCreateIn, user: dict = Depends(require_user)):
+    data = _normalize_template_data(payload.data)
+    preview = payload.preview_image_url or data.get("profile_picture") or "/static/icon.png"
+    doc_ref = firestoreDB.collection(TEMPLATE_COLLECTION).document()
+    now = firestore.SERVER_TIMESTAMP
+    doc_ref.set(
+        {
+            "name": payload.name.strip(),
+            "description": payload.description.strip() if payload.description else None,
+            "preview_image_url": preview,
+            "owner_id": int(user["id"]),
+            "owner_username": user.get("username"),
+            "is_public": bool(payload.is_public),
+            "device_type": data.get("device_type"),
+            "created_at": now,
+            "updated_at": now,
+            "data": data,
+        }
+    )
+    doc = doc_ref.get()
+    return _template_doc_to_detail(doc)
+
+
+@app.patch("/api/marketplace/templates/{template_id}", response_model=TemplateDetailOut)
+def update_template(
+    template_id: str, payload: TemplateUpdateIn, user: dict = Depends(require_user)
+):
+    doc_ref = firestoreDB.collection(TEMPLATE_COLLECTION).document(template_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(404, "Template not found")
+    existing = doc.to_dict() or {}
+    if int(existing.get("owner_id") or 0) != int(user["id"]):
+        raise HTTPException(403, "Forbidden")
+    update: dict[str, Any] = {"updated_at": firestore.SERVER_TIMESTAMP}
+    if payload.name is not None:
+        update["name"] = payload.name.strip()
+    if payload.description is not None:
+        update["description"] = payload.description.strip() if payload.description else None
+    if payload.preview_image_url is not None:
+        update["preview_image_url"] = payload.preview_image_url or None
+    if payload.is_public is not None:
+        update["is_public"] = bool(payload.is_public)
+    if payload.data is not None:
+        normalized = _normalize_template_data(payload.data)
+        update["data"] = normalized
+        update["device_type"] = normalized.get("device_type")
+    doc_ref.set(update, merge=True)
+    doc = doc_ref.get()
+    return _template_doc_to_detail(doc)
+
+
+@app.delete("/api/marketplace/templates/{template_id}", status_code=204)
+def delete_template(template_id: str, user: dict = Depends(require_user)):
+    doc_ref = firestoreDB.collection(TEMPLATE_COLLECTION).document(template_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(404, "Template not found")
+    existing = doc.to_dict() or {}
+    if int(existing.get("owner_id") or 0) != int(user["id"]):
+        raise HTTPException(403, "Forbidden")
+    doc_ref.delete()
+    return Response(status_code=204)
+
+
+@app.post("/api/marketplace/templates/{template_id}/save")
+def save_template(template_id: str, user: dict = Depends(require_user)):
+    doc = _get_template_doc(template_id, user=user)
+    save_id = f"{user['id']}_{doc.id}"
+    firestoreDB.collection(TEMPLATE_SAVES_COLLECTION).document(save_id).set(
+        {
+            "user_id": int(user["id"]),
+            "template_id": doc.id,
+            "created_at": firestore.SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+    return {"ok": True}
+
+
+@app.delete("/api/marketplace/templates/{template_id}/save", status_code=204)
+def unsave_template(template_id: str, user: dict = Depends(require_user)):
+    save_id = f"{user['id']}_{template_id}"
+    firestoreDB.collection(TEMPLATE_SAVES_COLLECTION).document(save_id).delete()
+    return Response(status_code=204)
+
+
+@app.post("/api/marketplace/templates/{template_id}/apply", response_model=LinktreeOut)
+def apply_template_to_linktree(
+    template_id: str,
+    device: Optional[DeviceType] = Query(None),
+    user: dict = Depends(require_user),
+):
+    _ensure_pg()
+    doc = _get_template_doc(template_id, user=user)
+    template = doc.to_dict() or {}
+    data = template.get("data") or {}
+    target_device = device or data.get("device_type") or "pc"
+    if target_device not in {"pc", "mobile"}:
+        raise HTTPException(400, "Invalid device")
+    link_fields = _extract_linktree_fields(data)
+    link_fields.pop("device_type", None)
+    links = data.get("links") or []
+    if not isinstance(links, list):
+        links = []
+
+    with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT id, slug FROM linktrees WHERE user_id=%s AND device_type=%s",
+            (user["id"], target_device),
+        )
+        row = cur.fetchone()
+        if row:
+            linktree_id = row["id"]
+            if link_fields:
+                cols = [f"{k}=%s" for k in link_fields.keys()]
+                vals = list(link_fields.values()) + [linktree_id]
+                cur.execute(
+                    f"UPDATE linktrees SET {', '.join(cols)}, updated_at=NOW() WHERE id=%s",
+                    tuple(vals),
+                )
+        else:
+            slug = _ensure_slug_unique(_resolve_user_slug(user), int(user["id"]))
+            linktree_id = db.create_linktree(
+                user_id=user["id"],
+                slug=slug,
+                device_type=target_device,
+                **link_fields,
+            )
+        cur.execute("DELETE FROM linktree_links WHERE linktree_id=%s", (linktree_id,))
+        for idx, link in enumerate(links):
+            if not isinstance(link, dict):
+                continue
+            url = link.get("url")
+            if not url:
+                continue
+            cur.execute(
+                """
+                INSERT INTO linktree_links(linktree_id, url, label, icon_url, position, is_active)
+                VALUES (%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    linktree_id,
+                    url,
+                    link.get("label"),
+                    link.get("icon_url"),
+                    link.get("position", idx),
+                    bool(link.get("is_active", True)),
+                ),
+            )
+        conn.commit()
+    return get_linktree_manage(linktree_id, user)

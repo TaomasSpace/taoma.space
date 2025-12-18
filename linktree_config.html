@@ -1600,6 +1600,17 @@
         return u.searchParams.get("slug");
       }
 
+      function templateIdFromQuery() {
+        const u = new URL(location.href);
+        return u.searchParams.get("template_id");
+      }
+
+      function deviceFromQuery() {
+        const u = new URL(location.href);
+        const val = u.searchParams.get("device");
+        return val === "mobile" ? "mobile" : val === "pc" ? "pc" : null;
+      }
+
       const DEFAULT_LINK_COLOR = "#e9ebff";
       const DEFAULT_LINK_BG_COLOR = "#171b3b";
       const DEFAULT_TEXT_COLOR = "#e9ebff";
@@ -2046,6 +2057,22 @@
         }
       }
 
+      async function apiApplyTemplate(templateId, device) {
+        const target = device || currentDevice || "pc";
+        const r = await fetch(
+          `/api/marketplace/templates/${encodeURIComponent(
+            templateId
+          )}/apply?device=${encodeURIComponent(target)}`,
+          {
+            method: "POST",
+            headers: headers(),
+            credentials: "include",
+          }
+        );
+        if (!r.ok) throw new Error(await r.text());
+        return await r.json();
+      }
+
       async function apiAddLink() {
         const body = {
           url: $("inLinkUrl").value.trim(),
@@ -2229,10 +2256,25 @@
           document.getElementById(
             "btnOpenPublic"
           ).href = `/tree/${encodeURIComponent(preferred)}`;
-          currentDevice = "pc";
-          document.getElementById("inDevice").value = "pc";
+          const preferredDevice = deviceFromQuery();
+          currentDevice = preferredDevice || "pc";
+          document.getElementById("inDevice").value = currentDevice;
           await loadDiscordStatus();
           await refreshData();
+          const templateId = templateIdFromQuery();
+          if (templateId) {
+            try {
+              await apiApplyTemplate(templateId, currentDevice);
+              showMsg(msgMeta, "Template applied", true);
+              await refreshData();
+            } catch (err) {
+              showMsg(msgMeta, "Template apply failed", false);
+            }
+            const url = new URL(location.href);
+            url.searchParams.delete("template_id");
+            url.searchParams.delete("device");
+            history.replaceState({}, "", url.toString());
+          }
           if (!currentTree) {
             showMsg(
               msgMeta,
