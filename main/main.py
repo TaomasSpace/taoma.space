@@ -47,7 +47,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
-from firepbase import get_firestore_client
+from .firepbase import get_firestore_client
 from google.cloud import firestore
 
 
