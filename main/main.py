@@ -3001,7 +3001,7 @@ class TemplateVariantIn(BaseModel):
 
 class TemplateCreateIn(BaseModel):
     name: str = Field(..., min_length=2, max_length=64)
-    description: Optional[str] = Field(None, max_length=500)
+    description: str = Field(..., min_length=1, max_length=500)
     preview_image_url: Optional[str] = Field(None, max_length=500)
     is_public: bool = True
     variants: List[TemplateVariantIn] = Field(..., min_length=1, max_length=2)
@@ -3265,7 +3265,12 @@ def create_template(payload: TemplateCreateIn, user: dict = Depends(require_user
     variants = [_normalize_variant(v) for v in payload.variants]
     if len({v["device_type"] for v in variants}) != len(variants):
         raise HTTPException(400, "Duplicate device_type in variants")
-    preview = payload.preview_image_url or "/static/icon.png"
+    # Pick preview from pc variant background, fallback first variant
+    preview = payload.preview_image_url
+    if not preview:
+        pc_var = next((v for v in variants if v.get("device_type") == "pc"), None)
+        src = pc_var or (variants[0] if variants else None)
+        preview = (src or {}).get("background_url") or "/static/icon.png"
     doc_ref = _fs().collection(TEMPLATE_COLLECTION).document()
     now = firestore.SERVER_TIMESTAMP
     doc_ref.set(
@@ -3310,6 +3315,11 @@ def update_template(
         if len({v["device_type"] for v in variants}) != len(variants):
             raise HTTPException(400, "Duplicate device_type in variants")
         update["variants"] = variants
+        # update preview to background of pc variant if provided
+        if not update.get("preview_image_url"):
+            pc_var = next((v for v in variants if v.get("device_type") == "pc"), None)
+            src = pc_var or (variants[0] if variants else None)
+            update["preview_image_url"] = (src or {}).get("background_url") or None
     doc_ref.set(update, merge=True)
     doc = doc_ref.get()
     return _template_doc_to_detail(doc)

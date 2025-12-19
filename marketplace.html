@@ -658,17 +658,7 @@
               </div>
               <div class="field">
                 <label for="tplDesc">Description</label>
-                <textarea id="tplDesc" class="input" maxlength="500"></textarea>
-              </div>
-              <div class="field">
-                <label for="tplPreview">Preview Image URL</label>
-                <input
-                  id="tplPreview"
-                  class="input"
-                  type="text"
-                  maxlength="500"
-                  placeholder="/media/... or https://"
-                />
+                <textarea id="tplDesc" class="input" maxlength="500" required></textarea>
               </div>
               <div class="field">
                 <label for="tplMode">Template scope</label>
@@ -1256,7 +1246,6 @@
         $("formTitle").textContent = "Create Template";
         $("tplName").value = "";
         $("tplDesc").value = "";
-        $("tplPreview").value = "";
         $("tplMode").value = "pc";
         $("tplDevice").value = "pc";
         $("tplPublic").value = "true";
@@ -1366,6 +1355,11 @@
           showMsg(formMsg, "Name required", false);
           return;
         }
+        const desc = $("tplDesc").value.trim();
+        if (!desc) {
+          showMsg(formMsg, "Description required", false);
+          return;
+        }
         const mode = $("tplMode").value || "pc";
 
         const buildVariantFromForm = (device) => {
@@ -1431,8 +1425,8 @@
 
         const payload = {
           name,
-          description: $("tplDesc").value.trim() || null,
-          preview_image_url: $("tplPreview").value.trim() || null,
+          description: desc,
+          preview_image_url: null, // backend uses background
           is_public: $("tplPublic").value === "true",
           variants,
         };
