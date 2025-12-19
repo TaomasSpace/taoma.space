@@ -3197,11 +3197,14 @@ def list_public_templates(
     query = (
         _fs().collection(TEMPLATE_COLLECTION)
         .where("is_public", "==", True)
-        .order_by("created_at", direction=firestore.Query.DESCENDING)
         .limit(limit)
     )
-    docs = query.stream()
-    return [_template_doc_to_list(doc) for doc in docs]
+    docs = [_template_doc_to_list(doc) for doc in query.stream()]
+    docs.sort(
+        key=lambda d: d.created_at or "",
+        reverse=True,
+    )
+    return docs
 
 
 @app.get("/api/marketplace/templates/mine", response_model=List[TemplateListOut])
@@ -3212,11 +3215,14 @@ def list_my_templates(
     query = (
         _fs().collection(TEMPLATE_COLLECTION)
         .where("owner_id", "==", int(user["id"]))
-        .order_by("created_at", direction=firestore.Query.DESCENDING)
         .limit(limit)
     )
-    docs = query.stream()
-    return [_template_doc_to_list(doc) for doc in docs]
+    docs = [_template_doc_to_list(doc) for doc in query.stream()]
+    docs.sort(
+        key=lambda d: d.created_at or "",
+        reverse=True,
+    )
+    return docs
 
 
 @app.get("/api/marketplace/templates/saved", response_model=List[TemplateListOut])
