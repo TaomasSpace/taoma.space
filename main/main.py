@@ -3181,6 +3181,11 @@ def marketplace_page():
     return FileResponse("marketplace.html")
 
 
+@app.get("/marketplace/create", include_in_schema=False)
+def marketplace_create_page():
+    return FileResponse("marketplace_create.html")
+
+
 @app.get("/marketplace/templates/{template_id}/demo", include_in_schema=False)
 def marketplace_template_demo(template_id: str):
     return FileResponse("linktree.html")

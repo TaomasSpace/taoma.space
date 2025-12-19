@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create Template - TAOMA Marketplace</title>
+    <meta name="description" content="Create Linktree templates for desktop and mobile." />
+    <link rel="icon" type="image/png" href="/static/icon.png" />
+    <style>
+      :root {
+        --bg: #0e1020;
+        --card: #171b3b;
+        --ink: #e9ebff;
+        --muted: #a2a9c8;
+        --acc: #85a3ff;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
+        --radius: 16px;
+        --space: clamp(16px, 2vw, 24px);
+        --container: 900px;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI,
+          Roboto, Ubuntu, Arial, sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+        min-height: 100dvh;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: saturate(1.1) blur(10px);
+        background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+        border-bottom: 1px solid #ffffff14;
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+        max-width: var(--container);
+        margin: 0 auto;
+        padding-inline: var(--space);
+      }
+      .brand { display: flex; gap: 0.75rem; align-items: center; font-weight: 800; }
+      .brand img { width: 28px; height: 28px; border-radius: 8px; }
+      .links { display: flex; gap: 1rem; }
+      .links a { padding: 0.45rem 0.7rem; border-radius: 10px; text-decoration: none; color: inherit; }
+      .links a:hover { background: #ffffff0f; border: 1px solid #ffffff1f; }
+      main { max-width: var(--container); margin: 0 auto; padding: clamp(24px, 4vw, 40px) var(--space); }
+      .card {
+        background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+        border: 1px solid #ffffff1a;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 18px;
+        display: grid;
+        gap: 12px;
+      }
+      .field { display: flex; flex-direction: column; gap: 6px; }
+      .input, .select {
+        background: #0f1331;
+        border: 1px solid #ffffff1a;
+        border-radius: 12px;
+        color: var(--ink);
+        padding: 0.7rem 0.8rem;
+        font: inherit;
+      }
+      label { font-weight: 700; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: var(--acc);
+        color: #fff;
+        font-weight: 700;
+        border: 1px solid #ffffff1a;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+      }
+      .btn.ghost { background: transparent; color: var(--ink); box-shadow: none; }
+      .muted { color: var(--muted); }
+      .alert {
+        border: 1px solid #ffffff26;
+        background: #ffffff0e;
+        border-radius: 12px;
+        padding: 0.65rem 0.8rem;
+        display: none;
+      }
+      .alert.ok { border-color: #1dd1a1; background: color-mix(in oklab, #1dd1a1 12%, transparent); }
+      .alert.err { border-color: #ff5a6a; background: color-mix(in oklab, #ff5a6a 10%, transparent); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="nav">
+        <div class="brand">
+          <img src="/static/icon.png" alt="TAOMA" />
+          <span>TAOMA</span>
+        </div>
+        <div class="links">
+          <a href="/marketplace">Marketplace</a>
+          <a href="/linktree/config">Linktree</a>
+        </div>
+      </div>
+    </header>
+    <main>
+      <h1>Create Template</h1>
+      <p class="muted">Build a template from your linktree styles (no links/icons).</p>
+      <div class="card">
+        <div class="field">
+          <label for="tplName">Name</label>
+          <input id="tplName" class="input" type="text" maxlength="64" />
+        </div>
+        <div class="field">
+          <label for="tplDesc">Description</label>
+          <textarea id="tplDesc" class="input" maxlength="500"></textarea>
+        </div>
+        <div class="field">
+          <label for="tplPreview">Preview image URL</label>
+          <input id="tplPreview" class="input" type="text" maxlength="500" placeholder="/media/... or https://" />
+        </div>
+        <div class="field">
+          <label for="tplScope">Scope</label>
+          <select id="tplScope" class="select">
+            <option value="pc">Desktop only</option>
+            <option value="mobile">Mobile only</option>
+            <option value="both">Desktop + Mobile</option>
+          </select>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:1; min-width: 180px">
+            <label for="tplDevice">Active variant</label>
+            <select id="tplDevice" class="select">
+              <option value="pc">Desktop</option>
+              <option value="mobile">Mobile</option>
+            </select>
+          </div>
+          <button class="btn ghost" id="btnLoadVariant">Load from my Linktree</button>
+        </div>
+        <div class="field">
+          <label for="tplLocation">Location (optional)</label>
+          <input id="tplLocation" class="input" type="text" maxlength="120" />
+        </div>
+        <div class="field">
+          <label for="tplQuote">Quote (optional)</label>
+          <input id="tplQuote" class="input" type="text" maxlength="240" />
+        </div>
+        <div class="field">
+          <label for="tplSong">Song URL (optional)</label>
+          <input id="tplSong" class="input" type="text" maxlength="500" />
+        </div>
+        <div class="field">
+          <label for="tplBackground">Background URL *</label>
+          <input id="tplBackground" class="input" type="text" maxlength="500" placeholder="/media/... or https://" />
+        </div>
+        <div class="field">
+          <label for="tplBgVideo">Background is video</label>
+          <select id="tplBgVideo" class="select">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tplTrans">Transparency (0-100)</label>
+          <input id="tplTrans" class="input" type="number" min="0" max="100" value="0" />
+        </div>
+        <div class="field">
+          <label for="tplNameFx">Name effect</label>
+          <select id="tplNameFx" class="select">
+            <option value="none">None</option>
+            <option value="glow">Glow</option>
+            <option value="neon">Neon</option>
+            <option value="rainbow">Rainbow</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tplBgFx">Background effect</label>
+          <select id="tplBgFx" class="select">
+            <option value="none">None</option>
+            <option value="night">Night</option>
+            <option value="rain">Rain</option>
+            <option value="snow">Snow</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tplDisplayName">Display name mode</label>
+          <select id="tplDisplayName" class="select">
+            <option value="slug">Slug</option>
+            <option value="username">Username</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tplCustomName">Custom display name</label>
+          <input id="tplCustomName" class="input" type="text" maxlength="64" />
+        </div>
+        <div class="field">
+          <label for="tplLinkColor">Link color</label>
+          <input id="tplLinkColor" class="input" type="text" placeholder="#RRGGBB" />
+        </div>
+        <div class="field">
+          <label for="tplLinkBgColor">Link background color</label>
+          <input id="tplLinkBgColor" class="input" type="text" placeholder="#RRGGBB" />
+        </div>
+        <div class="field">
+          <label for="tplLinkBgAlpha">Link background alpha (0-100)</label>
+          <input id="tplLinkBgAlpha" class="input" type="number" min="0" max="100" value="100" />
+        </div>
+        <div class="field">
+          <label for="tplTextColor">Text color</label>
+          <input id="tplTextColor" class="input" type="text" placeholder="#RRGGBB" />
+        </div>
+        <div class="field">
+          <label for="tplNameColor">Name color</label>
+          <input id="tplNameColor" class="input" type="text" placeholder="#RRGGBB" />
+        </div>
+        <div class="field">
+          <label for="tplLocationColor">Location color</label>
+          <input id="tplLocationColor" class="input" type="text" placeholder="#RRGGBB" />
+        </div>
+        <div class="field">
+          <label for="tplCursorUrl">Cursor URL (optional)</label>
+          <input id="tplCursorUrl" class="input" type="text" maxlength="500" />
+        </div>
+        <div class="field">
+          <label for="tplDiscordFrame">Discord frame enabled</label>
+          <select id="tplDiscordFrame" class="select">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tplShowCounter">Show visit counter</label>
+          <select id="tplShowCounter" class="select">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tplCounterColor">Counter color</label>
+          <input id="tplCounterColor" class="input" type="text" placeholder="#RRGGBB" />
+        </div>
+        <div class="field">
+          <label for="tplCounterBgColor">Counter background color</label>
+          <input id="tplCounterBgColor" class="input" type="text" placeholder="#RRGGBB" />
+        </div>
+        <div class="field">
+          <label for="tplCounterBgAlpha">Counter background alpha (0-100)</label>
+          <input id="tplCounterBgAlpha" class="input" type="number" min="0" max="100" value="20" />
+        </div>
+        <div class="row">
+          <button class="btn" id="btnSave">Save template</button>
+          <button class="btn ghost" id="btnReset">Reset</button>
+          <span class="muted">Background URL is required; no links/icons are stored.</span>
+        </div>
+        <div class="alert" id="msg"></div>
+      </div>
+    </main>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      let variantCache = { pc: null, mobile: null };
+
+      function showMsg(text, ok = false) {
+        const el = $("msg");
+        el.textContent = text;
+        el.className = "alert " + (ok ? "ok" : "err");
+        el.style.display = "block";
+        setTimeout(() => (el.style.display = "none"), 3500);
+      }
+
+      async function fetchSession() {
+        try {
+          const r = await fetch("/api/auth/verify", { credentials: "include" });
+          if (!r.ok) return null;
+          return await r.json();
+        } catch (_) {
+          return null;
+        }
+      }
+
+      async function requireUser() {
+        const session = await fetchSession();
+        if (!session || !session.user) {
+          showMsg("Login required", false);
+          return null;
+        }
+        return session.user;
+      }
+
+      async function loadVariant(device) {
+        const user = await requireUser();
+        if (!user || !user.linktree_slug) {
+          showMsg("Create a Linktree first", false);
+          return;
+        }
+        try {
+          const lt = await fetch(
+            `/api/linktrees/by-slug/${encodeURIComponent(
+              user.linktree_slug
+            )}/manage?device=${encodeURIComponent(device)}`,
+            { credentials: "include" }
+          ).then((r) => {
+            if (!r.ok) throw new Error();
+            return r.json();
+          });
+          const data = {
+            device_type: device,
+            location: lt.location || "",
+            quote: lt.quote || "",
+            song_url: lt.song_url || "",
+            background_url: lt.background_url || "",
+            background_is_video: !!lt.background_is_video,
+            transparency: lt.transparency ?? 0,
+            name_effect: lt.name_effect || "none",
+            background_effect: lt.background_effect || "none",
+            display_name_mode: lt.display_name_mode || "slug",
+            custom_display_name: lt.custom_display_name || "",
+            link_color: lt.link_color || "",
+            link_bg_color: lt.link_bg_color || "",
+            link_bg_alpha: lt.link_bg_alpha ?? 100,
+            text_color: lt.text_color || "",
+            name_color: lt.name_color || "",
+            location_color: lt.location_color || "",
+            cursor_url: lt.cursor_url || "",
+            discord_frame_enabled: !!lt.discord_frame_enabled,
+            show_visit_counter: !!lt.show_visit_counter,
+            visit_counter_color: lt.visit_counter_color || "",
+            visit_counter_bg_color: lt.visit_counter_bg_color || "",
+            visit_counter_bg_alpha: lt.visit_counter_bg_alpha ?? 20,
+          };
+          variantCache[device] = data;
+          fillForm(data);
+          showMsg(`Loaded ${device} variant`, true);
+        } catch (_) {
+          showMsg(`Load ${device} variant failed`, false);
+        }
+      }
+
+      function fillForm(v) {
+        $("tplDevice").value = v.device_type || "pc";
+        $("tplLocation").value = v.location || "";
+        $("tplQuote").value = v.quote || "";
+        $("tplSong").value = v.song_url || "";
+        $("tplBackground").value = v.background_url || "";
+        $("tplBgVideo").value = v.background_is_video ? "true" : "false";
+        $("tplTrans").value =
+          v.transparency !== undefined && v.transparency !== null ? v.transparency : 0;
+        $("tplNameFx").value = v.name_effect || "none";
+        $("tplBgFx").value = v.background_effect || "none";
+        $("tplDisplayName").value = v.display_name_mode || "slug";
+        $("tplCustomName").value = v.custom_display_name || "";
+        $("tplLinkColor").value = v.link_color || "";
+        $("tplLinkBgColor").value = v.link_bg_color || "";
+        $("tplLinkBgAlpha").value =
+          v.link_bg_alpha !== undefined && v.link_bg_alpha !== null ? v.link_bg_alpha : 100;
+        $("tplTextColor").value = v.text_color || "";
+        $("tplNameColor").value = v.name_color || "";
+        $("tplLocationColor").value = v.location_color || "";
+        $("tplCursorUrl").value = v.cursor_url || "";
+        $("tplDiscordFrame").value = v.discord_frame_enabled ? "true" : "false";
+        $("tplShowCounter").value = v.show_visit_counter ? "true" : "false";
+        $("tplCounterColor").value = v.visit_counter_color || "";
+        $("tplCounterBgColor").value = v.visit_counter_bg_color || "";
+        $("tplCounterBgAlpha").value =
+          v.visit_counter_bg_alpha !== undefined && v.visit_counter_bg_alpha !== null
+            ? v.visit_counter_bg_alpha
+            : 20;
+      }
+
+      function resetForm() {
+        variantCache = { pc: null, mobile: null };
+        $("tplScope").value = "pc";
+        $("tplDevice").value = "pc";
+        $("tplName").value = "";
+        $("tplDesc").value = "";
+        $("tplPreview").value = "";
+        [
+          "tplLocation",
+          "tplQuote",
+          "tplSong",
+          "tplBackground",
+          "tplCustomName",
+          "tplLinkColor",
+          "tplLinkBgColor",
+          "tplTextColor",
+          "tplNameColor",
+          "tplLocationColor",
+          "tplCursorUrl",
+          "tplCounterColor",
+          "tplCounterBgColor",
+        ].forEach((id) => ($(id).value = ""));
+        $("tplBgVideo").value = "false";
+        $("tplTrans").value = "0";
+        $("tplNameFx").value = "none";
+        $("tplBgFx").value = "none";
+        $("tplDisplayName").value = "slug";
+        $("tplLinkBgAlpha").value = "100";
+        $("tplDiscordFrame").value = "false";
+        $("tplShowCounter").value = "false";
+        $("tplCounterBgAlpha").value = "20";
+      }
+
+      async function saveTemplate() {
+        const name = $("tplName").value.trim();
+        if (!name) {
+          showMsg("Name required", false);
+          return;
+        }
+        const scope = $("tplScope").value || "pc";
+        const activeDevice = $("tplDevice").value || "pc";
+        const buildVariant = (device) => {
+          return {
+            device_type: device,
+            location: $("tplLocation").value.trim() || "",
+            quote: $("tplQuote").value.trim() || "",
+            song_url: $("tplSong").value.trim() || "",
+            background_url: $("tplBackground").value.trim(),
+            background_is_video: $("tplBgVideo").value === "true",
+            transparency: Math.min(100, Math.max(0, parseInt($("tplTrans").value || "0", 10))),
+            name_effect: $("tplNameFx").value || "none",
+            background_effect: $("tplBgFx").value || "none",
+            display_name_mode: $("tplDisplayName").value || "slug",
+            custom_display_name: $("tplCustomName").value.trim() || null,
+            link_color: $("tplLinkColor").value.trim() || null,
+            link_bg_color: $("tplLinkBgColor").value.trim() || null,
+            link_bg_alpha: Math.min(
+              100,
+              Math.max(0, parseInt($("tplLinkBgAlpha").value || "100", 10))
+            ),
+            text_color: $("tplTextColor").value.trim() || null,
+            name_color: $("tplNameColor").value.trim() || null,
+            location_color: $("tplLocationColor").value.trim() || null,
+            cursor_url: $("tplCursorUrl").value.trim() || null,
+            discord_frame_enabled: $("tplDiscordFrame").value === "true",
+            show_visit_counter: $("tplShowCounter").value === "true",
+            visit_counter_color: $("tplCounterColor").value.trim() || null,
+            visit_counter_bg_color: $("tplCounterBgColor").value.trim() || null,
+            visit_counter_bg_alpha: Math.min(
+              100,
+              Math.max(0, parseInt($("tplCounterBgAlpha").value || "20", 10))
+            ),
+          };
+        };
+
+        // update current device variant cache
+        const currentVariant = buildVariant(activeDevice);
+        if (!currentVariant.background_url) {
+          showMsg("Background URL is required", false);
+          return;
+        }
+        variantCache[activeDevice] = currentVariant;
+
+        let variants = [];
+        if (scope === "both") {
+          if (!variantCache.pc || !variantCache.mobile) {
+            showMsg("Load/fill both desktop and mobile variants", false);
+            return;
+          }
+          variants = [variantCache.pc, variantCache.mobile];
+        } else if (scope === "pc" || scope === "mobile") {
+          variants = [variantCache[activeDevice] || currentVariant];
+        }
+
+        const payload = {
+          name,
+          description: $("tplDesc").value.trim() || null,
+          preview_image_url: $("tplPreview").value.trim() || null,
+          is_public: true,
+          variants,
+        };
+        try {
+          const r = await fetch("/api/marketplace/templates", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          });
+          if (!r.ok) throw new Error(await r.text());
+          showMsg("Template created", true);
+          resetForm();
+        } catch (e) {
+          showMsg("Save failed", false);
+        }
+      }
+
+      $("btnLoadVariant").addEventListener("click", () => {
+        const dev = $("tplDevice").value || "pc";
+        loadVariant(dev);
+      });
+      $("btnSave").addEventListener("click", saveTemplate);
+      $("btnReset").addEventListener("click", resetForm);
+      $("tplDevice").addEventListener("change", () => {
+        const dev = $("tplDevice").value || "pc";
+        const v = variantCache[dev];
+        if (v) fillForm(v);
+      });
+    </script>
+  </body>
+</html>
