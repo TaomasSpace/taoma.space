@@ -2977,27 +2977,26 @@ class TemplateDataIn(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
-    background_url: Optional[str] = None
-    background_is_video: Optional[bool] = None
-    transparency: Optional[int] = Field(None, ge=0, le=100)
-    name_effect: Optional[EffectName] = None
-    background_effect: Optional[BgEffectName] = None
-    display_name_mode: Optional[DisplayNameMode] = None
+    background_url: str = Field(..., min_length=1)
+    background_is_video: bool = False
+    transparency: int = Field(0, ge=0, le=100)
+    name_effect: EffectName = "none"
+    background_effect: BgEffectName = "none"
+    display_name_mode: DisplayNameMode = "slug"
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
-    link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
+    link_bg_alpha: int = Field(100, ge=0, le=100)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
-    discord_frame_enabled: Optional[bool] = None
-    show_visit_counter: Optional[bool] = None
+    discord_frame_enabled: bool = False
+    show_visit_counter: bool = False
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
-    visit_counter_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
-    profile_picture: Optional[str] = None
+    visit_counter_bg_alpha: int = Field(20, ge=0, le=100)
     links: List[TemplateLinkIn] = Field(default_factory=list)
 
 
@@ -3055,6 +3054,16 @@ def _normalize_template_data(payload: TemplateDataIn) -> dict:
         data["links"] = normalized
     else:
         data["links"] = []
+    # Ensure required fields are present with defaults
+    data.setdefault("background_is_video", False)
+    data.setdefault("transparency", 0)
+    data.setdefault("name_effect", "none")
+    data.setdefault("background_effect", "none")
+    data.setdefault("display_name_mode", "slug")
+    data.setdefault("link_bg_alpha", 100)
+    data.setdefault("visit_counter_bg_alpha", 20)
+    data.setdefault("show_visit_counter", False)
+    data.setdefault("discord_frame_enabled", False)
     return data
 
 
@@ -3246,7 +3255,7 @@ def get_template_detail(
 @app.post("/api/marketplace/templates", response_model=TemplateDetailOut, status_code=201)
 def create_template(payload: TemplateCreateIn, user: dict = Depends(require_user)):
     data = _normalize_template_data(payload.data)
-    preview = payload.preview_image_url or data.get("profile_picture") or "/static/icon.png"
+    preview = payload.preview_image_url or "/static/icon.png"
     doc_ref = _fs().collection(TEMPLATE_COLLECTION).document()
     now = firestore.SERVER_TIMESTAMP
     doc_ref.set(

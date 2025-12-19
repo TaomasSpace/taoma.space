@@ -683,6 +683,117 @@
                   <option value="false">Private</option>
                 </select>
               </div>
+              <div class="field">
+                <label for="tplLocation">Location (optional)</label>
+                <input id="tplLocation" class="input" type="text" maxlength="120" />
+              </div>
+              <div class="field">
+                <label for="tplQuote">Quote (optional)</label>
+                <input id="tplQuote" class="input" type="text" maxlength="240" />
+              </div>
+              <div class="field">
+                <label for="tplSong">Song URL (optional)</label>
+                <input id="tplSong" class="input" type="text" maxlength="500" />
+              </div>
+              <div class="field">
+                <label for="tplBackground">Background URL *</label>
+                <input id="tplBackground" class="input" type="text" maxlength="500" placeholder="/media/... or https://" />
+              </div>
+              <div class="field">
+                <label for="tplBgVideo">Background is video</label>
+                <select id="tplBgVideo" class="select">
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplTrans">Transparency (0-100)</label>
+                <input id="tplTrans" class="input" type="number" min="0" max="100" value="0" />
+              </div>
+              <div class="field">
+                <label for="tplNameFx">Name effect</label>
+                <select id="tplNameFx" class="select">
+                  <option value="none">None</option>
+                  <option value="glow">Glow</option>
+                  <option value="neon">Neon</option>
+                  <option value="rainbow">Rainbow</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplBgFx">Background effect</label>
+                <select id="tplBgFx" class="select">
+                  <option value="none">None</option>
+                  <option value="night">Night</option>
+                  <option value="rain">Rain</option>
+                  <option value="snow">Snow</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplDisplayName">Display name mode</label>
+                <select id="tplDisplayName" class="select">
+                  <option value="slug">Slug</option>
+                  <option value="username">Username</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplCustomName">Custom display name</label>
+                <input id="tplCustomName" class="input" type="text" maxlength="64" />
+              </div>
+              <div class="field">
+                <label for="tplLinkColor">Link color</label>
+                <input id="tplLinkColor" class="input" type="text" placeholder="#RRGGBB" />
+              </div>
+              <div class="field">
+                <label for="tplLinkBgColor">Link background color</label>
+                <input id="tplLinkBgColor" class="input" type="text" placeholder="#RRGGBB" />
+              </div>
+              <div class="field">
+                <label for="tplLinkBgAlpha">Link background alpha (0-100)</label>
+                <input id="tplLinkBgAlpha" class="input" type="number" min="0" max="100" value="100" />
+              </div>
+              <div class="field">
+                <label for="tplTextColor">Text color</label>
+                <input id="tplTextColor" class="input" type="text" placeholder="#RRGGBB" />
+              </div>
+              <div class="field">
+                <label for="tplNameColor">Name color</label>
+                <input id="tplNameColor" class="input" type="text" placeholder="#RRGGBB" />
+              </div>
+              <div class="field">
+                <label for="tplLocationColor">Location color</label>
+                <input id="tplLocationColor" class="input" type="text" placeholder="#RRGGBB" />
+              </div>
+              <div class="field">
+                <label for="tplCursorUrl">Cursor URL (optional)</label>
+                <input id="tplCursorUrl" class="input" type="text" maxlength="500" />
+              </div>
+              <div class="field">
+                <label for="tplDiscordFrame">Discord frame enabled</label>
+                <select id="tplDiscordFrame" class="select">
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplShowCounter">Show visit counter</label>
+                <select id="tplShowCounter" class="select">
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplCounterColor">Counter color</label>
+                <input id="tplCounterColor" class="input" type="text" placeholder="#RRGGBB" />
+              </div>
+              <div class="field">
+                <label for="tplCounterBgColor">Counter background color</label>
+                <input id="tplCounterBgColor" class="input" type="text" placeholder="#RRGGBB" />
+              </div>
+              <div class="field">
+                <label for="tplCounterBgAlpha">Counter background alpha (0-100)</label>
+                <input id="tplCounterBgAlpha" class="input" type="number" min="0" max="100" value="20" />
+              </div>
               <button class="btn ghost" id="btnLoadLinktree">
                 Load from my Linktree
               </button>
@@ -1071,42 +1182,53 @@
           );
           const data = {
             device_type: device,
-            location: lt.location || null,
-            quote: lt.quote || null,
-            song_url: lt.song_url || null,
-            background_url: lt.background_url || null,
+            location: lt.location || "",
+            quote: lt.quote || "",
+            song_url: lt.song_url || "",
+            background_url: lt.background_url || "",
             background_is_video: !!lt.background_is_video,
             transparency: lt.transparency ?? 0,
             name_effect: lt.name_effect || "none",
             background_effect: lt.background_effect || "none",
             display_name_mode: lt.display_name_mode || "slug",
-            custom_display_name: lt.custom_display_name || null,
-            link_color: lt.link_color || null,
-            link_bg_color: lt.link_bg_color || null,
+            custom_display_name: lt.custom_display_name || "",
+            link_color: lt.link_color || "",
+            link_bg_color: lt.link_bg_color || "",
             link_bg_alpha: lt.link_bg_alpha ?? 100,
-            text_color: lt.text_color || null,
-            name_color: lt.name_color || null,
-            location_color: lt.location_color || null,
-            quote_color: lt.quote_color || null,
-            cursor_url: lt.cursor_url || null,
+            text_color: lt.text_color || "",
+            name_color: lt.name_color || "",
+            location_color: lt.location_color || "",
+            quote_color: lt.quote_color || "",
+            cursor_url: lt.cursor_url || "",
             discord_frame_enabled: !!lt.discord_frame_enabled,
             show_visit_counter: !!lt.show_visit_counter,
-            visit_counter_color: lt.visit_counter_color || null,
-            visit_counter_bg_color: lt.visit_counter_bg_color || null,
+            visit_counter_color: lt.visit_counter_color || "",
+            visit_counter_bg_color: lt.visit_counter_bg_color || "",
             visit_counter_bg_alpha: lt.visit_counter_bg_alpha ?? 20,
-            profile_picture: lt.profile_picture || null,
-            links: (lt.links || []).map((l, idx) => ({
-              url: l.url,
-              label: l.label || null,
-              icon_url: l.icon_url || null,
-              position: l.position ?? idx,
-              is_active: l.is_active !== false,
-            })),
           };
-          draftData = data;
-          if (!$("tplPreview").value && data.profile_picture) {
-            $("tplPreview").value = data.profile_picture;
-          }
+          draftData = { ...data };
+          $("tplLocation").value = data.location;
+          $("tplQuote").value = data.quote;
+          $("tplSong").value = data.song_url;
+          $("tplBackground").value = data.background_url;
+          $("tplBgVideo").value = data.background_is_video ? "true" : "false";
+          $("tplTrans").value = data.transparency;
+          $("tplNameFx").value = data.name_effect;
+          $("tplBgFx").value = data.background_effect;
+          $("tplDisplayName").value = data.display_name_mode;
+          $("tplCustomName").value = data.custom_display_name;
+          $("tplLinkColor").value = data.link_color;
+          $("tplLinkBgColor").value = data.link_bg_color;
+          $("tplLinkBgAlpha").value = data.link_bg_alpha;
+          $("tplTextColor").value = data.text_color;
+          $("tplNameColor").value = data.name_color;
+          $("tplLocationColor").value = data.location_color;
+          $("tplCursorUrl").value = data.cursor_url;
+          $("tplDiscordFrame").value = data.discord_frame_enabled ? "true" : "false";
+          $("tplShowCounter").value = data.show_visit_counter ? "true" : "false";
+          $("tplCounterColor").value = data.visit_counter_color;
+          $("tplCounterBgColor").value = data.visit_counter_bg_color;
+          $("tplCounterBgAlpha").value = data.visit_counter_bg_alpha;
           showMsg(formMsg, "Linktree loaded", true);
           return data;
         } catch (e) {
@@ -1124,6 +1246,28 @@
         $("tplPreview").value = "";
         $("tplDevice").value = "pc";
         $("tplPublic").value = "true";
+        $("tplLocation").value = "";
+        $("tplQuote").value = "";
+        $("tplSong").value = "";
+        $("tplBackground").value = "";
+        $("tplBgVideo").value = "false";
+        $("tplTrans").value = "0";
+        $("tplNameFx").value = "none";
+        $("tplBgFx").value = "none";
+        $("tplDisplayName").value = "slug";
+        $("tplCustomName").value = "";
+        $("tplLinkColor").value = "";
+        $("tplLinkBgColor").value = "";
+        $("tplLinkBgAlpha").value = "100";
+        $("tplTextColor").value = "";
+        $("tplNameColor").value = "";
+        $("tplLocationColor").value = "";
+        $("tplCursorUrl").value = "";
+        $("tplDiscordFrame").value = "false";
+        $("tplShowCounter").value = "false";
+        $("tplCounterColor").value = "";
+        $("tplCounterBgColor").value = "";
+        $("tplCounterBgAlpha").value = "20";
       }
 
       async function startEdit(item) {
@@ -1138,6 +1282,39 @@
           $("tplDevice").value =
             (detail.data && detail.data.device_type) || "pc";
           $("tplPublic").value = detail.is_public ? "true" : "false";
+          const data = detail.data || {};
+          $("tplLocation").value = data.location || "";
+          $("tplQuote").value = data.quote || "";
+          $("tplSong").value = data.song_url || "";
+          $("tplBackground").value = data.background_url || "";
+          $("tplBgVideo").value = data.background_is_video ? "true" : "false";
+          $("tplTrans").value =
+            data.transparency !== undefined && data.transparency !== null
+              ? data.transparency
+              : 0;
+          $("tplNameFx").value = data.name_effect || "none";
+          $("tplBgFx").value = data.background_effect || "none";
+          $("tplDisplayName").value = data.display_name_mode || "slug";
+          $("tplCustomName").value = data.custom_display_name || "";
+          $("tplLinkColor").value = data.link_color || "";
+          $("tplLinkBgColor").value = data.link_bg_color || "";
+          $("tplLinkBgAlpha").value =
+            data.link_bg_alpha !== undefined && data.link_bg_alpha !== null
+              ? data.link_bg_alpha
+              : 100;
+          $("tplTextColor").value = data.text_color || "";
+          $("tplNameColor").value = data.name_color || "";
+          $("tplLocationColor").value = data.location_color || "";
+          $("tplCursorUrl").value = data.cursor_url || "";
+          $("tplDiscordFrame").value = data.discord_frame_enabled ? "true" : "false";
+          $("tplShowCounter").value = data.show_visit_counter ? "true" : "false";
+          $("tplCounterColor").value = data.visit_counter_color || "";
+          $("tplCounterBgColor").value = data.visit_counter_bg_color || "";
+          $("tplCounterBgAlpha").value =
+            data.visit_counter_bg_alpha !== undefined &&
+            data.visit_counter_bg_alpha !== null
+              ? data.visit_counter_bg_alpha
+              : 20;
           showMsg(formMsg, "Loaded for editing", true);
         } catch (e) {
           showMsg(formMsg, "Edit load failed", false);
@@ -1160,8 +1337,44 @@
           showMsg(formMsg, "Name required", false);
           return;
         }
-        if (!draftData) {
-          showMsg(formMsg, "Load Linktree data first", false);
+        const data = {
+          device_type: $("tplDevice").value || "pc",
+          location: $("tplLocation").value.trim(),
+          quote: $("tplQuote").value.trim(),
+          song_url: $("tplSong").value.trim(),
+          background_url: $("tplBackground").value.trim(),
+          background_is_video: $("tplBgVideo").value === "true",
+          transparency: Math.min(
+            100,
+            Math.max(0, parseInt($("tplTrans").value || "0", 10))
+          ),
+          name_effect: $("tplNameFx").value || "none",
+          background_effect: $("tplBgFx").value || "none",
+          display_name_mode: $("tplDisplayName").value || "slug",
+          custom_display_name: $("tplCustomName").value.trim() || null,
+          link_color: $("tplLinkColor").value.trim() || null,
+          link_bg_color: $("tplLinkBgColor").value.trim() || null,
+          link_bg_alpha: Math.min(
+            100,
+            Math.max(0, parseInt($("tplLinkBgAlpha").value || "100", 10))
+          ),
+          text_color: $("tplTextColor").value.trim() || null,
+          name_color: $("tplNameColor").value.trim() || null,
+          location_color: $("tplLocationColor").value.trim() || null,
+          quote_color: $("tplQuoteColor") ? $("tplQuoteColor").value.trim() || null : null,
+          cursor_url: $("tplCursorUrl").value.trim() || null,
+          discord_frame_enabled: $("tplDiscordFrame").value === "true",
+          show_visit_counter: $("tplShowCounter").value === "true",
+          visit_counter_color: $("tplCounterColor").value.trim() || null,
+          visit_counter_bg_color: $("tplCounterBgColor").value.trim() || null,
+          visit_counter_bg_alpha: Math.min(
+            100,
+            Math.max(0, parseInt($("tplCounterBgAlpha").value || "20", 10))
+          ),
+          links: draftData && draftData.links ? draftData.links : [],
+        };
+        if (!data.background_url) {
+          showMsg(formMsg, "Background URL is required", false);
           return;
         }
         const payload = {
@@ -1169,7 +1382,7 @@
           description: $("tplDesc").value.trim() || null,
           preview_image_url: $("tplPreview").value.trim() || null,
           is_public: $("tplPublic").value === "true",
-          data: { ...draftData, device_type: $("tplDevice").value },
+          data,
         };
         try {
           if (editingId) {
