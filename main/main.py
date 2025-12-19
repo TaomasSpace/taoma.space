@@ -2972,8 +2972,8 @@ class TemplateLinkIn(BaseModel):
     is_active: bool = True
 
 
-class TemplateDataIn(BaseModel):
-    device_type: Optional[DeviceType] = None
+class TemplateVariantIn(BaseModel):
+    device_type: DeviceType
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
@@ -2997,7 +2997,6 @@ class TemplateDataIn(BaseModel):
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_alpha: int = Field(20, ge=0, le=100)
-    links: List[TemplateLinkIn] = Field(default_factory=list)
 
 
 class TemplateCreateIn(BaseModel):
@@ -3005,7 +3004,7 @@ class TemplateCreateIn(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     preview_image_url: Optional[str] = Field(None, max_length=500)
     is_public: bool = True
-    data: TemplateDataIn
+    variants: List[TemplateVariantIn] = Field(..., min_length=1, max_length=2)
 
 
 class TemplateUpdateIn(BaseModel):
@@ -3013,7 +3012,7 @@ class TemplateUpdateIn(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     preview_image_url: Optional[str] = Field(None, max_length=500)
     is_public: Optional[bool] = None
-    data: Optional[TemplateDataIn] = None
+    variants: Optional[List[TemplateVariantIn]] = None
 
 
 class TemplateListOut(BaseModel):
@@ -3024,13 +3023,14 @@ class TemplateListOut(BaseModel):
     owner_id: int
     owner_username: Optional[str] = None
     is_public: bool
-    device_type: Optional[DeviceType] = None
+    device_type: Optional[str] = None  # "pc", "mobile", or "both"
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
 
 class TemplateDetailOut(TemplateListOut):
-    data: dict
+    variants: List[dict]
+    data: Optional[dict] = None  # backwards compatibility
 
 
 def _doc_time_iso(value: Any) -> Optional[str]:
@@ -3039,22 +3039,8 @@ def _doc_time_iso(value: Any) -> Optional[str]:
     return value if value else None
 
 
-def _normalize_template_data(payload: TemplateDataIn) -> dict:
+def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data = payload.model_dump(exclude_none=True)
-    links = data.pop("links", [])
-    if links:
-        if len(links) > 100:
-            raise HTTPException(413, "Too many links in template")
-        normalized = []
-        for idx, link in enumerate(links):
-            item = link.model_dump(exclude_none=True)
-            if item.get("position") is None:
-                item["position"] = idx
-            normalized.append(item)
-        data["links"] = normalized
-    else:
-        data["links"] = []
-    # Ensure required fields are present with defaults
     data.setdefault("background_is_video", False)
     data.setdefault("transparency", 0)
     data.setdefault("name_effect", "none")
@@ -3069,6 +3055,13 @@ def _normalize_template_data(payload: TemplateDataIn) -> dict:
 
 def _template_doc_to_list(doc) -> TemplateListOut:
     data = doc.to_dict() or {}
+    variants = data.get("variants") or []
+    device_type = None
+    if variants:
+        if len(variants) >= 2:
+            device_type = "both"
+        else:
+            device_type = variants[0].get("device_type")
     return TemplateListOut(
         id=doc.id,
         name=data.get("name") or "",
@@ -3077,7 +3070,7 @@ def _template_doc_to_list(doc) -> TemplateListOut:
         owner_id=int(data.get("owner_id") or 0),
         owner_username=data.get("owner_username"),
         is_public=bool(data.get("is_public", False)),
-        device_type=data.get("device_type"),
+        device_type=device_type,
         created_at=_doc_time_iso(data.get("created_at")),
         updated_at=_doc_time_iso(data.get("updated_at")),
     )
@@ -3085,6 +3078,9 @@ def _template_doc_to_list(doc) -> TemplateListOut:
 
 def _template_doc_to_detail(doc) -> TemplateDetailOut:
     data = doc.to_dict() or {}
+    variants = data.get("variants") or []
+    # backward-compat: also expose first variant as "data"
+    first = variants[0] if variants else {}
     return TemplateDetailOut(
         id=doc.id,
         name=data.get("name") or "",
@@ -3095,7 +3091,8 @@ def _template_doc_to_detail(doc) -> TemplateDetailOut:
         is_public=bool(data.get("is_public", False)),
         created_at=_doc_time_iso(data.get("created_at")),
         updated_at=_doc_time_iso(data.get("updated_at")),
-        data=data.get("data") or {},
+        variants=variants,
+        data=first,
     )
 
 
@@ -3260,7 +3257,9 @@ def get_template_detail(
 
 @app.post("/api/marketplace/templates", response_model=TemplateDetailOut, status_code=201)
 def create_template(payload: TemplateCreateIn, user: dict = Depends(require_user)):
-    data = _normalize_template_data(payload.data)
+    variants = [_normalize_variant(v) for v in payload.variants]
+    if len({v["device_type"] for v in variants}) != len(variants):
+        raise HTTPException(400, "Duplicate device_type in variants")
     preview = payload.preview_image_url or "/static/icon.png"
     doc_ref = _fs().collection(TEMPLATE_COLLECTION).document()
     now = firestore.SERVER_TIMESTAMP
@@ -3272,10 +3271,9 @@ def create_template(payload: TemplateCreateIn, user: dict = Depends(require_user
             "owner_id": int(user["id"]),
             "owner_username": user.get("username"),
             "is_public": bool(payload.is_public),
-            "device_type": data.get("device_type"),
             "created_at": now,
             "updated_at": now,
-            "data": data,
+            "variants": variants,
         }
     )
     doc = doc_ref.get()
@@ -3302,10 +3300,11 @@ def update_template(
         update["preview_image_url"] = payload.preview_image_url or None
     if payload.is_public is not None:
         update["is_public"] = bool(payload.is_public)
-    if payload.data is not None:
-        normalized = _normalize_template_data(payload.data)
-        update["data"] = normalized
-        update["device_type"] = normalized.get("device_type")
+    if payload.variants is not None:
+        variants = [_normalize_variant(v) for v in payload.variants]
+        if len({v["device_type"] for v in variants}) != len(variants):
+            raise HTTPException(400, "Duplicate device_type in variants")
+        update["variants"] = variants
     doc_ref.set(update, merge=True)
     doc = doc_ref.get()
     return _template_doc_to_detail(doc)
@@ -3313,7 +3312,7 @@ def update_template(
 
 @app.delete("/api/marketplace/templates/{template_id}", status_code=204)
 def delete_template(template_id: str, user: dict = Depends(require_user)):
-    doc_ref = firestoreDB.collection(TEMPLATE_COLLECTION).document(template_id)
+    doc_ref = _fs().collection(TEMPLATE_COLLECTION).document(template_id)
     doc = doc_ref.get()
     if not doc.exists:
         raise HTTPException(404, "Template not found")
@@ -3349,65 +3348,64 @@ def unsave_template(template_id: str, user: dict = Depends(require_user)):
 @app.post("/api/marketplace/templates/{template_id}/apply", response_model=LinktreeOut)
 def apply_template_to_linktree(
     template_id: str,
-    device: Optional[DeviceType] = Query(None),
+    device: Optional[str] = Query(None, description="pc, mobile, or both"),
     user: dict = Depends(require_user),
 ):
     _ensure_pg()
     doc = _get_template_doc(template_id, user=user)
     template = doc.to_dict() or {}
-    data = template.get("data") or {}
-    target_device = device or data.get("device_type") or "pc"
-    if target_device not in {"pc", "mobile"}:
-        raise HTTPException(400, "Invalid device")
-    link_fields = _extract_linktree_fields(data)
-    link_fields.pop("device_type", None)
-    links = data.get("links") or []
-    if not isinstance(links, list):
-        links = []
+    variants = template.get("variants") or []
+    if not variants:
+        data = template.get("data") or {}
+        if data:
+            variants = [data]
+    var_map = {
+        v.get("device_type"): v for v in variants if v.get("device_type") in {"pc", "mobile"}
+    }
+    target_choice = device or ("both" if len(var_map) == 2 else next(iter(var_map.keys()), "pc"))
+    if target_choice not in {"pc", "mobile", "both"}:
+        raise HTTPException(400, "Invalid device option")
+    if target_choice == "both":
+        if "pc" not in var_map or "mobile" not in var_map:
+            raise HTTPException(400, "Template does not contain both variants")
+        targets = ["pc", "mobile"]
+    else:
+        if target_choice not in var_map:
+            raise HTTPException(404, f"Template has no {target_choice} variant")
+        targets = [target_choice]
 
+    results: list[tuple[int, str]] = []  # (id, device)
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
-        cur.execute(
-            "SELECT id, slug FROM linktrees WHERE user_id=%s AND device_type=%s",
-            (user["id"], target_device),
-        )
-        row = cur.fetchone()
-        if row:
-            linktree_id = row["id"]
-            if link_fields:
-                cols = [f"{k}=%s" for k in link_fields.keys()]
-                vals = list(link_fields.values()) + [linktree_id]
-                cur.execute(
-                    f"UPDATE linktrees SET {', '.join(cols)}, updated_at=NOW() WHERE id=%s",
-                    tuple(vals),
-                )
-        else:
-            slug = _ensure_slug_unique(_resolve_user_slug(user), int(user["id"]))
-            linktree_id = db.create_linktree(
-                user_id=user["id"],
-                slug=slug,
-                device_type=target_device,
-                **link_fields,
-            )
-        cur.execute("DELETE FROM linktree_links WHERE linktree_id=%s", (linktree_id,))
-        for idx, link in enumerate(links):
-            if not isinstance(link, dict):
-                continue
-            url = link.get("url")
-            if not url:
-                continue
+        for target_device in targets:
+            data = var_map[target_device] or {}
+            link_fields = _extract_linktree_fields(data)
+            link_fields.pop("device_type", None)
+
             cur.execute(
-                """
-                INSERT INTO linktree_links(linktree_id, url, label, icon_url, position, is_active)
-                VALUES (%s,%s,%s,%s,%s,%s)
-                """,
-                (
-                    linktree_id,
-                    url,
-                    link.get("label"),
-                    link.get("icon_url"),
-                    link.get("position", idx),
-                    bool(link.get("is_active", True)),
-                ),
+                "SELECT id, slug FROM linktrees WHERE user_id=%s AND device_type=%s",
+                (user["id"], target_device),
             )
+            row = cur.fetchone()
+            if row:
+                linktree_id = row["id"]
+                if link_fields:
+                    cols = [f"{k}=%s" for k in link_fields.keys()]
+                    vals = list(link_fields.values()) + [linktree_id]
+                    cur.execute(
+                        f"UPDATE linktrees SET {', '.join(cols)}, updated_at=NOW() WHERE id=%s",
+                        tuple(vals),
+                    )
+            else:
+                slug = _ensure_slug_unique(_resolve_user_slug(user), int(user["id"]))
+                linktree_id = db.create_linktree(
+                    user_id=user["id"],
+                    slug=slug,
+                    device_type=target_device,
+                    **link_fields,
+                )
+            results.append((linktree_id, target_device))
         conn.commit()
-    return get_linktree_manage(linktree_id, user)
+
+    # Return the manage view for the PC variant if available, otherwise the last applied
+    preferred = next((lid for lid, dev in results if dev == "pc"), results[-1][0])
+    return get_linktree_manage(preferred, user)

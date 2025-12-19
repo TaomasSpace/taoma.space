@@ -1608,6 +1608,7 @@
       function deviceFromQuery() {
         const u = new URL(location.href);
         const val = u.searchParams.get("device");
+        if (val === "both") return "both";
         return val === "mobile" ? "mobile" : val === "pc" ? "pc" : null;
       }
 
@@ -2257,15 +2258,22 @@
             "btnOpenPublic"
           ).href = `/tree/${encodeURIComponent(preferred)}`;
           const preferredDevice = deviceFromQuery();
-          currentDevice = preferredDevice || "pc";
+          currentDevice = preferredDevice === "both" ? "pc" : preferredDevice || "pc";
           document.getElementById("inDevice").value = currentDevice;
           await loadDiscordStatus();
           await refreshData();
           const templateId = templateIdFromQuery();
           if (templateId) {
             try {
-              await apiApplyTemplate(templateId, currentDevice);
-              showMsg(msgMeta, "Template applied", true);
+              const devParam = preferredDevice || currentDevice;
+              await apiApplyTemplate(templateId, devParam);
+              showMsg(
+                msgMeta,
+                devParam === "both"
+                  ? "Template applied to desktop and mobile"
+                  : "Template applied",
+                true
+              );
               await refreshData();
             } catch (err) {
               showMsg(msgMeta, "Template apply failed", false);
