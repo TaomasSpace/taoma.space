@@ -979,7 +979,6 @@
                 id="inSlug"
                 class="input"
                 placeholder="your-handle"
-                pattern="^[a-zA-Z0-9_-]{2,48}$"
                 required
               />
               <div class="preview-note muted">
@@ -1583,12 +1582,14 @@
       let linktreeId = null;
       let currentDevice = "pc";
       let discordStatus = { linked: false };
+      const HIDE_LINKS = new URLSearchParams(location.search).get("hideLinks") === "true";
 
       const $ = (id) => document.getElementById(id);
       const msgMeta = $("msgMeta"),
         msgLinks = $("msgLinks");
 
       function showMsg(el, text, ok = false) {
+        if (!el) return;
         el.textContent = text;
         el.className = "alert " + (ok ? "ok" : "err");
         el.style.display = "block";
@@ -1755,6 +1756,7 @@
 
       function renderLinks(links) {
         const wrap = $("linksList");
+        if (HIDE_LINKS || !wrap) return;
         wrap.innerHTML = "";
         ensureLinksDrag(wrap);
         (links || []).forEach((l, idx) => {
@@ -1838,6 +1840,7 @@
 
       function renderBadges(list) {
         const box = $("badges");
+        if (!box) return;
         box.innerHTML = "";
         (list || []).forEach((ic) => {
           const item = document.createElement("div");
@@ -2173,24 +2176,26 @@
         }
       });
 
-      $("formAddLink").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        if (!linktreeId) {
-          showMsg(msgLinks, "Create the Linktree first", false);
-          return;
-        }
-        try {
-          await apiAddLink();
-          $("inLinkUrl").value = "";
-          $("inLinkLabel").value = "";
-          $("inLinkIcon").value = "";
-          $("inLinkActive").value = "true";
-          showMsg(msgLinks, "Link added", true);
-          await refreshData();
-        } catch (err) {
-          showMsg(msgLinks, String(err), false);
-        }
-      });
+      if (!HIDE_LINKS && $("formAddLink")) {
+        $("formAddLink").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          if (!linktreeId) {
+            showMsg(msgLinks, "Create the Linktree first", false);
+            return;
+          }
+          try {
+            await apiAddLink();
+            $("inLinkUrl").value = "";
+            $("inLinkLabel").value = "";
+            $("inLinkIcon").value = "";
+            $("inLinkActive").value = "true";
+            showMsg(msgLinks, "Link added", true);
+            await refreshData();
+          } catch (err) {
+            showMsg(msgLinks, String(err), false);
+          }
+        });
+      }
 
       async function refreshData() {
         const slugInput = $("inSlug").value.trim();
