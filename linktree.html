@@ -1363,6 +1363,7 @@
             data.device_type = data.device_type || device;
             data.user_username = data.user_username || tpl.owner_username || "Template";
             data.profile_picture = data.profile_picture || tpl.preview_image_url || null;
+            data.is_template_demo = true;
             return data;
           }
 
@@ -1502,8 +1503,9 @@
           const pfp = document.getElementById("pfp");
           const pfpFrame = document.getElementById("pfpFrame");
           if (pfp) {
+            const prefersUserPfp = data.is_template_demo && currentUser && currentUser.profile_picture;
             const profileUrl =
-              safeMediaUrl(data.profile_picture) ||
+              safeMediaUrl(prefersUserPfp ? currentUser.profile_picture : data.profile_picture) ||
               safeMediaUrl(currentUser && currentUser.profile_picture) ||
               "/static/icon.png";
             pfp.src = profileUrl;
