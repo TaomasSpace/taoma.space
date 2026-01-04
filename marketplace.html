@@ -657,8 +657,12 @@
                 <input id="tplName" class="input" type="text" maxlength="64" />
               </div>
               <div class="field">
-                <label for="tplDesc">Description</label>
-                <textarea id="tplDesc" class="input" maxlength="500" required></textarea>
+                <label for="tplCreator">Creator</label>
+                <input id="tplCreator" class="input" type="text" maxlength="100" />
+              </div>
+              <div class="field">
+                <label for="tplDesc">Description (optional)</label>
+                <textarea id="tplDesc" class="input" maxlength="500"></textarea>
               </div>
               <div class="field">
                 <label for="tplMode">Template scope</label>
@@ -762,6 +766,10 @@
               <div class="field">
                 <label for="tplLocationColor">Location color</label>
                 <input id="tplLocationColor" class="input" type="text" placeholder="#RRGGBB" />
+              </div>
+              <div class="field">
+                <label for="tplQuoteColor">Quote color</label>
+                <input id="tplQuoteColor" class="input" type="text" placeholder="#RRGGBB" />
               </div>
               <div class="field">
                 <label for="tplCursorUrl">Cursor URL (optional)</label>
@@ -1015,8 +1023,8 @@
 
       function matchesSearch(item, term) {
         if (!term) return true;
-        const hay = `${item.name || ""} ${item.description || ""} ${
-          item.owner_username || ""
+        const hay = `${item.name || ""} ${item.description || ""} ${item.owner_username || ""} ${
+          item.creator || ""
         }`.toLowerCase();
         return hay.includes(term.toLowerCase());
       }
@@ -1037,7 +1045,7 @@
               <div>
                 <p class="template-title">${escapeHtml(item.name)}</p>
                 <div class="template-meta">by ${escapeHtml(
-                  item.owner_username || "unknown"
+                  item.creator || item.owner_username || "unknown"
                 )}</div>
               </div>
             </div>
@@ -1144,7 +1152,7 @@
         const frame = $("demoFrame");
         const actions = $("modalActions");
         $("modalTitle").textContent = item.name || "Template";
-        $("modalOwner").textContent = `by ${item.owner_username || "unknown"}`;
+        $("modalOwner").textContent = `by ${item.creator || item.owner_username || "unknown"}`;
         $("modalDesc").textContent = item.description || "";
         frame.src = `/marketplace/templates/${encodeURIComponent(
           item.id
@@ -1226,6 +1234,7 @@
           $("tplTextColor").value = data.text_color;
           $("tplNameColor").value = data.name_color;
           $("tplLocationColor").value = data.location_color;
+          $("tplQuoteColor").value = data.quote_color;
           $("tplCursorUrl").value = data.cursor_url;
           $("tplDiscordFrame").value = data.discord_frame_enabled ? "true" : "false";
           $("tplShowCounter").value = data.show_visit_counter ? "true" : "false";
@@ -1245,6 +1254,7 @@
         variantCache = { pc: null, mobile: null };
         $("formTitle").textContent = "Create Template";
         $("tplName").value = "";
+        $("tplCreator").value = currentUser ? currentUser.username || "" : "";
         $("tplDesc").value = "";
         $("tplMode").value = "pc";
         $("tplDevice").value = "pc";
@@ -1265,6 +1275,7 @@
         $("tplTextColor").value = "";
         $("tplNameColor").value = "";
         $("tplLocationColor").value = "";
+        $("tplQuoteColor").value = "";
         $("tplCursorUrl").value = "";
         $("tplDiscordFrame").value = "false";
         $("tplShowCounter").value = "false";
@@ -1279,6 +1290,7 @@
           editingId = item.id;
           $("formTitle").textContent = "Edit Template";
           $("tplName").value = detail.name || "";
+          $("tplCreator").value = detail.creator || detail.owner_username || "";
           $("tplDesc").value = detail.description || "";
           $("tplPreview").value = detail.preview_image_url || "";
           $("tplPublic").value = detail.is_public ? "true" : "false";
@@ -1323,6 +1335,7 @@
           $("tplTextColor").value = activeVariant.text_color || "";
           $("tplNameColor").value = activeVariant.name_color || "";
           $("tplLocationColor").value = activeVariant.location_color || "";
+          $("tplQuoteColor").value = activeVariant.quote_color || "";
           $("tplCursorUrl").value = activeVariant.cursor_url || "";
           $("tplDiscordFrame").value = activeVariant.discord_frame_enabled ? "true" : "false";
           $("tplShowCounter").value = activeVariant.show_visit_counter ? "true" : "false";
@@ -1356,10 +1369,7 @@
           return;
         }
         const desc = $("tplDesc").value.trim();
-        if (!desc) {
-          showMsg(formMsg, "Description required", false);
-          return;
-        }
+        const creator = $("tplCreator").value.trim();
         const mode = $("tplMode").value || "pc";
 
         const buildVariantFromForm = (device) => {
@@ -1387,6 +1397,7 @@
             text_color: $("tplTextColor").value.trim() || null,
             name_color: $("tplNameColor").value.trim() || null,
             location_color: $("tplLocationColor").value.trim() || null,
+            quote_color: $("tplQuoteColor").value.trim() || null,
             cursor_url: $("tplCursorUrl").value.trim() || null,
             discord_frame_enabled: $("tplDiscordFrame").value === "true",
             show_visit_counter: $("tplShowCounter").value === "true",
@@ -1425,7 +1436,8 @@
 
         const payload = {
           name,
-          description: desc,
+          description: desc || null,
+          creator: creator || currentUser?.username || null,
           preview_image_url: null, // backend uses background
           is_public: $("tplPublic").value === "true",
           variants,
@@ -1498,6 +1510,7 @@
           $("tplTextColor").value = v.text_color || "";
           $("tplNameColor").value = v.name_color || "";
           $("tplLocationColor").value = v.location_color || "";
+          $("tplQuoteColor").value = v.quote_color || "";
           $("tplCursorUrl").value = v.cursor_url || "";
           $("tplDiscordFrame").value = v.discord_frame_enabled ? "true" : "false";
           $("tplShowCounter").value = v.show_visit_counter ? "true" : "false";

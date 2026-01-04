@@ -3001,7 +3001,8 @@ class TemplateVariantIn(BaseModel):
 
 class TemplateCreateIn(BaseModel):
     name: str = Field(..., min_length=2, max_length=64)
-    description: str = Field(..., min_length=1, max_length=500)
+    description: Optional[str] = Field(None, max_length=500)
+    creator: Optional[str] = Field(None, max_length=100)
     preview_image_url: Optional[str] = Field(None, max_length=500)
     is_public: bool = True
     variants: List[TemplateVariantIn] = Field(..., min_length=1, max_length=2)
@@ -3010,6 +3011,7 @@ class TemplateCreateIn(BaseModel):
 class TemplateUpdateIn(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=64)
     description: Optional[str] = Field(None, max_length=500)
+    creator: Optional[str] = Field(None, max_length=100)
     preview_image_url: Optional[str] = Field(None, max_length=500)
     is_public: Optional[bool] = None
     variants: Optional[List[TemplateVariantIn]] = None
@@ -3019,6 +3021,7 @@ class TemplateListOut(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
+    creator: Optional[str] = None
     preview_image_url: Optional[str] = None
     owner_id: int
     owner_username: Optional[str] = None
@@ -3066,6 +3069,7 @@ def _template_doc_to_list(doc) -> TemplateListOut:
         id=doc.id,
         name=data.get("name") or "",
         description=data.get("description"),
+        creator=data.get("creator"),
         preview_image_url=data.get("preview_image_url"),
         owner_id=int(data.get("owner_id") or 0),
         owner_username=data.get("owner_username"),
@@ -3085,6 +3089,7 @@ def _template_doc_to_detail(doc) -> TemplateDetailOut:
         id=doc.id,
         name=data.get("name") or "",
         description=data.get("description"),
+        creator=data.get("creator"),
         preview_image_url=data.get("preview_image_url"),
         owner_id=int(data.get("owner_id") or 0),
         owner_username=data.get("owner_username"),
@@ -3271,12 +3276,14 @@ def create_template(payload: TemplateCreateIn, user: dict = Depends(require_user
         pc_var = next((v for v in variants if v.get("device_type") == "pc"), None)
         src = pc_var or (variants[0] if variants else None)
         preview = (src or {}).get("background_url") or "/static/icon.png"
+    creator_name = (payload.creator or user.get("username") or "").strip() or None
     doc_ref = _fs().collection(TEMPLATE_COLLECTION).document()
     now = firestore.SERVER_TIMESTAMP
     doc_ref.set(
         {
             "name": payload.name.strip(),
             "description": payload.description.strip() if payload.description else None,
+            "creator": creator_name,
             "preview_image_url": preview,
             "owner_id": int(user["id"]),
             "owner_username": user.get("username"),
@@ -3306,6 +3313,8 @@ def update_template(
         update["name"] = payload.name.strip()
     if payload.description is not None:
         update["description"] = payload.description.strip() if payload.description else None
+    if payload.creator is not None:
+        update["creator"] = payload.creator.strip() if payload.creator else None
     if payload.preview_image_url is not None:
         update["preview_image_url"] = payload.preview_image_url or None
     if payload.is_public is not None:

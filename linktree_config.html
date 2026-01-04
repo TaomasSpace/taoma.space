@@ -947,6 +947,12 @@
 
     <main class="container">
       <h1 class="section-title">Linktree Config</h1>
+      <div class="row" style="justify-content: space-between; gap: 1rem; align-items: flex-start; margin-bottom: 10px">
+        <div class="muted" style="max-width: 720px">
+          Turn your current setup into a reusable template for desktop, mobile, or both. Your links and icons stay private.
+        </div>
+        <a class="btn ghost" id="btnCreateTemplate" href="/marketplace/create">Create template</a>
+      </div>
 
       <div id="notLogged" class="alert err" style="display: none">
         Not logged in.
@@ -2144,17 +2150,32 @@
         await refreshData();
       }
 
+      const btnCreateTemplate = $("btnCreateTemplate");
+      function updateCreateTemplateLink() {
+        if (!btnCreateTemplate) return;
+        const slug = $("inSlug").value.trim();
+        const device = $("inDevice").value || currentDevice || "pc";
+        const params = new URLSearchParams();
+        params.set("source", "config");
+        if (slug) params.set("slug", slug);
+        if (device) params.set("device", device);
+        btnCreateTemplate.href =
+          "/marketplace/create" + (params.toString() ? "?" + params.toString() : "");
+      }
+
       $("inSlug").addEventListener("input", (e) => {
         $("slugPreview").textContent = e.target.value.trim() || "-";
         $("btnOpenPublic").href = `/tree/${encodeURIComponent(
           e.target.value.trim()
         )}`;
+        updateCreateTemplateLink();
       });
       $("inDisplayName").addEventListener("change", toggleCustomNameField);
       toggleCustomNameField();
 
       $("inDevice").addEventListener("change", async (e) => {
         currentDevice = e.target.value || "pc";
+        updateCreateTemplateLink();
         await refreshData();
       });
       $("btnDiscordLink").addEventListener("click", startDiscordLink);
@@ -2265,6 +2286,7 @@
           const preferredDevice = deviceFromQuery();
           currentDevice = preferredDevice === "both" ? "pc" : preferredDevice || "pc";
           document.getElementById("inDevice").value = currentDevice;
+          updateCreateTemplateLink();
           await loadDiscordStatus();
           await refreshData();
           const templateId = templateIdFromQuery();
