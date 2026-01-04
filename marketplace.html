@@ -968,7 +968,7 @@
             <div class="card-actions">
               <button class="btn sm ghost" data-act="demo">Live demo</button>
               <button class="btn sm" data-act="use">Use template</button>
-              <a class="btn sm ghost" href="${buildDemoUrl(item, item.device_type)}" target="_blank" rel="noopener">Demo link</a>
+              <a class="btn sm ghost" data-demo-link data-device="${item.device_type || "pc"}" href="${buildDemoUrl(item, item.device_type)}" target="_blank" rel="noopener">Demo link</a>
               ${
                 opts.allowSave
                   ? `<button class="btn sm ghost" data-act="save">${
@@ -1060,6 +1060,15 @@
         return url.toString();
       }
 
+      function openDemoWindow(url, device = "pc") {
+        const features =
+          device === "mobile"
+            ? "width=430,height=900,menubar=0,toolbar=0,location=0,status=0"
+            : "width=1280,height=900";
+        const w = window.open(url, "_blank", features);
+        if (!w) location.href = url;
+      }
+
       function useTemplate(item, deviceOverride) {
         const sourceDevice = deviceOverride || item.device_type || "pc";
         const target =
@@ -1106,7 +1115,10 @@
             btn.addEventListener("click", () => {
               demoDevice = dev;
               frame.src = buildDemoUrl(item, demoDevice);
-              if (demoLink) demoLink.href = buildDemoUrl(item, demoDevice);
+              if (demoLink) {
+                demoLink.href = buildDemoUrl(item, demoDevice);
+                demoLink.dataset.device = demoDevice;
+              }
             });
             toggleWrap.appendChild(btn);
           });
@@ -1128,6 +1140,8 @@
         demoLink.target = "_blank";
         demoLink.rel = "noopener";
         demoLink.textContent = "Open demo link";
+        demoLink.dataset.demoLink = "1";
+        demoLink.dataset.device = demoDevice;
         actions.appendChild(demoLink);
         modal.classList.add("open");
         modal.setAttribute("aria-hidden", "false");
@@ -1452,6 +1466,13 @@
           if (e.target.id === "detailModal") closeModal();
         });
         await loadTemplates();
+        document.addEventListener("click", (e) => {
+          const a = e.target.closest("[data-demo-link]");
+          if (!a) return;
+          e.preventDefault();
+          const dev = a.dataset.device || "pc";
+          openDemoWindow(a.href, dev);
+        });
       }
 
       $("navToggle").addEventListener("click", () => {

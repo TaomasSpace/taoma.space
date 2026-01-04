@@ -1236,8 +1236,23 @@
         };
         window.addEventListener("pointerdown", firstGesture, { once: true });
 
+        let currentUser = null;
+
+        async function fetchSessionUser() {
+          try {
+            const r = await fetch("/api/auth/verify", { credentials: "include" });
+            if (!r.ok) return null;
+            const json = await r.json();
+            currentUser = json && json.user ? json.user : null;
+            return currentUser;
+          } catch (_) {
+            return null;
+          }
+        }
+
         async function loadTree() {
           try {
+            await fetchSessionUser();
             const params = new URLSearchParams(location.search);
             let templateId = params.get("template_id");
             const parts = location.pathname.split("/").filter(Boolean);
@@ -1271,8 +1286,12 @@
               data.slug = data.slug || tpl.name || "Template";
               data.user_username =
                 data.user_username || tpl.owner_username || "Template";
+              const userPfp = currentUser && currentUser.profile_picture;
               data.profile_picture =
-                data.profile_picture || tpl.preview_image_url || "/static/icon.png";
+                userPfp ||
+                data.profile_picture ||
+                tpl.preview_image_url ||
+                "/static/icon.png";
             } else {
               const slug = decodeURIComponent(
                 location.pathname.split("/").pop() || ""
@@ -1409,7 +1428,9 @@
             const pfpFrame = document.getElementById("pfpFrame");
             if (pfp) {
               const profileUrl =
-                safeMediaUrl(data.profile_picture) || "/static/icon.png";
+                safeMediaUrl(currentUser && currentUser.profile_picture) ||
+                safeMediaUrl(data.profile_picture) ||
+                "/static/icon.png";
               pfp.src = profileUrl;
             }
             if (pfpFrame) {
