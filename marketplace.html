@@ -877,6 +877,41 @@
         return null;
       }
 
+      function normalizeVariant(raw, deviceFallback) {
+        const v = { ...(raw || {}) };
+        v.device_type = v.device_type || deviceFallback || "pc";
+        v.display_name_mode = v.display_name_mode || "slug";
+        if (v.display_name_mode === "custom") {
+          if (!v.custom_display_name || !v.custom_display_name.trim()) {
+            showMsg(formMsg, `Custom display name required for ${v.device_type}`, false);
+            return null;
+          }
+          v.custom_display_name = v.custom_display_name.trim();
+        } else {
+          v.custom_display_name = null;
+        }
+        v.link_color = hexOrNull(v.link_color);
+        v.link_bg_color = hexOrNull(v.link_bg_color);
+        v.text_color = hexOrNull(v.text_color);
+        v.name_color = hexOrNull(v.name_color);
+        v.location_color = hexOrNull(v.location_color);
+        v.quote_color = hexOrNull(v.quote_color);
+        v.visit_counter_color = hexOrNull(v.visit_counter_color);
+        v.visit_counter_bg_color = hexOrNull(v.visit_counter_bg_color);
+        v.link_bg_alpha = Math.min(100, Math.max(0, parseInt(v.link_bg_alpha ?? 100, 10)));
+        v.transparency = Math.min(100, Math.max(0, parseInt(v.transparency ?? 0, 10)));
+        v.visit_counter_bg_alpha = Math.min(
+          100,
+          Math.max(0, parseInt(v.visit_counter_bg_alpha ?? 20, 10))
+        );
+        v.background_url = (v.background_url || "").trim();
+        if (!v.background_url) {
+          showMsg(formMsg, `Background URL required for ${v.device_type}`, false);
+          return null;
+        }
+        return v;
+      }
+
       async function fetchSession() {
         try {
           const r = await fetch("/api/auth/verify", {
@@ -1421,28 +1456,25 @@
               Math.max(0, parseInt($("tplCounterBgAlpha").value || "20", 10))
             ),
           };
-          return v;
+          return normalizeVariant(v, device);
         };
 
         // Always update cache for the currently selected device
         const currentDevice = $("tplDevice").value || "pc";
         const currentVariant = buildVariantFromForm(currentDevice);
         if (!currentVariant) return;
-        if (!currentVariant.background_url) {
-          showMsg(formMsg, "Background URL is required", false);
-          return;
-        }
         variantCache[currentDevice] = currentVariant;
 
         let variants = [];
         if (mode === "both") {
-          if (!variantCache.pc || !variantCache.mobile) {
-            showMsg(formMsg, "Load and fill both desktop and mobile variants", false);
-            return;
-          }
-          variants = [variantCache.pc, variantCache.mobile];
+          const normPc = normalizeVariant(variantCache.pc, "pc");
+          const normMob = normalizeVariant(variantCache.mobile, "mobile");
+          if (!normPc || !normMob) return;
+          variants = [normPc, normMob];
         } else if (mode === "pc" || mode === "mobile") {
-          variants = [currentVariant];
+          const norm = normalizeVariant(currentVariant, currentDevice);
+          if (!norm) return;
+          variants = [norm];
         } else {
           showMsg(formMsg, "Invalid template scope", false);
           return;
@@ -1467,7 +1499,7 @@
           resetForm();
           await loadTemplates();
         } catch (e) {
-          showMsg(formMsg, `Save failed: ${e.message || e}`, false);$
+          showMsg(formMsg, `Save failed: ${e.message || e}`, false);
         }
       }
 
