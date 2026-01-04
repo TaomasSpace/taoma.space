@@ -1380,6 +1380,12 @@
         const mode = $("tplMode").value || "pc";
 
         const buildVariantFromForm = (device) => {
+          const displayMode = $("tplDisplayName").value || "slug";
+          const customName = $("tplCustomName").value.trim();
+          if (displayMode === "custom" && !customName) {
+            showMsg(formMsg, "Custom display name is required when mode is Custom", false);
+            return null;
+          }
           const v = {
             device_type: device,
             location: $("tplLocation").value.trim() || "",
@@ -1393,8 +1399,8 @@
             ),
             name_effect: $("tplNameFx").value || "none",
             background_effect: $("tplBgFx").value || "none",
-            display_name_mode: $("tplDisplayName").value || "slug",
-            custom_display_name: $("tplCustomName").value.trim() || null,
+            display_name_mode: displayMode,
+            custom_display_name: displayMode === "custom" ? customName : null,
             link_color: hexOrNull($("tplLinkColor").value),
             link_bg_color: hexOrNull($("tplLinkBgColor").value),
             link_bg_alpha: Math.min(
@@ -1421,6 +1427,7 @@
         // Always update cache for the currently selected device
         const currentDevice = $("tplDevice").value || "pc";
         const currentVariant = buildVariantFromForm(currentDevice);
+        if (!currentVariant) return;
         if (!currentVariant.background_url) {
           showMsg(formMsg, "Background URL is required", false);
           return;
