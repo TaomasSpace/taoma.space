@@ -630,6 +630,12 @@
               type="search"
               placeholder="Search templates by name, author, or description"
             />
+            <select id="deviceFilter" class="select" style="min-width:160px">
+              <option value="all">All devices</option>
+              <option value="pc">Desktop</option>
+              <option value="mobile">Mobile</option>
+              <option value="both">Desktop + Mobile</option>
+            </select>
             <span class="chip" id="resultCount">0 templates</span>
             <a class="btn ghost" href="/marketplace/create">Create template</a>
           </div>
@@ -646,172 +652,7 @@
         </section>
 
         <section class="tab-panel" id="tab-mine">
-          <div class="panel-wrap">
-            <div>
-              <div class="grid" id="mineGrid"></div>
-            </div>
-            <div class="panel">
-              <h3 id="formTitle">Create Template</h3>
-              <div class="field">
-                <label for="tplName">Name</label>
-                <input id="tplName" class="input" type="text" maxlength="64" />
-              </div>
-              <div class="field">
-                <label for="tplCreator">Creator</label>
-                <input id="tplCreator" class="input" type="text" maxlength="100" />
-              </div>
-              <div class="field">
-                <label for="tplDesc">Description (optional)</label>
-                <textarea id="tplDesc" class="input" maxlength="500"></textarea>
-              </div>
-              <div class="field">
-                <label for="tplMode">Template scope</label>
-                <select id="tplMode" class="select">
-                  <option value="pc">Desktop only</option>
-                  <option value="mobile">Mobile only</option>
-                  <option value="both">Desktop + Mobile</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="tplDevice">Device preset</label>
-                <select id="tplDevice" class="select">
-                  <option value="pc">Desktop</option>
-                  <option value="mobile">Mobile</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="tplPublic">Visibility</label>
-                <select id="tplPublic" class="select">
-                  <option value="true">Public</option>
-                  <option value="false">Private</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="tplLocation">Location (optional)</label>
-                <input id="tplLocation" class="input" type="text" maxlength="120" />
-              </div>
-              <div class="field">
-                <label for="tplQuote">Quote (optional)</label>
-                <input id="tplQuote" class="input" type="text" maxlength="240" />
-              </div>
-              <div class="field">
-                <label for="tplSong">Song URL (optional)</label>
-                <input id="tplSong" class="input" type="text" maxlength="500" />
-              </div>
-              <div class="field">
-                <label for="tplBackground">Background URL *</label>
-                <input id="tplBackground" class="input" type="text" maxlength="500" placeholder="/media/... or https://" />
-              </div>
-              <div class="field">
-                <label for="tplBgVideo">Background is video</label>
-                <select id="tplBgVideo" class="select">
-                  <option value="false">No</option>
-                  <option value="true">Yes</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="tplTrans">Transparency (0-100)</label>
-                <input id="tplTrans" class="input" type="number" min="0" max="100" value="0" />
-              </div>
-              <div class="field">
-                <label for="tplNameFx">Name effect</label>
-                <select id="tplNameFx" class="select">
-                  <option value="none">None</option>
-                  <option value="glow">Glow</option>
-                  <option value="neon">Neon</option>
-                  <option value="rainbow">Rainbow</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="tplBgFx">Background effect</label>
-                <select id="tplBgFx" class="select">
-                  <option value="none">None</option>
-                  <option value="night">Night</option>
-                  <option value="rain">Rain</option>
-                  <option value="snow">Snow</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="tplDisplayName">Display name mode</label>
-                <select id="tplDisplayName" class="select">
-                  <option value="slug">Slug</option>
-                  <option value="username">Username</option>
-                  <option value="custom">Custom</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="tplCustomName">Custom display name</label>
-                <input id="tplCustomName" class="input" type="text" maxlength="64" />
-              </div>
-              <div class="field">
-                <label for="tplLinkColor">Link color</label>
-                <input id="tplLinkColor" class="input" type="text" placeholder="#RRGGBB" />
-              </div>
-              <div class="field">
-                <label for="tplLinkBgColor">Link background color</label>
-                <input id="tplLinkBgColor" class="input" type="text" placeholder="#RRGGBB" />
-              </div>
-              <div class="field">
-                <label for="tplLinkBgAlpha">Link background alpha (0-100)</label>
-                <input id="tplLinkBgAlpha" class="input" type="number" min="0" max="100" value="100" />
-              </div>
-              <div class="field">
-                <label for="tplTextColor">Text color</label>
-                <input id="tplTextColor" class="input" type="text" placeholder="#RRGGBB" />
-              </div>
-              <div class="field">
-                <label for="tplNameColor">Name color</label>
-                <input id="tplNameColor" class="input" type="text" placeholder="#RRGGBB" />
-              </div>
-              <div class="field">
-                <label for="tplLocationColor">Location color</label>
-                <input id="tplLocationColor" class="input" type="text" placeholder="#RRGGBB" />
-              </div>
-              <div class="field">
-                <label for="tplQuoteColor">Quote color</label>
-                <input id="tplQuoteColor" class="input" type="text" placeholder="#RRGGBB" />
-              </div>
-              <div class="field">
-                <label for="tplCursorUrl">Cursor URL (optional)</label>
-                <input id="tplCursorUrl" class="input" type="text" maxlength="500" />
-              </div>
-              <div class="field">
-                <label for="tplDiscordFrame">Discord frame enabled</label>
-                <select id="tplDiscordFrame" class="select">
-                  <option value="false">No</option>
-                  <option value="true">Yes</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="tplShowCounter">Show visit counter</label>
-                <select id="tplShowCounter" class="select">
-                  <option value="false">No</option>
-                  <option value="true">Yes</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="tplCounterColor">Counter color</label>
-                <input id="tplCounterColor" class="input" type="text" placeholder="#RRGGBB" />
-              </div>
-              <div class="field">
-                <label for="tplCounterBgColor">Counter background color</label>
-                <input id="tplCounterBgColor" class="input" type="text" placeholder="#RRGGBB" />
-              </div>
-              <div class="field">
-                <label for="tplCounterBgAlpha">Counter background alpha (0-100)</label>
-                <input id="tplCounterBgAlpha" class="input" type="number" min="0" max="100" value="20" />
-              </div>
-              <button class="btn ghost" id="btnLoadLinktree">
-                Load from my Linktree
-              </button>
-              <button class="btn" id="btnSaveTemplate">Save Template</button>
-              <button class="btn ghost" id="btnResetForm">Reset</button>
-              <div class="alert" id="formMsg"></div>
-              <p class="muted">
-                Templates are built from your current Linktree layout and links.
-              </p>
-            </div>
-          </div>
+          <div class="grid" id="mineGrid"></div>
         </section>
 
         <section class="tab-panel" id="tab-saved">
@@ -1016,6 +857,10 @@
       const formMsg = $("formMsg");
 
       function showMsg(el, text, ok = false) {
+        if (!el) {
+          alert(text);
+          return;
+        }
         el.textContent = text;
         el.className = "alert " + (ok ? "ok" : "err");
         el.style.display = "block";
@@ -1063,22 +908,37 @@
         if (!r.ok && r.status !== 204) throw new Error(await r.text());
       }
 
-      function matchesSearch(item, term) {
+      function matchesSearch(item, term, deviceFilterVal) {
+        if (deviceFilterVal && deviceFilterVal !== "all") {
+          if ((item.device_type || "pc") !== deviceFilterVal) return false;
+        }
         if (!term) return true;
         const hay = `${item.name || ""} ${item.description || ""} ${item.owner_username || ""} ${
           item.creator || ""
-        }`.toLowerCase();
+        } ${item.device_type || ""}`.toLowerCase();
         return hay.includes(term.toLowerCase());
       }
       function renderTemplates(list, container, opts = {}) {
         container.innerHTML = "";
         const term = $("searchInput").value.trim();
-        const filtered = list.filter((item) => matchesSearch(item, term));
+        const deviceVal = $("deviceFilter").value || "all";
+        const filtered = list.filter((item) => matchesSearch(item, term, deviceVal));
         filtered.forEach((item) => {
           const card = document.createElement("div");
           card.className = "card";
-          const preview = sanitizeUrl(item.preview_image_url) || "/static/icon.png";
+          const preview =
+            sanitizeUrl(item.preview_image_url) ||
+            "/static/icon.png";
           const isSaved = savedIds.has(item.id);
+          const deviceLabel =
+            item.device_type === "both"
+              ? "Desktop + Mobile"
+              : item.device_type === "mobile"
+              ? "Mobile"
+              : "Desktop";
+          const userAvatar = sanitizeUrl(
+            (currentUser && currentUser.profile_picture) || ""
+          );
           card.innerHTML = `
             <div class="template-top">
               <div class="template-pfp">
@@ -1086,9 +946,16 @@
               </div>
               <div>
                 <p class="template-title">${escapeHtml(item.name)}</p>
-                <div class="template-meta">by ${escapeHtml(
-                  item.creator || item.owner_username || "unknown"
-                )}</div>
+                <div class="template-meta">
+                  <span style="display:inline-flex;align-items:center;gap:.45rem">
+                    ${
+                      userAvatar
+                        ? `<img src="${userAvatar}" alt="avatar" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #ffffff22">`
+                        : ""
+                    }
+                    by ${escapeHtml(item.creator || item.owner_username || "unknown")}
+                  </span>
+                </div>
               </div>
             </div>
             <div class="template-meta">${escapeHtml(
@@ -1096,10 +963,12 @@
             )}</div>
             <div class="row" style="display:flex;gap:.5rem;flex-wrap:wrap">
               <span class="chip">${item.is_public ? "Public" : "Private"}</span>
+              <span class="chip">${deviceLabel}</span>
             </div>
             <div class="card-actions">
               <button class="btn sm ghost" data-act="demo">Live demo</button>
               <button class="btn sm" data-act="use">Use template</button>
+              <a class="btn sm ghost" href="${buildDemoUrl(item, item.device_type)}" target="_blank" rel="noopener">Demo link</a>
               ${
                 opts.allowSave
                   ? `<button class="btn sm ghost" data-act="save">${
@@ -1109,8 +978,7 @@
               }
               ${
                 opts.allowEdit
-                  ? `<button class="btn sm ghost" data-act="edit">Edit</button>
-                     <button class="btn sm danger" data-act="delete">Delete</button>`
+                  ? `<button class="btn sm danger" data-act="delete">Delete</button>`
                   : ""
               }
             </div>
@@ -1176,14 +1044,40 @@
         }
       }
 
-      function useTemplate(item) {
-        const device = item.device_type || "pc";
+      function deviceLabel(device) {
+        return device === "both" ? "Desktop + Mobile" : device === "mobile" ? "Mobile" : "Desktop";
+      }
+
+      function buildDemoUrl(item, device) {
+        const dRaw = device || item.device_type || "pc";
+        const d = dRaw === "both" ? "pc" : dRaw;
+        const url = new URL(
+          `/marketplace/templates/${encodeURIComponent(item.id)}/demo`,
+          window.location.origin
+        );
+        url.searchParams.set("template_id", item.id);
+        if (d) url.searchParams.set("device", d);
+        return url.toString();
+      }
+
+      function useTemplate(item, deviceOverride) {
+        const sourceDevice = deviceOverride || item.device_type || "pc";
         const target =
-          device === "both"
+          sourceDevice === "both"
             ? "both"
-            : device === "mobile"
+            : sourceDevice === "mobile"
             ? "mobile"
             : "pc";
+        const label =
+          target === "both"
+            ? "Desktop and Mobile"
+            : target === "mobile"
+            ? "Mobile"
+            : "Desktop";
+        const ok = confirm(
+          `Are you sure? This will replace your ${label} Linktree appearance (links and icons stay unchanged).`
+        );
+        if (!ok) return;
         location.href = `/linktree/config?template_id=${encodeURIComponent(
           item.id
         )}&device=${encodeURIComponent(target)}`;
@@ -1196,20 +1090,45 @@
         $("modalTitle").textContent = item.name || "Template";
         $("modalOwner").textContent = `by ${item.creator || item.owner_username || "unknown"}`;
         $("modalDesc").textContent = item.description || "";
-        frame.src = `/marketplace/templates/${encodeURIComponent(
-          item.id
-        )}/demo?template_id=${encodeURIComponent(item.id)}`;
+        let demoDevice =
+          item.device_type === "mobile" ? "mobile" : item.device_type === "both" ? "pc" : "pc";
+        frame.src = buildDemoUrl(item, demoDevice);
         actions.innerHTML = "";
+        let demoLink = null;
+        if (item.device_type === "both") {
+          const toggleWrap = document.createElement("div");
+          toggleWrap.className = "row";
+          toggleWrap.style.marginBottom = "8px";
+          ["pc", "mobile"].forEach((dev) => {
+            const btn = document.createElement("button");
+            btn.className = "btn sm ghost";
+            btn.textContent = dev === "pc" ? "Desktop preview" : "Mobile preview";
+            btn.addEventListener("click", () => {
+              demoDevice = dev;
+              frame.src = buildDemoUrl(item, demoDevice);
+              if (demoLink) demoLink.href = buildDemoUrl(item, demoDevice);
+            });
+            toggleWrap.appendChild(btn);
+          });
+          actions.appendChild(toggleWrap);
+        }
         const useBtn = document.createElement("button");
         useBtn.className = "btn sm";
         useBtn.textContent = "Use template";
-        useBtn.addEventListener("click", () => useTemplate(item));
+        useBtn.addEventListener("click", () => useTemplate(item, item.device_type));
         actions.appendChild(useBtn);
         const saveBtn = document.createElement("button");
         saveBtn.className = "btn sm ghost";
         saveBtn.textContent = savedIds.has(item.id) ? "Saved" : "Save";
         saveBtn.addEventListener("click", () => toggleSave(item, saveBtn));
         actions.appendChild(saveBtn);
+        demoLink = document.createElement("a");
+        demoLink.className = "btn sm ghost";
+        demoLink.href = buildDemoUrl(item, demoDevice);
+        demoLink.target = "_blank";
+        demoLink.rel = "noopener";
+        demoLink.textContent = "Open demo link";
+        actions.appendChild(demoLink);
         modal.classList.add("open");
         modal.setAttribute("aria-hidden", "false");
       }
@@ -1527,45 +1446,10 @@
         }
         wireTabs();
         $("searchInput").addEventListener("input", renderAll);
-        $("btnLoadLinktree").addEventListener("click", loadLinktreeData);
-        $("btnSaveTemplate").addEventListener("click", saveTemplate);
-        $("btnResetForm").addEventListener("click", resetForm);
+        $("deviceFilter").addEventListener("change", renderAll);
         $("closeModal").addEventListener("click", closeModal);
         $("detailModal").addEventListener("click", (e) => {
           if (e.target.id === "detailModal") closeModal();
-        });
-        $("tplDevice").addEventListener("change", () => {
-          const dev = $("tplDevice").value || "pc";
-          const v = variantCache[dev];
-          if (!v) return;
-          $("tplLocation").value = v.location || "";
-          $("tplQuote").value = v.quote || "";
-          $("tplSong").value = v.song_url || "";
-          $("tplBackground").value = v.background_url || "";
-          $("tplBgVideo").value = v.background_is_video ? "true" : "false";
-          $("tplTrans").value =
-            v.transparency !== undefined && v.transparency !== null ? v.transparency : 0;
-          $("tplNameFx").value = v.name_effect || "none";
-          $("tplBgFx").value = v.background_effect || "none";
-          $("tplDisplayName").value = v.display_name_mode || "slug";
-          $("tplCustomName").value = v.custom_display_name || "";
-          $("tplLinkColor").value = v.link_color || "";
-          $("tplLinkBgColor").value = v.link_bg_color || "";
-          $("tplLinkBgAlpha").value =
-            v.link_bg_alpha !== undefined && v.link_bg_alpha !== null ? v.link_bg_alpha : 100;
-          $("tplTextColor").value = v.text_color || "";
-          $("tplNameColor").value = v.name_color || "";
-          $("tplLocationColor").value = v.location_color || "";
-          $("tplQuoteColor").value = v.quote_color || "";
-          $("tplCursorUrl").value = v.cursor_url || "";
-          $("tplDiscordFrame").value = v.discord_frame_enabled ? "true" : "false";
-          $("tplShowCounter").value = v.show_visit_counter ? "true" : "false";
-          $("tplCounterColor").value = v.visit_counter_color || "";
-          $("tplCounterBgColor").value = v.visit_counter_bg_color || "";
-          $("tplCounterBgAlpha").value =
-            v.visit_counter_bg_alpha !== undefined && v.visit_counter_bg_alpha !== null
-              ? v.visit_counter_bg_alpha
-              : 20;
         });
         await loadTemplates();
       }

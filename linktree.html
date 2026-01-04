@@ -926,7 +926,7 @@
       </div>
     </main>
 
-    <footer>© <span id="year"></span> TAOMA™ · <a href="/datenschutz.html">Privacy Policy</a></footer>
+    <footer>© <span id="year"></span> TAOMA™</footer>
 
     <script>
       async function resizeCursorImage(url, size = 32) {
@@ -1244,9 +1244,15 @@
             if (!templateId && parts[0] === "marketplace" && parts[1] === "templates") {
               templateId = parts[2] || null;
             }
-            const device = window.matchMedia("(max-width: 720px)").matches
-              ? "mobile"
-              : "pc";
+            const requestedDevice = params.get("device");
+            const device =
+              requestedDevice === "mobile"
+                ? "mobile"
+                : requestedDevice === "pc"
+                ? "pc"
+                : window.matchMedia("(max-width: 720px)").matches
+                ? "mobile"
+                : "pc";
             let data = null;
             if (templateId) {
               const r = await fetch(
@@ -1255,7 +1261,13 @@
               );
               if (!r.ok) return;
               const tpl = await r.json();
-              data = tpl.data || {};
+              const variants = tpl.variants || [];
+              const chosen =
+                variants.find((v) => v.device_type === device) ||
+                variants[0] ||
+                tpl.data ||
+                {};
+              data = { ...(chosen || {}) };
               data.slug = data.slug || tpl.name || "Template";
               data.user_username =
                 data.user_username || tpl.owner_username || "Template";
