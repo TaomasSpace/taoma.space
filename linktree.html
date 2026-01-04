@@ -885,6 +885,8 @@
             id="pfp"
             class="pfp"
             src="/static/icon.png"
+            loading="lazy"
+            decoding="async"
             alt="Profile picture"
           />
           <img
@@ -892,6 +894,8 @@
             class="pfp-frame"
             src=""
             alt=""
+            loading="lazy"
+            decoding="async"
             style="display: none"
           />
         </div>
@@ -1038,6 +1042,25 @@
             allowRelative: false,
             allowedProtocols: ["http:", "https:", "mailto:", "tel:"],
           });
+
+        const VIDEO_EXTENSIONS = [".mp4", ".webm", ".m4v", ".mov"];
+        const looksLikeVideo = (url) =>
+          VIDEO_EXTENSIONS.some((ext) => (url || "").toLowerCase().includes(ext));
+
+        function pickBackgroundSource(data, preferLite) {
+          const primary = safeMediaUrl(data.background_url);
+          const low =
+            preferLite &&
+            (safeMediaUrl(data.background_low_url) ||
+              safeMediaUrl(data.background_preview_url) ||
+              null);
+          const chosen = (low || primary || "").trim();
+          const useVideo =
+            data.background_is_video &&
+            looksLikeVideo(chosen) &&
+            !(preferLite && low && !looksLikeVideo(low));
+          return { url: chosen, isVideo: useVideo };
+        }
 
         const DEFAULT_LINK_COLOR = "#e9ebff";
         const DEFAULT_LINK_BG = "#171b3b";
@@ -1236,6 +1259,65 @@
         };
         window.addEventListener("pointerdown", firstGesture, { once: true });
 
+        const CACHE_PREFIX = "taoma:linktree:v1:";
+        const CACHE_MS = 90 * 1000; // short-lived cache to speed up repeat visits
+        let lastData = null;
+        let lastMediaMode = null;
+        let lastDevice = null;
+
+        function getConnectionProfile() {
+          const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+          const downlink =
+            conn && typeof conn.downlink === "number" ? conn.downlink : null;
+          return {
+            saveData:
+              !!(conn && conn.saveData) ||
+              (typeof window.matchMedia === "function" &&
+                window.matchMedia("(prefers-reduced-data: reduce)").matches),
+            effectiveType: (conn && conn.effectiveType) || "",
+            downlink,
+          };
+        }
+
+        function shouldUseLiteMedia(profile = getConnectionProfile()) {
+          const dl = typeof profile.downlink === "number" ? profile.downlink : null;
+          const slow =
+            profile.saveData ||
+            ["slow-2g", "2g", "3g"].includes(profile.effectiveType || "") ||
+            (dl !== null && dl < 1.5);
+          return !!slow;
+        }
+
+        function makeCacheKey({ slug, templateId, device }) {
+          if (templateId) return `${CACHE_PREFIX}tpl:${templateId}:${device}`;
+          return `${CACHE_PREFIX}slug:${slug || "anon"}:${device}`;
+        }
+
+        function readCachedTree(key) {
+          try {
+            const raw = sessionStorage.getItem(key);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed.savedAt !== "number" || !parsed.data) return null;
+            if (Date.now() - parsed.savedAt > CACHE_MS) {
+              sessionStorage.removeItem(key);
+              return null;
+            }
+            return parsed.data;
+          } catch (_) {
+            return null;
+          }
+        }
+
+        function writeCachedTree(key, data) {
+          try {
+            sessionStorage.setItem(
+              key,
+              JSON.stringify({ savedAt: Date.now(), data: data || null })
+            );
+          } catch (_) {}
+        }
+
         let currentUser = null;
 
         async function fetchSessionUser() {
@@ -1250,9 +1332,306 @@
           }
         }
 
+        function detectDevice(requestedDevice) {
+          return requestedDevice === "mobile"
+            ? "mobile"
+            : requestedDevice === "pc"
+            ? "pc"
+            : window.matchMedia("(max-width: 720px)").matches
+            ? "mobile"
+            : "pc";
+        }
+
+        let visibilityHandlerAdded = false;
+
+        async function fetchTreeData({ templateId, slug, device }) {
+          if (templateId) {
+            const r = await fetch(
+              `/api/marketplace/templates/${encodeURIComponent(templateId)}`,
+              { credentials: "include" }
+            );
+            if (!r.ok) return null;
+            const tpl = await r.json();
+            const variants = tpl.variants || [];
+            const chosen =
+              variants.find((v) => v.device_type === device) ||
+              variants[0] ||
+              tpl.data ||
+              {};
+            const data = { ...(chosen || {}) };
+            data.slug = data.slug || tpl.name || "Template";
+            data.device_type = data.device_type || device;
+            data.user_username = data.user_username || tpl.owner_username || "Template";
+            data.profile_picture = data.profile_picture || tpl.preview_image_url || null;
+            return data;
+          }
+
+          const r = await fetch(
+            `/api/linktrees/${encodeURIComponent(slug)}?device=${device}`
+          );
+          if (!r.ok) return null;
+          return await r.json();
+        }
+
+        function renderTree(
+          data,
+          { preferLite = shouldUseLiteMedia(), fromCache = false, device = detectDevice() } = {}
+        ) {
+          if (!data) return;
+          lastData = data;
+          lastMediaMode = preferLite ? "lite" : "full";
+          lastDevice = device;
+          const isMobile = device === "mobile";
+          let needsGate = false;
+
+          let bgIsVideo = false;
+          let bgUrl = "";
+          const bgEl = document.getElementById("bg");
+          bgVideo = null;
+          if (bgEl) {
+            bgEl.textContent = "";
+            const bgSource = pickBackgroundSource(data, preferLite);
+            bgUrl = bgSource.url;
+            bgIsVideo = bgSource.isVideo;
+            if (bgUrl) {
+              if (bgIsVideo) {
+                const video = document.createElement("video");
+                video.id = "bgvid";
+                video.src = bgUrl;
+                video.autoplay = false;
+                video.muted = true;
+                video.loop = true;
+                video.setAttribute("muted", "");
+                video.setAttribute("playsinline", "");
+                video.setAttribute("webkit-playsinline", "");
+                video.preload = preferLite ? "metadata" : "auto";
+                if (preferLite) {
+                  video.setAttribute("data-lite", "true");
+                }
+                bgEl.appendChild(video);
+                bgVideo = video;
+                needsGate = true;
+                if (!visibilityHandlerAdded) {
+                  document.addEventListener("visibilitychange", () => {
+                    if (!document.hidden && !gateActive && bgVideo)
+                      bgVideo.play().catch(() => {});
+                  });
+                  visibilityHandlerAdded = true;
+                }
+              } else {
+                const img = document.createElement("img");
+                img.src = bgUrl;
+                img.alt = "Background";
+                img.loading = "lazy";
+                img.decoding = "async";
+                bgEl.appendChild(img);
+              }
+            }
+          }
+          if (bgEl) {
+            bgEl.classList.remove("night", "rain", "snow");
+            if (data.background_effect && data.background_effect !== "none") {
+              bgEl.classList.add(data.background_effect);
+            }
+          }
+
+          // Audio (Song hat Vorrang vor Video-Ton)
+          if (bgAudio) {
+            try {
+              bgAudio.pause();
+            } catch {}
+            bgAudio.remove();
+            bgAudio = null;
+          }
+          const songUrl = safeMediaUrl(data.song_url);
+          if (songUrl) {
+            bgAudio = document.createElement("audio");
+            bgAudio.src = songUrl;
+            bgAudio.loop = true;
+            bgAudio.preload = preferLite ? "metadata" : "auto";
+            bgAudio.muted = true; // Autoplay-friendly start, gate will unmute
+            document.body.appendChild(bgAudio);
+            bgAudio.play().catch(() => {});
+            needsGate = true;
+            if (soundBtn) soundBtn.classList.remove("hidden"); // Button zeigen - Nutzer kann unmute'n
+          } else if (bgIsVideo && bgVideo) {
+            // Kein Song -> Videoton anbieten
+            if (soundBtn) soundBtn.classList.remove("hidden");
+          } else {
+            if (soundBtn) soundBtn.classList.add("hidden"); // nichts abzuspielen
+          }
+          if (needsGate) {
+            showGate(true);
+          } else {
+            showGate(false);
+          }
+          soundOn = false;
+          updateSoundUI();
+
+          const cardEl = document.getElementById("card");
+          if (cardEl) {
+            const raw = Number(data.transparency);
+            const clamped = Number.isFinite(raw) ? Math.min(100, Math.max(0, raw)) : 0;
+            const cardAlpha = 1 - clamped / 100;
+
+            if (cardAlpha <= 0) {
+              cardEl.classList.add("transparent");
+            } else {
+              cardEl.classList.remove("transparent");
+              cardEl.style.setProperty("--card-alpha", cardAlpha.toString());
+            }
+          }
+          applyTextColors(data);
+          applyLinkStyles(data.link_color, data.link_bg_color, data.link_bg_alpha);
+
+          const cursorUrl = safeMediaUrl(data.cursor_url);
+          if (cursorUrl && !isMobile) {
+            resizeCursorImage(cursorUrl, 32)
+              .then((resized) => {
+                const cursorDecl = `url("${resized}") 0 0, auto`;
+                document.documentElement.style.setProperty("--cursor", cursorDecl);
+              })
+              .catch(() => {
+                document.documentElement.style.setProperty("--cursor", "auto");
+              });
+          } else {
+            document.documentElement.style.setProperty("--cursor", "auto");
+          }
+
+          // Profil/Badges/Links wie gehabt
+          const pfp = document.getElementById("pfp");
+          const pfpFrame = document.getElementById("pfpFrame");
+          if (pfp) {
+            const profileUrl =
+              safeMediaUrl(data.profile_picture) ||
+              safeMediaUrl(currentUser && currentUser.profile_picture) ||
+              "/static/icon.png";
+            pfp.src = profileUrl;
+          }
+          if (pfpFrame) {
+            const frameUrl = safeMediaUrl(data.discord_decoration_url);
+            if (data.discord_frame_enabled && frameUrl) {
+              pfpFrame.src = frameUrl;
+              pfpFrame.style.display = "block";
+            } else {
+              pfpFrame.style.display = "none";
+            }
+          }
+          const nameEl = document.getElementById("name");
+          if (nameEl) {
+            const mode = data.display_name_mode || "slug";
+            if (mode === "username") {
+              nameEl.textContent = data.user_username || data.slug || "User";
+            } else if (mode === "custom" && data.custom_display_name) {
+              nameEl.textContent = data.custom_display_name;
+            } else {
+              nameEl.textContent = data.slug || "User";
+            }
+
+            // Effekt-Klassen setzen
+            nameEl.classList.remove("glow", "neon", "rainbow");
+            if (data.name_effect && data.name_effect !== "none") {
+              nameEl.classList.add(data.name_effect);
+            }
+          }
+          const quoteEl = document.getElementById("quote");
+          if (quoteEl) quoteEl.textContent = data.quote || "";
+          const locEl = document.getElementById("loc");
+          if (locEl) {
+            locEl.textContent = "";
+            const locText = typeof data.location === "string" ? data.location.trim() : "";
+            if (locText) {
+              const icon = createLocationIcon();
+              const text = document.createElement("span");
+              text.textContent = ` ${locText}`;
+              locEl.appendChild(icon);
+              locEl.appendChild(text);
+            }
+          }
+
+          const badgesEl = document.getElementById("badges");
+          if (badgesEl) {
+            badgesEl.innerHTML = "";
+            (data.icons || []).forEach((ic) => {
+              if (!ic.displayed) return;
+
+              const desc = ic.description || ic.code || "badge";
+              const wrap = document.createElement("span");
+              wrap.className = "badge";
+              // Tooltip via title (Desktop) + aria-label (AT / Touch-Langdruck zeigt oft auch title)
+              wrap.title = desc;
+              wrap.setAttribute("aria-label", desc);
+
+              const img = document.createElement("img");
+              const iconUrl = safeMediaUrl(ic.image_url);
+              if (!iconUrl) return;
+              img.src = iconUrl;
+              img.alt = desc;
+              img.width = 20;
+              img.height = 20;
+              img.loading = "lazy";
+              img.decoding = "async";
+
+              wrap.appendChild(img);
+              badgesEl.appendChild(wrap);
+            });
+          }
+          const linksEl = document.getElementById("links");
+          if (linksEl) {
+            linksEl.textContent = "";
+            (data.links || []).forEach((l) => {
+              if (!l.is_active) return;
+              const href = safeLinkUrl(l.url);
+              if (!href) return;
+              const a = document.createElement("a");
+              a.className = "link";
+              a.href = href;
+              a.target = "_blank";
+              a.rel = "noreferrer noopener";
+              const iconUrl = safeMediaUrl(l.icon_url);
+              if (iconUrl) {
+                const img = document.createElement("img");
+                img.src = iconUrl;
+                img.alt = "";
+                img.loading = "lazy";
+                img.decoding = "async";
+                a.appendChild(img);
+              }
+              const span = document.createElement("span");
+              span.textContent = l.label || l.url;
+              a.appendChild(span);
+              linksEl.appendChild(a);
+            });
+          }
+
+          const visitBox = document.getElementById("visitCounter");
+          const visitValue = document.getElementById("visitCounterValue");
+          if (visitBox && visitValue) {
+            if (data.show_visit_counter) {
+              visitValue.textContent = Number(data.visit_count || 0).toLocaleString();
+              const textColor =
+                hexToRgba(data.visit_counter_color, 1) ||
+                hexToRgba(data.text_color, 1) ||
+                null;
+              if (textColor) visitBox.style.color = textColor;
+              const bgAlpha = Number.isFinite(Number(data.visit_counter_bg_alpha))
+                ? Number(data.visit_counter_bg_alpha)
+                : 20;
+              const bgColor =
+                hexToRgba(
+                  data.visit_counter_bg_color || "#ffffff",
+                  Math.min(1, Math.max(0, bgAlpha / 100))
+                ) || "rgba(255,255,255,0.14)";
+              visitBox.style.backgroundColor = bgColor;
+              visitBox.style.display = "inline-flex";
+            } else {
+              visitBox.style.display = "none";
+            }
+          }
+        }
+
         async function loadTree() {
           try {
-            await fetchSessionUser();
             const params = new URLSearchParams(location.search);
             let templateId = params.get("template_id");
             const parts = location.pathname.split("/").filter(Boolean);
@@ -1260,304 +1639,52 @@
               templateId = parts[2] || null;
             }
             const requestedDevice = params.get("device");
-            const device =
-              requestedDevice === "mobile"
-                ? "mobile"
-                : requestedDevice === "pc"
-                ? "pc"
-                : window.matchMedia("(max-width: 720px)").matches
-                ? "mobile"
-                : "pc";
-            let data = null;
-            if (templateId) {
-              const r = await fetch(
-                `/api/marketplace/templates/${encodeURIComponent(templateId)}`,
-                { credentials: "include" }
-              );
-              if (!r.ok) return;
-              const tpl = await r.json();
-              const variants = tpl.variants || [];
-              const chosen =
-                variants.find((v) => v.device_type === device) ||
-                variants[0] ||
-                tpl.data ||
-                {};
-              data = { ...(chosen || {}) };
-              data.slug = data.slug || tpl.name || "Template";
-              data.user_username =
-                data.user_username || tpl.owner_username || "Template";
-              // In demo mode, prefer current user's profile picture; otherwise fallback to template preview
-              const userPfp = currentUser && currentUser.profile_picture;
-              data.profile_picture =
-                userPfp ||
-                data.profile_picture ||
-                tpl.preview_image_url ||
-                "/static/icon.png";
-            } else {
-              const slug = decodeURIComponent(
-                location.pathname.split("/").pop() || ""
-              );
-              const r = await fetch(
-                `/api/linktrees/${encodeURIComponent(slug)}?device=${device}`
-              );
-              if (!r.ok) return;
-              data = await r.json();
-            }
+            const device = detectDevice(requestedDevice);
+            const slug = decodeURIComponent(location.pathname.split("/").pop() || "");
+            const cacheKey = makeCacheKey({ slug, templateId, device });
+            const preferLite = shouldUseLiteMedia();
+
+            const cached = readCachedTree(cacheKey);
+            if (cached) renderTree(cached, { preferLite, fromCache: true, device });
+
+            const userPromise = fetchSessionUser();
+            const dataPromise = fetchTreeData({ templateId, slug, device });
+            const [_, liveData] = await Promise.all([userPromise, dataPromise]);
+            const data = liveData || cached;
             if (!data) return;
-            let needsGate = false;
-
-            // Background (Video oder Bild)
-            const bgEl = document.getElementById("bg");
-            bgVideo = null;
-            if (bgEl) {
-              bgEl.textContent = "";
-              const bgUrl = safeMediaUrl(data.background_url);
-              if (bgUrl) {
-                if (data.background_is_video) {
-                  const video = document.createElement("video");
-                  video.id = "bgvid";
-                  video.src = bgUrl;
-                  video.autoplay = false;
-                  video.muted = true;
-                  video.loop = true;
-                  video.setAttribute("muted", "");
-                  video.setAttribute("playsinline", "");
-                  video.setAttribute("webkit-playsinline", "");
-                  video.preload = "auto";
-                  bgEl.appendChild(video);
-                  bgVideo = video;
-                  needsGate = true;
-                  document.addEventListener("visibilitychange", () => {
-                    if (!document.hidden && !gateActive && bgVideo)
-                      bgVideo.play().catch(() => {});
-                  });
-                } else {
-                  const img = document.createElement("img");
-                  img.src = bgUrl;
-                  img.alt = "Background";
-                  bgEl.appendChild(img);
-                }
-              }
-            }
-            if (bgEl) {
-              bgEl.classList.remove("night", "rain", "snow");
-              if (data.background_effect && data.background_effect !== "none") {
-                bgEl.classList.add(data.background_effect);
-              }
-            }
-            // Audio (Song hat Vorrang vor Video-Ton)
-            if (bgAudio) {
-              try {
-                bgAudio.pause();
-              } catch {}
-              bgAudio.remove();
-              bgAudio = null;
-            }
-            const songUrl = safeMediaUrl(data.song_url);
-            if (songUrl) {
-              bgAudio = document.createElement("audio");
-              bgAudio.src = songUrl;
-              bgAudio.loop = true;
-              bgAudio.preload = "auto";
-              bgAudio.muted = true; // Autoplay-friendly start, gate will unmute
-              document.body.appendChild(bgAudio);
-              bgAudio.play().catch(() => {});
-              needsGate = true;
-              if (soundBtn) soundBtn.classList.remove("hidden"); // Button zeigen - Nutzer kann unmute'n
-            } else if (data.background_is_video && bgVideo) {
-              // Kein Song -> Videoton anbieten
-              if (soundBtn) soundBtn.classList.remove("hidden");
-            } else {
-              if (soundBtn) soundBtn.classList.add("hidden"); // nichts abzuspielen
-            }
-            if (needsGate) {
-              showGate(true);
-            } else {
-              showGate(false);
-            }
-            soundOn = false;
-            updateSoundUI();
-            const cardEl = document.getElementById("card");
-            let cardAlpha = 1;
-            if (cardEl) {
-              const raw = Number(data.transparency);
-              const clamped = Number.isFinite(raw)
-                ? Math.min(100, Math.max(0, raw))
-                : 0;
-              cardAlpha = 1 - clamped / 100;
-
-              if (cardAlpha <= 0) {
-                cardEl.classList.add("transparent");
-              } else {
-                cardEl.classList.remove("transparent");
-                cardEl.style.setProperty("--card-alpha", cardAlpha.toString());
-              }
-            }
-            applyTextColors(data);
-            applyLinkStyles(
-              data.link_color,
-              data.link_bg_color,
-              data.link_bg_alpha
-            );
-            const cursorUrl = safeMediaUrl(data.cursor_url);
-            if (cursorUrl && device === "pc") {
-              const cursorUrl = safeMediaUrl(data.cursor_url);
-
-              if (cursorUrl && device === "pc") {
-                resizeCursorImage(cursorUrl, 32)
-                  .then((resized) => {
-                    const cursorDecl = `url("${resized}") 0 0, auto`;
-                    document.documentElement.style.setProperty(
-                      "--cursor",
-                      cursorDecl
-                    );
-                  })
-                  .catch(() => {
-                    document.documentElement.style.setProperty(
-                      "--cursor",
-                      "auto"
-                    );
-                  });
-              } else {
-                document.documentElement.style.setProperty("--cursor", "auto");
-              }
-            } else {
-              document.documentElement.style.setProperty("--cursor", "auto");
-            }
-            // Profil/Badges/Links wie gehabt
-            const pfp = document.getElementById("pfp");
-            const pfpFrame = document.getElementById("pfpFrame");
-            if (pfp) {
-              const profileUrl =
-                safeMediaUrl(data.profile_picture) ||
-                safeMediaUrl(currentUser && currentUser.profile_picture) ||
-                "/static/icon.png";
-              pfp.src = profileUrl;
-            }
-            if (pfpFrame) {
-              const frameUrl = safeMediaUrl(data.discord_decoration_url);
-              if (data.discord_frame_enabled && frameUrl) {
-                pfpFrame.src = frameUrl;
-                pfpFrame.style.display = "block";
-              } else {
-                pfpFrame.style.display = "none";
-              }
-            }
-            const nameEl = document.getElementById("name");
-            if (nameEl) {
-              const mode = data.display_name_mode || "slug";
-              if (mode === "username") {
-                nameEl.textContent = data.user_username || data.slug || "User";
-              } else if (mode === "custom" && data.custom_display_name) {
-                nameEl.textContent = data.custom_display_name;
-              } else {
-                nameEl.textContent = data.slug || "User";
-              }
-
-              // Effekt-Klassen setzen
-              nameEl.classList.remove("glow", "neon", "rainbow");
-              if (data.name_effect && data.name_effect !== "none") {
-                nameEl.classList.add(data.name_effect);
-              }
-            }
-            const quoteEl = document.getElementById("quote");
-            if (quoteEl) quoteEl.textContent = data.quote || "";
-            const locEl = document.getElementById("loc");
-            if (locEl) {
-              locEl.textContent = "";
-              const locText =
-                typeof data.location === "string" ? data.location.trim() : "";
-              if (locText) {
-                const icon = createLocationIcon();
-                const text = document.createElement("span");
-                text.textContent = ` ${locText}`;
-                locEl.appendChild(icon);
-                locEl.appendChild(text);
-              }
-            }
-
-            const badgesEl = document.getElementById("badges");
-            if (badgesEl) {
-              badgesEl.innerHTML = "";
-              (data.icons || []).forEach((ic) => {
-                if (!ic.displayed) return;
-
-                const desc = ic.description || ic.code || "badge";
-                const wrap = document.createElement("span");
-                wrap.className = "badge";
-                // Tooltip via title (Desktop) + aria-label (AT / Touch-Langdruck zeigt oft auch title)
-                wrap.title = desc;
-                wrap.setAttribute("aria-label", desc);
-
-                const img = document.createElement("img");
-                const iconUrl = safeMediaUrl(ic.image_url);
-                if (!iconUrl) return;
-                img.src = iconUrl;
-                img.alt = desc;
-                img.width = 20;
-                img.height = 20;
-
-                wrap.appendChild(img);
-                badgesEl.appendChild(wrap);
-              });
-            }
-            const linksEl = document.getElementById("links");
-            if (linksEl) {
-              linksEl.textContent = "";
-              (data.links || []).forEach((l) => {
-                if (!l.is_active) return;
-                const href = safeLinkUrl(l.url);
-                if (!href) return;
-                const a = document.createElement("a");
-                a.className = "link";
-                a.href = href;
-                a.target = "_blank";
-                a.rel = "noreferrer noopener";
-                const iconUrl = safeMediaUrl(l.icon_url);
-                if (iconUrl) {
-                  const img = document.createElement("img");
-                  img.src = iconUrl;
-                  img.alt = "";
-                  a.appendChild(img);
-                }
-                const span = document.createElement("span");
-                span.textContent = l.label || l.url;
-                a.appendChild(span);
-                linksEl.appendChild(a);
-              });
-            }
-
-            const visitBox = document.getElementById("visitCounter");
-            const visitValue = document.getElementById("visitCounterValue");
-            if (visitBox && visitValue) {
-              if (data.show_visit_counter) {
-                visitValue.textContent = Number(
-                  data.visit_count || 0
-                ).toLocaleString();
-                const textColor =
-                  hexToRgba(data.visit_counter_color, 1) ||
-                  hexToRgba(data.text_color, 1) ||
-                  null;
-                if (textColor) visitBox.style.color = textColor;
-                const bgAlpha = Number.isFinite(Number(data.visit_counter_bg_alpha))
-                  ? Number(data.visit_counter_bg_alpha)
-                  : 20;
-                const bgColor =
-                  hexToRgba(
-                    data.visit_counter_bg_color || "#ffffff",
-                    Math.min(1, Math.max(0, bgAlpha / 100))
-                  ) || "rgba(255,255,255,0.14)";
-                visitBox.style.backgroundColor = bgColor;
-                visitBox.style.display = "inline-flex";
-              } else {
-                visitBox.style.display = "none";
-              }
-            }
+            writeCachedTree(cacheKey, data);
+            renderTree(data, { preferLite, fromCache: false, device });
           } catch (e) {
             console.error("loadTree failed:", e);
           }
           soundOn = false;
           updateSoundUI();
+        }
+
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        const prefersReducedData =
+          typeof window.matchMedia === "function"
+            ? window.matchMedia("(prefers-reduced-data: reduce)")
+            : null;
+
+        function handleMediaPreferenceChange() {
+          if (!lastData) return;
+          const preferLite = shouldUseLiteMedia();
+          if ((preferLite ? "lite" : "full") === lastMediaMode) return;
+          renderTree(lastData, {
+            preferLite,
+            fromCache: true,
+            device: lastDevice || detectDevice(),
+          });
+        }
+
+        if (connection && connection.addEventListener) {
+          connection.addEventListener("change", handleMediaPreferenceChange);
+        }
+        if (prefersReducedData && prefersReducedData.addEventListener) {
+          prefersReducedData.addEventListener("change", handleMediaPreferenceChange);
+        } else if (prefersReducedData && prefersReducedData.addListener) {
+          prefersReducedData.addListener(handleMediaPreferenceChange);
         }
 
         loadTree();
