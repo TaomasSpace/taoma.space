@@ -711,6 +711,10 @@
         return "";
       }
 
+      function isVideoUrl(url) {
+        return /\.(mp4|mov|webm|m4v|avi|mkv)$/i.test(url || "");
+      }
+
       function hexOrNull(val) {
         const t = (val || "").trim();
         if (!t) return null;
@@ -926,9 +930,10 @@
         filtered.forEach((item) => {
           const card = document.createElement("div");
           card.className = "card";
+          const previewRaw = sanitizeUrl(item.preview_image_url) || "";
           const preview =
-            sanitizeUrl(item.preview_image_url) ||
-            "/static/icon.png";
+            previewRaw && isVideoUrl(previewRaw) ? previewRaw : previewRaw || "/static/icon.png";
+          const previewIsVideo = isVideoUrl(preview);
           const isSaved = savedIds.has(item.id);
           const deviceLabel =
             item.device_type === "both"
@@ -936,23 +941,28 @@
               : item.device_type === "mobile"
               ? "Mobile"
               : "Desktop";
-          const userAvatar = sanitizeUrl(
-            (currentUser && currentUser.profile_picture) || ""
-          );
+          const userAvatar =
+            sanitizeUrl((currentUser && currentUser.profile_picture) || "") || null;
+          const ownerAvatar =
+            userAvatar ||
+            sanitizeUrl(item.owner_profile_picture || "") ||
+            "/static/icon.png";
           card.innerHTML = `
             <div class="template-top">
               <div class="template-pfp">
-                <img src="${preview}" alt="${escapeHtml(item.name)} preview" />
+                ${
+                  previewIsVideo
+                    ? `<video data-preview-video src="${preview}" muted playsinline preload="auto" aria-label="${escapeHtml(
+                        item.name
+                      )} preview"></video>`
+                    : `<img src="${preview}" alt="${escapeHtml(item.name)} preview" />`
+                }
               </div>
               <div>
                 <p class="template-title">${escapeHtml(item.name)}</p>
                 <div class="template-meta">
                   <span style="display:inline-flex;align-items:center;gap:.45rem">
-                    ${
-                      userAvatar
-                        ? `<img src="${userAvatar}" alt="avatar" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #ffffff22">`
-                        : ""
-                    }
+                    <img src="${ownerAvatar}" alt="avatar" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #ffffff22">
                     by ${escapeHtml(item.creator || item.owner_username || "unknown")}
                   </span>
                 </div>
@@ -978,7 +988,10 @@
               }
               ${
                 opts.allowEdit
-                  ? `<button class="btn sm danger" data-act="delete">Delete</button>`
+                  ? `<a class="btn sm ghost" href="/marketplace/create?template_id=${encodeURIComponent(
+                      item.id
+                    )}">Edit template</a>
+                     <button class="btn sm danger" data-act="delete">Delete</button>`
                   : ""
               }
             </div>
@@ -1473,6 +1486,21 @@
           const dev = a.dataset.device || "pc";
           openDemoWindow(a.href, dev);
         });
+        document.addEventListener("loadeddata", (e) => {
+          const v = e.target;
+          if (!v || !v.dataset || !v.dataset.previewVideo) return;
+          try {
+            v.currentTime = 0.01;
+          } catch (_) {}
+        }, true);
+        document.addEventListener("seeked", (e) => {
+          const v = e.target;
+          if (!v || !v.dataset || !v.dataset.previewVideo) return;
+          v.pause();
+          try {
+            v.currentTime = 0.01;
+          } catch (_) {}
+        }, true);
       }
 
       $("navToggle").addEventListener("click", () => {

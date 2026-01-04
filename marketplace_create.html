@@ -611,6 +611,7 @@
       let currentDevice = presetDevice === "both" ? "pc" : presetDevice;
       let variantCache = { pc: null, mobile: null };
       let choiceMade = false;
+      let editingId = null;
 
       function hexOrNull(val) {
         const t = (val || "").trim();
@@ -844,12 +845,14 @@
       }
 
       function resetForm() {
+        editingId = null;
         $("tplCreator").value = (currentUser && currentUser.username) || "";
         $("tplName").value = "";
         $("tplDesc").value = "";
         $("tplPublic").value = "true";
         $("tplMode").value = presetDevice === "both" ? "both" : presetDevice || "pc";
         $("tplDevice").value = currentDevice || "pc";
+        $("btnSaveTemplate").textContent = "Create template";
         variantCache = { pc: null, mobile: null };
         resetVariant($("tplDevice").value);
         updateModeBadge();
@@ -897,11 +900,19 @@
         };
 
         try {
-          await apiPost("/api/marketplace/templates", payload);
-          showMsg(formMsg, "Template created", true);
-          setTimeout(() => {
-            location.href = "/marketplace";
-          }, 800);
+          if (editingId) {
+            await apiPatch(`/api/marketplace/templates/${editingId}`, payload);
+            showMsg(formMsg, "Template updated", true);
+            setTimeout(() => {
+              location.href = "/marketplace";
+            }, 600);
+          } else {
+            await apiPost("/api/marketplace/templates", payload);
+            showMsg(formMsg, "Template created", true);
+            setTimeout(() => {
+              location.href = "/marketplace";
+            }, 800);
+          }
         } catch (e) {
           showMsg(formMsg, `Save failed: ${e.message || e}`, false);
         }
@@ -911,6 +922,51 @@
         if (choiceMade) return;
         choiceMade = true;
         formSection.style.display = "flex";
+      }
+
+      function applyTemplateToForm(detail) {
+        const variants = detail.variants || [];
+        variantCache = { pc: null, mobile: null };
+        variants.forEach((v) => {
+          if (v.device_type === "pc" || v.device_type === "mobile") {
+            variantCache[v.device_type] = v;
+          }
+        });
+        const mode =
+          variants.length === 2
+            ? "both"
+            : variants[0] && variants[0].device_type
+            ? variants[0].device_type
+            : "pc";
+        $("tplMode").value = mode;
+        const initialDevice =
+          mode === "mobile" ? "mobile" : mode === "both" ? "pc" : "pc";
+        $("tplDevice").value = initialDevice;
+        updateModeBadge();
+        const active =
+          (mode === "both" ? variantCache[initialDevice] : variantCache[mode]) ||
+          variants[0] ||
+          {};
+        applyVariantToForm(active);
+      }
+
+      async function loadTemplateForEdit(templateId) {
+        try {
+          const detail = await apiGet(`/api/marketplace/templates/${templateId}`);
+          editingId = templateId;
+          choiceMade = true;
+          formSection.style.display = "flex";
+          $("tplName").value = detail.name || "";
+          $("tplCreator").value =
+            detail.creator || detail.owner_username || (currentUser && currentUser.username) || "";
+          $("tplDesc").value = detail.description || "";
+          $("tplPublic").value = detail.is_public ? "true" : "false";
+          $("btnSaveTemplate").textContent = "Update template";
+          applyTemplateToForm(detail);
+          showMsg(formMsg, "Template loaded for editing", true);
+        } catch (e) {
+          showMsg(formMsg, "Could not load template", false);
+        }
       }
 
       async function boot() {
@@ -925,6 +981,10 @@
         userBadge.textContent = currentUser.username || "User";
         resetForm();
         updateSlugHint();
+        const tplId = params.get("template_id");
+        if (tplId) {
+          await loadTemplateForEdit(tplId);
+        }
       }
 
       $("tplDevice").addEventListener("change", ensureActiveVariant);
