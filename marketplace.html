@@ -870,6 +870,13 @@
         return "";
       }
 
+      function hexOrNull(val) {
+        const t = (val || "").trim();
+        if (!t) return null;
+        if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(t)) return t;
+        return null;
+      }
+
       async function fetchSession() {
         try {
           const r = await fetch("/api/auth/verify", {
@@ -1388,21 +1395,21 @@
             background_effect: $("tplBgFx").value || "none",
             display_name_mode: $("tplDisplayName").value || "slug",
             custom_display_name: $("tplCustomName").value.trim() || null,
-            link_color: $("tplLinkColor").value.trim() || null,
-            link_bg_color: $("tplLinkBgColor").value.trim() || null,
+            link_color: hexOrNull($("tplLinkColor").value),
+            link_bg_color: hexOrNull($("tplLinkBgColor").value),
             link_bg_alpha: Math.min(
               100,
               Math.max(0, parseInt($("tplLinkBgAlpha").value || "100", 10))
             ),
-            text_color: $("tplTextColor").value.trim() || null,
-            name_color: $("tplNameColor").value.trim() || null,
-            location_color: $("tplLocationColor").value.trim() || null,
-            quote_color: $("tplQuoteColor").value.trim() || null,
+            text_color: hexOrNull($("tplTextColor").value),
+            name_color: hexOrNull($("tplNameColor").value),
+            location_color: hexOrNull($("tplLocationColor").value),
+            quote_color: hexOrNull($("tplQuoteColor").value),
             cursor_url: $("tplCursorUrl").value.trim() || null,
             discord_frame_enabled: $("tplDiscordFrame").value === "true",
             show_visit_counter: $("tplShowCounter").value === "true",
-            visit_counter_color: $("tplCounterColor").value.trim() || null,
-            visit_counter_bg_color: $("tplCounterBgColor").value.trim() || null,
+            visit_counter_color: hexOrNull($("tplCounterColor").value),
+            visit_counter_bg_color: hexOrNull($("tplCounterBgColor").value),
             visit_counter_bg_alpha: Math.min(
               100,
               Math.max(0, parseInt($("tplCounterBgAlpha").value || "20", 10))
@@ -1453,7 +1460,7 @@
           resetForm();
           await loadTemplates();
         } catch (e) {
-          showMsg(formMsg, "Save failed", false);
+          showMsg(formMsg, `Save failed: ${e.message || e}`, false);$
         }
       }
 
