@@ -1264,6 +1264,7 @@
         let lastData = null;
         let lastMediaMode = null;
         let lastDevice = null;
+        let discordStatusCache = null;
 
         function getConnectionProfile() {
           const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -1316,6 +1317,34 @@
               JSON.stringify({ savedAt: Date.now(), data: data || null })
             );
           } catch (_) {}
+        }
+
+        async function fetchDiscordStatus() {
+          if (discordStatusCache !== null) return discordStatusCache;
+          try {
+            const r = await fetch("/api/discord/status", {
+              credentials: "include",
+            });
+            if (!r.ok) throw new Error("discord status failed");
+            const json = await r.json();
+            discordStatusCache = json || { linked: false };
+          } catch (_) {
+            discordStatusCache = { linked: false };
+          }
+          return discordStatusCache;
+        }
+
+        async function maybeAddDemoDiscordDecoration(data) {
+          if (!data || !data.is_template_demo || !data.discord_frame_enabled) return data;
+          if (!currentUser || !currentUser.id) return data;
+          const status = await fetchDiscordStatus();
+          if (status && status.linked && status.decoration_url) {
+            return {
+              ...data,
+              discord_decoration_url: data.discord_decoration_url || status.decoration_url,
+            };
+          }
+          return data;
         }
 
         let currentUser = null;
@@ -1651,10 +1680,12 @@
 
             const userPromise = fetchSessionUser();
             const dataPromise = fetchTreeData({ templateId, slug, device });
-            const [_, liveData] = await Promise.all([userPromise, dataPromise]);
-            const data = liveData || cached;
+            const [user, liveData] = await Promise.all([userPromise, dataPromise]);
+            currentUser = currentUser || user;
+            let data = liveData || cached;
             if (!data) return;
             writeCachedTree(cacheKey, data);
+            data = await maybeAddDemoDiscordDecoration(data);
             renderTree(data, { preferLite, fromCache: false, device });
           } catch (e) {
             console.error("loadTree failed:", e);
