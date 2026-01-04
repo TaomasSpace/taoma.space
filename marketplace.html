@@ -956,12 +956,8 @@
               : item.device_type === "mobile"
               ? "Mobile"
               : "Desktop";
-          const userAvatar =
-            sanitizeUrl((currentUser && currentUser.profile_picture) || "") || null;
           const ownerAvatar =
-            userAvatar ||
-            sanitizeUrl(item.owner_profile_picture || "") ||
-            "/static/icon.png";
+            sanitizeUrl(item.owner_profile_picture || "") || "/static/icon.png";
           card.innerHTML = `
             <div class="template-top">
               <div class="template-pfp">
