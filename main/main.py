@@ -3025,6 +3025,7 @@ class TemplateListOut(BaseModel):
     preview_image_url: Optional[str] = None
     owner_id: int
     owner_username: Optional[str] = None
+    owner_profile_picture: Optional[str] = None
     is_public: bool
     device_type: Optional[str] = None  # "pc", "mobile", or "both"
     created_at: Optional[str] = None
@@ -3073,6 +3074,7 @@ def _template_doc_to_list(doc) -> TemplateListOut:
         preview_image_url=data.get("preview_image_url"),
         owner_id=int(data.get("owner_id") or 0),
         owner_username=data.get("owner_username"),
+        owner_profile_picture=data.get("owner_profile_picture"),
         is_public=bool(data.get("is_public", False)),
         device_type=device_type,
         created_at=_doc_time_iso(data.get("created_at")),
@@ -3093,6 +3095,7 @@ def _template_doc_to_detail(doc) -> TemplateDetailOut:
         preview_image_url=data.get("preview_image_url"),
         owner_id=int(data.get("owner_id") or 0),
         owner_username=data.get("owner_username"),
+        owner_profile_picture=data.get("owner_profile_picture"),
         is_public=bool(data.get("is_public", False)),
         created_at=_doc_time_iso(data.get("created_at")),
         updated_at=_doc_time_iso(data.get("updated_at")),
@@ -3277,6 +3280,7 @@ def create_template(payload: TemplateCreateIn, user: dict = Depends(require_user
         src = pc_var or (variants[0] if variants else None)
         preview = (src or {}).get("background_url") or "/static/icon.png"
     creator_name = (payload.creator or user.get("username") or "").strip() or None
+    owner_pfp = user.get("profile_picture") if isinstance(user, dict) else None
     doc_ref = _fs().collection(TEMPLATE_COLLECTION).document()
     now = firestore.SERVER_TIMESTAMP
     doc_ref.set(
@@ -3287,6 +3291,7 @@ def create_template(payload: TemplateCreateIn, user: dict = Depends(require_user
             "preview_image_url": preview,
             "owner_id": int(user["id"]),
             "owner_username": user.get("username"),
+            "owner_profile_picture": owner_pfp,
             "is_public": bool(payload.is_public),
             "created_at": now,
             "updated_at": now,
@@ -3329,6 +3334,8 @@ def update_template(
             pc_var = next((v for v in variants if v.get("device_type") == "pc"), None)
             src = pc_var or (variants[0] if variants else None)
             update["preview_image_url"] = (src or {}).get("background_url") or None
+    if payload.creator is not None or not existing.get("owner_profile_picture"):
+        update["owner_profile_picture"] = user.get("profile_picture")
     doc_ref.set(update, merge=True)
     doc = doc_ref.get()
     return _template_doc_to_detail(doc)

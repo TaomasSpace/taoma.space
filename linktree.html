@@ -1286,6 +1286,7 @@
               data.slug = data.slug || tpl.name || "Template";
               data.user_username =
                 data.user_username || tpl.owner_username || "Template";
+              // In demo mode, prefer current user's profile picture; otherwise fallback to template preview
               const userPfp = currentUser && currentUser.profile_picture;
               data.profile_picture =
                 userPfp ||
@@ -1428,8 +1429,8 @@
             const pfpFrame = document.getElementById("pfpFrame");
             if (pfp) {
               const profileUrl =
-                safeMediaUrl(currentUser && currentUser.profile_picture) ||
                 safeMediaUrl(data.profile_picture) ||
+                safeMediaUrl(currentUser && currentUser.profile_picture) ||
                 "/static/icon.png";
               pfp.src = profileUrl;
             }
