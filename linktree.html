@@ -1265,6 +1265,7 @@
         let lastMediaMode = null;
         let lastDevice = null;
         let discordStatusCache = null;
+        let discordStatusPromise = null;
 
         function getConnectionProfile() {
           const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -1321,30 +1322,63 @@
 
         async function fetchDiscordStatus() {
           if (discordStatusCache !== null) return discordStatusCache;
-          try {
-            const r = await fetch("/api/discord/status", {
-              credentials: "include",
-            });
-            if (!r.ok) throw new Error("discord status failed");
-            const json = await r.json();
-            discordStatusCache = json || { linked: false };
-          } catch (_) {
-            discordStatusCache = { linked: false };
-          }
-          return discordStatusCache;
+          if (discordStatusPromise) return discordStatusPromise;
+          discordStatusPromise = (async () => {
+            try {
+              const r = await fetch("/api/discord/status", {
+                credentials: "include",
+              });
+              if (!r.ok) throw new Error("discord status failed");
+              const json = await r.json();
+              discordStatusCache = json || { linked: false };
+            } catch (_) {
+              discordStatusCache = { linked: false };
+            } finally {
+              discordStatusPromise = null;
+            }
+            return discordStatusCache;
+          })();
+          return discordStatusPromise;
         }
 
-        async function maybeAddDemoDiscordDecoration(data) {
-          if (!data || !data.is_template_demo || !data.discord_frame_enabled) return data;
-          if (!currentUser || !currentUser.id) return data;
-          const status = await fetchDiscordStatus();
-          if (status && status.linked && status.decoration_url) {
-            return {
-              ...data,
-              discord_decoration_url: data.discord_decoration_url || status.decoration_url,
-            };
+        function updateProfileFromUser(data) {
+          if (!data || !data.is_template_demo) return;
+          if (!currentUser || !currentUser.profile_picture) return;
+          const pfp = document.getElementById("pfp");
+          const url = safeMediaUrl(currentUser.profile_picture);
+          if (!pfp || !url) return;
+          try {
+            const absolute = new URL(url, window.location.origin).href;
+            if (pfp.src === absolute) return;
+          } catch (_) {
+            // ignore comparison errors
           }
-          return data;
+          pfp.src = url;
+        }
+
+        async function applyUserDiscordFrame(data) {
+          if (!data || !data.is_template_demo || !data.discord_frame_enabled) return;
+          const status = await fetchDiscordStatus();
+          if (!status || !status.linked || !status.decoration_url) return;
+          const frame = document.getElementById("pfpFrame");
+          const url = safeMediaUrl(status.decoration_url);
+          if (!frame || !url) return;
+          frame.src = url;
+          frame.style.display = "block";
+        }
+
+        async function hydrateUserEnhancements(data, device, userPromise) {
+          try {
+            const user = await userPromise.catch(() => null);
+            currentUser = currentUser || user;
+            if (!data) return;
+            if (data.is_template_demo) {
+              updateProfileFromUser(data);
+              await applyUserDiscordFrame(data);
+            }
+          } catch (_) {
+            // ignore hydration errors to avoid blocking initial render
+          }
         }
 
         let currentUser = null;
@@ -1583,6 +1617,7 @@
           const badgesEl = document.getElementById("badges");
           if (badgesEl) {
             badgesEl.innerHTML = "";
+            const frag = document.createDocumentFragment();
             (data.icons || []).forEach((ic) => {
               if (!ic.displayed) return;
 
@@ -1604,12 +1639,14 @@
               img.decoding = "async";
 
               wrap.appendChild(img);
-              badgesEl.appendChild(wrap);
+              frag.appendChild(wrap);
             });
+            badgesEl.appendChild(frag);
           }
           const linksEl = document.getElementById("links");
           if (linksEl) {
             linksEl.textContent = "";
+            const frag = document.createDocumentFragment();
             (data.links || []).forEach((l) => {
               if (!l.is_active) return;
               const href = safeLinkUrl(l.url);
@@ -1631,8 +1668,9 @@
               const span = document.createElement("span");
               span.textContent = l.label || l.url;
               a.appendChild(span);
-              linksEl.appendChild(a);
+              frag.appendChild(a);
             });
+            linksEl.appendChild(frag);
           }
 
           const visitBox = document.getElementById("visitCounter");
@@ -1675,18 +1713,20 @@
             const cacheKey = makeCacheKey({ slug, templateId, device });
             const preferLite = shouldUseLiteMedia();
 
-            const cached = readCachedTree(cacheKey);
-            if (cached) renderTree(cached, { preferLite, fromCache: true, device });
-
             const userPromise = fetchSessionUser();
+            const cached = readCachedTree(cacheKey);
+            if (cached) {
+              renderTree(cached, { preferLite, fromCache: true, device });
+              hydrateUserEnhancements(cached, device, userPromise).catch(() => {});
+            }
+
             const dataPromise = fetchTreeData({ templateId, slug, device });
-            const [user, liveData] = await Promise.all([userPromise, dataPromise]);
-            currentUser = currentUser || user;
+            const liveData = await dataPromise;
             let data = liveData || cached;
             if (!data) return;
             writeCachedTree(cacheKey, data);
-            data = await maybeAddDemoDiscordDecoration(data);
             renderTree(data, { preferLite, fromCache: false, device });
+            hydrateUserEnhancements(data, device, userPromise).catch(() => {});
           } catch (e) {
             console.error("loadTree failed:", e);
           }
