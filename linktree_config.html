@@ -145,6 +145,44 @@
         font-size: 0.9rem;
       }
 
+      .template-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 12px;
+        width: 100%;
+      }
+
+      .template-card {
+        border: 1px solid #ffffff1a;
+        border-radius: 14px;
+        padding: 0.85rem;
+        background: linear-gradient(180deg, #ffffff0b, #ffffff06);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .template-card .title {
+        font-weight: 700;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.4rem;
+      }
+
+      .template-card .sub {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .template-card .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+      }
+
       .card {
         background: linear-gradient(
           180deg,
@@ -963,6 +1001,22 @@
       </div>
 
       <div class="wrap" id="cfgWrap" style="display: none">
+        <section class="card panel" style="grid-column: 1 / -1">
+          <div class="row" style="justify-content: space-between; gap: 0.75rem; flex-wrap: wrap">
+            <div style="display: flex; flex-direction: column; gap: 4px; max-width: 720px">
+              <h2 style="margin: 0">Templates</h2>
+              <div class="muted">
+                Save your current look as a private template and reuse anything you've saved from the marketplace.
+              </div>
+            </div>
+            <button class="btn sm" id="btnSavePrivateTemplate" type="button">Save as private template</button>
+          </div>
+          <div id="msgTemplates" class="alert" style="display: none"></div>
+          <div id="savedTemplatesGrid" class="template-grid" aria-live="polite">
+            <div class="muted">Loading templates...</div>
+          </div>
+        </section>
+
         <!-- Left: Meta / Badges -->
         <section class="card panel">
           <h2>Profile & Appearance</h2>
@@ -1589,11 +1643,13 @@
       let linktreeId = null;
       let currentDevice = "pc";
       let discordStatus = { linked: false };
+      let savedTemplates = [];
       const HIDE_LINKS = new URLSearchParams(location.search).get("hideLinks") === "true";
 
       const $ = (id) => document.getElementById(id);
       const msgMeta = $("msgMeta"),
-        msgLinks = $("msgLinks");
+        msgLinks = $("msgLinks"),
+        msgTemplates = $("msgTemplates");
 
       function showMsg(el, text, ok = false) {
         if (!el) return;
@@ -1626,6 +1682,25 @@
       const DEFAULT_NAME_COLOR = "#e9ebff";
       const DEFAULT_LOCATION_COLOR = "#a2a9c8";
       const DEFAULT_QUOTE_COLOR = "#e9ebff";
+
+      function hexOrNull(val) {
+        const t = (val || "").trim();
+        if (!t) return null;
+        if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(t)) return t;
+        return null;
+      }
+
+      function clampPercent(val, fallback = 0) {
+        const n = parseInt(val ?? fallback, 10);
+        if (Number.isNaN(n)) return Math.min(100, Math.max(0, fallback));
+        return Math.min(100, Math.max(0, n));
+      }
+
+      function templateDeviceLabel(device) {
+        if (device === "both") return "Desktop + Mobile";
+        if (device === "mobile") return "Mobile";
+        return "Desktop";
+      }
 
       function fillMetaForm(lt) {
         $("inSlug").value = lt.slug || "";
@@ -1683,6 +1758,247 @@
         input.disabled = !isCustom;
         if (input.parentElement) {
           input.parentElement.classList.toggle("muted", !isCustom);
+        }
+      }
+
+      function resolveTemplateDevice(tpl) {
+        if (!tpl) return "pc";
+        if (tpl.device_type) return tpl.device_type;
+        if (Array.isArray(tpl.variants)) {
+          if (tpl.variants.length > 1) return "both";
+          if (tpl.variants[0] && tpl.variants[0].device_type) {
+            return tpl.variants[0].device_type;
+          }
+        }
+        return "pc";
+      }
+
+      function variantFromTreeData(lt) {
+        if (!lt || !lt.background_url) return null;
+        const disp = lt.display_name_mode || "slug";
+        return {
+          device_type: lt.device_type || "pc",
+          location: lt.location || "",
+          quote: lt.quote || "",
+          song_url: lt.song_url || "",
+          background_url: lt.background_url,
+          background_is_video: !!lt.background_is_video,
+          transparency: clampPercent(lt.transparency ?? 0, 0),
+          name_effect: lt.name_effect || "none",
+          background_effect: lt.background_effect || "none",
+          display_name_mode: disp,
+          custom_display_name: disp === "custom" ? lt.custom_display_name || "" : null,
+          link_color: hexOrNull(lt.link_color),
+          link_bg_color: hexOrNull(lt.link_bg_color),
+          link_bg_alpha: clampPercent(lt.link_bg_alpha ?? 100, 100),
+          text_color: hexOrNull(lt.text_color),
+          name_color: hexOrNull(lt.name_color),
+          location_color: hexOrNull(lt.location_color),
+          quote_color: hexOrNull(lt.quote_color),
+          cursor_url: lt.cursor_url || null,
+          discord_frame_enabled: !!lt.discord_frame_enabled,
+          show_visit_counter: !!lt.show_visit_counter,
+          visit_counter_color: hexOrNull(lt.visit_counter_color),
+          visit_counter_bg_color: hexOrNull(lt.visit_counter_bg_color),
+          visit_counter_bg_alpha: clampPercent(lt.visit_counter_bg_alpha ?? 20, 20),
+        };
+      }
+
+      function buildVariantFromFormState(device) {
+        const dev = device || currentDevice || "pc";
+        const displayMode = $("inDisplayName").value || "slug";
+        const customName = $("inCustomName").value.trim();
+        if (displayMode === "custom" && !customName) {
+          showMsg(msgTemplates || msgMeta, "Add a custom name before saving the template", false);
+          return null;
+        }
+        const bgUrl = $("inBg").value.trim();
+        if (!bgUrl) {
+          showMsg(msgTemplates || msgMeta, "Set a background URL before saving a template", false);
+          return null;
+        }
+        const linkBgAlpha = clampPercent($("inLinkBgAlpha").value ?? 100, 100);
+        const cardAlphaInput = clampPercent($("inTrans").value ?? 100, 100);
+        const counterAlpha = clampPercent($("inCounterBgAlpha").value ?? 20, 20);
+        return {
+          device_type: dev,
+          location: $("inLocation").value.trim() || "",
+          quote: $("inQuote").value.trim() || "",
+          song_url: $("inSong").value.trim() || "",
+          background_url: bgUrl,
+          background_is_video: $("inVideo").value === "true",
+          transparency: 100 - cardAlphaInput,
+          name_effect: $("inNameFx").value || "none",
+          background_effect: $("inBgFx").value || "none",
+          display_name_mode: displayMode,
+          custom_display_name: displayMode === "custom" ? customName : null,
+          link_color: hexOrNull($("inLinkColor").value),
+          link_bg_color: hexOrNull($("inLinkBgColor").value),
+          link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
+          text_color: hexOrNull($("inTextColor").value),
+          name_color: hexOrNull($("inNameColor").value),
+          location_color: hexOrNull($("inLocationColor").value),
+          quote_color: hexOrNull($("inQuoteColor").value),
+          cursor_url: $("inCursor").value.trim() || null,
+          discord_frame_enabled: $("inDiscordFrame").checked,
+          show_visit_counter: $("inShowCounter").checked,
+          visit_counter_color: hexOrNull($("inCounterColor").value),
+          visit_counter_bg_color: hexOrNull($("inCounterBgColor").value),
+          visit_counter_bg_alpha: Number.isFinite(counterAlpha) ? counterAlpha : 20,
+        };
+      }
+
+      function buildTemplateDemoUrl(tpl, device) {
+        if (!tpl || !tpl.id) return "#";
+        const dRaw = device || resolveTemplateDevice(tpl) || "pc";
+        const d = dRaw === "both" ? "pc" : dRaw;
+        const url = new URL(
+          `/marketplace/templates/${encodeURIComponent(tpl.id)}/demo`,
+          window.location.origin
+        );
+        url.searchParams.set("template_id", tpl.id);
+        if (d) url.searchParams.set("device", d);
+        return url.toString();
+      }
+
+      function renderSavedTemplates() {
+        const grid = $("savedTemplatesGrid");
+        if (!grid) return;
+        grid.innerHTML = "";
+        if (!savedTemplates.length) {
+          const empty = document.createElement("div");
+          empty.className = "muted";
+          empty.textContent = "No saved templates yet.";
+          grid.appendChild(empty);
+          return;
+        }
+        savedTemplates.forEach((tpl) => {
+          if (!tpl || !tpl.id) return;
+          const card = document.createElement("div");
+          card.className = "template-card";
+          const device = resolveTemplateDevice(tpl);
+          const deviceChip = `<span class="chip">${templateDeviceLabel(device)}</span>`;
+          const owner = tpl.creator || tpl.owner_username || "unknown";
+          const isMine =
+            currentUser &&
+            (tpl.owner_username === currentUser.username ||
+              tpl.owner_id === currentUser.id);
+          const privacy = tpl.is_public ? "Public" : "Private";
+          card.innerHTML = `
+            <div class="title">
+              <span>${escapeHtml(tpl.name || "Template")}</span>
+              ${deviceChip}
+            </div>
+            <div class="sub">by ${escapeHtml(owner)}</div>
+            <div class="meta-row">
+              <span class="chip">${privacy}</span>
+              ${isMine ? `<span class="chip">Yours</span>` : ""}
+            </div>
+          `;
+          const btnRow = document.createElement("div");
+          btnRow.className = "meta-row";
+          const applyBtn = document.createElement("button");
+          applyBtn.type = "button";
+          applyBtn.className = "btn sm";
+          applyBtn.textContent = "Apply";
+          applyBtn.addEventListener("click", () => applySavedTemplate(tpl));
+          btnRow.appendChild(applyBtn);
+          const demoLink = document.createElement("a");
+          demoLink.className = "btn sm ghost";
+          demoLink.href = buildTemplateDemoUrl(tpl, device);
+          demoLink.target = "_blank";
+          demoLink.rel = "noopener";
+          demoLink.textContent = "Demo";
+          btnRow.appendChild(demoLink);
+          card.appendChild(btnRow);
+          grid.appendChild(card);
+        });
+      }
+
+      async function loadSavedTemplates() {
+        const grid = $("savedTemplatesGrid");
+        if (!currentUser || !grid) return;
+        grid.innerHTML = `<div class="muted">Loading templates...</div>`;
+        try {
+          const [savedRes, mineRes] = await Promise.all([
+            fetch("/api/marketplace/templates/saved", { credentials: "include" }),
+            fetch("/api/marketplace/templates/mine", { credentials: "include" }),
+          ]);
+          const saved = savedRes.ok ? await savedRes.json() : [];
+          const mine = mineRes.ok ? await mineRes.json() : [];
+          const merged = new Map();
+          mine.forEach((tpl) => merged.set(tpl.id, tpl));
+          saved.forEach((tpl) => {
+            if (!merged.has(tpl.id)) merged.set(tpl.id, tpl);
+          });
+          savedTemplates = Array.from(merged.values());
+          renderSavedTemplates();
+        } catch (e) {
+          renderSavedTemplates();
+          showMsg(msgTemplates || msgMeta, "Could not load saved templates", false);
+        }
+      }
+
+      async function applySavedTemplate(tpl) {
+        if (!tpl || !tpl.id) return;
+        const device = resolveTemplateDevice(tpl) || currentDevice || "pc";
+        const label = templateDeviceLabel(device);
+        const ok = confirm(
+          `Apply "${tpl.name || "Template"}" to your ${label}? Links and icons stay unchanged.`
+        );
+        if (!ok) return;
+        try {
+          await apiApplyTemplate(tpl.id, device);
+          showMsg(msgTemplates || msgMeta, `Template applied to ${label}`, true);
+          await refreshData();
+        } catch (err) {
+          showMsg(msgTemplates || msgMeta, "Template apply failed", false);
+        }
+      }
+
+      async function savePrivateTemplate() {
+        if (!currentUser) {
+          showMsg(msgTemplates || msgMeta, "Login required", false);
+          return;
+        }
+        const slug = $("inSlug").value.trim();
+        if (!slug) {
+          showMsg(msgTemplates || msgMeta, "Set a slug before saving a template", false);
+          return;
+        }
+        const activeDevice = $("inDevice").value || currentDevice || "pc";
+        const mainVariant = buildVariantFromFormState(activeDevice);
+        if (!mainVariant) return;
+        const variants = [mainVariant];
+        const otherDevice = activeDevice === "pc" ? "mobile" : "pc";
+        try {
+          const otherTree = await apiLoadTreeOwnerBySlug(slug, otherDevice);
+          const otherVariant = variantFromTreeData(otherTree);
+          if (otherVariant) variants.push(otherVariant);
+        } catch (_) {}
+        const deviceLabel =
+          variants.length > 1
+            ? "Desktop + Mobile"
+            : templateDeviceLabel(mainVariant.device_type);
+        const payload = {
+          name: `${slug} – ${deviceLabel}`,
+          description: "Private snapshot created from Linktree Config.",
+          creator: currentUser.username || "User",
+          is_public: false,
+          preview_image_url: null,
+          variants,
+        };
+        try {
+          await fetch("/api/marketplace/templates", {
+            method: "POST",
+            headers: headers(),
+            credentials: "include",
+            body: JSON.stringify(payload),
+          });
+          showMsg(msgTemplates || msgMeta, "Private template saved", true);
+          await loadSavedTemplates();
+        } catch (err) {
+          showMsg(msgTemplates || msgMeta, "Save failed", false);
         }
       }
 
@@ -2179,6 +2495,9 @@
         updateCreateTemplateLink();
         await refreshData();
       });
+      if ($("btnSavePrivateTemplate")) {
+        $("btnSavePrivateTemplate").addEventListener("click", savePrivateTemplate);
+      }
       $("btnDiscordLink").addEventListener("click", startDiscordLink);
       $("btnDiscordUnlink").addEventListener("click", unlinkDiscord);
 
@@ -2290,6 +2609,7 @@
           updateCreateTemplateLink();
           await loadDiscordStatus();
           await refreshData();
+          await loadSavedTemplates();
           const templateId = templateIdFromQuery();
           if (templateId) {
             try {
