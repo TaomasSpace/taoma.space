@@ -5,8 +5,8 @@ set -euo pipefail
 : "${BACKEND_ORIGIN:=http://127.0.0.1:8000}"
 export BACKEND_ORIGIN
 
-echo "[render_start] starting FastAPI on 127.0.0.1:8000"
-uvicorn main.main:app --host 127.0.0.1 --port 8000 &
+echo "[render_start] starting FastAPI on 0.0.0.0:8000"
+uvicorn main.main:app --host 0.0.0.0 --port 8000 &
 UVICORN_PID=$!
 
 echo "[render_start] starting Next.js on 0.0.0.0:${PORT:-3000} (BACKEND_ORIGIN=${BACKEND_ORIGIN})"
