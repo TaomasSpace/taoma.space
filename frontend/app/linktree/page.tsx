@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import styles from "./linktree.module.css";
 
 export const metadata: Metadata = {
   title: "TAOMA™ — Linktree",
@@ -26,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function LinktreePage() {
   return (
-    <div className={styles.page}>
+    <div className="linktree-page">
       <div className="bg" id="bg" />
       <div
         id="enterOverlay"
