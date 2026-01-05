@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Alexandra Health Data</title>
+    <meta name="color-scheme" content="light dark" />
+
+    <style>
+      /* =========================================================
+         Design System
+      ========================================================= */
+      :root {
+        --bg: #0b1020; /* dark base for dark mode */
+        --bg-card: #ffffff; /* card on light */
+        --ink: #0f172a; /* text on light */
+        --muted: #6b7280;
+        --line: #e5e7eb;
+        --shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+
+        --accent: #2563eb;
+        --accent-weak: color-mix(in sRGB, var(--accent) 16%, #ffffff);
+        --danger: #b91c1c;
+        --ok: #16a34a;
+
+        --radius: 14px;
+        --radius-sm: 10px;
+        --radius-lg: 22px;
+
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-5: 1.25rem;
+        --space-6: 1.5rem;
+        --space-7: 2rem;
+
+        --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1020;
+          --bg-card: #12172b;
+          --ink: #e5e7eb;
+          --muted: #9aa3b2;
+          --line: #1e293b;
+          --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+          --accent-weak: color-mix(in sRGB, var(--accent) 18%, #0b1020);
+        }
+      }
+
+      /* =========================================================
+         Base
+      ========================================================= */
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        font-family: var(--font);
+        background: linear-gradient(
+          180deg,
+          color-mix(in sRGB, var(--bg) 86%, #1f2937),
+          var(--bg)
+        );
+        color: var(--ink);
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: var(--space-6) var(--space-4) var(--space-7);
+      }
+
+      .site-footer {
+        max-width: 1100px;
+        margin: 0 auto var(--space-6);
+        padding: var(--space-4) var(--space-4) 0;
+        color: var(--muted);
+        text-align: center;
+        border-top: 1px solid var(--line);
+      }
+
+      .site-footer a {
+        color: inherit;
+        font-weight: 700;
+      }
+
+      .site-footer a:hover {
+        text-decoration: underline;
+      }
+
+      header.page {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        margin-bottom: var(--space-5);
+      }
+      header.page h1 {
+        font-size: clamp(1.25rem, 2.5vw, 1.9rem);
+        letter-spacing: 0.2px;
+        margin: 0;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      /* =========================================================
+         Tabs
+      ========================================================= */
+      .tabs-wrap {
+        overflow: hidden;
+      }
+      .tabs {
+        display: grid;
+        grid-auto-flow: column;
+        gap: var(--space-2);
+        padding: var(--space-2);
+        background: linear-gradient(
+          180deg,
+          var(--bg-card),
+          color-mix(in sRGB, var(--bg-card) 60%, #fff0)
+        );
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(6px);
+      }
+      .tab {
+        border: 1px solid var(--line);
+        background: color-mix(in sRGB, var(--bg-card) 85%, var(--accent-weak));
+        border-radius: var(--radius-sm);
+        padding: 0.6rem 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.12s ease, background 0.2s ease, color 0.2s ease;
+        text-align: center;
+      }
+      .tab:hover {
+        transform: translateY(-1px);
+      }
+      .tab:focus-visible {
+        outline: 3px solid color-mix(in sRGB, var(--accent) 45%, transparent);
+        outline-offset: 2px;
+      }
+      .tab.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+
+      .panels {
+        padding: var(--space-4);
+      }
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
+      }
+
+      /* =========================================================
+         Capture Form
+      ========================================================= */
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr minmax(220px, 1.1fr) 60px;
+        gap: var(--space-4);
+        align-items: center;
+        padding: var(--space-5);
+      }
+      .form-grid .row {
+        display: contents;
+      }
+      .form-grid label {
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .form-grid input[type="range"] {
+        width: 100%;
+      }
+      .form-grid input[type="number"],
+      .form-grid input[type="text"],
+      .form-grid select,
+      .form-grid input[type="date"] {
+        width: 100%;
+        padding: 0.6rem 0.7rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: color-mix(in sRGB, var(--bg-card) 96%, #fff0);
+        color: var(--ink);
+      }
+      .val {
+        justify-self: end;
+        font-variant-numeric: tabular-nums;
+        color: var(--muted);
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        padding: 0.3rem 0.5rem;
+        min-width: 2.25rem;
+        text-align: center;
+      }
+
+      .info-wrap {
+        display: inline-block;
+        position: relative;
+        margin-left: 0.35rem;
+      }
+      .info-wrap .badge {
+        font-size: 0.85rem;
+        padding: 0.12rem 0.4rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      .info-wrap .tooltip {
+        position: absolute;
+        top: 130%;
+        left: 0;
+        display: none;
+        z-index: 30;
+        background: var(--bg-card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 0.6rem;
+        width: min(440px, 86vw);
+      }
+      .info-wrap:hover .tooltip {
+        display: block;
+      }
+      .info-wrap .tooltip img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 8px;
+      }
+      .info-wrap .tooltip a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .info-wrap .tooltip a:hover {
+        text-decoration: underline;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: var(--space-2);
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      #status {
+        font-size: 0.95rem;
+      }
+
+      /* =========================================================
+         Buttons
+      ========================================================= */
+      .btn,
+      button {
+        --_bg: var(--bg-card);
+        --_ink: var(--ink);
+        --_bd: var(--line);
+        padding: 0.55rem 0.8rem;
+        border-radius: 10px;
+        border: 1px solid var(--_bd);
+        background: var(--_bg);
+        color: var(--_ink);
+        cursor: pointer;
+        transition: transform 0.06s ease, background 0.2s ease,
+          border-color 0.2s ease, opacity 0.2s ease;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: translateY(0);
+      }
+      .btn:focus-visible {
+        outline: 3px solid color-mix(in sRGB, var(--accent) 45%, transparent);
+        outline-offset: 2px;
+      }
+      .btn.primary {
+        --_bg: var(--accent);
+        --_ink: #fff;
+        --_bd: var(--accent);
+      }
+      .btn.ghost {
+        --_bg: color-mix(in sRGB, var(--bg-card) 90%, #fff0);
+      }
+      .btn.danger {
+        --_bg: var(--danger);
+        --_ink: #fff;
+        --_bd: var(--danger);
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: var(--space-4);
+        border-top: 1px solid var(--line);
+      }
+      .pill {
+        font-size: 0.8rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        background: color-mix(in sRGB, var(--accent) 18%, #ffffff);
+        color: var(--ink);
+      }
+      .right {
+        margin-left: auto;
+      }
+
+      /* =========================================================
+         Filters + Table (History)
+      ========================================================= */
+      .filters {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.6rem;
+        padding: 0 var(--space-4) var(--space-4);
+      }
+      .filters label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 0.15rem;
+      }
+      .filters input,
+      .filters select {
+        width: 100%;
+        padding: 0.5rem 0.6rem;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: color-mix(in sRGB, var(--bg-card) 96%, #fff0);
+        color: var(--ink);
+      }
+
+      .table-wrap {
+        padding: 0 var(--space-4) var(--space-5);
+      }
+      .table-scroll {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead th {
+        text-align: left;
+        font-weight: 700;
+        background: color-mix(in sRGB, var(--bg-card) 90%, #ffffff);
+        padding: 0.6rem;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      tbody td {
+        padding: 0.55rem 0.6rem;
+        border-bottom: 1px solid
+          color-mix(in sRGB, var(--line) 80%, transparent);
+      }
+      tbody tr {
+        cursor: pointer;
+      }
+      tbody tr:hover {
+        background: color-mix(in sRGB, var(--accent) 6%, var(--bg-card));
+      }
+
+      /* =========================================================
+         Chart Area
+      ========================================================= */
+      .chart-card {
+        padding: var(--space-4);
+      }
+      .chart-wrap {
+        position: relative;
+        height: 420px;
+        max-height: 70vh;
+        width: 100%;
+      }
+      #healthChart {
+        position: absolute;
+        inset: 0;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      /* =========================================================
+         Modal
+      ========================================================= */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-4);
+      }
+      .modal {
+        background: var(--bg-card);
+        color: var(--ink);
+        padding: var(--space-5);
+        border-radius: var(--radius-lg);
+        width: min(720px, 96vw);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--line);
+      }
+      .modal header {
+        font-weight: 800;
+        margin-bottom: var(--space-3);
+        font-size: 1.1rem;
+      }
+      .modal .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+      .modal label {
+        font-size: 0.95rem;
+        color: var(--muted);
+        display: grid;
+        gap: 0.35rem;
+      }
+      .modal input,
+      .modal select {
+        padding: 0.55rem 0.6rem;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: color-mix(in sRGB, var(--bg-card) 96%, #fff0);
+        color: var(--ink);
+      }
+      .modal footer {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        margin-top: var(--space-4);
+      }
+
+      /* =========================================================
+         Responsive
+      ========================================================= */
+      @media (max-width: 900px) {
+        .filters {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      @media (max-width: 640px) {
+        .container {
+          padding-inline: var(--space-4);
+        }
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+        .val {
+          justify-self: start;
+        }
+        .filters {
+          grid-template-columns: 1fr 1fr;
+        }
+        thead th {
+          position: static;
+        }
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Accessibility niceties */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+
+      /* Slider mit Tick-Leiste */
+      .slider {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto 24px;
+        align-items: center;
+      }
+      .slider input[type="range"] {
+        grid-row: 1;
+        width: 100%;
+      }
+      .slider .ticks {
+        grid-row: 2;
+        position: relative;
+        height: 24px;
+      }
+      .slider .ticks span {
+        position: absolute;
+        bottom: 12px;
+        width: 1px;
+        height: 8px;
+        background: var(--line);
+        transform: translateX(-0.5px);
+        opacity: 0.9;
+      }
+      .slider .ticks span.major {
+        height: 12px;
+        background: color-mix(in sRGB, var(--ink) 65%, var(--line));
+      }
+      .slider .tick-label {
+        position: absolute;
+        top: 12px;
+        transform: translateX(-50%);
+        font-size: 0.72rem;
+        color: var(--muted);
+        user-select: none;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      /* Statistik-Tabellen-Layout */
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 0.4fr;
+        gap: var(--space-4);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <header class="page">
+        <h1>Health Tracking</h1>
+      </header>
+
+      <section class="card tabs-wrap">
+        <nav class="tabs" role="tablist" aria-label="Ansichten">
+          <button
+            class="tab active"
+            role="tab"
+            aria-selected="true"
+            data-tab="capture"
+          >
+            Erfassen
+          </button>
+          <button
+            class="tab"
+            role="tab"
+            aria-selected="false"
+            data-tab="history"
+          >
+            Historie
+          </button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="stats">
+            Statistik
+          </button>
+        </nav>
+
+        <div class="panels">
+          <!-- Panel: Erfassen -->
+          <div class="panel active" id="panel-capture">
+            <form class="form-grid" autocomplete="off">
+              <div class="row">
+                <label for="Datum">Datum</label>
+                <input type="date" id="Datum" />
+                <span></span>
+              </div>
+
+              <div class="row">
+                <label for="Borg">
+                  Borg Skala (0–20)
+                  <span class="info-wrap">
+                    <span class="badge">ℹ️</span>
+                    <span class="tooltip">
+                      <img
+                        src="https://www.amsel.de/fileadmin/bildarchiv/ms_und_sport/sportundms_woraufmuessensieachten.jpg"
+                        alt="Borg-Skala"
+                        loading="lazy"
+                        referrerpolicy="no-referrer"
+                        onerror="this.replaceWith(document.getElementById('borg-fallback').content.cloneNode(true))"
+                      />
+                      <div>
+                        <a
+                          href="https://www.amsel.de/multiple-sklerose/ms-themen/ms-und-sport/einfuehrung/worauf-muessen-menschen-mit-ms-beim-sport-achten/"
+                          target="_blank"
+                          rel="noopener"
+                          >Quelle öffnen</a
+                        >
+                      </div>
+                    </span>
+                  </span>
+                </label>
+                <input type="range" max="20" min="0" id="Borg" value="0" />
+                <output class="val"></output>
+              </div>
+              <br />
+
+              <div class="row">
+                <label for="Erschoepfung">Erschöpfung (0–10)</label
+                ><input
+                  type="range"
+                  max="10"
+                  min="0"
+                  id="Erschoepfung"
+                  value="0"
+                /><output class="val"></output>
+              </div>
+              <div class="row">
+                <label for="Muskelschwaeche">Muskelschwäche (0–10)</label
+                ><input
+                  type="range"
+                  max="10"
+                  min="0"
+                  id="Muskelschwaeche"
+                  value="0"
+                /><output class="val"></output>
+              </div>
+              <div class="row">
+                <label for="Schmerzen">Schmerzen (0–10)</label
+                ><input
+                  type="range"
+                  max="10"
+                  min="0"
+                  id="Schmerzen"
+                  value="0"
+                /><output class="val"></output>
+              </div>
+              <div class="row">
+                <label for="Angst">Angst (0–10)</label
+                ><input
+                  type="range"
+                  max="10"
+                  min="0"
+                  id="Angst"
+                  value="0"
+                /><output class="val"></output>
+              </div>
+              <div class="row">
+                <label for="Konzentration"
+                  >Konzentration/Gedächtnis (0–10)</label
+                ><input
+                  type="range"
+                  max="10"
+                  min="0"
+                  id="Konzentration"
+                  value="0"
+                /><output class="val"></output>
+              </div>
+              <div class="row">
+                <label for="Husten">Husten (0–10)</label
+                ><input
+                  type="range"
+                  max="10"
+                  min="0"
+                  id="Husten"
+                  value="0"
+                /><output class="val"></output>
+              </div>
+              <div class="row">
+                <label for="Atemnot">Atemnot (0–10)</label
+                ><input
+                  type="range"
+                  max="10"
+                  min="0"
+                  id="Atemnot"
+                  value="0"
+                /><output class="val"></output>
+              </div>
+
+              <div class="row">
+                <label for="Temperatur"
+                  >Temperatur (°C) <span class="hint">(optional)</span></label
+                >
+                <input
+                  type="number"
+                  max="45"
+                  min="20"
+                  id="Temperatur"
+                  step="0.1"
+                  placeholder="optional"
+                />
+                <span></span>
+              </div>
+              <div class="row">
+                <label for="Mens">Mens</label
+                ><input type="checkbox" id="Mens" /><span></span>
+              </div>
+              <div class="row">
+                <label for="Notizen">Notizen</label
+                ><input
+                  type="text"
+                  id="Notizen"
+                  placeholder="optional"
+                /><span></span>
+              </div>
+              <div class="row">
+                <label for="OtherCapture"> Anderes </label>
+                <input type="text" id="OtherCapture" /> <span></span>
+              </div>
+            </form>
+
+            <div
+              class="actions"
+              style="padding: 0 var(--space-5) var(--space-5)"
+            >
+              <button id="saveBtn" class="btn primary">Save</button>
+              <span class="hint"
+                >speichert für <span id="todayLabel"></span
+              ></span>
+              <span id="status"></span>
+            </div>
+          </div>
+
+          <!-- Panel: Historie -->
+          <div class="panel" id="panel-history">
+            <div class="toolbar">
+              <strong>Einträge</strong>
+              <span class="pill" id="countBadge">0</span>
+              <button id="refreshBtn" class="btn ghost">Neu laden</button>
+              <span class="right"></span>
+            </div>
+
+            <div class="filters">
+              <div>
+                <label for="fDateFrom">Datum von</label
+                ><input type="date" id="fDateFrom" />
+              </div>
+              <div>
+                <label for="fDateTo">Datum bis</label
+                ><input type="date" id="fDateTo" />
+              </div>
+              <div>
+                <label for="fMinBorg">min Borg</label
+                ><input type="number" id="fMinBorg" min="0" max="20" />
+              </div>
+              <div>
+                <label for="fMinPain">min Schmerzen</label
+                ><input type="number" id="fMinPain" min="0" max="10" />
+              </div>
+              <div>
+                <label for="fMens">Mens</label
+                ><select id="fMens">
+                  <option value="">egal</option>
+                  <option value="true">ja</option>
+                  <option value="false">nein</option>
+                </select>
+              </div>
+              <div>
+                <label for="fQuery">Notizen enthält</label
+                ><input type="text" id="fQuery" placeholder="Stichwort" />
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <div class="table-scroll card">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Datum</th>
+                      <th>Borg</th>
+                      <th>Schmerzen</th>
+                      <th>Atemnot</th>
+                      <th>Temp</th>
+                      <th>Mens</th>
+                      <th>Notizen</th>
+                      <th style="width: 170px">Aktionen</th>
+                    </tr>
+                  </thead>
+                  <tbody id="healthTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel: Statistik -->
+          <div class="panel" id="panel-stats">
+            <div class="toolbar">
+              <div>
+                <label for="sRange" class="hint">Zeitraum</label>
+                <select id="sRange" class="btn">
+                  <option value="30">30 Tage</option>
+                  <option value="90" selected>90 Tage</option>
+                  <option value="180">180 Tage</option>
+                  <option value="365">365 Tage</option>
+                  <option value="all">Alles</option>
+                </select>
+              </div>
+              <div class="right hint">
+                Metriken:
+                <label
+                  ><input
+                    type="checkbox"
+                    class="sMetric"
+                    value="borg"
+                    checked
+                  />
+                  Borg</label
+                >
+                <label
+                  ><input type="checkbox" class="sMetric" value="schmerzen" />
+                  Schmerzen</label
+                >
+                <label
+                  ><input type="checkbox" class="sMetric" value="atemnot" />
+                  Atemnot</label
+                >
+                <label
+                  ><input type="checkbox" class="sMetric" value="husten" />
+                  Husten</label
+                >
+                <label
+                  ><input type="checkbox" class="sMetric" value="angst" />
+                  Angst</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="sMetric"
+                    value="konzentration"
+                  />
+                  Konzentration</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="sMetric"
+                    value="erschoepfung"
+                  />
+                  Erschöpfung</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="sMetric"
+                    value="muskelschwaeche"
+                  />
+                  Muskelschwäche</label
+                >
+                <label
+                  ><input type="checkbox" class="sMetric" value="temperatur" />
+                  Temperatur</label
+                >
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <h3>Verlauf (ausgewählte Werte)</h3>
+              <div class="chart-wrap">
+                <canvas id="healthChart"></canvas>
+              </div>
+            </div>
+
+            <div class="table-wrap grid2">
+              <!-- Tabelle 1: Alle Werte außer Borg -->
+              <div class="table-scroll">
+                <table id="tableOther">
+                  <thead>
+                    <tr>
+                      <th>Datum</th>
+                      <th>Erschöpfung</th>
+                      <th>Muskelschwäche</th>
+                      <th>Schmerzen</th>
+                      <th>Angst</th>
+                      <th>Konzentration</th>
+                      <th>Husten</th>
+                      <th>Atemnot</th>
+                      <th>Temperatur</th>
+                      <th>Mens</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+
+              <!-- Tabelle 2: Borg separat -->
+              <div class="table-scroll">
+                <table id="tableBorg">
+                  <thead>
+                    <tr>
+                      <th>Datum</th>
+                      <th>Borg</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal: Bearbeiten/Löschen -->
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal" role="dialog" aria-modal="true">
+        <header>Eintrag bearbeiten</header>
+        <div id="modalContent">
+          <div class="grid">
+            <label>Datum <input type="date" id="m_day" /></label>
+            <label
+              >Borg <input type="number" id="m_borg" min="0" max="20"
+            /></label>
+            <label
+              >Temperatur
+              <input
+                type="number"
+                id="m_temp"
+                step="0.1"
+                min="20"
+                max="45"
+                placeholder="optional"
+            /></label>
+            <label
+              >Erschöpfung <input type="number" id="m_ersch" min="0" max="10"
+            /></label>
+            <label
+              >Muskelschwäche
+              <input type="number" id="m_muskel" min="0" max="10"
+            /></label>
+            <label
+              >Schmerzen <input type="number" id="m_schmerz" min="0" max="10"
+            /></label>
+            <label
+              >Angst <input type="number" id="m_angst" min="0" max="10"
+            /></label>
+            <label
+              >Konzentration <input type="number" id="m_konz" min="0" max="10"
+            /></label>
+            <label
+              >Husten <input type="number" id="m_husten" min="0" max="10"
+            /></label>
+            <label
+              >Atemnot <input type="number" id="m_atem" min="0" max="10"
+            /></label>
+            <label> Anderes <input type="text" id="other" /> </label>
+            <label
+              >Mens
+              <select id="m_mens">
+                <option value="false">nein</option>
+                <option value="true">ja</option>
+              </select></label
+            >
+            <label>Notizen <input type="text" id="m_note" /></label>
+          </div>
+        </div>
+        <footer>
+          <button id="btnDelete" class="btn danger">Löschen</button>
+          <span style="flex: 1"></span>
+          <button id="btnCancel" class="btn">Abbrechen</button>
+      <button id="btnSaveEdit" class="btn primary">Speichern</button>
+        </footer>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      © <span id="year"></span> TAOMA™ · <a href="/datenschutz.html">Privacy Policy</a>
+    </footer>
+
+    <template id="borg-fallback">
+      <div style="font-size: 0.95rem; line-height: 1.35">
+        <strong>Borg-Skala (vereinfachte Orientierung)</strong>
+        <ul style="margin: 0.4rem 0; padding-left: 1rem">
+          <li>0–1: sehr leicht</li>
+          <li>2–3: leicht</li>
+          <li>4–6: etwas anstrengend</li>
+          <li>7–8: anstrengend</li>
+          <li>9–10: sehr anstrengend</li>
+          <li>20 (klassisch): maximale Anstrengung</li>
+        </ul>
+        <a
+          href="https://www.amsel.de/multiple-sklerose/ms-themen/ms-und-sport/einfuehrung/worauf-muessen-menschen-mit-ms-beim-sport-achten/"
+          target="_blank"
+          rel="noopener"
+          >Quelle öffnen</a
+        >
+      </div>
+    </template>
+
+    <script>
+      const yearEl = document.getElementById("year");
+      if (yearEl) yearEl.textContent = new Date().getFullYear();
+    </script>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
+
+    <!-- App Logic -->
+    <script>
+      let mensMarkedLabels = new Set();
+      const mensHighlighter = {
+        id: "mensHighlighter",
+        beforeDatasetsDraw(chart) {
+          if (!mensMarkedLabels.size) return;
+          const { ctx, chartArea, scales } = chart;
+          const x = scales.x;
+          if (!x?.ticks?.length) return;
+          ctx.save();
+          ctx.fillStyle = "rgba(220, 38, 38, 0.08)";
+          const tickCount = x.ticks.length;
+          for (let i = 0; i < tickCount; i++) {
+            const label = x.ticks[i].label;
+            if (!mensMarkedLabels.has(label)) continue;
+            const curr = x.getPixelForTick(i);
+            const prev =
+              i > 0
+                ? x.getPixelForTick(i - 1)
+                : curr - (x.getPixelForTick(i + 1) - curr);
+            const next =
+              i < tickCount - 1
+                ? x.getPixelForTick(i + 1)
+                : curr + (curr - prev);
+            const left = (prev + curr) / 2;
+            const right = (curr + next) / 2;
+            const w = Math.max(1, right - left);
+            ctx.fillRect(
+              left,
+              chartArea.top,
+              w,
+              chartArea.bottom - chartArea.top
+            );
+          }
+          ctx.restore();
+        },
+      };
+      Chart.register(mensHighlighter);
+
+      const API_BASE = "/alexandra/data/health"; // ggf. anpassen
+      const $ = (id) => document.getElementById(id);
+      const todayISO = () => {
+        const d = new Date();
+        const y = d.getFullYear(),
+          m = String(d.getMonth() + 1).padStart(2, "0"),
+          day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+      const toISODate = (s) => s?.slice(0, 10);
+      const fmtTemp = (v) => (v != null ? Number(v).toFixed(1) : "");
+
+      async function safe(fn) {
+        try {
+          return await fn();
+        } catch (e) {
+          console.error(e);
+          return null;
+        }
+      }
+
+      async function fetchSession() {
+        try {
+          const r = await safe(() =>
+            fetch("/api/auth/verify", { credentials: "include" })
+          );
+          if (!r || !r.ok) return null;
+          return await r.json();
+        } catch {
+          return null;
+        }
+      }
+
+      async function requireLogin() {
+        const session = await fetchSession();
+        if (!session || !session.user) {
+          const next = encodeURIComponent(location.href);
+          location.href = `/login?next=${next}`;
+          return null;
+        }
+        return session.user;
+      }
+
+      // Tabs
+      document.querySelectorAll(".tab").forEach((t) => {
+        t.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab")
+            .forEach((x) => x.classList.remove("active"));
+          document
+            .querySelectorAll(".panel")
+            .forEach((x) => x.classList.remove("active"));
+          t.classList.add("active");
+          const id =
+            t.dataset.tab === "capture"
+              ? "panel-capture"
+              : t.dataset.tab === "history"
+              ? "panel-history"
+              : "panel-stats";
+          document.getElementById(id).classList.add("active");
+          if (id === "panel-history") loadTable();
+          if (id === "panel-stats") initStats();
+        });
+      });
+
+      // Capture
+      $("todayLabel").textContent = todayISO();
+      $("Datum").addEventListener("change", () => {
+        $("todayLabel").textContent = $("Datum").value || todayISO();
+      });
+
+      async function createOrUpdateData() {
+        const statusEl = $("status");
+        statusEl.textContent = "speichere...";
+        statusEl.style.color = "";
+        const day = $("Datum").value || new Date().toISOString().split("T")[0];
+
+        const payload = {
+          day,
+          borg: parseInt($("Borg").value, 10),
+          erschoepfung: parseInt($("Erschoepfung").value, 10),
+          muskelschwaeche: parseInt($("Muskelschwaeche").value, 10),
+          schmerzen: parseInt($("Schmerzen").value, 10),
+          angst: parseInt($("Angst").value, 10),
+          konzentration: parseInt($("Konzentration").value, 10),
+          husten: parseInt($("Husten").value, 10),
+          atemnot: parseInt($("Atemnot").value, 10),
+          mens: $("Mens").checked,
+          notizen: $("Notizen").value?.trim() || null,
+          other: $("OtherCapture").value?.trim() || null,
+        };
+
+        // Temperatur nur mitsenden, wenn gesetzt
+        const tRaw = $("Temperatur").value;
+        const tNum = parseFloat(tRaw);
+        if (tRaw !== "" && Number.isFinite(tNum)) {
+          payload.temperatur = tNum;
+        }
+
+        try {
+          await ensureListLoaded();
+          const existing = (allRows || []).find(
+            (r) => (r.day || "").slice(0, 10) === day
+          );
+          if (existing) {
+            const res = await fetch(`${API_BASE}/${existing.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
+            statusEl.textContent = "Aktualisiert ✓";
+            statusEl.style.color = "#16a34a";
+          } else {
+            const res = await fetch(`${API_BASE}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error(`POST failed: ${res.status}`);
+            statusEl.textContent = "Gespeichert ✓";
+            statusEl.style.color = "#16a34a";
+          }
+          await loadTable();
+          await ensureListLoaded();
+          if (
+            document
+              .querySelector('[data-tab="stats"]')
+              .classList.contains("active")
+          ) {
+            updateChart();
+          }
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = "Fehler beim Speichern";
+          statusEl.style.color = "crimson";
+          alert(String(err));
+        }
+      }
+      $("saveBtn").addEventListener("click", (e) => {
+        e.preventDefault();
+        createOrUpdateData();
+      });
+
+      // History
+      let allRows = [];
+      let currentRow = null;
+      async function loadTable() {
+        try {
+          const res = await fetch(`${API_BASE}`);
+          if (!res.ok) throw new Error(`GET list failed: ${res.status}`);
+          allRows = await res.json();
+          renderTable();
+        } catch (e) {
+          console.error(e);
+          alert("Konnte Einträge nicht laden.");
+        }
+      }
+
+      function applyFilters(rows) {
+        const df = $("fDateFrom").value;
+        const dt = $("fDateTo").value;
+        const minB = $("fMinBorg").value
+          ? parseInt($("fMinBorg").value, 10)
+          : null;
+        const minP = $("fMinPain").value
+          ? parseInt($("fMinPain").value, 10)
+          : null;
+        const mens = $("fMens").value;
+        const q = $("fQuery").value.trim().toLowerCase();
+        return rows.filter((r) => {
+          const d = toISODate(r.day || r["day"]);
+          if (df && d < df) return false;
+          if (dt && d > dt) return false;
+          if (minB != null && (r.borg ?? 0) < minB) return false;
+          if (minP != null && (r.schmerzen ?? 0) < minP) return false;
+          if (mens === "true" && !r.mens) return false;
+          if (mens === "false" && r.mens) return false;
+          if (q && !(r.notizen || "").toLowerCase().includes(q)) return false;
+          return true;
+        });
+      }
+
+      function renderTable() {
+        const rows = applyFilters(allRows);
+        $("countBadge").textContent = rows.length;
+        const tb = $("healthTableBody");
+        tb.innerHTML = "";
+        for (const r of rows) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${toISODate(r.day)}</td>
+            <td>${r.borg ?? ""}</td>
+            <td>${r.schmerzen ?? ""}</td>
+            <td>${r.atemnot ?? ""}</td>
+            <td>${fmtTemp(r.temperatur)}</td>
+            <td>${r.mens ? "ja" : "nein"}</td>
+            <td>${(r.notizen || "").replace(/</g, "&lt;")}</td>
+            <td>
+              <button class="btn" data-action="edit">Bearbeiten</button>
+              <button class="btn danger" data-action="delete">Löschen</button>
+            </td>`;
+          tr.querySelector('[data-action="edit"]').addEventListener(
+            "click",
+            (e) => {
+              e.stopPropagation();
+              openEdit(r);
+            }
+          );
+          tr.querySelector('[data-action="delete"]').addEventListener(
+            "click",
+            (e) => {
+              e.stopPropagation();
+              confirmDelete(r);
+            }
+          );
+          tr.addEventListener("click", () => openEdit(r));
+          tb.appendChild(tr);
+        }
+      }
+
+      [
+        "fDateFrom",
+        "fDateTo",
+        "fMinBorg",
+        "fMinPain",
+        "fMens",
+        "fQuery",
+      ].forEach((id) => {
+        $(id).addEventListener("input", renderTable);
+        $(id).addEventListener("change", renderTable);
+      });
+      $("refreshBtn").addEventListener("click", loadTable);
+
+      // Stats
+      const METRIC_LABELS = {
+        borg: "Borg",
+        schmerzen: "Schmerzen",
+        atemnot: "Atemnot",
+        husten: "Husten",
+        angst: "Angst",
+        konzentration: "Konzentration",
+        erschoepfung: "Erschöpfung",
+        muskelschwaeche: "Muskelschwäche",
+        temperatur: "Temperatur (°C)",
+        other: "Anderes",
+      };
+      const RIGHT_AXIS = new Set(["temperatur"]);
+      function parseDateISO(d) {
+        const s = (d || "").slice(0, 10);
+        const [Y, M, D] = s.split("-").map(Number);
+        return new Date(Y, (M || 1) - 1, D || 1);
+      }
+      function filterRange(rows, rangeValue) {
+        if (rangeValue === "all") return rows.slice();
+        const days = parseInt(rangeValue, 10);
+        if (!Number.isFinite(days)) return rows.slice();
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days + 1);
+        return rows.filter((r) => parseDateISO(r.day) >= cutoff);
+      }
+      function normalizeRowKeys(r) {
+        return {
+          ...r,
+          erschoepfung: r.erschoepfung ?? r["erschöpfung"],
+          muskelschwaeche: r.muskelschwaeche ?? r["muskelschwäche"],
+        };
+      }
+      function buildDatasets(rows, selected) {
+        const labels = rows.map((r) => (r.day || "").slice(0, 10));
+        const datasets = [];
+        selected.forEach((metric) => {
+          const yAxisID = RIGHT_AXIS.has(metric) ? "yR" : "yL";
+          const data = rows.map((r) => {
+            const rr = normalizeRowKeys(r);
+            const v = rr[metric];
+            return v == null ? null : Number(v);
+          });
+          datasets.push({
+            label: METRIC_LABELS[metric] || metric,
+            data,
+            yAxisID,
+            spanGaps: true,
+            tension: 0.25,
+            pointRadius: 2,
+          });
+        });
+        return { labels, datasets };
+      }
+      async function ensureListLoaded() {
+        if (allRows && allRows.length) return;
+        const res = await fetch(`${API_BASE}`);
+        if (!res.ok) throw new Error(`GET list failed: ${res.status}`);
+        allRows = await res.json();
+      }
+      let chart;
+      let statsWired = false;
+
+      function renderStatsTables(rowsAsc) {
+        // Tabelle Borg
+        const tbB = document.querySelector("#tableBorg tbody");
+        tbB.innerHTML = "";
+        rowsAsc.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${toISODate(r.day)}</td><td>${r.borg ?? ""}</td>`;
+          tbB.appendChild(tr);
+        });
+
+        // Tabelle Other (alle außer Borg)
+        const tbO = document.querySelector("#tableOther tbody");
+        tbO.innerHTML = "";
+        rowsAsc.forEach((r) => {
+          const rr = normalizeRowKeys(r);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${toISODate(r.day)}</td>
+            <td>${rr.erschoepfung ?? ""}</td>
+            <td>${rr.muskelschwaeche ?? ""}</td>
+            <td>${rr.schmerzen ?? ""}</td>
+            <td>${rr.angst ?? ""}</td>
+            <td>${rr.konzentration ?? ""}</td>
+            <td>${rr.husten ?? ""}</td>
+            <td>${rr.atemnot ?? ""}</td>
+            <td>${fmtTemp(rr.temperatur)}</td>
+            <td>${rr.mens ? "ja" : "nein"}</td>
+            <td>${rr.other ?? ""}
+          `;
+          tbO.appendChild(tr);
+        });
+      }
+
+      async function initStats() {
+        try {
+          await ensureListLoaded();
+        } catch (e) {
+          console.error(e);
+          alert("Konnte Daten für Statistik nicht laden.");
+          return;
+        }
+        if (!statsWired) {
+          document
+            .querySelectorAll(".sMetric")
+            .forEach((cb) => cb.addEventListener("change", updateChart));
+          $("sRange").addEventListener("change", updateChart);
+          statsWired = true;
+        }
+        updateChart();
+        queueMicrotask(() => chart?.resize());
+      }
+
+      function updateChart() {
+        const selected = [...document.querySelectorAll(".sMetric:checked")].map(
+          (c) => c.value
+        );
+        if (!selected.length) {
+          document.querySelector('.sMetric[value="borg"]').checked = true;
+          selected.push("borg");
+        }
+
+        const rowsAsc = filterRange(allRows, $("sRange").value)
+          .slice()
+          .sort((a, b) => parseDateISO(a.day) - parseDateISO(b.day));
+
+        // Tabellen füllen
+        renderStatsTables(rowsAsc);
+
+        const { labels, datasets } = buildDatasets(rowsAsc, selected);
+        mensMarkedLabels = new Set(
+          rowsAsc.filter((r) => r.mens).map((r) => (r.day || "").slice(0, 10))
+        );
+
+        const pointColors = labels.map((l) =>
+          mensMarkedLabels.has(l) ? "crimson" : undefined
+        );
+        datasets.forEach((ds) => {
+          ds.pointBackgroundColor = pointColors;
+          ds.pointBorderColor = pointColors;
+        });
+
+        const cfg = {
+          type: "line",
+          data: { labels, datasets },
+          options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            interaction: { mode: "nearest", intersect: false },
+            scales: {
+              yL: {
+                type: "linear",
+                position: "left",
+                title: { display: true, text: "Skalen (0–10 / 0–20)" },
+                min: 0,
+                suggestedMax: 20,
+                grid: { drawOnChartArea: true },
+              },
+              yR: {
+                type: "linear",
+                position: "right",
+                title: { display: true, text: "Temperatur (°C)" },
+                min: 20,
+                suggestedMax: 40,
+                grid: { drawOnChartArea: false },
+              },
+              x: { ticks: { autoSkip: true, maxTicksLimit: 12 } },
+            },
+            plugins: {
+              legend: { position: "top" },
+              tooltip: {
+                callbacks: { title: (items) => items[0]?.label ?? "" },
+              },
+            },
+          },
+        };
+
+        const ctx = /** @type {HTMLCanvasElement} */ (
+          document.getElementById("healthChart")
+        ).getContext("2d");
+
+        if (chart) {
+          chart.data.labels = labels;
+          chart.data.datasets = datasets;
+          chart.options = cfg.options;
+          chart.update();
+        } else {
+          chart = new Chart(ctx, cfg);
+        }
+      }
+
+      // Modal
+      function openEdit(row) {
+        currentRow = row;
+        $("m_day").value = toISODate(row.day);
+        $("m_borg").value = row.borg ?? 0;
+        $("m_temp").value = row.temperatur ?? "";
+        $("m_ersch").value = row["erschöpfung"] ?? row.erschoepfung ?? 0;
+        $("m_muskel").value = row["muskelschwäche"] ?? row.muskelschwaeche ?? 0;
+        $("m_schmerz").value = row.schmerzen ?? 0;
+        $("m_angst").value = row.angst ?? 0;
+        $("m_konz").value = row.konzentration ?? 0;
+        $("m_husten").value = row.husten ?? 0;
+        $("m_atem").value = row.atemnot ?? 0;
+        $("m_mens").value = row.mens ? "true" : "false";
+        $("m_note").value = row.notizen || "";
+        $("other").value = row.other || "";
+        $("modalBackdrop").style.display = "flex";
+      }
+      function closeModal() {
+        $("modalBackdrop").style.display = "none";
+        currentRow = null;
+      }
+      $("btnCancel").addEventListener("click", closeModal);
+      $("btnDelete").addEventListener("click", async () => {
+        if (!currentRow) return;
+        await confirmDelete(currentRow);
+        closeModal();
+      });
+
+      $("btnSaveEdit").addEventListener("click", async () => {
+        if (!currentRow) return;
+        const id = currentRow.id;
+        const payload = {
+          day: $("m_day").value,
+          borg: parseInt($("m_borg").value, 10),
+          erschoepfung: parseInt($("m_ersch").value, 10),
+          muskelschwaeche: parseInt($("m_muskel").value, 10),
+          schmerzen: parseInt($("m_schmerz").value, 10),
+          angst: parseInt($("m_angst").value, 10),
+          konzentration: parseInt($("m_konz").value, 10),
+          husten: parseInt($("m_husten").value, 10),
+          atemnot: parseInt($("m_atem").value, 10),
+          mens: $("m_mens").value === "true",
+          notizen: $("m_note").value?.trim() || null,
+          other: $("OtherCapture").value?.trim() || null,
+        };
+        // Temperatur nur mitsenden, wenn gesetzt
+        const tRaw = $("m_temp").value;
+        const tNum = parseFloat(tRaw);
+        if (tRaw !== "" && Number.isFinite(tNum)) {
+          payload.temperatur = tNum;
+        }
+
+        try {
+          const res = await fetch(`${API_BASE}/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
+          closeModal();
+          await loadTable();
+          if (
+            document
+              .querySelector('[data-tab="stats"]')
+              .classList.contains("active")
+          ) {
+            updateChart();
+          }
+        } catch (e) {
+          console.error(e);
+          alert("Speichern fehlgeschlagen.");
+        }
+      });
+
+      async function confirmDelete(row) {
+        if (!confirm(`Eintrag vom ${toISODate(row.day)} wirklich löschen?`))
+          return;
+        try {
+          const res = await fetch(`${API_BASE}/${row.id}`, {
+            method: "DELETE",
+          });
+          if (!res.ok) throw new Error(`DELETE failed: ${res.status}`);
+          await loadTable();
+          if (
+            document
+              .querySelector('[data-tab="stats"]')
+              .classList.contains("active")
+          ) {
+            await ensureListLoaded();
+            updateChart();
+          }
+        } catch (e) {
+          console.error(e);
+          alert("Löschen fehlgeschlagen.");
+        }
+      }
+
+      // Slider-Ticks + Output
+      function enhanceSlidersWithTicks() {
+        document
+          .querySelectorAll('.form-grid input[type="range"]')
+          .forEach((r) => {
+            if (r.closest(".slider")) return;
+
+            const min = Number(r.min || 0);
+            const max = Number(r.max || 100);
+            const step = Number(r.step || 1);
+            const total = max - min || 1;
+
+            const labelStep = Number(r.dataset.labelStep || 1);
+            const majorStep = Number(
+              r.dataset.majorStep || (total >= 10 ? 5 : step)
+            );
+
+            const wrap = document.createElement("div");
+            wrap.className = "slider";
+            const ticks = document.createElement("div");
+            ticks.className = "ticks";
+
+            for (let v = min; v <= max; v += step) {
+              const p = ((v - min) / total) * 100;
+
+              const tick = document.createElement("span");
+              tick.style.left = `${p}%`;
+              if ((v - min) % majorStep === 0) tick.classList.add("major");
+              ticks.appendChild(tick);
+
+              if ((v - min) % labelStep === 0) {
+                const lbl = document.createElement("div");
+                lbl.className = "tick-label";
+                lbl.style.left = `${p}%`;
+                lbl.textContent = String(v);
+                ticks.appendChild(lbl);
+              }
+            }
+
+            const parent = r.parentElement;
+            parent.insertBefore(wrap, r);
+            wrap.appendChild(r);
+            wrap.appendChild(ticks);
+          });
+      }
+
+      function wireRangeOutputs() {
+        document
+          .querySelectorAll('.form-grid input[type="range"]')
+          .forEach((r) => {
+            const row = r.closest(".row") || r.parentElement;
+            const out = row.querySelector("output.val");
+            if (!out) return;
+            const update = () => (out.textContent = r.value);
+            r.addEventListener("input", update);
+            r.addEventListener("change", update);
+            update();
+          });
+      }
+
+      // Init (only when logged in)
+      (async () => {
+        const user = await requireLogin();
+        if (!user) return;
+        $("todayLabel").textContent = todayISO();
+        enhanceSlidersWithTicks();
+        wireRangeOutputs();
+      })();
+    </script>
+  </body>
+</html>

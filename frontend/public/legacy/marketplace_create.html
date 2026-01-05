@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create Template - TAOMA</title>
+    <meta name="description" content="Create Linktree templates for desktop, mobile, or both." />
+    <meta property="og:title" content="Create Template - TAOMA" />
+    <meta property="og:description" content="Turn your Linktree design into a reusable template." />
+    <meta name="theme-color" content="#0f1223" />
+    <link rel="icon" type="image/png" href="/static/icon.png" />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg: #0e1020;
+        --bg-soft: #141735;
+        --card: #171b3b;
+        --ink: #e9ebff;
+        --muted: #a2a9c8;
+        --acc: #85a3ff;
+        --acc-2: #5b7bff;
+        --ok: #35d79c;
+        --danger: #ff5a6a;
+        --ring: #85a3ff55;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35),
+          0 2px 8px rgba(0, 0, 0, 0.25);
+        --radius: 16px;
+        --space: clamp(16px, 2vw, 24px);
+        --container: 1100px;
+      }
+
+      body {
+        margin: 0;
+        font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI,
+          Roboto, Ubuntu, Arial, sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: radial-gradient(
+            1400px 900px at 12% -8%,
+            #1b1f45 0%,
+            #1b1f45 35%,
+            transparent 72%
+          ),
+          radial-gradient(
+            1200px 800px at 100% -10%,
+            #0b4ea8 0%,
+            #0b4ea8 28%,
+            transparent 68%
+          ),
+          radial-gradient(
+            900px 500px at 95% 115%,
+            #0b4ea84d 0%,
+            transparent 60%
+          ),
+          linear-gradient(160deg, #0f1531 0%, #0e1020 72%);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .container {
+        max-width: var(--container);
+        margin: 0 auto;
+        padding: clamp(16px, 3vw, 28px);
+        width: 100%;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(8px) saturate(1.05);
+        background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+        border-bottom: 1px solid #ffffff14;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+        gap: 1rem;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.4px;
+      }
+
+      .brand .logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: block;
+      }
+
+      .links {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .links a {
+        padding: 0.45rem 0.7rem;
+        border-radius: 10px;
+        border: 1px solid transparent;
+      }
+
+      .links a:hover {
+        border-color: #ffffff1f;
+        background: #ffffff0f;
+      }
+
+      .hero {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(24px, 4vw, 32px);
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .card {
+        background: linear-gradient(
+          180deg,
+          color-mix(in oklab, var(--card), transparent 8%),
+          var(--card)
+        );
+        border: 1px solid #ffffff1a;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: clamp(16px, 2vw, 22px);
+      }
+
+      .panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .grid.cols-2 {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+        margin-bottom: 1rem;
+      }
+
+      .option {
+        position: relative;
+        padding: 16px;
+        border-radius: 14px;
+        border: 1px solid #ffffff1a;
+        background: #ffffff08;
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .option strong {
+        font-size: 1.05rem;
+      }
+
+      .option button {
+        justify-self: flex-start;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .field label {
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+
+      .input,
+      .select,
+      textarea {
+        background: #0f1331;
+        border: 1px solid #ffffff1a;
+        border-radius: 12px;
+        color: var(--ink);
+        padding: 0.7rem 0.8rem;
+        width: 100%;
+        font: inherit;
+      }
+
+      textarea {
+        min-height: 84px;
+        resize: vertical;
+      }
+
+      .row {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: var(--acc);
+        color: #fff;
+        font-weight: 700;
+        box-shadow: var(--shadow);
+        border: 1px solid #ffffff1a;
+        transition: 0.2s;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        filter: saturate(1.05);
+      }
+
+      .btn.ghost {
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid #ffffff26;
+        box-shadow: none;
+      }
+
+      .btn.sm {
+        padding: 0.55rem 0.75rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        background: color-mix(in oklab, var(--acc) 15%, transparent);
+        border: 1px solid #ffffff1a;
+        font-size: 0.9rem;
+      }
+
+      .alert {
+        border: 1px solid #ffffff26;
+        background: #ffffff0e;
+        border-radius: 12px;
+        padding: 0.65rem 0.8rem;
+        display: none;
+      }
+
+      .alert.ok {
+        border-color: #1dd1a1;
+        background: color-mix(in oklab, var(--ok) 12%, transparent);
+        display: block;
+      }
+
+      .alert.err {
+        border-color: #ff5a6a;
+        background: color-mix(in oklab, var(--danger) 10%, transparent);
+        display: block;
+      }
+
+      .hr {
+        height: 1px;
+        background: #ffffff14;
+        width: 100%;
+      }
+
+      @media (max-width: 640px) {
+        .links {
+          display: none;
+        }
+        header {
+          position: static;
+        }
+        .grid.cols-2 {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container nav">
+        <div class="brand">
+          <a href="/"
+            ><img class="logo" src="/static/icon.png" alt="TAOMA" width="28" height="28"
+          /></a>
+          <a href="/"><span>TAOMA™</span></a>
+        </div>
+        <nav class="links">
+          <a href="/linktree/config">Linktree</a>
+          <a href="/marketplace">Marketplace</a>
+        </nav>
+        <div class="badge" id="userBadge">Checking session…</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <section class="hero">
+          <div class="row" style="justify-content: space-between; gap: 1rem; align-items: flex-start">
+            <div>
+              <h1>Create a template</h1>
+              <p>
+                Save your Linktree look to the marketplace. Templates include your layout and styling only—no links, icons, or slug.
+              </p>
+            </div>
+            <a class="btn ghost sm" href="/marketplace">Back to marketplace</a>
+          </div>
+        </section>
+
+        <div class="options">
+          <div class="option">
+            <strong>Import my current Linktree</strong>
+            <p class="muted">
+              Pull your existing Linktree settings (backgrounds, colors, effects) for desktop or mobile.
+            </p>
+            <button class="btn sm" id="btnChoiceImport">Use current setup</button>
+          </div>
+          <div class="option">
+            <strong>Start from scratch</strong>
+            <p class="muted">
+              Build a brand-new template without touching your existing Linktree.
+            </p>
+            <button class="btn ghost sm" id="btnChoiceFresh">Start new</button>
+          </div>
+        </div>
+
+        <section class="card panel" id="formSection" style="display:none">
+          <div class="row" style="justify-content: space-between; align-items: center">
+            <h3 style="margin:0">Template details</h3>
+            <span class="badge" id="modeBadge">Desktop</span>
+          </div>
+          <div class="grid cols-2">
+            <div class="field">
+              <label for="tplCreator">Creator</label>
+              <input id="tplCreator" class="input" type="text" maxlength="100" placeholder="Your name or brand" />
+            </div>
+            <div class="field">
+              <label for="tplName">Template name</label>
+              <input id="tplName" class="input" type="text" maxlength="64" required />
+            </div>
+            <div class="field">
+              <label for="tplDesc">Description (optional)</label>
+              <textarea id="tplDesc" class="input" maxlength="500" placeholder="What makes this template unique?"></textarea>
+            </div>
+            <div class="field">
+              <label for="tplPublic">Visibility</label>
+              <select id="tplPublic" class="select">
+                <option value="true">Public</option>
+                <option value="false">Private</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplMode">Template contains</label>
+              <select id="tplMode" class="select">
+                <option value="pc">Desktop only</option>
+                <option value="mobile">Mobile only</option>
+                <option value="both">Desktop + Mobile</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplDevice">Editing variant</label>
+              <select id="tplDevice" class="select">
+                <option value="pc">Desktop</option>
+                <option value="mobile">Mobile</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row" style="justify-content: space-between; align-items: flex-start">
+            <div class="muted" id="slugHint"></div>
+            <div class="row" style="gap:0.4rem">
+              <button class="btn ghost sm" id="btnResetVariant">Start blank for this device</button>
+              <button class="btn sm" id="btnImportVariant">Import from my Linktree</button>
+            </div>
+          </div>
+
+          <div class="grid cols-2">
+            <div class="field">
+              <label for="tplLocation">Location (optional)</label>
+              <input id="tplLocation" class="input" type="text" maxlength="120" />
+            </div>
+            <div class="field">
+              <label for="tplQuote">Quote (optional)</label>
+              <input id="tplQuote" class="input" type="text" maxlength="240" />
+            </div>
+            <div class="field">
+              <label for="tplSong">Song URL (optional)</label>
+              <input id="tplSong" class="input" type="text" maxlength="500" />
+            </div>
+            <div class="field">
+              <label for="tplBackground">Background URL *</label>
+              <input id="tplBackground" class="input" type="text" maxlength="500" placeholder="/media/... or https://" />
+            </div>
+            <div class="field">
+              <label for="tplBgVideo">Background is video</label>
+              <select id="tplBgVideo" class="select">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplTrans">Transparency (0-100)</label>
+              <input id="tplTrans" class="input" type="number" min="0" max="100" value="0" />
+            </div>
+            <div class="field">
+              <label for="tplNameFx">Name effect</label>
+              <select id="tplNameFx" class="select">
+                <option value="none">None</option>
+                <option value="glow">Glow</option>
+                <option value="neon">Neon</option>
+                <option value="rainbow">Rainbow</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplBgFx">Background effect</label>
+              <select id="tplBgFx" class="select">
+                <option value="none">None</option>
+                <option value="night">Night</option>
+                <option value="rain">Rain</option>
+                <option value="snow">Snow</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplDisplayName">Display name mode</label>
+              <select id="tplDisplayName" class="select">
+                <option value="slug">Slug</option>
+                <option value="username">Username</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplCustomName">Custom display name</label>
+              <input id="tplCustomName" class="input" type="text" maxlength="64" />
+            </div>
+            <div class="field">
+              <label for="tplLinkColor">Link color</label>
+              <input id="tplLinkColor" class="input" type="text" placeholder="#RRGGBB" />
+            </div>
+            <div class="field">
+              <label for="tplLinkBgColor">Link background color</label>
+              <input id="tplLinkBgColor" class="input" type="text" placeholder="#RRGGBB" />
+            </div>
+            <div class="field">
+              <label for="tplLinkBgAlpha">Link background alpha (0-100)</label>
+              <input id="tplLinkBgAlpha" class="input" type="number" min="0" max="100" value="100" />
+            </div>
+            <div class="field">
+              <label for="tplTextColor">Text color</label>
+              <input id="tplTextColor" class="input" type="text" placeholder="#RRGGBB" />
+            </div>
+            <div class="field">
+              <label for="tplNameColor">Name color</label>
+              <input id="tplNameColor" class="input" type="text" placeholder="#RRGGBB" />
+            </div>
+            <div class="field">
+              <label for="tplLocationColor">Location color</label>
+              <input id="tplLocationColor" class="input" type="text" placeholder="#RRGGBB" />
+            </div>
+            <div class="field">
+              <label for="tplQuoteColor">Quote color</label>
+              <input id="tplQuoteColor" class="input" type="text" placeholder="#RRGGBB" />
+            </div>
+            <div class="field">
+              <label for="tplCursorUrl">Cursor URL (optional)</label>
+              <input id="tplCursorUrl" class="input" type="text" maxlength="500" />
+            </div>
+            <div class="field">
+              <label for="tplDiscordFrame">Discord frame enabled</label>
+              <select id="tplDiscordFrame" class="select">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplShowCounter">Show visit counter</label>
+              <select id="tplShowCounter" class="select">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplCounterColor">Counter color</label>
+              <input id="tplCounterColor" class="input" type="text" placeholder="#RRGGBB" />
+            </div>
+            <div class="field">
+              <label for="tplCounterBgColor">Counter background color</label>
+              <input id="tplCounterBgColor" class="input" type="text" placeholder="#RRGGBB" />
+            </div>
+            <div class="field">
+              <label for="tplCounterBgAlpha">Counter background alpha (0-100)</label>
+              <input id="tplCounterBgAlpha" class="input" type="number" min="0" max="100" value="20" />
+            </div>
+          </div>
+
+          <div class="hr"></div>
+          <div class="row" style="justify-content: space-between; align-items: center">
+            <div class="muted">
+              Templates save to the marketplace using Firebase. Links, icons, and slug are never copied.
+            </div>
+            <div class="row" style="gap:0.4rem">
+              <button class="btn ghost sm" id="btnResetAll">Reset form</button>
+              <button class="btn sm" id="btnSaveTemplate">Create template</button>
+            </div>
+          </div>
+          <div class="alert" id="formMsg"></div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+
+      function showMsg(el, text, ok = false) {
+        if (!el) return;
+        el.textContent = text;
+        el.className = "alert " + (ok ? "ok" : "err");
+        el.style.display = "block";
+        setTimeout(() => (el.style.display = "none"), 3500);
+      }
+
+      function headers() {
+        return { "Content-Type": "application/json" };
+      }
+
+      async function fetchSession() {
+        try {
+          const r = await fetch("/api/auth/verify", { credentials: "include" });
+          if (!r.ok) return null;
+          return await r.json();
+        } catch (_) {
+          return null;
+        }
+      }
+
+      async function apiGet(url) {
+        const r = await fetch(url, { credentials: "include" });
+        if (!r.ok) throw new Error(await r.text());
+        return await r.json();
+      }
+
+      async function apiPost(url, body) {
+        const r = await fetch(url, {
+          method: "POST",
+          headers: headers(),
+          credentials: "include",
+          body: JSON.stringify(body),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        return await r.json();
+      }
+
+      async function apiPatch(url, body) {
+        const r = await fetch(url, {
+          method: "PATCH",
+          headers: headers(),
+          credentials: "include",
+          body: JSON.stringify(body),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        return await r.json();
+      }
+
+      const params = new URLSearchParams(location.search);
+      const presetSlug = params.get("slug") || "";
+      const presetDevice = (() => {
+        const val = params.get("device");
+        if (val === "both") return "both";
+        if (val === "mobile") return "mobile";
+        return "pc";
+      })();
+
+      const formMsg = $("formMsg");
+      const userBadge = $("userBadge");
+      const modeBadge = $("modeBadge");
+      const slugHint = $("slugHint");
+      const formSection = $("formSection");
+
+      let currentUser = null;
+      let currentDevice = presetDevice === "both" ? "pc" : presetDevice;
+      let variantCache = { pc: null, mobile: null };
+      let choiceMade = false;
+      let editingId = null;
+
+      function hexOrNull(val) {
+        const t = (val || "").trim();
+        if (!t) return null;
+        if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(t)) return t;
+        return null;
+      }
+
+      function normalizeVariant(raw, deviceFallback) {
+        const v = { ...(raw || {}) };
+        v.device_type = v.device_type || deviceFallback || "pc";
+        v.display_name_mode = v.display_name_mode || "slug";
+        if (v.display_name_mode === "custom") {
+          if (!v.custom_display_name || !v.custom_display_name.trim()) {
+            showMsg(formMsg, `Custom display name required for ${v.device_type}`, false);
+            return null;
+          }
+          v.custom_display_name = v.custom_display_name.trim();
+        } else {
+          v.custom_display_name = null;
+        }
+        v.link_color = hexOrNull(v.link_color);
+        v.link_bg_color = hexOrNull(v.link_bg_color);
+        v.text_color = hexOrNull(v.text_color);
+        v.name_color = hexOrNull(v.name_color);
+        v.location_color = hexOrNull(v.location_color);
+        v.quote_color = hexOrNull(v.quote_color);
+        v.visit_counter_color = hexOrNull(v.visit_counter_color);
+        v.visit_counter_bg_color = hexOrNull(v.visit_counter_bg_color);
+        v.link_bg_alpha = Math.min(100, Math.max(0, parseInt(v.link_bg_alpha ?? 100, 10)));
+        v.transparency = Math.min(100, Math.max(0, parseInt(v.transparency ?? 0, 10)));
+        v.visit_counter_bg_alpha = Math.min(
+          100,
+          Math.max(0, parseInt(v.visit_counter_bg_alpha ?? 20, 10))
+        );
+        v.background_url = (v.background_url || "").trim();
+        if (!v.background_url) {
+          showMsg(formMsg, `Background URL required for ${v.device_type}`, false);
+          return null;
+        }
+        return v;
+      }
+
+      function updateModeBadge() {
+        const mode = $("tplMode").value || "pc";
+        if (mode === "pc") $("tplDevice").value = "pc";
+        if (mode === "mobile") $("tplDevice").value = "mobile";
+        if (mode === "both") {
+          modeBadge.textContent = "Desktop + Mobile";
+        } else if (mode === "mobile") {
+          modeBadge.textContent = "Mobile";
+        } else {
+          modeBadge.textContent = "Desktop";
+        }
+      }
+
+      function updateSlugHint() {
+        const slug =
+          presetSlug || (currentUser && currentUser.linktree_slug) || "your-slug";
+        const device = $("tplDevice").value || currentDevice || "pc";
+        slugHint.textContent = `Import uses /linktrees/${slug} for ${device}.`;
+      }
+
+      function resetVariant(device) {
+        const d = device || currentDevice || "pc";
+        variantCache[d] = {
+          device_type: d,
+          location: "",
+          quote: "",
+          song_url: "",
+          background_url: "",
+          background_is_video: false,
+          transparency: 0,
+          name_effect: "none",
+          background_effect: "none",
+          display_name_mode: "slug",
+          custom_display_name: "",
+          link_color: "",
+          link_bg_color: "",
+          link_bg_alpha: 100,
+          text_color: "",
+          name_color: "",
+          location_color: "",
+          quote_color: "",
+          cursor_url: "",
+          discord_frame_enabled: false,
+          show_visit_counter: false,
+          visit_counter_color: "",
+          visit_counter_bg_color: "",
+          visit_counter_bg_alpha: 20,
+        };
+        applyVariantToForm(variantCache[d]);
+      }
+
+      function applyVariantToForm(v) {
+        $("tplLocation").value = v.location || "";
+        $("tplQuote").value = v.quote || "";
+        $("tplSong").value = v.song_url || "";
+        $("tplBackground").value = v.background_url || "";
+        $("tplBgVideo").value = v.background_is_video ? "true" : "false";
+        $("tplTrans").value =
+          v.transparency !== undefined && v.transparency !== null ? v.transparency : 0;
+        $("tplNameFx").value = v.name_effect || "none";
+        $("tplBgFx").value = v.background_effect || "none";
+        $("tplDisplayName").value = v.display_name_mode || "slug";
+        $("tplCustomName").value = v.custom_display_name || "";
+        $("tplLinkColor").value = v.link_color || "";
+        $("tplLinkBgColor").value = v.link_bg_color || "";
+        $("tplLinkBgAlpha").value =
+          v.link_bg_alpha !== undefined && v.link_bg_alpha !== null ? v.link_bg_alpha : 100;
+        $("tplTextColor").value = v.text_color || "";
+        $("tplNameColor").value = v.name_color || "";
+        $("tplLocationColor").value = v.location_color || "";
+        $("tplQuoteColor").value = v.quote_color || "";
+        $("tplCursorUrl").value = v.cursor_url || "";
+        $("tplDiscordFrame").value = v.discord_frame_enabled ? "true" : "false";
+        $("tplShowCounter").value = v.show_visit_counter ? "true" : "false";
+        $("tplCounterColor").value = v.visit_counter_color || "";
+        $("tplCounterBgColor").value = v.visit_counter_bg_color || "";
+        $("tplCounterBgAlpha").value =
+          v.visit_counter_bg_alpha !== undefined && v.visit_counter_bg_alpha !== null
+            ? v.visit_counter_bg_alpha
+            : 20;
+      }
+
+      function buildVariantFromForm(device) {
+        const d = device || currentDevice || "pc";
+        const displayMode = $("tplDisplayName").value || "slug";
+        const customName = $("tplCustomName").value.trim();
+        if (displayMode === "custom" && !customName) {
+          showMsg(formMsg, "Custom display name is required when mode is Custom", false);
+          return null;
+        }
+        return {
+          device_type: d,
+          location: $("tplLocation").value.trim() || "",
+          quote: $("tplQuote").value.trim() || "",
+          song_url: $("tplSong").value.trim() || "",
+          background_url: $("tplBackground").value.trim(),
+          background_is_video: $("tplBgVideo").value === "true",
+          transparency: Math.min(
+            100,
+            Math.max(0, parseInt($("tplTrans").value || "0", 10))
+          ),
+          name_effect: $("tplNameFx").value || "none",
+          background_effect: $("tplBgFx").value || "none",
+          display_name_mode: displayMode,
+          custom_display_name: displayMode === "custom" ? customName : null,
+          link_color: hexOrNull($("tplLinkColor").value),
+          link_bg_color: hexOrNull($("tplLinkBgColor").value),
+          link_bg_alpha: Math.min(
+            100,
+            Math.max(0, parseInt($("tplLinkBgAlpha").value || "100", 10))
+          ),
+          text_color: hexOrNull($("tplTextColor").value),
+          name_color: hexOrNull($("tplNameColor").value),
+          location_color: hexOrNull($("tplLocationColor").value),
+          quote_color: hexOrNull($("tplQuoteColor").value),
+          cursor_url: $("tplCursorUrl").value.trim() || null,
+          discord_frame_enabled: $("tplDiscordFrame").value === "true",
+          show_visit_counter: $("tplShowCounter").value === "true",
+          visit_counter_color: hexOrNull($("tplCounterColor").value),
+          visit_counter_bg_color: hexOrNull($("tplCounterBgColor").value),
+          visit_counter_bg_alpha: Math.min(
+            100,
+            Math.max(0, parseInt($("tplCounterBgAlpha").value || "20", 10))
+          ),
+        };
+      }
+
+      function ensureActiveVariant() {
+        const dev = $("tplDevice").value || currentDevice || "pc";
+        currentDevice = dev;
+        if (!variantCache[dev]) {
+          resetVariant(dev);
+        } else {
+          applyVariantToForm(variantCache[dev]);
+        }
+        updateModeBadge();
+        updateSlugHint();
+      }
+
+      async function importFromLinktree(deviceOverride) {
+        const device = deviceOverride || $("tplDevice").value || currentDevice || "pc";
+        const slug =
+          presetSlug ||
+          (currentUser && currentUser.linktree_slug) ||
+          (currentUser && currentUser.username);
+        if (!slug) {
+          showMsg(formMsg, "Set a Linktree slug first", false);
+          return;
+        }
+        try {
+          const lt = await apiGet(
+            `/api/linktrees/by-slug/${encodeURIComponent(slug)}/manage?device=${encodeURIComponent(
+              device
+            )}`
+          );
+          const data = {
+            device_type: device,
+            location: lt.location || "",
+            quote: lt.quote || "",
+            song_url: lt.song_url || "",
+            background_url: lt.background_url || "",
+            background_is_video: !!lt.background_is_video,
+            transparency: lt.transparency ?? 0,
+            name_effect: lt.name_effect || "none",
+            background_effect: lt.background_effect || "none",
+            display_name_mode: lt.display_name_mode || "slug",
+            custom_display_name: lt.custom_display_name || "",
+            link_color: lt.link_color || "",
+            link_bg_color: lt.link_bg_color || "",
+            link_bg_alpha: lt.link_bg_alpha ?? 100,
+            text_color: lt.text_color || "",
+            name_color: lt.name_color || "",
+            location_color: lt.location_color || "",
+            quote_color: lt.quote_color || "",
+            cursor_url: lt.cursor_url || "",
+            discord_frame_enabled: !!lt.discord_frame_enabled,
+            show_visit_counter: !!lt.show_visit_counter,
+            visit_counter_color: lt.visit_counter_color || "",
+            visit_counter_bg_color: lt.visit_counter_bg_color || "",
+            visit_counter_bg_alpha: lt.visit_counter_bg_alpha ?? 20,
+          };
+          variantCache[device] = data;
+          applyVariantToForm(data);
+          showMsg(formMsg, `Imported ${device} settings`, true);
+        } catch (e) {
+          showMsg(formMsg, "Import failed", false);
+        }
+      }
+
+      function resetForm() {
+        editingId = null;
+        $("tplCreator").value = (currentUser && currentUser.username) || "";
+        $("tplName").value = "";
+        $("tplDesc").value = "";
+        $("tplPublic").value = "true";
+        $("tplMode").value = presetDevice === "both" ? "both" : presetDevice || "pc";
+        $("tplDevice").value = currentDevice || "pc";
+        $("btnSaveTemplate").textContent = "Create template";
+        variantCache = { pc: null, mobile: null };
+        resetVariant($("tplDevice").value);
+        updateModeBadge();
+        updateSlugHint();
+      }
+
+      async function saveTemplate() {
+        const name = $("tplName").value.trim();
+        if (!name) {
+          showMsg(formMsg, "Name required", false);
+          return;
+        }
+        const desc = $("tplDesc").value.trim();
+        const creator = $("tplCreator").value.trim() || (currentUser && currentUser.username) || null;
+        const mode = $("tplMode").value || "pc";
+        const activeDevice = $("tplDevice").value || currentDevice || "pc";
+        const activeVariant = buildVariantFromForm(activeDevice);
+        if (!activeVariant) return;
+        variantCache[activeDevice] = activeVariant;
+
+        let variants = [];
+        if (mode === "both") {
+          const normPc = normalizeVariant(variantCache.pc, "pc");
+          const normMob = normalizeVariant(variantCache.mobile, "mobile");
+          if (!normPc || !normMob) return;
+          variants = [normPc, normMob];
+        } else {
+          const norm = normalizeVariant(activeVariant, activeDevice);
+          if (!norm) return;
+          variants = [norm];
+        }
+
+        if (mode === "both" && variants.length < 2) {
+          showMsg(formMsg, "Fill both desktop and mobile variants", false);
+          return;
+        }
+
+        const payload = {
+          name,
+          description: desc || null,
+          creator,
+          is_public: $("tplPublic").value === "true",
+          preview_image_url: null,
+          variants,
+        };
+
+        try {
+          if (editingId) {
+            await apiPatch(`/api/marketplace/templates/${editingId}`, payload);
+            showMsg(formMsg, "Template updated", true);
+            setTimeout(() => {
+              location.href = "/marketplace";
+            }, 600);
+          } else {
+            await apiPost("/api/marketplace/templates", payload);
+            showMsg(formMsg, "Template created", true);
+            setTimeout(() => {
+              location.href = "/marketplace";
+            }, 800);
+          }
+        } catch (e) {
+          showMsg(formMsg, `Save failed: ${e.message || e}`, false);
+        }
+      }
+
+      function ensureChoice() {
+        if (choiceMade) return;
+        choiceMade = true;
+        formSection.style.display = "flex";
+      }
+
+      function applyTemplateToForm(detail) {
+        const variants = detail.variants || [];
+        variantCache = { pc: null, mobile: null };
+        variants.forEach((v) => {
+          if (v.device_type === "pc" || v.device_type === "mobile") {
+            variantCache[v.device_type] = v;
+          }
+        });
+        const mode =
+          variants.length === 2
+            ? "both"
+            : variants[0] && variants[0].device_type
+            ? variants[0].device_type
+            : "pc";
+        $("tplMode").value = mode;
+        const initialDevice =
+          mode === "mobile" ? "mobile" : mode === "both" ? "pc" : "pc";
+        $("tplDevice").value = initialDevice;
+        updateModeBadge();
+        const active =
+          (mode === "both" ? variantCache[initialDevice] : variantCache[mode]) ||
+          variants[0] ||
+          {};
+        applyVariantToForm(active);
+      }
+
+      async function loadTemplateForEdit(templateId) {
+        try {
+          const detail = await apiGet(`/api/marketplace/templates/${templateId}`);
+          editingId = templateId;
+          choiceMade = true;
+          formSection.style.display = "flex";
+          $("tplName").value = detail.name || "";
+          $("tplCreator").value =
+            detail.creator || detail.owner_username || (currentUser && currentUser.username) || "";
+          $("tplDesc").value = detail.description || "";
+          $("tplPublic").value = detail.is_public ? "true" : "false";
+          $("btnSaveTemplate").textContent = "Update template";
+          applyTemplateToForm(detail);
+          showMsg(formMsg, "Template loaded for editing", true);
+        } catch (e) {
+          showMsg(formMsg, "Could not load template", false);
+        }
+      }
+
+      async function boot() {
+        const session = await fetchSession();
+        currentUser = session && session.user ? session.user : null;
+        if (!currentUser) {
+          userBadge.textContent = "Login required";
+          userBadge.classList.add("alert", "err");
+          location.href = `/login?next=${encodeURIComponent(location.href)}`;
+          return;
+        }
+        userBadge.textContent = currentUser.username || "User";
+        resetForm();
+        updateSlugHint();
+        const tplId = params.get("template_id");
+        if (tplId) {
+          await loadTemplateForEdit(tplId);
+        }
+      }
+
+      $("tplDevice").addEventListener("change", ensureActiveVariant);
+      $("tplMode").addEventListener("change", () => {
+        updateModeBadge();
+        ensureActiveVariant();
+      });
+      $("btnImportVariant").addEventListener("click", async () => {
+        ensureChoice();
+        await importFromLinktree();
+      });
+      $("btnResetVariant").addEventListener("click", () => {
+        ensureChoice();
+        resetVariant($("tplDevice").value);
+        showMsg(formMsg, "Variant cleared", true);
+      });
+      $("btnSaveTemplate").addEventListener("click", () => {
+        ensureChoice();
+        saveTemplate();
+      });
+      $("btnResetAll").addEventListener("click", () => {
+        resetForm();
+        showMsg(formMsg, "Form reset", true);
+      });
+      $("btnChoiceImport").addEventListener("click", async () => {
+        ensureChoice();
+        await importFromLinktree(currentDevice);
+      });
+      $("btnChoiceFresh").addEventListener("click", () => {
+        ensureChoice();
+        resetForm();
+        showMsg(formMsg, "Starting new template", true);
+      });
+
+      boot();
+    </script>
+  </body>
+</html>

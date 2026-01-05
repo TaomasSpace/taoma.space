@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy | TAOMA Space</title>
+    <meta
+      name="description"
+      content="Privacy Policy for taoma.space — clear information about personal data, legal bases, rights, and security."
+    />
+    <meta property="og:title" content="Privacy Policy | TAOMA Space" />
+    <meta
+      property="og:description"
+      content="Everything you need to know about privacy on taoma.space: controller, legal bases, user rights."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://taoma.space/datenschutz.html" />
+    <meta property="og:image" content="https://taoma.space/static/icon.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Privacy Policy | TAOMA Space" />
+    <meta
+      name="twitter:description"
+      content="Everything you need to know about privacy on taoma.space: controller, legal bases, user rights."
+    />
+    <meta name="twitter:image" content="https://taoma.space/static/icon.png" />
+    <link rel="canonical" href="https://taoma.space/datenschutz.html" />
+    <meta name="robots" content="index,follow" />
+    <meta name="theme-color" content="#0f1223" />
+    <link rel="icon" type="image/png" href="/static/icon.png" />
+    <style>
+      :root {
+        --bg: #0d1023;
+        --bg-2: linear-gradient(
+          140deg,
+          rgba(90, 110, 255, 0.14),
+          rgba(95, 199, 255, 0.06)
+        );
+        --card: #171b3b;
+        --card-soft: #11162e;
+        --ink: #e9ebff;
+        --muted: #a5adcf;
+        --line: #283056;
+        --acc: #9b7bff;
+        --acc-2: #5fc7ff;
+        --radius: 16px;
+        --shadow: 0 16px 50px rgba(0, 0, 0, 0.35), 0 2px 10px rgba(0, 0, 0, 0.2);
+        --container: 1080px;
+        --space: clamp(16px, 2vw, 22px);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.65 "Inter", system-ui, -apple-system, "Segoe UI",
+          sans-serif;
+        min-height: 100vh;
+      }
+
+      a {
+        color: var(--acc);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .hero {
+        padding: clamp(28px, 6vw, 72px) clamp(18px, 5vw, 48px);
+        background: radial-gradient(
+            900px 600px at 10% 0%,
+            rgba(159, 132, 255, 0.25),
+            transparent 65%
+          ),
+          radial-gradient(
+            900px 700px at 92% 2%,
+            rgba(95, 199, 255, 0.2),
+            transparent 60%
+          ),
+          linear-gradient(160deg, #0f1531, #0c1024 62%, #0d1023);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 800;
+        font-size: 1.05rem;
+        letter-spacing: 0.03em;
+        color: var(--ink);
+      }
+
+      .brand-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--acc), var(--acc-2));
+        box-shadow: 0 0 0 6px rgba(155, 123, 255, 0.12);
+      }
+
+      .chip {
+        padding: 0.4rem 0.85rem;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #ffffff0f;
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      .hero h1 {
+        margin: 18px 0 10px;
+        font-size: clamp(2.1rem, 4vw, 2.9rem);
+        letter-spacing: -0.01em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 28px;
+        height: 2px;
+        background: linear-gradient(90deg, var(--acc), var(--acc-2));
+        border-radius: 999px;
+      }
+
+      .lede {
+        max-width: 760px;
+        color: var(--muted);
+        font-size: 1.05rem;
+        margin: 0 0 12px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem 1.6rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      main {
+        width: min(100%, var(--container));
+        margin: 0 auto;
+        padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 32px) 72px;
+      }
+
+      .card {
+        background: linear-gradient(
+          180deg,
+          var(--card) 0%,
+          var(--card-soft) 100%
+        );
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: clamp(16px, 3vw, 26px);
+        margin-bottom: 18px;
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 1.35rem;
+      }
+
+      .card h3 {
+        margin: 12px 0 6px;
+        font-size: 1.1rem;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      ul {
+        padding-left: 1.1rem;
+        margin: 8px 0 0;
+        color: var(--ink);
+      }
+
+      li {
+        margin: 4px 0;
+      }
+
+      .note {
+        background: #ffffff0d;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-top: 10px;
+        color: var(--ink);
+      }
+
+      .page-footer {
+        width: min(100%, var(--container));
+        margin: 0 auto 36px;
+        padding: 14px clamp(16px, 4vw, 32px);
+        color: var(--muted);
+        text-align: center;
+        border-top: 1px solid var(--line);
+      }
+
+      .page-footer a {
+        color: inherit;
+        font-weight: 700;
+      }
+    </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "PrivacyPolicy",
+        "url": "https://taoma.space/datenschutz.html",
+        "name": "Privacy Policy | TAOMA Space",
+        "inLanguage": "en",
+        "description": "Transparent information about personal data, legal bases, and user rights on taoma.space.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "TAOMA",
+          "url": "https://taoma.space/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://taoma.space/static/icon.png"
+          },
+          "email": "mailto:taoma.m@proton.me"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="topbar">
+        <a class="brand" href="/">
+          <span class="brand-dot" aria-hidden="true"></span>
+          TAOMA Space
+        </a>
+        <a class="chip" href="mailto:taoma.m@proton.me">taoma.m@proton.me</a>
+      </div>
+      <div class="hero-text">
+        <div class="eyebrow">Transparency & Privacy</div>
+        <h1>Privacy Policy</h1>
+        <p class="lede">
+          This page explains what personal data is processed on taoma.space and
+          related services (including Linktree, GIF API, Global Chat, Health
+          Data, and login areas), for which purposes, and which rights you can
+          exercise.
+        </p>
+        <div class="meta">
+          <span>Effective: December 9, 2025</span>
+          <span>Applies to taoma.space and all provided subpages/tools.</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>1. Controller</h2>
+        <p>
+          The controller for this website and its functions is TAOMA (Taoma M.),
+          email:
+          <a href="mailto:taoma.m@proton.me">taoma.m@proton.me</a>.
+        </p>
+        <p>
+          If you have privacy questions, contact us anytime at this address.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>2. Core Principles</h2>
+        <ul>
+          <li>
+            We only process data that is necessary to provide the features.
+          </li>
+          <li>
+            No advertising or tracking cookies; only technically required
+            cookies or local storage.
+          </li>
+          <li>
+            No sharing with third parties without a legal basis. No selling of
+            data.
+          </li>
+          <li>
+            Transport encryption (TLS/HTTPS) and role-based access in protected
+            areas.
+          </li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>3. What Data We Process</h2>
+        <h3>3.1 Visiting the website</h3>
+        <p>
+          Server logs are generated (e.g., IP address, timestamp, requested URL,
+          user agent, possible error codes) to ensure uptime and troubleshoot
+          issues.
+        </p>
+
+        <h3>3.2 Account, login, and protected areas</h3>
+        <p>
+          For registration, login, profiles, or admin functions we process the
+          details you provide (e.g., username, password hash) plus
+          authentication data (tokens/session identifiers). These are required
+          to enable and secure access.
+        </p>
+
+        <h3>3.3 Linktree and public profiles</h3>
+        <p>
+          For Linktree/profile pages we store the links, descriptions, avatars,
+          or other content you voluntarily publish.
+        </p>
+
+        <h3>3.4 GIF API and uploads</h3>
+        <p>
+          When adding GIFs or using the API we process content and metadata
+          (title, tags, file URL, possibly user ID) plus technical logs to
+          prevent abuse.
+        </p>
+
+        <h3>3.5 Global Chat and communication</h3>
+        <p>
+          Messages in the chat are processed to provide the service, for
+          moderation, and for security. Abuse and spam protection can trigger
+          server-side checks.
+        </p>
+
+        <h3>3.6 Contact</h3>
+        <p>
+          If you contact us by email, we process your message and the contact
+          details you provide to handle your request.
+        </p>
+
+        <div class="note">
+          No third-party analytics tools are used. External resources are
+          integrated locally or as data-minimizing as possible.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>4. Legal Bases</h2>
+        <ul>
+          <li>
+            Art. 6(1)(b) GDPR — contract performance and pre-contractual steps
+            (e.g., account, Linktree, API, chat).
+          </li>
+          <li>
+            Art. 6(1)(f) GDPR — legitimate interests (operation, security, fraud
+            and abuse prevention, troubleshooting).
+          </li>
+          <li>
+            Art. 6(1)(a) GDPR — consent (e.g., voluntary content, newsletters if
+            offered, processing of special data).
+          </li>
+          <li>Art. 6(1)(c) GDPR — legal obligations where applicable.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>5. Storage Period</h2>
+        <ul>
+          <li>
+            Log data is usually kept short-term and used for security and
+            diagnostics.
+          </li>
+          <li>
+            Account and content data remain until you delete them or remove your
+            account.
+          </li>
+          <li>Statutory retention duties remain unaffected.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>6. Recipients and International Transfers</h2>
+        <p>
+          We only share data when necessary for contract performance, security,
+          or to comply with legal duties. Transfers to third countries occur
+          only where adequate safeguards exist. No tracking or advertising
+          providers are currently used.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>7. Security</h2>
+        <p>
+          Data is transmitted via TLS/HTTPS. Access to administrative areas is
+          protected by roles. Regular updates and (where implemented) backups
+          support availability and integrity.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>8. Your Rights</h2>
+        <ul>
+          <li>
+            Access, rectification, erasure, and restriction of processing.
+          </li>
+          <li>Data portability (Art. 20 GDPR).</li>
+          <li>Objection to processing based on Art. 6(1)(f) GDPR.</li>
+          <li>Withdrawal of consent with future effect.</li>
+          <li>Right to lodge a complaint with a data protection authority.</li>
+        </ul>
+        <div class="note">
+          Email <a href="mailto:taoma.m@proton.me">taoma.m@proton.me</a> if you
+          want to exercise any of these rights.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>9. Obligation to Provide Data</h2>
+        <p>
+          You only need to provide the data required for each feature. Without
+          essential details (e.g., login credentials) protected areas cannot be
+          used.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>10. Automated Decisions</h2>
+        <p>
+          No automated decision-making or profiling under Art. 22 GDPR takes
+          place.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>11. Changes</h2>
+        <p>
+          We will update this Privacy Policy when new features, legal
+          requirements, or technical changes require it. The current version
+          published here is authoritative.
+        </p>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      © <span id="year"></span> TAOMA™ ·
+      <a href="/datenschutz.html">Privacy Policy</a> ·
+      <a href="mailto:taoma.m@proton.me">Contact</a>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>
