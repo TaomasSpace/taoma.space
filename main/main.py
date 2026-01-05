@@ -110,14 +110,6 @@ async def root():
     """
     return {"status": "ok"}
 
-
-@app.head("/", tags=["health"])
-async def root_head():
-    """
-    Explicit HEAD handler for health checks.
-    """
-    return Response(status_code=200)
-
 ADMIN_PASSWORD = os.getenv("GIFAPI_ADMIN_PASSWORD", "")
 lock = threading.Lock()
 
