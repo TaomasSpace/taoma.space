@@ -102,14 +102,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 DATABASE_URL = os.getenv("DATABASE_URL")  # von Render
 db = PgGifDB(DATABASE_URL) if DATABASE_URL else SqliteGifDB("gifs.db")
 
-
-@app.get("/", tags=["health"])
-async def root():
-    """
-    Lightweight health endpoint so platform HEAD/GET checks return 200.
-    """
-    return {"status": "ok"}
-
 ADMIN_PASSWORD = os.getenv("GIFAPI_ADMIN_PASSWORD", "")
 lock = threading.Lock()
 
