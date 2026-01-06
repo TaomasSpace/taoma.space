@@ -1927,10 +1927,14 @@
           const saved = savedRes.ok ? await savedRes.json() : [];
           const mine = mineRes.ok ? await mineRes.json() : [];
           const merged = new Map();
-          mine.forEach((tpl) => merged.set(tpl.id, tpl));
-          saved.forEach((tpl) => {
-            if (!merged.has(tpl.id)) merged.set(tpl.id, tpl);
-          });
+          saved
+            .filter((tpl) => tpl && tpl.id)
+            .forEach((tpl) => merged.set(tpl.id, tpl));
+          mine
+            .filter((tpl) => tpl && tpl.id && tpl.is_public === false)
+            .forEach((tpl) => {
+              if (!merged.has(tpl.id)) merged.set(tpl.id, tpl);
+            });
           savedTemplates = Array.from(merged.values());
           renderSavedTemplates();
         } catch (e) {
