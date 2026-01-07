@@ -1682,6 +1682,8 @@
       const DEFAULT_NAME_COLOR = "#e9ebff";
       const DEFAULT_LOCATION_COLOR = "#a2a9c8";
       const DEFAULT_QUOTE_COLOR = "#e9ebff";
+      const PRIVATE_TEMPLATE_DESC = "Private snapshot created from Linktree Config.";
+      const PRIVATE_TEMPLATE_MARKER = PRIVATE_TEMPLATE_DESC.toLowerCase();
 
       function hexOrNull(val) {
         const t = (val || "").trim();
@@ -1932,6 +1934,9 @@
             .forEach((tpl) => merged.set(tpl.id, tpl));
           mine
             .filter((tpl) => tpl && tpl.id && tpl.is_public === false)
+            .filter((tpl) =>
+              (tpl.description || "").toLowerCase().includes(PRIVATE_TEMPLATE_MARKER)
+            )
             .forEach((tpl) => {
               if (!merged.has(tpl.id)) merged.set(tpl.id, tpl);
             });
@@ -1986,7 +1991,7 @@
             : templateDeviceLabel(mainVariant.device_type);
         const payload = {
           name: `${slug} – ${deviceLabel}`,
-          description: "Private snapshot created from Linktree Config.",
+          description: PRIVATE_TEMPLATE_DESC,
           creator: currentUser.username || "User",
           is_public: false,
           preview_image_url: null,
