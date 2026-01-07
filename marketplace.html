@@ -616,20 +616,50 @@
   </head>
   <body>
     <header>
-      <div class="container nav">
+    <header>
+      <div class="container nav" role="navigation" aria-label="Primary">
         <div class="brand">
-          <img class="logo" src="/static/icon.png" alt="TAOMA" />
-          <span>TAOMA</span>
+          <a href="/"
+            ><img
+              class="logo"
+              src="/static/icon.png"
+              alt="TAOMA logo"
+              width="30"
+              height="30"
+          /></a>
+          <a href="/">TAOMAT</a>
         </div>
-        <button class="mobile-toggle" id="navToggle" aria-label="Menu">
-          Menu
+        <button
+          type="button"
+          class="mobile-toggle"
+          id="mobileToggle"
+          aria-controls="primary-menu"
+          aria-expanded="false"
+          aria-label="Toggle menu"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M4 6H20M4 12H20M4 18H20"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
         </button>
-        <nav class="links" id="navLinks">
-          <a href="/">Home</a>
+        <nav id="primary-menu" class="links" aria-label="Site">
+          <a href="/" aria-current="page">Home</a>
+          <a href="/api">GIF API</a>
+          <a href="/api/gif/admin">Add GIFs</a>
+          <a href="/marketplace">Marketplace</a>
           <a href="/linktree/config">Linktree</a>
-          <a href="/marketplace" aria-current="page">Marketplace</a>
         </nav>
-        <div class="auth" id="authSlot"></div>
+        <div id="authSlot" class="auth"></div>
       </div>
     </header>
 
