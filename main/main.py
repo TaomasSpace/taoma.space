@@ -414,6 +414,64 @@ def _collect_media_references() -> tuple[set[str], bool, list[str]]:
     return urls, templates_ok, warnings
 
 
+def _perform_media_gc(min_age_seconds: int, refs: set[str]) -> tuple[list[str], list[str]]:
+    deleted: list[str] = []
+    skipped: list[str] = []
+    now = datetime.now().timestamp()
+
+    for p in UPLOAD_DIR.iterdir():
+        if not p.is_file():
+            continue
+        url = f"/media/{UPLOAD_DIR.name}/{p.name}"
+        try:
+            age = now - p.stat().st_mtime
+        except Exception as exc:
+            logger.warning("GC stat failed for %s: %s", p, exc)
+            skipped.append(p.name)
+            continue
+        if age < min_age_seconds:
+            skipped.append(p.name)  # zu frisch
+            continue
+        try:
+            if not _has_media_references(url, cache=refs):
+                p.unlink(missing_ok=True)
+                deleted.append(p.name)
+            else:
+                skipped.append(p.name)
+        except Exception as e:
+            logger.warning("GC failed for %s: %s", p, e)
+            skipped.append(p.name)
+
+    return deleted, skipped
+
+
+def _run_media_gc(min_age_seconds: int, *, require_templates: bool) -> dict:
+    refs, templates_ok, warnings = _collect_media_references()
+    if not templates_ok:
+        msg = "Template reference scan failed; skipped GC to avoid false positives."
+        if msg not in warnings:
+            warnings.append(msg)
+        if require_templates:
+            detail = {"message": "Template reference scan failed. No files were deleted.", "warnings": warnings}
+            raise HTTPException(503, detail)
+        return {
+            "ok": False,
+            "deleted": [],
+            "skipped": [],
+            "warnings": warnings,
+            "skipped_due_to_templates": True,
+        }
+
+    deleted, skipped = _perform_media_gc(min_age_seconds, refs)
+    return {
+        "ok": True,
+        "deleted": deleted,
+        "skipped": skipped,
+        "warnings": warnings,
+        "skipped_due_to_templates": False,
+    }
+
+
 def _is_referenced_in_templates(url: str) -> bool:
     if not _is_local_media_url(url):
         return False
@@ -2843,45 +2901,7 @@ async def upload_linkicon(
 )
 def media_garbage_collect(min_age_seconds: int = Query(60, ge=0)):
     """Löscht unreferenzierte Dateien im Upload-Verzeichnis, die älter als min_age_seconds sind."""
-    deleted = []
-    skipped = []
-    warnings = []
-    now = datetime.now().timestamp()
-
-    try:
-        refs, templates_ok, warnings = _collect_media_references()
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.warning("Media GC: failed to collect references: %s", exc)
-        raise HTTPException(500, "Could not build media reference index")
-
-    if not templates_ok:
-        detail = {
-            "message": "Template reference scan failed. No files were deleted.",
-            "warnings": warnings,
-        }
-        raise HTTPException(503, detail)
-
-    for p in UPLOAD_DIR.iterdir():
-        if not p.is_file():
-            continue
-        url = f"/media/{UPLOAD_DIR.name}/{p.name}"
-        age = now - p.stat().st_mtime
-        if age < min_age_seconds:
-            skipped.append(p.name)  # zu frisch
-            continue
-        try:
-            if not _has_media_references(url, cache=refs):
-                p.unlink(missing_ok=True)
-                deleted.append(p.name)
-            else:
-                skipped.append(p.name)
-        except Exception as e:
-            logger.warning("GC failed for %s: %s", p, e)
-            skipped.append(p.name)
-
-    return {"ok": True, "deleted": deleted, "skipped": skipped, "warnings": warnings}
+    return _run_media_gc(min_age_seconds, require_templates=True)
 
 
 @app.get("/nanna/birthdays/2025", include_in_schema=False)
@@ -3129,6 +3149,23 @@ def _fs():
         logger.error("Firestore unavailable: %s", exc)
         raise HTTPException(503, "Firestore is not configured")
     return firestoreDB
+
+
+@app.on_event("startup")
+async def _startup_media_gc():
+    try:
+        res = _run_media_gc(60, require_templates=False)
+        if not res.get("ok", False):
+            logger.warning("Startup media GC skipped: %s", "; ".join(res.get("warnings") or []))
+            return
+        logger.info(
+            "Startup media GC: deleted=%d skipped=%d warnings=%d",
+            len(res.get("deleted", [])),
+            len(res.get("skipped", [])),
+            len(res.get("warnings", [])),
+        )
+    except Exception as exc:
+        logger.warning("Startup media GC failed: %s", exc)
 
 
 class TemplateLinkIn(BaseModel):
