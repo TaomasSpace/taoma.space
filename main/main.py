@@ -246,6 +246,13 @@ def _path_from_media_url(url: str) -> pathlib.Path | None:
     return p
 
 
+def _add_local_media_url(url: str | None, bucket: set[str]) -> None:
+    if not url:
+        return
+    if _is_local_media_url(str(url)):
+        bucket.add(str(url))
+
+
 def _count_db_references(url: str) -> int:
     if not url:
         return 0
@@ -257,9 +264,33 @@ def _count_db_references(url: str) -> int:
         total += int(cur.fetchone()[0])
         cur.execute("SELECT COUNT(*) FROM linktrees WHERE background_url = %s", (url,))
         total += int(cur.fetchone()[0])
+        cur.execute("SELECT COUNT(*) FROM linktrees WHERE cursor_url = %s", (url,))
+        total += int(cur.fetchone()[0])
         cur.execute("SELECT COUNT(*) FROM linktree_links WHERE icon_url = %s", (url,))
         total += int(cur.fetchone()[0])
+        cur.execute("SELECT COUNT(*) FROM icons WHERE image_url = %s", (url,))
+        total += int(cur.fetchone()[0])
+        cur.execute("SELECT COUNT(*) FROM gifs WHERE url = %s", (url,))
+        total += int(cur.fetchone()[0])
         return total
+
+
+def _has_media_references(url: str, cache: set[str] | None = None) -> bool:
+    if not _is_local_media_url(url):
+        return False
+    if cache is not None:
+        return url in cache
+    try:
+        if _count_db_references(url) > 0:
+            return True
+    except Exception as exc:
+        logger.warning("DB reference check failed for %s: %s", url, exc)
+        return True
+    try:
+        return _is_referenced_in_templates(url)
+    except Exception as exc:
+        logger.warning("Template reference check failed for %s: %s", url, exc)
+        return True
 
 
 def _delete_if_unreferenced(url: str) -> bool:
@@ -267,7 +298,7 @@ def _delete_if_unreferenced(url: str) -> bool:
     Gibt True zurück, wenn gelöscht wurde."""
     if not _is_local_media_url(url):
         return False
-    if _count_db_references(url) > 0:
+    if _has_media_references(url):
         return False
     p = _path_from_media_url(url)
     if not p or not p.exists():
@@ -278,6 +309,126 @@ def _delete_if_unreferenced(url: str) -> bool:
     except Exception as e:
         logger.warning("Failed to delete unreferenced media %s: %s", url, e)
         return False
+
+
+def _template_doc_has_url(data: dict, url: str) -> bool:
+    if not data or not isinstance(data, dict):
+        return False
+    if data.get("preview_image_url") == url:
+        return True
+    if data.get("owner_profile_picture") == url:
+        return True
+    variants = data.get("variants") or []
+    for variant in variants:
+        if not isinstance(variant, dict):
+            continue
+        if any(variant.get(k) == url for k in ("song_url", "background_url", "cursor_url")):
+            return True
+        links = variant.get("links") or []
+        for link in links:
+            if isinstance(link, dict) and link.get("icon_url") == url:
+                return True
+    legacy = data.get("data")
+    if isinstance(legacy, dict):
+        if any(legacy.get(k) == url for k in ("song_url", "background_url", "cursor_url")):
+            return True
+        links = legacy.get("links") or []
+        for link in links:
+            if isinstance(link, dict) and link.get("icon_url") == url:
+                return True
+    return False
+
+
+def _collect_template_media_urls() -> tuple[set[str], bool, list[str]]:
+    urls: set[str] = set()
+    warnings: list[str] = []
+    try:
+        fs = _fs()
+    except HTTPException as exc:
+        if getattr(exc, "status_code", None) == 503:
+            warnings.append("Templates disabled (Firestore not configured); template references not scanned.")
+            return urls, True, warnings
+        warnings.append(str(exc.detail if hasattr(exc, "detail") else exc))
+        return urls, False, warnings
+    except Exception as exc:
+        warnings.append(str(exc))
+        return urls, False, warnings
+    try:
+        docs = fs.collection(TEMPLATE_COLLECTION).stream()
+    except Exception as exc:
+        warnings.append(str(exc))
+        return urls, False, warnings
+
+    for doc in docs:
+        data = doc.to_dict() or {}
+        _add_local_media_url(data.get("preview_image_url"), urls)
+        _add_local_media_url(data.get("owner_profile_picture"), urls)
+        variants = data.get("variants") or []
+        for variant in variants:
+            if not isinstance(variant, dict):
+                continue
+            _add_local_media_url(variant.get("song_url"), urls)
+            _add_local_media_url(variant.get("background_url"), urls)
+            _add_local_media_url(variant.get("cursor_url"), urls)
+            links = variant.get("links") or []
+            for link in links:
+                if isinstance(link, dict):
+                    _add_local_media_url(link.get("icon_url"), urls)
+        legacy = data.get("data")
+        if isinstance(legacy, dict):
+            _add_local_media_url(legacy.get("song_url"), urls)
+            _add_local_media_url(legacy.get("background_url"), urls)
+            _add_local_media_url(legacy.get("cursor_url"), urls)
+            links = legacy.get("links") or []
+            for link in links:
+                if isinstance(link, dict):
+                    _add_local_media_url(link.get("icon_url"), urls)
+    return urls, True, warnings
+
+
+def _collect_media_references() -> tuple[set[str], bool, list[str]]:
+    urls: set[str] = set()
+    warnings: list[str] = []
+    try:
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            queries = (
+                "SELECT profile_picture FROM users WHERE profile_picture IS NOT NULL",
+                "SELECT song_url FROM linktrees WHERE song_url IS NOT NULL",
+                "SELECT background_url FROM linktrees WHERE background_url IS NOT NULL",
+                "SELECT cursor_url FROM linktrees WHERE cursor_url IS NOT NULL",
+                "SELECT icon_url FROM linktree_links WHERE icon_url IS NOT NULL",
+                "SELECT image_url FROM icons WHERE image_url IS NOT NULL",
+                "SELECT url FROM gifs WHERE url IS NOT NULL",
+            )
+            for sql in queries:
+                cur.execute(sql)
+                rows = cur.fetchall()
+                for row in rows:
+                    _add_local_media_url(row[0], urls)
+    except Exception as exc:
+        raise HTTPException(500, "Could not collect media references") from exc
+
+    template_urls, templates_ok, template_warnings = _collect_template_media_urls()
+    urls |= template_urls
+    warnings.extend(template_warnings)
+    return urls, templates_ok, warnings
+
+
+def _is_referenced_in_templates(url: str) -> bool:
+    if not _is_local_media_url(url):
+        return False
+    try:
+        fs = _fs()
+    except HTTPException as exc:
+        if getattr(exc, "status_code", None) == 503:
+            return False
+        raise
+    docs = fs.collection(TEMPLATE_COLLECTION).stream()
+    for doc in docs:
+        data = doc.to_dict() or {}
+        if _template_doc_has_url(data, url):
+            return True
+    return False
 
 
 def _session_response(
@@ -2694,7 +2845,23 @@ def media_garbage_collect(min_age_seconds: int = Query(60, ge=0)):
     """Löscht unreferenzierte Dateien im Upload-Verzeichnis, die älter als min_age_seconds sind."""
     deleted = []
     skipped = []
+    warnings = []
     now = datetime.now().timestamp()
+
+    try:
+        refs, templates_ok, warnings = _collect_media_references()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning("Media GC: failed to collect references: %s", exc)
+        raise HTTPException(500, "Could not build media reference index")
+
+    if not templates_ok:
+        detail = {
+            "message": "Template reference scan failed. No files were deleted.",
+            "warnings": warnings,
+        }
+        raise HTTPException(503, detail)
 
     for p in UPLOAD_DIR.iterdir():
         if not p.is_file():
@@ -2705,7 +2872,7 @@ def media_garbage_collect(min_age_seconds: int = Query(60, ge=0)):
             skipped.append(p.name)  # zu frisch
             continue
         try:
-            if _is_local_media_url(url) and _count_db_references(url) == 0:
+            if not _has_media_references(url, cache=refs):
                 p.unlink(missing_ok=True)
                 deleted.append(p.name)
             else:
@@ -2714,7 +2881,7 @@ def media_garbage_collect(min_age_seconds: int = Query(60, ge=0)):
             logger.warning("GC failed for %s: %s", p, e)
             skipped.append(p.name)
 
-    return {"ok": True, "deleted": deleted, "skipped": skipped}
+    return {"ok": True, "deleted": deleted, "skipped": skipped, "warnings": warnings}
 
 
 @app.get("/nanna/birthdays/2025", include_in_schema=False)

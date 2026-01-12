@@ -1541,7 +1541,7 @@
         <button class="btn danger" type="submit">Run GC</button>
       </form>
       <div class="log" id="logGC"></div>
-      <p class="note muted">Deletes löcal <code class="mono">/media/…</code> files without db connection.</p>
+      <p class="note muted">Deletes only unused uploads older than the chosen age. Checks linktrees, icons, templates, and profile pictures before removing anything.</p>
     </section>
   </main>
 
@@ -1892,9 +1892,22 @@
       try {
         const r = await apipost('/api/admin/media/gc', { min_age_seconds: age });
         const t = await r.json();
-        if (!r.ok) { show('#logGC', t?.detail || JSON.stringify(t), false); return; }
-        const summary = `Deleted: ${t.deleted.length} • Skipped: ${t.skipped.length}\n\nDeleted files:\n- ${t.deleted.join('\n- ')}`;
-        show('#logGC', summary, true);
+        if (!r.ok) {
+          const detail = t?.detail;
+          const msg = typeof detail === 'string' ? detail : detail?.message || JSON.stringify(detail);
+          const warn = (detail?.warnings || []).length ? `\nWarnings:\n- ${detail.warnings.join('\n- ')}` : '';
+          show('#logGC', `${msg}${warn}`, false);
+          return;
+        }
+        const deleted = Array.isArray(t.deleted) ? t.deleted : [];
+        const skipped = Array.isArray(t.skipped) ? t.skipped : [];
+        const warnings = Array.isArray(t.warnings) ? t.warnings : [];
+        const parts = [
+          `Deleted: ${deleted.length} | Skipped: ${skipped.length}`,
+          warnings.length ? `Warnings:\n- ${warnings.join('\n- ')}` : '',
+          deleted.length ? `Deleted files:\n- ${deleted.join('\n- ')}` : '',
+        ].filter(Boolean);
+        show('#logGC', parts.join('\n\n'), true);
       } catch (err) { show('#logGC', String(err), false); }
     });
 
