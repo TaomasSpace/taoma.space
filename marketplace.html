@@ -906,7 +906,7 @@
 
     <script>
       const $ = (id) => document.getElementById(id);
-      const escapeHtml = (value) =>
+      const escapeHtml1 = (value) =>
         String(value !== undefined && value !== null ? value : "").replace(
           /[&<>"']/g,
           (ch) =>
@@ -1037,14 +1037,14 @@
           <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
             ${
               pfp
-                ? `<img class="avatar" src="${pfp}" alt="${escapeHtml(
+                ? `<img class="avatar" src="${pfp}" alt="${escapeHtml1(
                     uname
                   )}'s profile picture">`
-                : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(
+                : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml1(
                     initials
                   )}</span>`
             }
-            <span class="uname" style="font-weight:700;font-size:.95rem">${escapeHtml(
+            <span class="uname" style="font-weight:700;font-size:.95rem">${escapeHtml1(
               uname
             )}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1194,27 +1194,27 @@
               <div class="template-pfp">
                 ${
                   previewIsVideo
-                    ? `<video data-preview-video src="${preview}" muted playsinline preload="auto" aria-label="${escapeHtml(
+                    ? `<video data-preview-video src="${preview}" muted playsinline preload="auto" aria-label="${escapeHtml1(
                         item.name
                       )} preview"></video>`
-                    : `<img src="${preview}" alt="${escapeHtml(
+                    : `<img src="${preview}" alt="${escapeHtml1(
                         item.name
                       )} preview" />`
                 }
               </div>
               <div>
-                <p class="template-title">${escapeHtml(item.name)}</p>
+                <p class="template-title">${escapeHtml1(item.name)}</p>
                 <div class="template-meta">
                   <span style="display:inline-flex;align-items:center;gap:.45rem">
                     <img src="${ownerAvatar}" alt="avatar" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #ffffff22">
-                    by ${escapeHtml(
+                    by ${escapeHtml1(
                       item.creator || item.owner_username || "unknown"
                     )}
                   </span>
                 </div>
               </div>
             </div>
-            <div class="template-meta">${escapeHtml(
+            <div class="template-meta">${escapeHtml1(
               item.description || "No description yet."
             )}</div>
             <div class="row" style="display:flex;gap:.5rem;flex-wrap:wrap">
