@@ -3,19 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#2563EB" />
     <title>Anime GIF API - Explorer & Docs</title>
     <style>
       :root {
-        --bg: #0e1020;
-        --card: #171b3b;
-        --ink: #e7e9ff;
-        --muted: #a2a9c8;
-        --acc: #85a3ff;
-        --acc-2: #5b7bff;
-        --ok: #35d79c;
-        --err: #ff5a6a;
-        --ring: #85a3ff55;
-        --container: 1100px;
+        --bg: #ffffff;
+        --card: #f8fafc;
+        --ink: #0f172a;
+        --muted: #475569;
+        --acc: #2563eb;
+        --acc-2: #1d4ed8;
+        --ok: #10b981;
+        --err: #ef4444;
+        --ring: rgba(37, 99, 235, 0.25);
+        --container: 1280px;
+        --border: #e2e8f0;
       }
 
       * {
@@ -222,6 +224,367 @@
 
         .links.open {
           display: flex;
+        }
+      }
+
+      /* --- Design system overrides --- */
+      body {
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      body::before {
+        content: none;
+      }
+
+      header {
+        background: #ffffff;
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: none;
+      }
+
+      .nav {
+        height: 72px;
+      }
+
+      @media (max-width: 1024px) {
+        .nav {
+          height: 64px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .nav {
+          height: 56px;
+        }
+      }
+
+      .links a {
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      .links a:hover {
+        color: var(--ink);
+        border-color: transparent;
+        background: transparent;
+      }
+
+      .links a[aria-current="page"] {
+        color: var(--acc);
+        border-bottom: 2px solid var(--acc);
+        border-radius: 0;
+      }
+
+      .mobile-toggle {
+        border-color: var(--border);
+        background: #ffffff;
+        color: var(--ink);
+      }
+
+      @media (max-width: 800px) {
+        .links {
+          background: #ffffff;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .links a {
+          border-bottom: 1px solid var(--border);
+        }
+      }
+
+      .wrap {
+        width: min(100%, var(--container));
+        margin: 0 auto;
+        padding: 40px 40px 80px;
+        display: grid;
+        gap: 24px;
+      }
+
+      @media (max-width: 1024px) {
+        .wrap {
+          padding: 32px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .wrap {
+          padding: 24px 16px 64px;
+        }
+      }
+
+      .card {
+        background: #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      }
+
+      .btn {
+        border-radius: 8px;
+        border: 1px solid var(--acc);
+        background: var(--acc);
+        color: #ffffff;
+      }
+
+      .btn:hover {
+        background: var(--acc-2);
+        border-color: var(--acc-2);
+      }
+
+      .btn.secondary,
+      .btn.ghost {
+        background: #ffffff;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+
+      .btn.secondary:hover,
+      .btn.ghost:hover {
+        background: var(--card);
+        color: var(--ink);
+      }
+
+      .avatar-btn {
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--ink);
+      }
+
+      .avatar-fallback {
+        background: #e2e8f0;
+        color: var(--ink);
+      }
+
+      .menu {
+        background: #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      }
+
+      .menu a,
+      .menu button {
+        color: var(--ink);
+      }
+
+      .menu a:hover,
+      .menu button:hover {
+        background: var(--card);
+      }
+
+      input,
+      select,
+      textarea {
+        background: #ffffff;
+        border: 1px solid var(--border);
+        color: var(--ink);
+        border-radius: 8px;
+      }
+
+      code,
+      .mono {
+        background: #f1f5f9;
+        color: var(--ink);
+        border: 1px solid var(--border);
+      }
+
+      .pill {
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        color: var(--acc);
+      }
+
+      .tabs {
+        gap: 12px;
+      }
+
+      .tab {
+        border: 1px solid var(--border);
+        background: #ffffff;
+        color: var(--muted);
+      }
+
+      .tab.active {
+        background: #eff6ff;
+        color: var(--acc);
+        border-color: #dbeafe;
+      }
+
+      table {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--border);
+        color: var(--ink);
+      }
+
+      .search-bar {
+        position: sticky;
+        top: 72px;
+        z-index: 5;
+        background: #ffffff;
+        border-bottom: 1px solid var(--border);
+        padding: 16px 0;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+
+      .search-input {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0 16px;
+        height: 48px;
+        background: #ffffff;
+      }
+
+      .search-input input {
+        border: 0;
+        outline: 0;
+        background: transparent;
+        flex: 1;
+        font: inherit;
+      }
+
+      .search-filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .category-tabs {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+
+      .category-tabs .btn {
+        border-radius: 999px;
+        height: 40px;
+        padding: 0 16px;
+      }
+
+      #listView.grid {
+        display: block;
+        column-count: 5;
+        column-gap: 16px;
+      }
+
+      #listView .gifCard {
+        break-inside: avoid;
+        display: inline-block;
+        width: 100%;
+        margin-bottom: 16px;
+        background: #ffffff;
+        border: 1px solid var(--border);
+      }
+
+      #listView .gifCard img {
+        height: auto;
+        border: 1px solid var(--border);
+      }
+
+      #gifImg {
+        border: 1px solid var(--border) !important;
+      }
+
+      @media (max-width: 1024px) {
+        #listView.grid {
+          column-count: 4;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .search-bar {
+          top: 56px;
+        }
+
+        #listView.grid {
+          column-count: 2;
+        }
+      }
+
+      .site-footer {
+        background: #0f172a;
+        color: #94a3b8;
+        margin-top: 64px;
+        padding: 60px 0 32px;
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 32px;
+      }
+
+      .footer-brand p {
+        margin: 12px 0 0;
+        color: #94a3b8;
+        max-width: 300px;
+      }
+
+      .footer-links h3 {
+        margin: 0 0 12px;
+        font-size: 14px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #ffffff;
+      }
+
+      .footer-links a {
+        display: block;
+        margin-bottom: 10px;
+        color: #94a3b8;
+      }
+
+      .footer-links a:hover {
+        color: #ffffff;
+      }
+
+      .footer-bottom {
+        border-top: 1px solid #334155;
+        margin-top: 32px;
+        padding-top: 24px;
+        text-align: center;
+        font-size: 14px;
+        color: #64748b;
+      }
+
+      footer {
+        background: #0f172a;
+        color: #94a3b8;
+        padding: 40px 0;
+      }
+
+      footer a {
+        color: #ffffff;
+      }
+
+      @media (max-width: 1024px) {
+        .footer-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .footer-grid {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -616,6 +979,91 @@
         everything is empty, we call <code>/gifs?</code> for a random GIF.
       </p>
 
+      <div class="search-bar" aria-label="GIF search">
+        <div class="search-input">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              cx="11"
+              cy="11"
+              r="7"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M20 20l-3.5-3.5"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+          <label class="sr-only" for="q" data-i18n="label.q"
+            >Search in the title (q)</label
+          >
+          <input
+            id="q"
+            type="text"
+            data-i18n-placeholder="ph.q"
+            placeholder="Search GIFs by title"
+          />
+        </div>
+        <div class="hint" data-i18n="hint.q">
+          If this is set, don't use tag/anime/character.
+        </div>
+        <div class="search-filters">
+          <div>
+            <label for="tag" data-i18n="label.tag">Tag (tag)</label>
+            <div class="actions">
+              <select id="tag">
+                <option value="">-</option>
+              </select>
+              <button
+                id="refreshTags"
+                class="btn secondary"
+                type="button"
+                data-i18n="btn.refreshTags"
+              >
+                Reload tags
+              </button>
+            </div>
+            <div class="hint" data-i18n="hint.tags">
+              Dropdown loads with <code>GET /gifs?list=tags</code>.
+            </div>
+          </div>
+          <div>
+            <label for="anime" data-i18n="label.anime">Anime (anime)</label>
+            <input
+              id="anime"
+              type="text"
+              data-i18n-placeholder="ph.anime"
+              placeholder="Call of the Night"
+            />
+            <div class="hint" data-i18n="hint.anime">
+              Exact Match (case-insensitive).
+            </div>
+          </div>
+          <div>
+            <label for="character" data-i18n="label.character"
+              >Character (character)</label
+            >
+            <input
+              id="character"
+              type="text"
+              data-i18n-placeholder="ph.character"
+              placeholder="Nazuna Nanakusa"
+            />
+            <div class="hint" data-i18n="hint.character">
+              Exact Match (case-insensitive).
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <h2>Ownership &amp; Blacklist</h2>
         <p class="muted">
@@ -667,67 +1115,7 @@
           </div>
         </div>
 
-        <div class="row cols-3">
-          <div>
-            <label for="q" data-i18n="label.q">Search in the title (q)</label>
-            <input
-              id="q"
-              type="text"
-              data-i18n-placeholder="ph.q"
-              placeholder="e.g. Nazuna Nanakusa"
-            />
-            <div class="hint" data-i18n="hint.q">
-              If this is set, don't use tag/anime/character.
-            </div>
-          </div>
-          <div>
-            <label for="tag" data-i18n="label.tag">Tag (tag)</label>
-            <div class="actions">
-              <select id="tag">
-                <option value="">-</option>
-              </select>
-              <button
-                id="refreshTags"
-                class="btn secondary"
-                type="button"
-                data-i18n="btn.refreshTags"
-              >
-                Reload tags
-              </button>
-            </div>
-            <div class="hint" data-i18n="hint.tags">
-              Dropdown loads with <code>GET /gifs?list=tags</code>.
-            </div>
-          </div>
-          <div>
-            <label for="anime" data-i18n="label.anime">Anime (anime)</label>
-            <input
-              id="anime"
-              type="text"
-              data-i18n-placeholder="ph.anime"
-              placeholder="Call of the Night"
-            />
-            <div class="hint" data-i18n="hint.anime">
-              Exact Match (case-insensitive).
-            </div>
-          </div>
-        </div>
-
-        <div class="row cols-3">
-          <div>
-            <label for="character" data-i18n="label.character"
-              >Character (character)</label
-            >
-            <input
-              id="character"
-              type="text"
-              data-i18n-placeholder="ph.character"
-              placeholder="Nazuna Nanakusa"
-            />
-            <div class="hint" data-i18n="hint.character">
-              Exact Match (case-insensitive).
-            </div>
-          </div>
+        <div class="row cols-2">
           <div>
             <label for="limit" data-i18n="label.limit">Limit (limit)</label>
             <input
@@ -757,7 +1145,7 @@
           </div>
         </div>
 
-        <div class="actions" style="margin-top: 8px">
+        <div class="actions category-tabs" style="margin-top: 8px">
           <button id="presetRandom" class="btn" data-i18n="btn.presetRandom">
             Preset: Random
           </button>
