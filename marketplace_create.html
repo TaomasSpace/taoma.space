@@ -1367,12 +1367,16 @@
         const session = await fetchSession();
         currentUser = session && session.user ? session.user : null;
         if (!currentUser) {
-          userBadge.textContent = "Login required";
-          userBadge.classList.add("alert", "err");
+          if (userBadge) {
+            userBadge.textContent = "Login required";
+            userBadge.classList.add("alert", "err");
+          }
           location.href = `/login?next=${encodeURIComponent(location.href)}`;
           return;
         }
-        userBadge.textContent = currentUser.username || "User";
+        if (userBadge) {
+          userBadge.textContent = currentUser.username || "User";
+        }
         resetForm();
         updateSlugHint();
         const tplId = params.get("template_id");
