@@ -1792,8 +1792,10 @@
         );
       }
 
-      $("navToggle").addEventListener("click", () => {
-        $("navLinks").classList.toggle("open");
+      const navToggle = $("navToggle");
+      const navLinks = $("navLinks");
+      navToggle?.addEventListener("click", () => {
+        navLinks?.classList.toggle("open");
       });
 
       boot();
