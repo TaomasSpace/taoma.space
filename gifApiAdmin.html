@@ -4,25 +4,23 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Anime GIF API - Admin</title>
-    <meta name="theme-color" content="#2563EB" />
     <link rel="icon" type="image/png" href="/static/icon.png" />
     <style>
       :root {
-        --bg: #ffffff;
-        --bg-soft: #f8fafc;
-        --card: #f8fafc;
-        --ink: #0f172a;
-        --muted: #475569;
-        --acc: #2563eb;
-        --acc-2: #1d4ed8;
-        --ok: #10b981;
-        --danger: #ef4444;
-        --ring: rgba(37, 99, 235, 0.25);
-        --shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-        --radius: 12px;
+        --bg: #0e1020;
+        --bg-soft: #141735;
+        --card: #171b3b;
+        --ink: #e9ebff;
+        --muted: #a2a9c8;
+        --acc: #85a3ff;
+        --acc-2: #5b7bff;
+        --ok: #35d79c;
+        --danger: #ff5a6a;
+        --ring: #85a3ff55;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
+        --radius: 16px;
         --space: clamp(16px, 2vw, 24px);
-        --container: 1280px;
-        --border: #e2e8f0;
+        --container: 1100px;
       }
 
       * {
@@ -146,212 +144,6 @@
         .links.open {
           display: flex;
         }
-      }
-
-      /* --- Design system overrides --- */
-      body {
-        background: var(--bg);
-        color: var(--ink);
-      }
-
-      body::before {
-        content: none;
-      }
-
-      header {
-        background: #ffffff;
-        border-bottom: 1px solid var(--border);
-        backdrop-filter: none;
-      }
-
-      .nav {
-        height: 72px;
-      }
-
-      @media (max-width: 1024px) {
-        .nav {
-          height: 64px;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .nav {
-          height: 56px;
-        }
-      }
-
-      .links a {
-        color: var(--muted);
-        font-weight: 500;
-      }
-
-      .links a:hover {
-        color: var(--ink);
-        border-color: transparent;
-        background: transparent;
-      }
-
-      .links a[aria-current="page"] {
-        color: var(--acc);
-        border-bottom: 2px solid var(--acc);
-        border-radius: 0;
-      }
-
-      .mobile-toggle {
-        border-color: var(--border);
-        background: #ffffff;
-        color: var(--ink);
-      }
-
-      @media (max-width: 800px) {
-        .links {
-          background: #ffffff;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .links a {
-          border-bottom: 1px solid var(--border);
-        }
-      }
-
-      .card {
-        background: #ffffff;
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-      }
-
-      .btn {
-        border-radius: 8px;
-        border: 1px solid var(--acc);
-        background: var(--acc);
-        color: #ffffff;
-        box-shadow: none;
-      }
-
-      .btn:hover {
-        transform: none;
-        background: var(--acc-2);
-        border-color: var(--acc-2);
-      }
-
-      .btn.secondary {
-        background: #ffffff;
-        border: 1px solid var(--border);
-        color: var(--muted);
-      }
-
-      .btn.secondary:hover {
-        background: var(--bg-soft);
-        color: var(--ink);
-      }
-
-      .avatar-btn {
-        background: var(--bg-soft);
-        border: 1px solid var(--border);
-        color: var(--ink);
-      }
-
-      .avatar-fallback {
-        background: #e2e8f0;
-        color: var(--ink);
-      }
-
-      .menu {
-        background: #ffffff;
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-      }
-
-      .menu a,
-      .menu button {
-        color: var(--ink);
-      }
-
-      .menu a:hover,
-      .menu button:hover {
-        background: var(--bg-soft);
-      }
-
-      input,
-      select,
-      textarea {
-        background: #ffffff;
-        border: 1px solid var(--border);
-        color: var(--ink);
-        border-radius: 8px;
-      }
-
-      .pill {
-        background: #eff6ff;
-        border: 1px solid #dbeafe;
-        color: var(--acc);
-      }
-
-      main {
-        padding-block: 80px;
-      }
-
-      @media (max-width: 1024px) {
-        main {
-          padding-block: 60px;
-        }
-      }
-
-      @media (max-width: 768px) {
-        main {
-          padding-block: 40px;
-        }
-      }
-
-      .grid.two {
-        grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-        gap: 48px;
-      }
-
-      .preview-card {
-        position: sticky;
-        top: 96px;
-      }
-
-      .preview {
-        background: var(--bg-soft);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 16px;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .preview img {
-        max-height: 400px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-      }
-
-      #payloadBox {
-        background: #f1f5f9 !important;
-        border: 1px solid var(--border) !important;
-        color: var(--ink) !important;
-      }
-
-      @media (max-width: 1024px) {
-        .grid.two {
-          grid-template-columns: 1fr;
-        }
-
-        .preview-card {
-          position: static;
-        }
-      }
-
-      footer {
-        background: #0f172a;
-        color: #94a3b8;
-        border-top: 0;
-      }
-
-      footer a {
-        color: #ffffff;
       }
 
       footer {
@@ -805,6 +597,22 @@
                 <div id="tags" class="chips"></div>
               </div>
             </div>
+            <div class="preview" id="preview" style="display: none">
+              <img id="gifPreview" alt="GIF preview" />
+              <pre
+                id="payloadBox"
+                style="
+                  flex: 1;
+                  min-height: 180px;
+                  background: #0b1030;
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  border-radius: 12px;
+                  padding: 12px;
+                  color: #cfe0ff;
+                  overflow: auto;
+                "
+              ></pre>
+            </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap">
               <button type="submit" class="btn" data-i18n="admin.save">
                 save
@@ -830,22 +638,7 @@
           </form>
         </div>
 
-        <div class="card preview-card" aria-labelledby="previewTitle">
-          <div class="section-title">
-            <h2 id="previewTitle">Preview</h2>
-            <span class="pill">Live</span>
-          </div>
-          <div class="preview" id="preview" style="display: none">
-            <img id="gifPreview" alt="GIF preview" />
-            <pre id="payloadBox"></pre>
-          </div>
-          <p class="muted" id="previewHint">
-            Paste a GIF URL and add tags to see the preview update here.
-          </p>
-        </div>
-      </section>
-
-      <section class="card" id="blacklistCard">
+        <div class="card" id="blacklistCard">
           <div class="section-title">
             <h2>GIF-Blacklist</h2>
             <span class="pill">Only Admins</span>
@@ -877,6 +670,7 @@
               overflow: auto;
             "
           ></div>
+        </div>
       </section>
 
       <section class="card">
@@ -1053,15 +847,12 @@
       function showPreview() {
         const p = buildPayload();
         $("#preview").style.display = p.url ? "flex" : "none";
-        const hint = document.getElementById("previewHint");
-        if (hint) hint.style.display = p.url ? "none" : "block";
         $("#gifPreview").src = p.url || "";
         $("#pillNSFW").textContent = p.nsfw ? "nsfw" : "sfw";
-        $("#pillNSFW").style.background = p.nsfw
-          ? "rgba(239, 68, 68, 0.12)"
-          : "rgba(37, 99, 235, 0.12)";
-        $("#pillNSFW").style.borderColor = p.nsfw ? "#fca5a5" : "#dbeafe";
-        $("#pillNSFW").style.color = p.nsfw ? "#b91c1c" : "#2563eb";
+        $("#pillNSFW").style.background = p.nsfw ? "#31131b" : "#0b1030";
+        $("#pillNSFW").style.borderColor = p.nsfw
+          ? "#ff6b81"
+          : "rgba(255,255,255,.08)";
         $("#payloadBox").textContent = JSON.stringify(p, null, 2);
       }
       $("#addChar").onclick = () => {

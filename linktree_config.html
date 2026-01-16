@@ -10,7 +10,7 @@
       property="og:description"
       content="Edit your linktree profile, links and badges."
     />
-    <meta name="theme-color" content="#2563EB" />
+    <meta name="theme-color" content="#0f1223" />
     <link rel="icon" type="image/png" href="/static/icon.png" />
     <style>
       /* ---- Base / Tokens ---- */
@@ -21,21 +21,20 @@
       }
 
       :root {
-        --bg: #ffffff;
-        --bg-soft: #f8fafc;
-        --card: #f8fafc;
-        --ink: #0f172a;
-        --muted: #475569;
-        --acc: #2563eb;
-        --acc-2: #1d4ed8;
-        --ok: #10b981;
-        --danger: #ef4444;
-        --ring: rgba(37, 99, 235, 0.25);
-        --shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-        --radius: 12px;
+        --bg: #0e1020;
+        --bg-soft: #141735;
+        --card: #171b3b;
+        --ink: #e9ebff;
+        --muted: #a2a9c8;
+        --acc: #85a3ff;
+        --acc-2: #5b7bff;
+        --ok: #35d79c;
+        --danger: #ff5a6a;
+        --ring: #85a3ff55;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
+        --radius: 16px;
         --space: clamp(16px, 2vw, 24px);
-        --container: 1280px;
-        --border: #e2e8f0;
+        --container: 1100px;
       }
 
       html,
@@ -931,272 +930,6 @@
         outline-offset: 3px;
         box-shadow: 0 0 0 6px var(--ring);
       }
-
-      /* --- Design system overrides --- */
-      body {
-        background: var(--bg);
-        color: var(--ink);
-      }
-
-      body::before {
-        content: none;
-      }
-
-      header {
-        background: #ffffff;
-        border-bottom: 1px solid var(--border);
-        backdrop-filter: none;
-      }
-
-      .nav {
-        height: 72px;
-      }
-
-      @media (max-width: 1024px) {
-        .nav {
-          height: 64px;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .nav {
-          height: 56px;
-        }
-      }
-
-      .links a {
-        color: var(--muted);
-        font-weight: 500;
-      }
-
-      .links a:hover {
-        color: var(--ink);
-        border-color: transparent;
-        background: transparent;
-      }
-
-      .links a[aria-current="page"] {
-        color: var(--acc);
-        border-bottom: 2px solid var(--acc);
-        border-radius: 0;
-      }
-
-      @media (max-width: 800px) {
-        .links {
-          background: #ffffff;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .links a {
-          border-bottom: 1px solid var(--border);
-        }
-      }
-
-      .mobile-toggle {
-        border-color: var(--border);
-        background: #ffffff;
-        color: var(--ink);
-      }
-
-      .btn {
-        border-radius: 8px;
-        border: 1px solid var(--acc);
-        background: var(--acc);
-        color: #ffffff;
-        box-shadow: none;
-      }
-
-      .btn:hover {
-        transform: none;
-        background: var(--acc-2);
-        border-color: var(--acc-2);
-      }
-
-      .btn.ghost {
-        background: #ffffff;
-        border: 1px solid var(--border);
-        color: var(--muted);
-      }
-
-      .btn.ghost:hover {
-        background: var(--bg-soft);
-        color: var(--ink);
-      }
-
-      .avatar-btn {
-        background: var(--bg-soft);
-        border: 1px solid var(--border);
-        color: var(--ink);
-      }
-
-      .avatar-fallback {
-        background: #e2e8f0;
-        color: var(--ink);
-      }
-
-      .btn.danger {
-        background: var(--danger);
-        border-color: var(--danger);
-      }
-
-      .card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-      }
-
-      .chip {
-        background: #eff6ff;
-        border: 1px solid #dbeafe;
-        color: var(--acc);
-      }
-
-      .input,
-      .select,
-      textarea,
-      input[type="file"] {
-        background: #ffffff;
-        border: 1px solid var(--border);
-        color: var(--ink);
-        border-radius: 8px;
-      }
-
-      .input:focus,
-      .select:focus,
-      textarea:focus {
-        border-color: var(--acc);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-      }
-
-      .link-item,
-      .badge-item,
-      .template-card,
-      .discord-box,
-      .alert {
-        background: var(--bg-soft);
-        border: 1px solid var(--border);
-      }
-
-      .menu {
-        background: #ffffff;
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-      }
-
-      .menu a,
-      .menu button {
-        color: var(--ink);
-      }
-
-      .menu a:hover,
-      .menu button:hover {
-        background: var(--bg-soft);
-      }
-
-      main {
-        padding-block: 80px;
-      }
-
-      @media (max-width: 1024px) {
-        main {
-          padding-block: 60px;
-        }
-      }
-
-      @media (max-width: 768px) {
-        main {
-          padding-block: 40px;
-        }
-      }
-
-      .wrap {
-        grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-        gap: 48px;
-      }
-
-      .panel.config {
-        grid-column: 1;
-      }
-
-      .panel.preview-panel {
-        grid-column: 2;
-        position: sticky;
-        top: 96px;
-      }
-
-      .preview-phone {
-        background: #ffffff;
-        border-radius: 24px;
-        padding: 24px;
-        border: 1px solid var(--border);
-        display: flex;
-        justify-content: center;
-      }
-
-      .preview-frame {
-        width: 100%;
-        height: 520px;
-        border: 0;
-        border-radius: 20px;
-        background: var(--bg-soft);
-      }
-
-      .preview-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 16px;
-      }
-
-      .preview-fab {
-        display: none;
-        position: fixed;
-        left: 16px;
-        right: 16px;
-        bottom: 16px;
-        z-index: 60;
-      }
-
-      @media (max-width: 980px) {
-        .wrap {
-          grid-template-columns: 1fr;
-        }
-
-        .panel.preview-panel {
-          position: static;
-          grid-column: 1;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .panel.preview-panel {
-          display: none;
-        }
-
-        .preview-fab {
-          display: flex;
-        }
-      }
-
-      footer {
-        background: #0f172a;
-        color: #94a3b8;
-        border-top: 0;
-      }
-
-      footer a {
-        color: #ffffff;
-      }
-
-      .visitor-counter {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid #334155;
-        color: #e2e8f0;
-      }
-
-      .visitor-counter svg {
-        color: #94a3b8;
-      }
     </style>
   </head>
 
@@ -1285,7 +1018,7 @@
         </section>
 
         <!-- Left: Meta / Badges -->
-        <section class="card panel config">
+        <section class="card panel">
           <h2>Profile & Appearance</h2>
           <div id="msgMeta" class="alert" style="display: none"></div>
 
@@ -1556,7 +1289,7 @@
         </section>
 
         <!-- Right: Links -->
-        <section class="card panel config">
+        <section class="card panel">
           <h2>Links</h2>
           <div id="msgLinks" class="alert" style="display: none"></div>
 
@@ -1597,41 +1330,6 @@
 
           <div class="links-list" id="linksList" aria-live="polite"></div>
         </section>
-
-        <section class="card panel preview-panel" aria-labelledby="previewTitle">
-          <h2 id="previewTitle">Live Preview</h2>
-          <div class="preview-phone">
-            <iframe
-              id="previewFrame"
-              class="preview-frame"
-              title="Linktree preview"
-              loading="lazy"
-            ></iframe>
-          </div>
-          <p class="preview-note muted">
-            The preview follows the slug you are editing.
-          </p>
-          <div class="preview-actions">
-            <a
-              class="btn ghost"
-              id="previewOpen"
-              href="#"
-              target="_blank"
-              rel="noreferrer"
-              >Open full preview</a
-            >
-          </div>
-        </section>
-      </div>
-      <div class="preview-fab" id="previewFabWrap">
-        <a
-          class="btn"
-          id="previewFab"
-          href="#"
-          target="_blank"
-          rel="noreferrer"
-          >Preview</a
-        >
       </div>
     </main>
 
@@ -2050,9 +1748,9 @@
             ? lt.visit_counter_bg_alpha
             : 20;
         toggleCustomNameField();
-        updatePreviewLinks(lt.slug);
         const btnOpen = $("btnOpenPublic");
-        if (btnOpen) btnOpen.textContent = `/tree/${lt.slug}`;
+        btnOpen.href = `/tree/${encodeURIComponent(lt.slug)}`;
+        btnOpen.textContent = `/tree/${lt.slug}`;
         updateDiscordUI();
       }
 
@@ -2779,20 +2477,6 @@
       }
 
       const btnCreateTemplate = $("btnCreateTemplate");
-      const previewOpen = $("previewOpen");
-      const previewFab = $("previewFab");
-      const previewFrame = $("previewFrame");
-      const previewFabWrap = document.getElementById("previewFabWrap");
-
-      function updatePreviewLinks(rawSlug) {
-        const slug = (rawSlug || "").trim();
-        const href = slug ? `/tree/${encodeURIComponent(slug)}` : "#";
-        const btnOpen = $("btnOpenPublic");
-        if (btnOpen) btnOpen.href = href;
-        if (previewOpen) previewOpen.href = href;
-        if (previewFab) previewFab.href = href;
-        if (previewFrame) previewFrame.src = slug ? href : "about:blank";
-      }
       function updateCreateTemplateLink() {
         if (!btnCreateTemplate) return;
         const slug = $("inSlug").value.trim();
@@ -2807,7 +2491,9 @@
 
       $("inSlug").addEventListener("input", (e) => {
         $("slugPreview").textContent = e.target.value.trim() || "-";
-        updatePreviewLinks(e.target.value);
+        $("btnOpenPublic").href = `/tree/${encodeURIComponent(
+          e.target.value.trim()
+        )}`;
         updateCreateTemplateLink();
       });
       $("inDisplayName").addEventListener("change", toggleCustomNameField);
@@ -2913,11 +2599,9 @@
           if (!user) {
             document.getElementById("notLogged").style.display = "block";
             document.getElementById("cfgWrap").style.display = "none";
-            if (previewFabWrap) previewFabWrap.style.display = "none";
             return;
           }
           document.getElementById("cfgWrap").style.display = "grid";
-          if (previewFabWrap) previewFabWrap.style.display = "";
 
           const preferred =
             slugFromQuery() ||
@@ -2925,7 +2609,9 @@
             (user.username || "").toLowerCase().replace(/[^a-z0-9_-]/gi, "");
           document.getElementById("inSlug").value = preferred;
           document.getElementById("slugPreview").textContent = preferred;
-          updatePreviewLinks(preferred);
+          document.getElementById(
+            "btnOpenPublic"
+          ).href = `/tree/${encodeURIComponent(preferred)}`;
           const preferredDevice = deviceFromQuery();
           currentDevice = preferredDevice === "both" ? "pc" : preferredDevice || "pc";
           document.getElementById("inDevice").value = currentDevice;
