@@ -4,9 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Create Template - TAOMA</title>
-    <meta name="description" content="Create Linktree templates for desktop, mobile, or both." />
+    <meta
+      name="description"
+      content="Create Linktree templates for desktop, mobile, or both."
+    />
     <meta property="og:title" content="Create Template - TAOMA" />
-    <meta property="og:description" content="Turn your Linktree design into a reusable template." />
+    <meta
+      property="og:description"
+      content="Turn your Linktree design into a reusable template."
+    />
     <meta name="theme-color" content="#0f1223" />
     <link rel="icon" type="image/png" href="/static/icon.png" />
     <style>
@@ -27,8 +33,7 @@
         --ok: #35d79c;
         --danger: #ff5a6a;
         --ring: #85a3ff55;
-        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35),
-          0 2px 8px rgba(0, 0, 0, 0.25);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
         --radius: 16px;
         --space: clamp(16px, 2vw, 24px);
         --container: 1100px;
@@ -317,33 +322,253 @@
           grid-template-columns: minmax(0, 1fr);
         }
       }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .container {
+        width: min(100%, var(--container));
+        margin: 0 auto;
+        padding: 0 var(--space);
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: saturate(1.05) blur(10px);
+        background: linear-gradient(180deg, #0d1026e6 0%, #0d102600 100%);
+        border-bottom: 1px solid #ffffff1a;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 68px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.4px;
+      }
+
+      .brand .logo {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+      }
+
+      .links {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+      }
+
+      .links a {
+        padding: 0.55rem 0.8rem;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        transition: all 0.15s ease;
+      }
+
+      .links a:hover {
+        border-color: #ffffff22;
+        background: #ffffff0d;
+      }
+
+      .links a[aria-current="page"] {
+        border-color: #ffffff30;
+        background: #ffffff14;
+      }
+
+      .auth {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .auth .btn.small {
+        padding: 0.5rem 0.7rem;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid #ffffff26;
+        box-shadow: none;
+        font-weight: 700;
+      }
+
+      .auth-box {
+        position: relative;
+      }
+
+      .avatar-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 12px;
+        background: #ffffff0d;
+        border: 1px solid #ffffff1a;
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .avatar-fallback {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #ffffff1a;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: var(--ink);
+      }
+
+      .menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: #10142f;
+        border: 1px solid #ffffff22;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        min-width: 180px;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 20;
+      }
+
+      .menu.open {
+        display: flex;
+      }
+
+      .menu a,
+      .menu button {
+        padding: 0.65rem 0.9rem;
+        text-align: left;
+        background: transparent;
+        color: var(--ink);
+        border: 0;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .menu a:hover,
+      .menu button:hover {
+        background: #ffffff0f;
+      }
+
+      .mobile-toggle {
+        display: none;
+      }
+
+      @media (max-width: 820px) {
+        .mobile-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          border: 1px solid #ffffff26;
+          background: transparent;
+          color: var(--ink);
+        }
+
+        .links {
+          position: fixed;
+          inset: 68px 0 auto 0;
+          padding: 1rem var(--space);
+          background: linear-gradient(180deg, #0b0f29f0, #0b0f29a5);
+          flex-direction: column;
+          align-items: flex-start;
+          display: none;
+        }
+
+        .links.open {
+          display: flex;
+        }
+      }
     </style>
   </head>
   <body>
     <header>
-      <div class="container nav">
+      <div class="container nav" role="navigation" aria-label="Primary">
         <div class="brand">
           <a href="/"
-            ><img class="logo" src="/static/icon.png" alt="TAOMA" width="28" height="28"
+            ><img
+              class="logo"
+              src="/static/icon.png"
+              alt="TAOMA logo"
+              width="30"
+              height="30"
           /></a>
-          <a href="/"><span>TAOMA™</span></a>
+          <a href="/">TAOMA™</a>
         </div>
-        <nav class="links">
-          <a href="/linktree/config">Linktree</a>
+        <button
+          type="button"
+          class="mobile-toggle"
+          id="mobileToggle"
+          aria-controls="primary-menu"
+          aria-expanded="false"
+          aria-label="Toggle menu"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M4 6H20M4 12H20M4 18H20"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <nav id="primary-menu" class="links" aria-label="Site">
+          <a href="/" aria-current="page">Home</a>
+          <a href="/api">GIF API</a>
+          <a href="/api/gif/admin">Add GIFs</a>
           <a href="/marketplace">Marketplace</a>
+          <a href="/linktree/config">Linktree</a>
         </nav>
-        <div class="badge" id="userBadge">Checking session…</div>
+        <div id="authSlot" class="auth"></div>
       </div>
     </header>
 
     <main>
       <div class="container">
         <section class="hero">
-          <div class="row" style="justify-content: space-between; gap: 1rem; align-items: flex-start">
+          <div
+            class="row"
+            style="
+              justify-content: space-between;
+              gap: 1rem;
+              align-items: flex-start;
+            "
+          >
             <div>
               <h1>Create a template</h1>
               <p>
-                Save your Linktree look to the marketplace. Templates include your layout and styling only—no links, icons, or slug.
+                Save your Linktree look to the marketplace. Templates include
+                your layout and styling only—no links, icons, or slug.
               </p>
             </div>
             <a class="btn ghost sm" href="/marketplace">Back to marketplace</a>
@@ -354,36 +579,60 @@
           <div class="option">
             <strong>Import my current Linktree</strong>
             <p class="muted">
-              Pull your existing Linktree settings (backgrounds, colors, effects) for desktop or mobile.
+              Pull your existing Linktree settings (backgrounds, colors,
+              effects) for desktop or mobile.
             </p>
-            <button class="btn sm" id="btnChoiceImport">Use current setup</button>
+            <button class="btn sm" id="btnChoiceImport">
+              Use current setup
+            </button>
           </div>
           <div class="option">
             <strong>Start from scratch</strong>
             <p class="muted">
-              Build a brand-new template without touching your existing Linktree.
+              Build a brand-new template without touching your existing
+              Linktree.
             </p>
             <button class="btn ghost sm" id="btnChoiceFresh">Start new</button>
           </div>
         </div>
 
-        <section class="card panel" id="formSection" style="display:none">
-          <div class="row" style="justify-content: space-between; align-items: center">
-            <h3 style="margin:0">Template details</h3>
+        <section class="card panel" id="formSection" style="display: none">
+          <div
+            class="row"
+            style="justify-content: space-between; align-items: center"
+          >
+            <h3 style="margin: 0">Template details</h3>
             <span class="badge" id="modeBadge">Desktop</span>
           </div>
           <div class="grid cols-2">
             <div class="field">
               <label for="tplCreator">Creator</label>
-              <input id="tplCreator" class="input" type="text" maxlength="100" placeholder="Your name or brand" />
+              <input
+                id="tplCreator"
+                class="input"
+                type="text"
+                maxlength="100"
+                placeholder="Your name or brand"
+              />
             </div>
             <div class="field">
               <label for="tplName">Template name</label>
-              <input id="tplName" class="input" type="text" maxlength="64" required />
+              <input
+                id="tplName"
+                class="input"
+                type="text"
+                maxlength="64"
+                required
+              />
             </div>
             <div class="field">
               <label for="tplDesc">Description (optional)</label>
-              <textarea id="tplDesc" class="input" maxlength="500" placeholder="What makes this template unique?"></textarea>
+              <textarea
+                id="tplDesc"
+                class="input"
+                maxlength="500"
+                placeholder="What makes this template unique?"
+              ></textarea>
             </div>
             <div class="field">
               <label for="tplPublic">Visibility</label>
@@ -409,18 +658,30 @@
             </div>
           </div>
 
-          <div class="row" style="justify-content: space-between; align-items: flex-start">
+          <div
+            class="row"
+            style="justify-content: space-between; align-items: flex-start"
+          >
             <div class="muted" id="slugHint"></div>
-            <div class="row" style="gap:0.4rem">
-              <button class="btn ghost sm" id="btnResetVariant">Start blank for this device</button>
-              <button class="btn sm" id="btnImportVariant">Import from my Linktree</button>
+            <div class="row" style="gap: 0.4rem">
+              <button class="btn ghost sm" id="btnResetVariant">
+                Start blank for this device
+              </button>
+              <button class="btn sm" id="btnImportVariant">
+                Import from my Linktree
+              </button>
             </div>
           </div>
 
           <div class="grid cols-2">
             <div class="field">
               <label for="tplLocation">Location (optional)</label>
-              <input id="tplLocation" class="input" type="text" maxlength="120" />
+              <input
+                id="tplLocation"
+                class="input"
+                type="text"
+                maxlength="120"
+              />
             </div>
             <div class="field">
               <label for="tplQuote">Quote (optional)</label>
@@ -432,7 +693,13 @@
             </div>
             <div class="field">
               <label for="tplBackground">Background URL *</label>
-              <input id="tplBackground" class="input" type="text" maxlength="500" placeholder="/media/... or https://" />
+              <input
+                id="tplBackground"
+                class="input"
+                type="text"
+                maxlength="500"
+                placeholder="/media/... or https://"
+              />
             </div>
             <div class="field">
               <label for="tplBgVideo">Background is video</label>
@@ -443,7 +710,14 @@
             </div>
             <div class="field">
               <label for="tplTrans">Transparency (0-100)</label>
-              <input id="tplTrans" class="input" type="number" min="0" max="100" value="0" />
+              <input
+                id="tplTrans"
+                class="input"
+                type="number"
+                min="0"
+                max="100"
+                value="0"
+              />
             </div>
             <div class="field">
               <label for="tplNameFx">Name effect</label>
@@ -473,39 +747,86 @@
             </div>
             <div class="field">
               <label for="tplCustomName">Custom display name</label>
-              <input id="tplCustomName" class="input" type="text" maxlength="64" />
+              <input
+                id="tplCustomName"
+                class="input"
+                type="text"
+                maxlength="64"
+              />
             </div>
             <div class="field">
               <label for="tplLinkColor">Link color</label>
-              <input id="tplLinkColor" class="input" type="text" placeholder="#RRGGBB" />
+              <input
+                id="tplLinkColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
             </div>
             <div class="field">
               <label for="tplLinkBgColor">Link background color</label>
-              <input id="tplLinkBgColor" class="input" type="text" placeholder="#RRGGBB" />
+              <input
+                id="tplLinkBgColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
             </div>
             <div class="field">
               <label for="tplLinkBgAlpha">Link background alpha (0-100)</label>
-              <input id="tplLinkBgAlpha" class="input" type="number" min="0" max="100" value="100" />
+              <input
+                id="tplLinkBgAlpha"
+                class="input"
+                type="number"
+                min="0"
+                max="100"
+                value="100"
+              />
             </div>
             <div class="field">
               <label for="tplTextColor">Text color</label>
-              <input id="tplTextColor" class="input" type="text" placeholder="#RRGGBB" />
+              <input
+                id="tplTextColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
             </div>
             <div class="field">
               <label for="tplNameColor">Name color</label>
-              <input id="tplNameColor" class="input" type="text" placeholder="#RRGGBB" />
+              <input
+                id="tplNameColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
             </div>
             <div class="field">
               <label for="tplLocationColor">Location color</label>
-              <input id="tplLocationColor" class="input" type="text" placeholder="#RRGGBB" />
+              <input
+                id="tplLocationColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
             </div>
             <div class="field">
               <label for="tplQuoteColor">Quote color</label>
-              <input id="tplQuoteColor" class="input" type="text" placeholder="#RRGGBB" />
+              <input
+                id="tplQuoteColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
             </div>
             <div class="field">
               <label for="tplCursorUrl">Cursor URL (optional)</label>
-              <input id="tplCursorUrl" class="input" type="text" maxlength="500" />
+              <input
+                id="tplCursorUrl"
+                class="input"
+                type="text"
+                maxlength="500"
+              />
             </div>
             <div class="field">
               <label for="tplDiscordFrame">Discord frame enabled</label>
@@ -523,26 +844,51 @@
             </div>
             <div class="field">
               <label for="tplCounterColor">Counter color</label>
-              <input id="tplCounterColor" class="input" type="text" placeholder="#RRGGBB" />
+              <input
+                id="tplCounterColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
             </div>
             <div class="field">
               <label for="tplCounterBgColor">Counter background color</label>
-              <input id="tplCounterBgColor" class="input" type="text" placeholder="#RRGGBB" />
+              <input
+                id="tplCounterBgColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
             </div>
             <div class="field">
-              <label for="tplCounterBgAlpha">Counter background alpha (0-100)</label>
-              <input id="tplCounterBgAlpha" class="input" type="number" min="0" max="100" value="20" />
+              <label for="tplCounterBgAlpha"
+                >Counter background alpha (0-100)</label
+              >
+              <input
+                id="tplCounterBgAlpha"
+                class="input"
+                type="number"
+                min="0"
+                max="100"
+                value="20"
+              />
             </div>
           </div>
 
           <div class="hr"></div>
-          <div class="row" style="justify-content: space-between; align-items: center">
+          <div
+            class="row"
+            style="justify-content: space-between; align-items: center"
+          >
             <div class="muted">
-              Templates save to the marketplace using Firebase. Links, icons, and slug are never copied.
+              Templates save to the marketplace using Firebase. Links, icons,
+              and slug are never copied.
             </div>
-            <div class="row" style="gap:0.4rem">
+            <div class="row" style="gap: 0.4rem">
               <button class="btn ghost sm" id="btnResetAll">Reset form</button>
-              <button class="btn sm" id="btnSaveTemplate">Create template</button>
+              <button class="btn sm" id="btnSaveTemplate">
+                Create template
+              </button>
             </div>
           </div>
           <div class="alert" id="formMsg"></div>
@@ -637,7 +983,11 @@
         v.display_name_mode = v.display_name_mode || "slug";
         if (v.display_name_mode === "custom") {
           if (!v.custom_display_name || !v.custom_display_name.trim()) {
-            showMsg(formMsg, `Custom display name required for ${v.device_type}`, false);
+            showMsg(
+              formMsg,
+              `Custom display name required for ${v.device_type}`,
+              false
+            );
             return null;
           }
           v.custom_display_name = v.custom_display_name.trim();
@@ -652,15 +1002,25 @@
         v.quote_color = hexOrNull(v.quote_color);
         v.visit_counter_color = hexOrNull(v.visit_counter_color);
         v.visit_counter_bg_color = hexOrNull(v.visit_counter_bg_color);
-        v.link_bg_alpha = Math.min(100, Math.max(0, parseInt(v.link_bg_alpha ?? 100, 10)));
-        v.transparency = Math.min(100, Math.max(0, parseInt(v.transparency ?? 0, 10)));
+        v.link_bg_alpha = Math.min(
+          100,
+          Math.max(0, parseInt(v.link_bg_alpha ?? 100, 10))
+        );
+        v.transparency = Math.min(
+          100,
+          Math.max(0, parseInt(v.transparency ?? 0, 10))
+        );
         v.visit_counter_bg_alpha = Math.min(
           100,
           Math.max(0, parseInt(v.visit_counter_bg_alpha ?? 20, 10))
         );
         v.background_url = (v.background_url || "").trim();
         if (!v.background_url) {
-          showMsg(formMsg, `Background URL required for ${v.device_type}`, false);
+          showMsg(
+            formMsg,
+            `Background URL required for ${v.device_type}`,
+            false
+          );
           return null;
         }
         return v;
@@ -681,7 +1041,9 @@
 
       function updateSlugHint() {
         const slug =
-          presetSlug || (currentUser && currentUser.linktree_slug) || "your-slug";
+          presetSlug ||
+          (currentUser && currentUser.linktree_slug) ||
+          "your-slug";
         const device = $("tplDevice").value || currentDevice || "pc";
         slugHint.textContent = `Import uses /linktrees/${slug} for ${device}.`;
       }
@@ -724,7 +1086,9 @@
         $("tplBackground").value = v.background_url || "";
         $("tplBgVideo").value = v.background_is_video ? "true" : "false";
         $("tplTrans").value =
-          v.transparency !== undefined && v.transparency !== null ? v.transparency : 0;
+          v.transparency !== undefined && v.transparency !== null
+            ? v.transparency
+            : 0;
         $("tplNameFx").value = v.name_effect || "none";
         $("tplBgFx").value = v.background_effect || "none";
         $("tplDisplayName").value = v.display_name_mode || "slug";
@@ -732,7 +1096,9 @@
         $("tplLinkColor").value = v.link_color || "";
         $("tplLinkBgColor").value = v.link_bg_color || "";
         $("tplLinkBgAlpha").value =
-          v.link_bg_alpha !== undefined && v.link_bg_alpha !== null ? v.link_bg_alpha : 100;
+          v.link_bg_alpha !== undefined && v.link_bg_alpha !== null
+            ? v.link_bg_alpha
+            : 100;
         $("tplTextColor").value = v.text_color || "";
         $("tplNameColor").value = v.name_color || "";
         $("tplLocationColor").value = v.location_color || "";
@@ -743,7 +1109,8 @@
         $("tplCounterColor").value = v.visit_counter_color || "";
         $("tplCounterBgColor").value = v.visit_counter_bg_color || "";
         $("tplCounterBgAlpha").value =
-          v.visit_counter_bg_alpha !== undefined && v.visit_counter_bg_alpha !== null
+          v.visit_counter_bg_alpha !== undefined &&
+          v.visit_counter_bg_alpha !== null
             ? v.visit_counter_bg_alpha
             : 20;
       }
@@ -753,7 +1120,11 @@
         const displayMode = $("tplDisplayName").value || "slug";
         const customName = $("tplCustomName").value.trim();
         if (displayMode === "custom" && !customName) {
-          showMsg(formMsg, "Custom display name is required when mode is Custom", false);
+          showMsg(
+            formMsg,
+            "Custom display name is required when mode is Custom",
+            false
+          );
           return null;
         }
         return {
@@ -806,7 +1177,8 @@
       }
 
       async function importFromLinktree(deviceOverride) {
-        const device = deviceOverride || $("tplDevice").value || currentDevice || "pc";
+        const device =
+          deviceOverride || $("tplDevice").value || currentDevice || "pc";
         const slug =
           presetSlug ||
           (currentUser && currentUser.linktree_slug) ||
@@ -817,9 +1189,9 @@
         }
         try {
           const lt = await apiGet(
-            `/api/linktrees/by-slug/${encodeURIComponent(slug)}/manage?device=${encodeURIComponent(
-              device
-            )}`
+            `/api/linktrees/by-slug/${encodeURIComponent(
+              slug
+            )}/manage?device=${encodeURIComponent(device)}`
           );
           const data = {
             device_type: device,
@@ -861,7 +1233,8 @@
         $("tplName").value = "";
         $("tplDesc").value = "";
         $("tplPublic").value = "true";
-        $("tplMode").value = presetDevice === "both" ? "both" : presetDevice || "pc";
+        $("tplMode").value =
+          presetDevice === "both" ? "both" : presetDevice || "pc";
         $("tplDevice").value = currentDevice || "pc";
         $("btnSaveTemplate").textContent = "Create template";
         variantCache = { pc: null, mobile: null };
@@ -877,7 +1250,10 @@
           return;
         }
         const desc = $("tplDesc").value.trim();
-        const creator = $("tplCreator").value.trim() || (currentUser && currentUser.username) || null;
+        const creator =
+          $("tplCreator").value.trim() ||
+          (currentUser && currentUser.username) ||
+          null;
         const mode = $("tplMode").value || "pc";
         const activeDevice = $("tplDevice").value || currentDevice || "pc";
         const activeVariant = buildVariantFromForm(activeDevice);
@@ -955,7 +1331,9 @@
         $("tplDevice").value = initialDevice;
         updateModeBadge();
         const active =
-          (mode === "both" ? variantCache[initialDevice] : variantCache[mode]) ||
+          (mode === "both"
+            ? variantCache[initialDevice]
+            : variantCache[mode]) ||
           variants[0] ||
           {};
         applyVariantToForm(active);
@@ -963,13 +1341,18 @@
 
       async function loadTemplateForEdit(templateId) {
         try {
-          const detail = await apiGet(`/api/marketplace/templates/${templateId}`);
+          const detail = await apiGet(
+            `/api/marketplace/templates/${templateId}`
+          );
           editingId = templateId;
           choiceMade = true;
           formSection.style.display = "flex";
           $("tplName").value = detail.name || "";
           $("tplCreator").value =
-            detail.creator || detail.owner_username || (currentUser && currentUser.username) || "";
+            detail.creator ||
+            detail.owner_username ||
+            (currentUser && currentUser.username) ||
+            "";
           $("tplDesc").value = detail.description || "";
           $("tplPublic").value = detail.is_public ? "true" : "false";
           $("btnSaveTemplate").textContent = "Update template";
@@ -1031,6 +1414,109 @@
       });
 
       boot();
+
+      async function fetchSession() {
+        try {
+          const r = await safe(() =>
+            fetch("/api/auth/verify", { credentials: "include" })
+          );
+          if (!r || !r.ok) return null;
+          return await r.json();
+        } catch {
+          return null;
+        }
+      }
+
+      async function renderAuthHeader() {
+        const slot = document.getElementById("authSlot");
+        if (!slot) return;
+
+        const session = await fetchSession();
+        const user = session && session.user ? session.user : null;
+        const isAdmin = !!(user && user.admin);
+
+        if (!user) {
+          slot.innerHTML = `<a class="btn small" href="/login?next=${encodeURIComponent(
+            location.href
+          )}">Login</a>
+      <a class="btn small" href="/register?next=${encodeURIComponent(
+        location.href
+      )}">Register</a>`;
+          return;
+        }
+
+        const uname = user.username || "User";
+        const initials = uname.trim().slice(0, 2).toUpperCase() || "U";
+        const pfp = sanitizeUrl(user.profile_picture || "");
+
+        slot.innerHTML = `
+    <div class="auth-box">
+      <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
+        ${
+          pfp
+            ? `<img class="avatar" src="${pfp}" alt="${escapeHtml(
+                uname
+              )}'s profile picture">`
+            : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(
+                initials
+              )}</span>`
+        }
+        <span class="uname" style="font-weight:700;font-size:.95rem">${escapeHtml(
+          uname
+        )}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="menu" id="userMenu" role="menu" aria-label="User menu">
+        <a href="/profile" role="menuitem">Profile</a>
+        ${isAdmin ? `<a href="/admin" role="menuitem">Admin</a>` : ""}
+        <button id="logoutBtnHdr" role="menuitem">Logout</button>
+      </div>
+    </div>`;
+
+        const btn = slot.querySelector("#avatarBtn");
+        const menu = slot.querySelector("#userMenu");
+        const logoutBtn = slot.querySelector("#logoutBtnHdr");
+
+        function closeMenu() {
+          menu?.classList.remove("open");
+          btn?.setAttribute("aria-expanded", "false");
+        }
+
+        btn?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const open = menu?.classList.toggle("open");
+          btn.setAttribute("aria-expanded", String(open));
+        });
+
+        document.addEventListener("click", (e) => {
+          if (
+            menu &&
+            !menu.contains(e.target) &&
+            btn &&
+            !btn.contains(e.target)
+          ) {
+            closeMenu();
+          }
+        });
+
+        logoutBtn?.addEventListener(
+          "click",
+          async () => {
+            try {
+              await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: "include",
+              });
+            } catch {}
+            location.href = "/";
+          },
+          { passive: true }
+        );
+      }
+
+      renderAuthHeader();
     </script>
   </body>
 </html>

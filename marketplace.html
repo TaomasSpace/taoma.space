@@ -25,8 +25,7 @@
         --ok: #35d79c;
         --danger: #ff5a6a;
         --ring: #85a3ff55;
-        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35),
-          0 2px 8px rgba(0, 0, 0, 0.25);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
         --radius: 16px;
         --space: clamp(16px, 2vw, 24px);
         --container: 1150px;
@@ -612,24 +611,234 @@
           align-items: flex-start;
         }
       }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .container {
+        width: min(100%, var(--container));
+        margin: 0 auto;
+        padding: 0 var(--space);
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: saturate(1.05) blur(10px);
+        background: linear-gradient(180deg, #0d1026e6 0%, #0d102600 100%);
+        border-bottom: 1px solid #ffffff1a;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 68px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.4px;
+      }
+
+      .brand .logo {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+      }
+
+      .links {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+      }
+
+      .links a {
+        padding: 0.55rem 0.8rem;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        transition: all 0.15s ease;
+      }
+
+      .links a:hover {
+        border-color: #ffffff22;
+        background: #ffffff0d;
+      }
+
+      .links a[aria-current="page"] {
+        border-color: #ffffff30;
+        background: #ffffff14;
+      }
+
+      .auth {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .auth .btn.small {
+        padding: 0.5rem 0.7rem;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid #ffffff26;
+        box-shadow: none;
+        font-weight: 700;
+      }
+
+      .auth-box {
+        position: relative;
+      }
+
+      .avatar-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 12px;
+        background: #ffffff0d;
+        border: 1px solid #ffffff1a;
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .avatar-fallback {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #ffffff1a;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: var(--ink);
+      }
+
+      .menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: #10142f;
+        border: 1px solid #ffffff22;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        min-width: 180px;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 20;
+      }
+
+      .menu.open {
+        display: flex;
+      }
+
+      .menu a,
+      .menu button {
+        padding: 0.65rem 0.9rem;
+        text-align: left;
+        background: transparent;
+        color: var(--ink);
+        border: 0;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .menu a:hover,
+      .menu button:hover {
+        background: #ffffff0f;
+      }
+
+      .mobile-toggle {
+        display: none;
+      }
+
+      @media (max-width: 820px) {
+        .mobile-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          border: 1px solid #ffffff26;
+          background: transparent;
+          color: var(--ink);
+        }
+
+        .links {
+          position: fixed;
+          inset: 68px 0 auto 0;
+          padding: 1rem var(--space);
+          background: linear-gradient(180deg, #0b0f29f0, #0b0f29a5);
+          flex-direction: column;
+          align-items: flex-start;
+          display: none;
+        }
+
+        .links.open {
+          display: flex;
+        }
+      }
     </style>
   </head>
   <body>
     <header>
-      <div class="container nav">
+      <div class="container nav" role="navigation" aria-label="Primary">
         <div class="brand">
-          <img class="logo" src="/static/icon.png" alt="TAOMA" />
-          <span>TAOMA</span>
+          <a href="/"
+            ><img
+              class="logo"
+              src="/static/icon.png"
+              alt="TAOMA logo"
+              width="30"
+              height="30"
+          /></a>
+          <a href="/">TAOMA™</a>
         </div>
-        <button class="mobile-toggle" id="navToggle" aria-label="Menu">
-          Menu
+        <button
+          type="button"
+          class="mobile-toggle"
+          id="mobileToggle"
+          aria-controls="primary-menu"
+          aria-expanded="false"
+          aria-label="Toggle menu"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M4 6H20M4 12H20M4 18H20"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
         </button>
-        <nav class="links" id="navLinks">
-          <a href="/">Home</a>
+        <nav id="primary-menu" class="links" aria-label="Site">
+          <a href="/" aria-current="page">Home</a>
+          <a href="/api">GIF API</a>
+          <a href="/api/gif/admin">Add GIFs</a>
+          <a href="/marketplace">Marketplace</a>
           <a href="/linktree/config">Linktree</a>
-          <a href="/marketplace" aria-current="page">Marketplace</a>
         </nav>
-        <div class="auth" id="authSlot"></div>
+        <div id="authSlot" class="auth"></div>
       </div>
     </header>
 
@@ -645,7 +854,7 @@
               type="search"
               placeholder="Search templates by name, author, or description"
             />
-            <select id="deviceFilter" class="select" style="min-width:160px">
+            <select id="deviceFilter" class="select" style="min-width: 160px">
               <option value="all">All devices</option>
               <option value="pc">Desktop</option>
               <option value="mobile">Mobile</option>
@@ -679,7 +888,11 @@
     <div class="modal" id="detailModal" aria-hidden="true">
       <div class="modal-card">
         <div class="modal-body">
-          <iframe id="demoFrame" title="Template demo" allow="autoplay"></iframe>
+          <iframe
+            id="demoFrame"
+            title="Template demo"
+            allow="autoplay"
+          ></iframe>
         </div>
         <div class="modal-meta">
           <button class="btn ghost sm" id="closeModal">Close</button>
@@ -743,7 +956,11 @@
         v.display_name_mode = v.display_name_mode || "slug";
         if (v.display_name_mode === "custom") {
           if (!v.custom_display_name || !v.custom_display_name.trim()) {
-            showMsg(formMsg, `Custom display name required for ${v.device_type}`, false);
+            showMsg(
+              formMsg,
+              `Custom display name required for ${v.device_type}`,
+              false
+            );
             return null;
           }
           v.custom_display_name = v.custom_display_name.trim();
@@ -758,15 +975,25 @@
         v.quote_color = hexOrNull(v.quote_color);
         v.visit_counter_color = hexOrNull(v.visit_counter_color);
         v.visit_counter_bg_color = hexOrNull(v.visit_counter_bg_color);
-        v.link_bg_alpha = Math.min(100, Math.max(0, parseInt(v.link_bg_alpha ?? 100, 10)));
-        v.transparency = Math.min(100, Math.max(0, parseInt(v.transparency ?? 0, 10)));
+        v.link_bg_alpha = Math.min(
+          100,
+          Math.max(0, parseInt(v.link_bg_alpha ?? 100, 10))
+        );
+        v.transparency = Math.min(
+          100,
+          Math.max(0, parseInt(v.transparency ?? 0, 10))
+        );
         v.visit_counter_bg_alpha = Math.min(
           100,
           Math.max(0, parseInt(v.visit_counter_bg_alpha ?? 20, 10))
         );
         v.background_url = (v.background_url || "").trim();
         if (!v.background_url) {
-          showMsg(formMsg, `Background URL required for ${v.device_type}`, false);
+          showMsg(
+            formMsg,
+            `Background URL required for ${v.device_type}`,
+            false
+          );
           return null;
         }
         return v;
@@ -932,22 +1159,26 @@
           if ((item.device_type || "pc") !== deviceFilterVal) return false;
         }
         if (!term) return true;
-        const hay = `${item.name || ""} ${item.description || ""} ${item.owner_username || ""} ${
-          item.creator || ""
-        } ${item.device_type || ""}`.toLowerCase();
+        const hay = `${item.name || ""} ${item.description || ""} ${
+          item.owner_username || ""
+        } ${item.creator || ""} ${item.device_type || ""}`.toLowerCase();
         return hay.includes(term.toLowerCase());
       }
       function renderTemplates(list, container, opts = {}) {
         container.innerHTML = "";
         const term = $("searchInput").value.trim();
         const deviceVal = $("deviceFilter").value || "all";
-        const filtered = list.filter((item) => matchesSearch(item, term, deviceVal));
+        const filtered = list.filter((item) =>
+          matchesSearch(item, term, deviceVal)
+        );
         filtered.forEach((item) => {
           const card = document.createElement("div");
           card.className = "card";
           const previewRaw = sanitizeUrl(item.preview_image_url) || "";
           const preview =
-            previewRaw && isVideoUrl(previewRaw) ? previewRaw : previewRaw || "/static/icon.png";
+            previewRaw && isVideoUrl(previewRaw)
+              ? previewRaw
+              : previewRaw || "/static/icon.png";
           const previewIsVideo = isVideoUrl(preview);
           const isSaved = savedIds.has(item.id);
           const deviceLabel =
@@ -966,7 +1197,9 @@
                     ? `<video data-preview-video src="${preview}" muted playsinline preload="auto" aria-label="${escapeHtml(
                         item.name
                       )} preview"></video>`
-                    : `<img src="${preview}" alt="${escapeHtml(item.name)} preview" />`
+                    : `<img src="${preview}" alt="${escapeHtml(
+                        item.name
+                      )} preview" />`
                 }
               </div>
               <div>
@@ -974,7 +1207,9 @@
                 <div class="template-meta">
                   <span style="display:inline-flex;align-items:center;gap:.45rem">
                     <img src="${ownerAvatar}" alt="avatar" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #ffffff22">
-                    by ${escapeHtml(item.creator || item.owner_username || "unknown")}
+                    by ${escapeHtml(
+                      item.creator || item.owner_username || "unknown"
+                    )}
                   </span>
                 </div>
               </div>
@@ -989,7 +1224,12 @@
             <div class="card-actions">
               <button class="btn sm ghost" data-act="demo">Live demo</button>
               <button class="btn sm" data-act="use">Use template</button>
-              <a class="btn sm ghost" data-demo-link data-device="${item.device_type || "pc"}" href="${buildDemoUrl(item, item.device_type)}" target="_blank" rel="noopener">Demo link</a>
+              <a class="btn sm ghost" data-demo-link data-device="${
+                item.device_type || "pc"
+              }" href="${buildDemoUrl(
+            item,
+            item.device_type
+          )}" target="_blank" rel="noopener">Demo link</a>
               ${
                 opts.allowSave
                   ? `<button class="btn sm ghost" data-act="save">${
@@ -1008,12 +1248,12 @@
             </div>
           `;
 
-          card.querySelector('[data-act="demo"]').addEventListener("click", () =>
-            openModal(item)
-          );
-          card.querySelector('[data-act="use"]').addEventListener("click", () =>
-            useTemplate(item)
-          );
+          card
+            .querySelector('[data-act="demo"]')
+            .addEventListener("click", () => openModal(item));
+          card
+            .querySelector('[data-act="use"]')
+            .addEventListener("click", () => useTemplate(item));
           const saveBtn = card.querySelector('[data-act="save"]');
           if (saveBtn) {
             saveBtn.addEventListener("click", () => toggleSave(item, saveBtn));
@@ -1069,7 +1309,11 @@
       }
 
       function deviceLabel(device) {
-        return device === "both" ? "Desktop + Mobile" : device === "mobile" ? "Mobile" : "Desktop";
+        return device === "both"
+          ? "Desktop + Mobile"
+          : device === "mobile"
+          ? "Mobile"
+          : "Desktop";
       }
 
       function buildDemoUrl(item, device) {
@@ -1121,10 +1365,16 @@
         const frame = $("demoFrame");
         const actions = $("modalActions");
         $("modalTitle").textContent = item.name || "Template";
-        $("modalOwner").textContent = `by ${item.creator || item.owner_username || "unknown"}`;
+        $("modalOwner").textContent = `by ${
+          item.creator || item.owner_username || "unknown"
+        }`;
         $("modalDesc").textContent = item.description || "";
         let demoDevice =
-          item.device_type === "mobile" ? "mobile" : item.device_type === "both" ? "pc" : "pc";
+          item.device_type === "mobile"
+            ? "mobile"
+            : item.device_type === "both"
+            ? "pc"
+            : "pc";
         frame.src = buildDemoUrl(item, demoDevice);
         actions.innerHTML = "";
         let demoLink = null;
@@ -1135,7 +1385,8 @@
           ["pc", "mobile"].forEach((dev) => {
             const btn = document.createElement("button");
             btn.className = "btn sm ghost";
-            btn.textContent = dev === "pc" ? "Desktop preview" : "Mobile preview";
+            btn.textContent =
+              dev === "pc" ? "Desktop preview" : "Mobile preview";
             btn.addEventListener("click", () => {
               demoDevice = dev;
               frame.src = buildDemoUrl(item, demoDevice);
@@ -1151,7 +1402,9 @@
         const useBtn = document.createElement("button");
         useBtn.className = "btn sm";
         useBtn.textContent = "Use template";
-        useBtn.addEventListener("click", () => useTemplate(item, item.device_type));
+        useBtn.addEventListener("click", () =>
+          useTemplate(item, item.device_type)
+        );
         actions.appendChild(useBtn);
         const saveBtn = document.createElement("button");
         saveBtn.className = "btn sm ghost";
@@ -1235,8 +1488,12 @@
           $("tplLocationColor").value = data.location_color;
           $("tplQuoteColor").value = data.quote_color;
           $("tplCursorUrl").value = data.cursor_url;
-          $("tplDiscordFrame").value = data.discord_frame_enabled ? "true" : "false";
-          $("tplShowCounter").value = data.show_visit_counter ? "true" : "false";
+          $("tplDiscordFrame").value = data.discord_frame_enabled
+            ? "true"
+            : "false";
+          $("tplShowCounter").value = data.show_visit_counter
+            ? "true"
+            : "false";
           $("tplCounterColor").value = data.visit_counter_color;
           $("tplCounterBgColor").value = data.visit_counter_bg_color;
           $("tplCounterBgAlpha").value = data.visit_counter_bg_alpha;
@@ -1316,9 +1573,12 @@
           $("tplQuote").value = activeVariant.quote || "";
           $("tplSong").value = activeVariant.song_url || "";
           $("tplBackground").value = activeVariant.background_url || "";
-          $("tplBgVideo").value = activeVariant.background_is_video ? "true" : "false";
+          $("tplBgVideo").value = activeVariant.background_is_video
+            ? "true"
+            : "false";
           $("tplTrans").value =
-            activeVariant.transparency !== undefined && activeVariant.transparency !== null
+            activeVariant.transparency !== undefined &&
+            activeVariant.transparency !== null
               ? activeVariant.transparency
               : 0;
           $("tplNameFx").value = activeVariant.name_effect || "none";
@@ -1328,7 +1588,8 @@
           $("tplLinkColor").value = activeVariant.link_color || "";
           $("tplLinkBgColor").value = activeVariant.link_bg_color || "";
           $("tplLinkBgAlpha").value =
-            activeVariant.link_bg_alpha !== undefined && activeVariant.link_bg_alpha !== null
+            activeVariant.link_bg_alpha !== undefined &&
+            activeVariant.link_bg_alpha !== null
               ? activeVariant.link_bg_alpha
               : 100;
           $("tplTextColor").value = activeVariant.text_color || "";
@@ -1336,10 +1597,15 @@
           $("tplLocationColor").value = activeVariant.location_color || "";
           $("tplQuoteColor").value = activeVariant.quote_color || "";
           $("tplCursorUrl").value = activeVariant.cursor_url || "";
-          $("tplDiscordFrame").value = activeVariant.discord_frame_enabled ? "true" : "false";
-          $("tplShowCounter").value = activeVariant.show_visit_counter ? "true" : "false";
+          $("tplDiscordFrame").value = activeVariant.discord_frame_enabled
+            ? "true"
+            : "false";
+          $("tplShowCounter").value = activeVariant.show_visit_counter
+            ? "true"
+            : "false";
           $("tplCounterColor").value = activeVariant.visit_counter_color || "";
-          $("tplCounterBgColor").value = activeVariant.visit_counter_bg_color || "";
+          $("tplCounterBgColor").value =
+            activeVariant.visit_counter_bg_color || "";
           $("tplCounterBgAlpha").value =
             activeVariant.visit_counter_bg_alpha !== undefined &&
             activeVariant.visit_counter_bg_alpha !== null
@@ -1375,7 +1641,11 @@
           const displayMode = $("tplDisplayName").value || "slug";
           const customName = $("tplCustomName").value.trim();
           if (displayMode === "custom" && !customName) {
-            showMsg(formMsg, "Custom display name is required when mode is Custom", false);
+            showMsg(
+              formMsg,
+              "Custom display name is required when mode is Custom",
+              false
+            );
             return null;
           }
           const v = {
@@ -1497,21 +1767,29 @@
           const dev = a.dataset.device || "pc";
           openDemoWindow(a.href, dev);
         });
-        document.addEventListener("loadeddata", (e) => {
-          const v = e.target;
-          if (!v || !v.dataset || !v.dataset.previewVideo) return;
-          try {
-            v.currentTime = 0.01;
-          } catch (_) {}
-        }, true);
-        document.addEventListener("seeked", (e) => {
-          const v = e.target;
-          if (!v || !v.dataset || !v.dataset.previewVideo) return;
-          v.pause();
-          try {
-            v.currentTime = 0.01;
-          } catch (_) {}
-        }, true);
+        document.addEventListener(
+          "loadeddata",
+          (e) => {
+            const v = e.target;
+            if (!v || !v.dataset || !v.dataset.previewVideo) return;
+            try {
+              v.currentTime = 0.01;
+            } catch (_) {}
+          },
+          true
+        );
+        document.addEventListener(
+          "seeked",
+          (e) => {
+            const v = e.target;
+            if (!v || !v.dataset || !v.dataset.previewVideo) return;
+            v.pause();
+            try {
+              v.currentTime = 0.01;
+            } catch (_) {}
+          },
+          true
+        );
       }
 
       $("navToggle").addEventListener("click", () => {
@@ -1519,6 +1797,109 @@
       });
 
       boot();
+
+      async function fetchSession() {
+        try {
+          const r = await safe(() =>
+            fetch("/api/auth/verify", { credentials: "include" })
+          );
+          if (!r || !r.ok) return null;
+          return await r.json();
+        } catch {
+          return null;
+        }
+      }
+
+      async function renderAuthHeader() {
+        const slot = document.getElementById("authSlot");
+        if (!slot) return;
+
+        const session = await fetchSession();
+        const user = session && session.user ? session.user : null;
+        const isAdmin = !!(user && user.admin);
+
+        if (!user) {
+          slot.innerHTML = `<a class="btn small" href="/login?next=${encodeURIComponent(
+            location.href
+          )}">Login</a>
+      <a class="btn small" href="/register?next=${encodeURIComponent(
+        location.href
+      )}">Register</a>`;
+          return;
+        }
+
+        const uname = user.username || "User";
+        const initials = uname.trim().slice(0, 2).toUpperCase() || "U";
+        const pfp = sanitizeUrl(user.profile_picture || "");
+
+        slot.innerHTML = `
+    <div class="auth-box">
+      <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
+        ${
+          pfp
+            ? `<img class="avatar" src="${pfp}" alt="${escapeHtml(
+                uname
+              )}'s profile picture">`
+            : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(
+                initials
+              )}</span>`
+        }
+        <span class="uname" style="font-weight:700;font-size:.95rem">${escapeHtml(
+          uname
+        )}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="menu" id="userMenu" role="menu" aria-label="User menu">
+        <a href="/profile" role="menuitem">Profile</a>
+        ${isAdmin ? `<a href="/admin" role="menuitem">Admin</a>` : ""}
+        <button id="logoutBtnHdr" role="menuitem">Logout</button>
+      </div>
+    </div>`;
+
+        const btn = slot.querySelector("#avatarBtn");
+        const menu = slot.querySelector("#userMenu");
+        const logoutBtn = slot.querySelector("#logoutBtnHdr");
+
+        function closeMenu() {
+          menu?.classList.remove("open");
+          btn?.setAttribute("aria-expanded", "false");
+        }
+
+        btn?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const open = menu?.classList.toggle("open");
+          btn.setAttribute("aria-expanded", String(open));
+        });
+
+        document.addEventListener("click", (e) => {
+          if (
+            menu &&
+            !menu.contains(e.target) &&
+            btn &&
+            !btn.contains(e.target)
+          ) {
+            closeMenu();
+          }
+        });
+
+        logoutBtn?.addEventListener(
+          "click",
+          async () => {
+            try {
+              await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: "include",
+              });
+            } catch {}
+            location.href = "/";
+          },
+          { passive: true }
+        );
+      }
+
+      renderAuthHeader();
     </script>
   </body>
 </html>
