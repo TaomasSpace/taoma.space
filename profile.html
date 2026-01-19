@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TAOMA™ — Profile</title>
@@ -9,935 +8,1244 @@
     <meta property="og:title" content="TAOMA™ — Profile" />
     <meta property="og:description" content="Manage your account settings." />
     <meta name="theme-color" content="#0f1223" />
-    <link rel="icon" type="image/png" href="/static/icon.png">
+    <link rel="icon" type="image/png" href="/static/icon.png" />
+
     <style>
-        /* --- Base / Tokens (wie auf Home) --- */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box
-        }
+      /* === TAOMA UI v2 — friendly, modern, consistent (no functional changes) === */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
 
+      :root {
+        /* Core */
+        --bg: #0b1020;
+        --bg2: #0a1630;
+        --card: rgba(255, 255, 255, 0.06);
+        --card2: rgba(255, 255, 255, 0.08);
+        --stroke: rgba(255, 255, 255, 0.12);
+        --stroke2: rgba(255, 255, 255, 0.18);
+        --ink: #eef2ff;
+        --muted: rgba(238, 242, 255, 0.72);
+
+        /* Accent (teal/blue) */
+        --acc: #2dd4bf; /* primary */
+        --acc2: #60a5fa; /* secondary */
+        --acc3: #22c55e; /* success */
+        --danger: #fb7185;
+
+        /* Surfaces */
+        --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+        --shadow2: 0 10px 20px rgba(0, 0, 0, 0.25);
+        --radius: 18px;
+        --radius-sm: 12px;
+        --space: clamp(16px, 2.2vw, 24px);
+        --container: 1100px;
+
+        /* Focus */
+        --ring: color-mix(in oklab, var(--acc) 35%, transparent);
+        --ring2: color-mix(in oklab, var(--acc2) 35%, transparent);
+
+        color-scheme: dark;
+      }
+
+      @media (prefers-color-scheme: light) {
         :root {
-            --bg: #0e1020;
-            --bg-soft: #141735;
-            --card: #171b3b;
-            --ink: #e9ebff;
-            --muted: #a2a9c8;
-            --acc: #85a3ff;
-            --acc-2: #5b7bff;
-            --ok: #35d79c;
-            --danger: #ff5a6a;
-            --ring: #85a3ff55;
-            --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .25);
-            --radius: 16px;
-            --space: clamp(16px, 2vw, 24px);
-            --container: 1100px;
+          --bg: #f6f8ff;
+          --bg2: #eef3ff;
+          --card: rgba(255, 255, 255, 0.82);
+          --card2: rgba(255, 255, 255, 0.92);
+          --stroke: rgba(15, 23, 42, 0.1);
+          --stroke2: rgba(15, 23, 42, 0.16);
+          --ink: #0f172a;
+          --muted: rgba(15, 23, 42, 0.68);
+          --shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+          --shadow2: 0 10px 20px rgba(15, 23, 42, 0.08);
+          color-scheme: light;
         }
+      }
 
-        html,
-        body {
-            height: 100%
-        }
+      html,
+      body {
+        height: 100%;
+      }
 
-        body {
-            margin: 0;
-            font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
-            color: var(--ink);
-            background: var(--bg);
-            position: relative;
-            min-height: 100dvh;
-            display: flex;
-            flex-direction: column;
-        }
+      body {
+        margin: 0;
+        font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI,
+          Roboto, Ubuntu, Arial, sans-serif;
+        color: var(--ink);
+        background: radial-gradient(
+            1200px 800px at 10% -10%,
+            color-mix(in oklab, var(--acc2) 35%, transparent) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 600px at 105% 0%,
+            color-mix(in oklab, var(--acc) 38%, transparent) 0%,
+            transparent 62%
+          ),
+          radial-gradient(
+            900px 700px at 50% 120%,
+            color-mix(in oklab, var(--acc) 22%, transparent) 0%,
+            transparent 58%
+          ),
+          linear-gradient(160deg, var(--bg2), var(--bg));
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
 
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            pointer-events: none;
-            background:
-                radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
-                radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
-                radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
-                linear-gradient(160deg, #0f1531 0%, #0e1020 72%);
-            will-change: transform;
-        }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      img {
+        max-width: 100%;
+        display: block;
+      }
 
-        a {
-            color: inherit;
-            text-decoration: none
-        }
+      .container {
+        max-width: var(--container);
+        margin: 0 auto;
+        padding-inline: var(--space);
+      }
 
-        img {
-            max-width: 100%;
-            display: block
-        }
+      /* A11y */
+      .visually-hidden {
+        position: absolute !important;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
 
-        .container {
-            max-width: var(--container);
-            margin: 0 auto;
-            padding-inline: var(--space)
-        }
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.55rem;
+        padding: 0.78rem 1.05rem;
+        border-radius: 999px;
+        border: 1px solid color-mix(in oklab, var(--stroke) 70%, transparent);
+        background: linear-gradient(
+          180deg,
+          color-mix(in oklab, var(--acc) 88%, white 10%),
+          color-mix(in oklab, var(--acc) 70%, black 14%)
+        );
+        color: white;
+        font-weight: 750;
+        letter-spacing: 0.2px;
+        box-shadow: var(--shadow2);
+        transition: transform 0.15s ease, filter 0.15s ease,
+          box-shadow 0.15s ease, background 0.15s ease;
+        cursor: pointer;
+      }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .6rem;
-            padding: .75rem 1rem;
-            border-radius: 12px;
-            background: var(--acc);
-            color: #fff;
-            font-weight: 600;
-            box-shadow: var(--shadow);
-            border: 1px solid #ffffff1a;
-            transition: .2s ease
-        }
+      .btn:hover {
+        transform: translateY(-1px);
+        filter: saturate(1.06);
+        box-shadow: var(--shadow);
+      }
+      .btn:active {
+        transform: translateY(0px) scale(0.99);
+      }
 
-        .btn:hover {
-            transform: translateY(-1px);
-            filter: saturate(1.1)
-        }
+      .btn.ghost {
+        background: color-mix(in oklab, var(--card2) 70%, transparent);
+        color: var(--ink);
+        border: 1px solid var(--stroke);
+        box-shadow: none;
+      }
 
-        .btn.ghost {
-            background: transparent;
-            color: var(--ink);
-            border: 1px solid #ffffff26;
-            box-shadow: none
-        }
+      .btn.ghost:hover {
+        background: color-mix(in oklab, var(--card2) 88%, transparent);
+        border-color: var(--stroke2);
+      }
 
-        .btn.sm {
-            padding: .5rem .7rem;
-            border-radius: 10px
-        }
+      .btn.sm {
+        padding: 0.55rem 0.8rem;
+        border-radius: 999px;
+        font-weight: 700;
+      }
 
-        .chip {
-            display: inline-flex;
-            align-items: center;
-            gap: .4rem;
-            padding: .35rem .6rem;
-            border-radius: 999px;
-            background: color-mix(in oklab, var(--acc) 15%, transparent);
-            border: 1px solid #ffffff1a;
-            font-size: .9rem
-        }
+      /* Chips / Cards */
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        background: color-mix(in oklab, var(--acc) 14%, transparent);
+        border: 1px solid color-mix(in oklab, var(--acc) 18%, var(--stroke));
+        font-size: 0.9rem;
+      }
 
-        .card {
-            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
-            border: 1px solid #ffffff1a;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow)
-        }
+      .card {
+        background: linear-gradient(
+          180deg,
+          color-mix(in oklab, var(--card2) 88%, transparent),
+          color-mix(in oklab, var(--card) 92%, transparent)
+        );
+        border: 1px solid var(--stroke);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px) saturate(1.05);
+      }
 
-        .muted {
-            color: var(--muted)
-        }
+      .muted {
+        color: var(--muted);
+      }
+      .section-title {
+        font-size: clamp(22px, 3vw, 30px);
+        margin: 0 0 1rem 0;
+        letter-spacing: 0.2px;
+      }
 
-        .section-title {
-            font-size: clamp(22px, 3vw, 28px);
-            margin: 0 0 1rem 0
-        }
+      /* Header / Nav */
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: blur(12px) saturate(1.1);
+        background: color-mix(in oklab, var(--bg) 70%, transparent);
+        border-bottom: 1px solid var(--stroke);
+      }
 
-        /* --- Header / Nav (wie auf Home) --- */
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            backdrop-filter: saturate(1.1) blur(10px);
-            background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
-            border-bottom: 1px solid #ffffff14
-        }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 68px;
+      }
 
-        .nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 64px
-        }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 900;
+        letter-spacing: 0.4px;
+      }
 
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            font-weight: 800;
-            letter-spacing: .4px
-        }
+      .brand .logo {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--stroke);
+      }
 
-        .brand .logo {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            display: block
+      .links {
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+      }
+
+      .links a {
+        padding: 0.5rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        color: var(--muted);
+        transition: background 0.15s ease, border-color 0.15s ease,
+          color 0.15s ease;
+      }
+
+      .links a:hover {
+        border-color: var(--stroke);
+        background: color-mix(in oklab, var(--card2) 80%, transparent);
+        color: var(--ink);
+      }
+
+      .mobile-toggle {
+        display: none;
+      }
+
+      @media (max-width: 800px) {
+        .mobile-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 42px;
+          height: 42px;
+          border-radius: 12px;
+          border: 1px solid var(--stroke);
+          background: color-mix(in oklab, var(--card2) 60%, transparent);
+          color: var(--ink);
         }
 
         .links {
-            display: flex;
-            gap: 1rem;
-            align-items: center
+          position: fixed;
+          inset: 68px 0 auto 0;
+          background: color-mix(in oklab, var(--bg) 82%, transparent);
+          padding: 1rem;
+          display: none;
+          flex-direction: column;
+          gap: 0.35rem;
+          border-bottom: 1px solid var(--stroke);
         }
 
         .links a {
-            padding: .45rem .7rem;
-            border-radius: 10px;
-            border: 1px solid transparent
+          width: 100%;
+          text-align: center;
         }
-
-        .links a:hover {
-            border-color: #ffffff1f;
-            background: #ffffff0f
+        .links.open {
+          display: flex;
         }
+      }
 
-        .mobile-toggle {
-            display: none
-        }
+      /* Auth */
+      .auth {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
 
-        @media (max-width:800px) {
-            .mobile-toggle {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 40px;
-                height: 40px;
-                border-radius: 10px;
-                border: 1px solid #ffffff26;
-                background: transparent
-            }
+      .avatar-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.35rem 0.6rem;
+        border-radius: 999px;
+        background: color-mix(in oklab, var(--card2) 65%, transparent);
+        border: 1px solid var(--stroke);
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
+      }
 
-            .links {
-                position: fixed;
-                inset: 64px 0 auto 0;
-                background: linear-gradient(180deg, #0b0f29, #0b0f2945);
-                padding: 1rem;
-                display: none;
-                flex-direction: column
-            }
+      .avatar-btn:hover {
+        background: color-mix(in oklab, var(--card2) 82%, transparent);
+        border-color: var(--stroke2);
+      }
 
-            .links.open {
-                display: flex
-            }
-        }
+      .avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        object-fit: cover;
+        background: color-mix(in oklab, var(--bg) 70%, transparent);
+        border: 1px solid var(--stroke);
+      }
 
-        /* --- Auth (Avatar + Menü) --- */
-        .auth {
-            display: flex;
-            align-items: center;
-            gap: .5rem
-        }
+      .avatar-fallback {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font: 800 12px/1 Inter;
+        background: color-mix(in oklab, var(--acc2) 50%, black);
+        color: white;
+        border: 1px solid var(--stroke);
+      }
 
-        .avatar-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-            padding: .35rem .55rem;
-            border-radius: 999px;
-            background: #ffffff10;
-            border: 1px solid #ffffff26;
-            cursor: pointer
-        }
+      .menu {
+        position: absolute;
+        margin-top: 0.45rem;
+        right: 0;
+        min-width: 180px;
+        z-index: 60;
+        background: color-mix(in oklab, var(--card2) 92%, transparent);
+        border: 1px solid var(--stroke);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        padding: 0.35rem;
+        display: none;
+      }
 
-        .avatar {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: #0f1331
-        }
+      .menu.open {
+        display: block;
+      }
 
-        .avatar-fallback {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            font: 700 12px/1 Inter;
-            background: #25306a;
-            color: #e9ebff
-        }
+      .menu a,
+      .menu button {
+        width: 100%;
+        text-align: left;
+        display: block;
+        background: transparent;
+        color: var(--ink);
+        padding: 0.6rem 0.7rem;
+        border: 0;
+        border-radius: 12px;
+        cursor: pointer;
+      }
 
-        .menu {
-            position: absolute;
-            margin-top: .4rem;
-            right: 0;
-            min-width: 160px;
-            z-index: 60;
-            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
-            border: 1px solid #ffffff22;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            padding: .35rem;
-            display: none
-        }
+      .menu a:hover,
+      .menu button:hover {
+        background: color-mix(in oklab, var(--acc) 10%, transparent);
+      }
 
-        .menu.open {
-            display: block
-        }
+      /* Main layout */
+      main {
+        padding-block: clamp(28px, 6vw, 72px);
+      }
 
-        .menu a,
-        .menu button {
-            width: 100%;
-            text-align: left;
-            display: block;
-            background: transparent;
-            color: var(--ink);
-            padding: .55rem .65rem;
-            border: 0;
-            border-radius: 10px;
-            cursor: pointer
-        }
-
-        .menu a:hover,
-        .menu button:hover {
-            background: #ffffff12
-        }
-
-        /* --- Profile Layout --- */
-        main {
-            padding-block: clamp(32px, 6vw, 72px)
-        }
-
+      .profile-wrap {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: clamp(16px, 3vw, 24px);
+      }
+      @media (max-width: 900px) {
         .profile-wrap {
-            display: grid;
-            grid-template-columns: 1.1fr .9fr;
-            gap: clamp(16px, 3vw, 24px)
+          grid-template-columns: 1fr;
         }
+      }
 
-        @media (max-width:900px) {
-            .profile-wrap {
-                grid-template-columns: 1fr
-            }
-        }
+      .profile-card {
+        padding: clamp(16px, 2.8vw, 22px);
+      }
 
-        .profile-card {
-            padding: clamp(16px, 2.8vw, 22px)
-        }
+      .head-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
 
-        .head-row {
-            display: flex;
-            align-items: center;
-            gap: 14px
-        }
+      .head-row .pfp {
+        width: 86px;
+        height: 86px;
+        border-radius: 999px;
+        object-fit: cover;
+        background: color-mix(in oklab, var(--bg) 70%, transparent);
+        border: 1px solid var(--stroke);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+      }
 
-        .head-row .pfp {
-            width: 84px;
-            height: 84px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: #0f1331;
-            border: 1px solid #ffffff22
-        }
+      .badges {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        margin-top: 0.45rem;
+      }
 
-        .badges {
-            display: flex;
-            gap: .4rem;
-            flex-wrap: wrap;
-            margin-top: .4rem
-        }
-
-        .grid {
-            display: grid;
-            gap: 12px
-        }
-
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+      .grid.cols-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+      @media (max-width: 640px) {
         .grid.cols-2 {
-            grid-template-columns: 1fr 1fr
+          grid-template-columns: 1fr;
         }
+      }
 
-        @media (max-width:640px) {
-            .grid.cols-2 {
-                grid-template-columns: 1fr
-            }
+      .discord-box {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.85rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--stroke);
+        background: color-mix(in oklab, var(--card2) 70%, transparent);
+        flex-wrap: wrap;
+      }
+
+      .discord-preview {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: 0.4rem;
+      }
+
+      .pfp-preview {
+        width: 60px;
+        height: 60px;
+        border-radius: 999px;
+        background: color-mix(in oklab, var(--bg) 70%, transparent);
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--stroke);
+        overflow: hidden;
+      }
+
+      .pfp-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.38rem;
+      }
+      .field label {
+        font-weight: 800;
+        font-size: 0.95rem;
+      }
+
+      .input {
+        background: color-mix(in oklab, var(--card2) 55%, transparent);
+        border: 1px solid var(--stroke);
+        border-radius: 14px;
+        color: var(--ink);
+        padding: 0.78rem 0.9rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease,
+          background 0.15s ease;
+      }
+
+      .input::placeholder {
+        color: color-mix(in oklab, var(--muted) 85%, transparent);
+      }
+      .input:focus {
+        outline: none;
+        border-color: color-mix(in oklab, var(--acc) 55%, var(--stroke));
+        box-shadow: 0 0 0 6px var(--ring);
+        background: color-mix(in oklab, var(--card2) 75%, transparent);
+      }
+
+      .row {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .help {
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+
+      .hr {
+        height: 1px;
+        background: var(--stroke);
+        margin: 1rem 0;
+      }
+
+      .alert {
+        border: 1px solid var(--stroke);
+        background: color-mix(in oklab, var(--card2) 70%, transparent);
+        border-radius: 14px;
+        padding: 0.75rem 0.9rem;
+      }
+
+      .alert.ok {
+        border-color: color-mix(in oklab, var(--acc3) 55%, var(--stroke));
+        background: color-mix(in oklab, var(--acc3) 12%, transparent);
+      }
+
+      .alert.err {
+        border-color: color-mix(in oklab, var(--danger) 55%, var(--stroke));
+        background: color-mix(in oklab, var(--danger) 12%, transparent);
+      }
+
+      /* Checkbox: slightly nicer */
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--acc);
+      }
+
+      footer {
+        border-top: 1px solid var(--stroke);
+        padding-block: 24px;
+        margin-top: auto;
+        background: color-mix(in oklab, var(--bg) 75%, transparent);
+        backdrop-filter: blur(10px);
+      }
+
+      .foot {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .social {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+      .social a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        border: 1px solid var(--stroke);
+        background: color-mix(in oklab, var(--card2) 55%, transparent);
+      }
+
+      /* Focus & motion */
+      :focus-visible {
+        outline: 2px solid color-mix(in oklab, var(--acc) 70%, white);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 6px var(--ring);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
         }
+      }
 
-        .discord-box {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            padding: .75rem;
-            border-radius: 14px;
-            border: 1px solid #ffffff1a;
-            background: #ffffff08;
-            flex-wrap: wrap;
-        }
+      /* Keep your existing footer isometric hover, but soften a bit and align with new tokens */
+      footer .social a.iso-pro {
+        position: relative;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: color-mix(in oklab, var(--card2) 65%, transparent);
+        box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.18),
+          0 8px 18px rgba(0, 0, 0, 0.18);
+        transition: transform 0.25s ease, box-shadow 0.25s ease,
+          background 0.25s ease;
+        overflow: visible;
+      }
 
-        .discord-preview {
-            display: flex;
-            align-items: center;
-            gap: .6rem;
-            margin-top: .35rem;
-        }
+      footer .social a.iso-pro:hover {
+        background: color-mix(in oklab, var(--card2) 82%, transparent);
+        box-shadow: inset 0 0 22px rgba(255, 255, 255, 0.2),
+          0 12px 26px rgba(0, 0, 0, 0.22);
+      }
 
-        .pfp-preview {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #0f1331;
-            display: grid;
-            place-items: center;
-        }
+      footer .social a.iso-pro .svg,
+      footer .social a.iso-pro svg {
+        width: 22px;
+        height: 22px;
+        transition: transform 0.25s ease;
+        color: currentColor;
+        fill: currentColor;
+      }
 
-        .pfp-preview img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
+      footer .social a.iso-pro:hover .svg,
+      footer .social a.iso-pro:hover svg {
+        transform: translate(5px, -5px);
+      }
 
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: .35rem
-        }
+      footer .social a.iso-pro span {
+        opacity: 0;
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        height: 48px;
+        width: 48px;
+        border-radius: 50%;
+        border: 2px solid currentColor;
+        box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.18),
+          0 8px 14px rgba(0, 0, 0, 0.14);
+        transition: transform 0.25s ease, opacity 0.25s ease;
+        pointer-events: none;
+      }
 
-        .field label {
-            font-weight: 700;
-            font-size: .95rem
-        }
+      footer .social a.iso-pro:hover span {
+        opacity: 1;
+      }
+      footer .social a.iso-pro:hover span:nth-child(1) {
+        opacity: 0.18;
+        transform: translate(0px, 0px);
+      }
+      footer .social a.iso-pro:hover span:nth-child(2) {
+        opacity: 0.38;
+        transform: translate(4px, -4px);
+      }
+      footer .social a.iso-pro:hover span:nth-child(3) {
+        opacity: 0.58;
+        transform: translate(8px, -8px);
+      }
 
-        .input {
-            background: #0f1331;
-            border: 1px solid #ffffff1a;
-            border-radius: 12px;
-            color: var(--ink);
-            padding: .7rem .8rem
-        }
+      footer .social a.iso-pro .text {
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        transform: translate(10px, -50%);
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 10;
+        font: 700 12px/1.2 Inter, ui-sans-serif, system-ui, -apple-system,
+          Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+        padding: 6px 8px;
+        border-radius: 10px;
+        color: currentColor;
+        background: color-mix(in oklab, var(--card2) 85%, transparent);
+        border: 1px solid var(--stroke);
+        box-shadow: var(--shadow2);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
 
-        .row {
-            display: flex;
-            gap: .6rem;
-            align-items: center;
-            flex-wrap: wrap
-        }
+      footer .social a.iso-pro:hover .text {
+        opacity: 1;
+        transform: translate(16px, -50%);
+      }
 
-        .help {
-            font-size: .9rem;
-            color: var(--muted)
-        }
+      footer .social a.iso-pro.is-fb,
+      footer .social a.iso-pro.is-gh,
+      footer .social a.iso-pro.is-mail,
+      footer .social a.iso-pro.is-discord {
+        color: var(--ink);
+      }
 
-        .hr {
-            height: 1px;
-            background: #ffffff14;
-            margin: .9rem 0
-        }
-
-        .alert {
-            border: 1px solid #ffffff26;
-            background: #ffffff0e;
-            border-radius: 12px;
-            padding: .65rem .8rem
-        }
-
-        .alert.ok {
-            border-color: #1dd1a1;
-            background: color-mix(in oklab, var(--ok) 12%, transparent)
-        }
-
-        .alert.err {
-            border-color: #ff5a6a;
-            background: color-mix(in oklab, var(--danger) 10%, transparent)
-        }
-
-        footer {
-            border-top: 1px solid #ffffff14;
-            padding-block: 24px;
-            margin-top: auto
-        }
-
-        .foot {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap
-        }
-
-        .social {
-            display: flex;
-            align-items: center;
-            gap: .6rem
-        }
-
-        .social a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            border: 1px solid #ffffff26
-        }
-
-        /* --- Focus / Motion --- */
-        :focus-visible {
-            outline: 2px solid var(--acc);
-            outline-offset: 2px;
-            box-shadow: 0 0 0 6px var(--ring)
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                transition: none !important;
-                animation: none !important
-            }
-        }
-
-        /* === Footer social isometric hover (scoped) === */
-        footer .social a.iso-pro {
-            position: relative;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            /* behält deine vorhandene Border aus .social a */
-            background: color-mix(in oklab, var(--card) 35%, transparent);
-            box-shadow:
-                inset 0 0 20px rgba(255, 255, 255, .20),
-                inset 0 0 5px rgba(255, 255, 255, .28),
-                0 5px 8px rgba(0, 0, 0, .18);
-            transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
-            overflow: visible;
-            /* damit Tooltip/Spans sichtbar bleiben */
-        }
-
-        footer .social a.iso-pro:hover {
-            background: color-mix(in oklab, var(--card) 45%, transparent);
-            box-shadow:
-                inset 0 0 22px rgba(255, 255, 255, .22),
-                inset 0 0 6px rgba(255, 255, 255, .34),
-                0 8px 14px rgba(0, 0, 0, .22);
-        }
-
-        /* SVG im Button */
-        footer .social a.iso-pro .svg,
-        footer .social a.iso-pro svg {
-            width: 22px;
-            height: 22px;
-            transition: transform .3s ease, filter .3s ease, color .3s ease;
-            color: currentColor;
-            /* wie in deinem Beispiel */
-            fill: currentColor;
-        }
-
-        /* Isometrischer Versatz auf Hover */
-        footer .social a.iso-pro:hover .svg,
-        footer .social a.iso-pro:hover svg {
-            transform: translate(5px, -5px);
-        }
-
-        /* Wellenringe */
-        footer .social a.iso-pro span {
-            opacity: 0;
-            position: absolute;
-            inset: 0;
-            margin: auto;
-            height: 48px;
-            width: 48px;
-            border-radius: 50%;
-            border: 2px solid currentColor;
-            /* nutzt die Icon-Farbe */
-            box-shadow:
-                inset 0 0 20px rgba(255, 255, 255, .25),
-                inset 0 0 5px rgba(255, 255, 255, .35),
-                0 5px 5px rgba(0, 0, 0, .16);
-            transition: transform .3s ease, opacity .3s ease;
-            pointer-events: none;
-        }
-
-        footer .social a.iso-pro:hover span {
-            opacity: 1;
-        }
-
-        footer .social a.iso-pro:hover span:nth-child(1) {
-            opacity: .22;
-            transform: translate(0px, 0px);
-        }
-
-        footer .social a.iso-pro:hover span:nth-child(2) {
-            opacity: .42;
-            transform: translate(4px, -4px);
-        }
-
-        footer .social a.iso-pro:hover span:nth-child(3) {
-            opacity: .62;
-            transform: translate(8px, -8px);
-        }
-
-        /* Tooltip */
-        footer .social a.iso-pro .text {
-            position: absolute;
-            left: 100%;
-            top: 50%;
-            transform: translate(10px, -50%) skew(-5deg);
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 10;
-
-            font: 600 12px/1.2 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
-            padding: 6px 8px;
-            border-radius: 6px;
-
-            color: currentColor;
-            background: rgba(255, 255, 255, .18);
-            border: 1px solid rgba(255, 255, 255, .28);
-            box-shadow:
-                -5px 0 1px rgba(153, 153, 153, .18),
-                -10px 0 1px rgba(153, 153, 153, .14),
-                inset 0 0 20px rgba(255, 255, 255, .24),
-                inset 0 0 5px rgba(255, 255, 255, .32),
-                0 5px 5px rgba(0, 0, 0, .12);
-            transition: opacity .25s ease, transform .25s ease;
-        }
-
-        footer .social a.iso-pro:hover .text {
-            opacity: 1;
-            transform: translate(18px, -50%) skew(-5deg);
-        }
-
-        /* Optionale Brand-Farben (ändern nur currentColor) */
-        footer .social a.iso-pro.is-fb {
-            color: #ffffff;
-        }
-
-        footer .social a.iso-pro.is-gh {
-            color: #ffffff;
-        }
-
-        /* GitHub neutral/weiß auf dark bg */
-        footer .social a.iso-pro.is-mail {
-            color: #ffffff;
-        }
-
-        /* Lila */
-        footer .social a.iso-pro.is-discord {
-            color: #ffffff;
-        }
-
-        /* Kleines Accessibility-Detail: Fokus */
-        footer .social a.iso-pro:focus-visible {
-            outline: 2px solid var(--acc);
-            outline-offset: 3px;
-            box-shadow: 0 0 0 6px var(--ring);
-        }
+      footer .social a.iso-pro:focus-visible {
+        outline: 2px solid color-mix(in oklab, var(--acc2) 65%, white);
+        outline-offset: 3px;
+        box-shadow: 0 0 0 6px var(--ring2);
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <header>
-        <div class="container nav" role="navigation" aria-label="Primary">
-            <div class="brand">
-                <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
-                <a href="/"><span>TAOMA™</span></a>
-            </div>
-
-            <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu"
-                aria-expanded="false" aria-label="Toggle menu">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-            </button>
-
-            <nav id="primary-menu" class="links" aria-label="Site">
-              <a href="/">Home</a>
-              <a href="/api">GIF API</a>
-              <a href="/api/gif/admin">Add GIFs</a>
-              <a href="/marketplace">Marketplace</a>
-              <a href="/linktree/config">Linktree</a>
-            </nav>
-
-            <div id="authSlot" class="auth"></div>
+      <div class="container nav" role="navigation" aria-label="Primary">
+        <div class="brand">
+          <a href="/"
+            ><img
+              class="logo"
+              src="/static/icon.png"
+              alt="TAOMA logo"
+              width="28"
+              height="28"
+          /></a>
+          <a href="/"><span>TAOMA™</span></a>
         </div>
+
+        <button
+          type="button"
+          class="mobile-toggle"
+          id="mobileToggle"
+          aria-controls="primary-menu"
+          aria-expanded="false"
+          aria-label="Toggle menu"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M4 6H20M4 12H20M4 18H20"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+
+        <nav id="primary-menu" class="links" aria-label="Site">
+          <a href="/">Home</a>
+          <a href="/api">GIF API</a>
+          <a href="/api/gif/admin">Add GIFs</a>
+          <a href="/marketplace">Marketplace</a>
+          <a href="/linktree/config">Linktree</a>
+        </nav>
+
+        <div id="authSlot" class="auth"></div>
+      </div>
     </header>
 
     <main class="container">
-        <h1 class="section-title">Profile</h1>
+      <h1 class="section-title">Profile</h1>
 
-        <!-- Not logged in state -->
-        <div id="notLogged" class="alert err" style="display:none">Not logged in. <a href="/login?next=${encodeURIComponent(location.href)}" class="btn sm ghost"
-                style="margin-left:.6rem">Go to Login</a></div>
+      <!-- Not logged in state -->
+      <div id="notLogged" class="alert err" style="display: none">
+        Not logged in.
+        <a
+          href="/login?next=${encodeURIComponent(location.href)}"
+          class="btn sm ghost"
+          style="margin-left: 0.6rem"
+          >Go to Login</a
+        >
+      </div>
 
-        <div class="profile-wrap" id="profileWrap" style="display:none">
-            <!-- Left: Overview -->
-            <section class="card profile-card" aria-labelledby="overviewTitle">
-                <h2 id="overviewTitle" class="visually-hidden">Overview</h2>
-                <div class="head-row">
-                    <img id="pfp" class="pfp" src="/static/icon.png" alt="Profile picture">
-                    <div>
-                        <div style="font-weight:800;font-size:1.25rem" id="uname">User</div>
-                        <div class="badges">
-                            <span id="badgeAdmin" class="chip" style="display:none">Admin</span>
-                            <span class="chip" id="uidChip" title="User ID">#</span>
-                        </div>
-                    </div>
+      <div class="profile-wrap" id="profileWrap" style="display: none">
+        <!-- Left: Overview -->
+        <section class="card profile-card" aria-labelledby="overviewTitle">
+          <h2 id="overviewTitle" class="visually-hidden">Overview</h2>
+          <div class="head-row">
+            <img
+              id="pfp"
+              class="pfp"
+              src="/static/icon.png"
+              alt="Profile picture"
+            />
+            <div>
+              <div style="font-weight: 800; font-size: 1.25rem" id="uname">
+                User
+              </div>
+              <div class="badges">
+                <span id="badgeAdmin" class="chip" style="display: none"
+                  >Admin</span
+                >
+                <span class="chip" id="uidChip" title="User ID">#</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="grid cols-2">
+            <div>
+              <div class="muted">Created</div>
+              <div id="createdAt">—</div>
+            </div>
+            <div>
+              <div class="muted">Last updated</div>
+              <div id="updatedAt">—</div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="row">
+            <button id="logoutBtn" class="btn ghost">Logout</button>
+            <a
+              class="btn ghost"
+              href="/admin"
+              id="adminLink"
+              style="display: none"
+              >Open Admin</a
+            >
+          </div>
+        </section>
+
+        <!-- Right: Settings -->
+        <section class="card profile-card" aria-labelledby="settingsTitle">
+          <h2 id="settingsTitle" style="margin: 0 0 0.6rem 0">
+            Account Settings
+          </h2>
+          <div id="msg" class="alert" style="display: none"></div>
+
+          <!-- Username -->
+          <form id="formName" class="field" autocomplete="off">
+            <label for="inName">Username</label>
+            <input
+              id="inName"
+              class="input"
+              name="username"
+              placeholder="Your username"
+            />
+            <div class="row">
+              <button class="btn sm" type="submit">Save Username</button>
+              <span class="help">This updates your display & login name.</span>
+            </div>
+          </form>
+
+          <div class="hr"></div>
+
+          <!-- Avatar: Tabs (URL / Upload / Gallery) -->
+          <div class="field">
+            <label>Profile picture</label>
+
+            <div class="row" role="tablist" aria-label="Avatar source">
+              <button type="button" class="btn sm ghost" data-tab="url">
+                URL
+              </button>
+              <button type="button" class="btn sm ghost" data-tab="upload">
+                Upload
+              </button>
+              <button type="button" class="btn sm ghost" data-tab="gallery">
+                Gallery
+              </button>
+            </div>
+
+            <div id="tab-url" class="grid" style="margin-top: 0.6rem">
+              <input
+                id="inPfp"
+                class="input"
+                name="profile_picture"
+                placeholder="https://…/avatar.png"
+              />
+              <div class="row">
+                <button id="btnPfpSave" class="btn sm" type="button">
+                  Save Picture
+                </button>
+                <span class="help">Direct image URL. PNG/JPG/GIF/WebP.</span>
+              </div>
+            </div>
+
+            <div
+              id="tab-upload"
+              class="grid"
+              style="display: none; margin-top: 0.6rem"
+            >
+              <input
+                id="inFile"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                class="input"
+              />
+              <div class="row">
+                <button id="btnUpload" class="btn sm" type="button">
+                  Upload
+                </button>
+                <span class="help"
+                  >Max 2 MB. We store it under /static/uploads/avatars/</span
+                >
+              </div>
+            </div>
+
+            <div
+              id="tab-gallery"
+              class="grid"
+              style="display: none; margin-top: 0.6rem"
+            >
+              <div
+                id="galleryWrap"
+                class="grid"
+                style="
+                  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+                  gap: 10px;
+                "
+              ></div>
+              <div class="row">
+                <span class="help">Pick one of the preset avatars.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <!-- Password change -->
+          <form id="formPwd" class="grid" autocomplete="off">
+            <div class="field">
+              <label for="curPwd">Current password</label>
+              <input
+                id="curPwd"
+                class="input"
+                type="password"
+                minlength="8"
+                placeholder="••••••••"
+              />
+            </div>
+            <div class="field">
+              <label for="newPwd">New password</label>
+              <input
+                id="newPwd"
+                class="input"
+                type="password"
+                minlength="8"
+                placeholder="At least 8 characters"
+              />
+            </div>
+            <div class="field">
+              <label for="repPwd">Repeat new password</label>
+              <input
+                id="repPwd"
+                class="input"
+                type="password"
+                minlength="8"
+                placeholder="Repeat new password"
+              />
+            </div>
+            <div class="row">
+              <button class="btn sm" type="submit">Change Password</button>
+              <span class="help">You must enter your current password.</span>
+            </div>
+          </form>
+          <div class="hr"></div>
+
+          <!-- Discord -->
+          <div class="field">
+            <label>Discord (optional)</label>
+            <div class="discord-box">
+              <div>
+                <div id="discordStatusText" class="muted">Not linked</div>
+                <div id="discordPreview" class="discord-preview muted">
+                  Link Discord to use your profile frame.
                 </div>
+              </div>
+              <div class="row" style="gap: 0.5rem; flex-wrap: wrap">
+                <button type="button" class="btn sm" id="btnDiscordLink">
+                  Link Discord
+                </button>
+                <button
+                  type="button"
+                  class="btn sm ghost"
+                  id="btnDiscordUnlink"
+                  style="display: none"
+                >
+                  Unlink
+                </button>
+              </div>
+            </div>
+            <div
+              class="row"
+              style="margin-top: 0.45rem; gap: 0.4rem; align-items: center"
+            >
+              <input type="checkbox" id="inDiscordFrameProfile" />
+              <span class="help"
+                >Toggle to show your Discord profile frame in your Linktree
+                (needs a linked account).</span
+              >
+            </div>
+          </div>
+          <div class="hr"></div>
 
-                <div class="hr"></div>
-
-                <div class="grid cols-2">
-                    <div>
-                        <div class="muted">Created</div>
-                        <div id="createdAt">—</div>
-                    </div>
-                    <div>
-                        <div class="muted">Last updated</div>
-                        <div id="updatedAt">—</div>
-                    </div>
-                </div>
-
-                <div class="hr"></div>
-
-                <div class="row">
-                    <button id="logoutBtn" class="btn ghost">Logout</button>
-                    <a class="btn ghost" href="/admin" id="adminLink" style="display:none">Open Admin</a>
-                </div>
-            </section>
-
-            <!-- Right: Settings -->
-            <section class="card profile-card" aria-labelledby="settingsTitle">
-                <h2 id="settingsTitle" style="margin:0 0 .6rem 0">Account Settings</h2>
-                <div id="msg" class="alert" style="display:none"></div>
-
-                <!-- Username -->
-                <form id="formName" class="field" autocomplete="off">
-                    <label for="inName">Username</label>
-                    <input id="inName" class="input" name="username" placeholder="Your username">
-                    <div class="row">
-                        <button class="btn sm" type="submit">Save Username</button>
-                        <span class="help">This updates your display & login name.</span>
-                    </div>
-                </form>
-
-                <div class="hr"></div>
-
-                <!-- Avatar: Tabs (URL / Upload / Gallery) -->
-                <div class="field">
-                    <label>Profile picture</label>
-
-                    <div class="row" role="tablist" aria-label="Avatar source">
-                        <button type="button" class="btn sm ghost" data-tab="url">URL</button>
-                        <button type="button" class="btn sm ghost" data-tab="upload">Upload</button>
-                        <button type="button" class="btn sm ghost" data-tab="gallery">Gallery</button>
-                    </div>
-
-                    <div id="tab-url" class="grid" style="margin-top:.6rem">
-                        <input id="inPfp" class="input" name="profile_picture" placeholder="https://…/avatar.png">
-                        <div class="row">
-                            <button id="btnPfpSave" class="btn sm" type="button">Save Picture</button>
-                            <span class="help">Direct image URL. PNG/JPG/GIF/WebP.</span>
-                        </div>
-                    </div>
-
-                    <div id="tab-upload" class="grid" style="display:none;margin-top:.6rem">
-                        <input id="inFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="input">
-                        <div class="row">
-                            <button id="btnUpload" class="btn sm" type="button">Upload</button>
-                            <span class="help">Max 2 MB. We store it under /static/uploads/avatars/</span>
-                        </div>
-                    </div>
-
-                    <div id="tab-gallery" class="grid" style="display:none;margin-top:.6rem">
-                        <div id="galleryWrap" class="grid"
-                            style="grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px"></div>
-                        <div class="row"><span class="help">Pick one of the preset avatars.</span></div>
-                    </div>
-                </div>
-
-                <div class="hr"></div>
-
-                <!-- Password change -->
-                <form id="formPwd" class="grid" autocomplete="off">
-                    <div class="field">
-                        <label for="curPwd">Current password</label>
-                        <input id="curPwd" class="input" type="password" minlength="8" placeholder="••••••••">
-                    </div>
-                    <div class="field">
-                        <label for="newPwd">New password</label>
-                        <input id="newPwd" class="input" type="password" minlength="8"
-                            placeholder="At least 8 characters">
-                    </div>
-                    <div class="field">
-                        <label for="repPwd">Repeat new password</label>
-                        <input id="repPwd" class="input" type="password" minlength="8"
-                            placeholder="Repeat new password">
-                    </div>
-                <div class="row">
-                    <button class="btn sm" type="submit">Change Password</button>
-                    <span class="help">You must enter your current password.</span>
-                </div>
-            </form>
-            <div class="hr"></div>
-
-                <!-- Discord -->
-                <div class="field">
-                    <label>Discord (optional)</label>
-                    <div class="discord-box">
-                        <div>
-                            <div id="discordStatusText" class="muted">Not linked</div>
-                            <div id="discordPreview" class="discord-preview muted">Link Discord to use your profile frame.</div>
-                        </div>
-                        <div class="row" style="gap:.5rem;flex-wrap:wrap">
-                            <button type="button" class="btn sm" id="btnDiscordLink">Link Discord</button>
-                            <button type="button" class="btn sm ghost" id="btnDiscordUnlink" style="display:none">Unlink</button>
-                        </div>
-                    </div>
-                    <div class="row" style="margin-top:.45rem;gap:.4rem;align-items:center">
-                        <input type="checkbox" id="inDiscordFrameProfile">
-                        <span class="help">Toggle to show your Discord profile frame in your Linktree (needs a linked account).</span>
-                    </div>
-                </div>
-                <div class="hr"></div>
-
-                <!-- Linktree -->
-                <div class="field">
-                    <label>Your Linktree</label>
-                    <div id="linktreeSlot" class="row"></div>
-                    <span class="help">Share all your important links in one place.</span>
-                </div>
-            </section>
-        </div>
+          <!-- Linktree -->
+          <div class="field">
+            <label>Your Linktree</label>
+            <div id="linktreeSlot" class="row"></div>
+            <span class="help"
+              >Share all your important links in one place.</span
+            >
+          </div>
+        </section>
+      </div>
     </main>
 
     <footer>
-        <div class="container foot">
-            <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved. · <a href="/datenschutz.html">Privacy Policy</a></small>
-            <div class="visitor-counter">
-                <!-- Eye Icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span id="visitor-count">0</span>
-            </div>
-            <div class="social">
-                <a href="https://guns.lol/taoma" target="_blank" rel="noreferrer" aria-label="guns.lol"
-                    class="iso-pro is-fb">
-                    <span></span><span></span><span></span>
-                    <svg width="18" height="18" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
-                        fill="currentColor" class="svg">
-                        <path
-                            d="M256 32C132 32 32 132 32 256s100 224 224 224 224-100 224-224S380 32 256 32Zm80 160h32v32h-32v32h-32v-32h-32v-32h32v-32h32v32Z" />
-                    </svg>
-                    <div class="text">guns.lol</div>
-                </a>
-
-                <a href="https://github.com/TaomasSpace" target="_blank" rel="noreferrer" aria-label="GitHub"
-                    class="iso-pro is-gh">
-                    <span></span><span></span><span></span>
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg">
-                        <path
-                            d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z" />
-                    </svg>
-                    <div class="text">GitHub</div>
-                </a>
-
-                <a href="mailto:Taoma.M@proton.me" aria-label="Email" class="iso-pro is-mail">
-                    <span></span><span></span><span></span>
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg"
-                        aria-hidden="true">
-                        <!-- Rahmen des Umschlags -->
-                        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"
-                            stroke-linejoin="round" />
-                        <!-- Klappe -->
-                        <path d="M3 7l9 6 9-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                    <div class="text">Email</div>
-                </a>
-                <a href="https://discord.gg/H3NDg7e3vD" target="_blank" rel="noreferrer" aria-label="Discord"
-                    class="iso-pro is-discord">
-                    <span></span><span></span><span></span>
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg">
-                        <path
-                            d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z" />
-                    </svg>
-                    <div class="text">Discord</div>
-                </a>
-            </div>
+      <div class="container foot">
+        <small class="muted"
+          >© <span id="year"></span> TAOMA™. All rights reserved. ·
+          <a href="/datenschutz.html">Privacy Policy</a></small
+        >
+        <div class="visitor-counter">
+          <!-- Eye Icon -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
+          </svg>
+          <span id="visitor-count">0</span>
         </div>
+        <div class="social">
+          <a
+            href="https://guns.lol/taoma"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="guns.lol"
+            class="iso-pro is-fb"
+          >
+            <span></span><span></span><span></span>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              class="svg"
+            >
+              <path
+                d="M256 32C132 32 32 132 32 256s100 224 224 224 224-100 224-224S380 32 256 32Zm80 160h32v32h-32v32h-32v-32h-32v-32h32v-32h32v32Z"
+              />
+            </svg>
+            <div class="text">guns.lol</div>
+          </a>
+
+          <a
+            href="https://github.com/TaomasSpace"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="GitHub"
+            class="iso-pro is-gh"
+          >
+            <span></span><span></span><span></span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="svg"
+            >
+              <path
+                d="M12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 6.838 9.488c.5.092.682-.216.682-.48 0-.237-.01-1.026-.015-1.862-2.782.604-3.369-1.18-3.369-1.18-.455-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.833.092-.647.35-1.088.636-1.339-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.987 1.03-2.688-.103-.252-.447-1.268.098-2.643 0 0 .84-.269 2.75 1.026A9.58 9.58 0 0 1 12 6.844c.85.004 1.707.115 2.506.337 1.909-1.295 2.748-1.026 2.748-1.026.547 1.375.203 2.39.1 2.643.64.701 1.028 1.597 1.028 2.688 0 3.842-2.338 4.688-4.566 4.936.358.31.677.92.677 1.855 0 1.338-.012 2.419-.012 2.748 0 .267.18.577.688.478A10.003 10.003 0 0 0 22 12c0-5.523-4.477-10-10-10Z"
+              />
+            </svg>
+            <div class="text">GitHub</div>
+          </a>
+
+          <a
+            href="mailto:Taoma.M@proton.me"
+            aria-label="Email"
+            class="iso-pro is-mail"
+          >
+            <span></span><span></span><span></span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="svg"
+              aria-hidden="true"
+            >
+              <!-- Rahmen des Umschlags -->
+              <rect
+                x="3"
+                y="5"
+                width="18"
+                height="14"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linejoin="round"
+              />
+              <!-- Klappe -->
+              <path
+                d="M3 7l9 6 9-6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <div class="text">Email</div>
+          </a>
+          <a
+            href="https://discord.gg/H3NDg7e3vD"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Discord"
+            class="iso-pro is-discord"
+          >
+            <span></span><span></span><span></span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="svg"
+            >
+              <path
+                d="M20 4a18 18 0 0 0-4.5-1.5l-.2.4A16.4 16.4 0 0 1 12 3c-1.1 0-2.2.1-3.3.3l-.2-.4A18 18 0 0 0 4 4c-1.3 2-2 4.2-2 6.5 0 6.7 4.5 8.6 8.8 8.6h.7l-.3-1a9 9 0 0 1-1.7-.6l.4-.2c.8.4 1.7.6 2.6.6s1.8-.2 2.6-.6l.4.2a9 9 0 0 1-1.7.6l-.3 1h.7C17.5 19.1 22 17.2 22 10.5 22 8.2 21.3 6 20 4ZM9.5 14.2c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8S11 11.4 11 12.4s-.7 1.8-1.5 1.8Zm5 0c-.8 0-1.5-.8-1.5-1.8s.7-1.8 1.5-1.8 1.5.8 1.5 1.8-.7 1.8-1.5 1.8Z"
+              />
+            </svg>
+            <div class="text">Discord</div>
+          </a>
+        </div>
+      </div>
     </footer>
 
     <script>
-        // --- Mobile menu
-        const toggle = document.getElementById('mobileToggle');
-        const menu = document.getElementById('primary-menu');
-        if (toggle) { toggle.addEventListener('click', () => { const open = menu.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); }); }
-        // year
-        document.getElementById('year').textContent = new Date().getFullYear();
+      // --- Mobile menu
+      const toggle = document.getElementById("mobileToggle");
+      const menu = document.getElementById("primary-menu");
+      if (toggle) {
+        toggle.addEventListener("click", () => {
+          const open = menu.classList.toggle("open");
+          toggle.setAttribute("aria-expanded", String(open));
+        });
+      }
+      // year
+      document.getElementById("year").textContent = new Date().getFullYear();
 
-        // --- Visitor counter (wie Home)
-        (async () => {
-            const KEY = "taoma_last_counted_at"; const DAY = 24 * 60 * 60 * 1000;
-            const now = Date.now(); const last = parseInt(localStorage.getItem(KEY) || "0", 10);
-            const shouldCount = !last || (now - last) > DAY;
-            if (shouldCount) { navigator.sendBeacon("/api/visits/increment"); localStorage.setItem(KEY, String(now)); }
-            try {
-                const res = await fetch("/api/visits/value"); const { total } = await res.json();
-                document.getElementById("visitor-count").textContent = (total !== undefined && total !== null) ? total : "0";
-            } catch { }
-        })();
-
-        function escapeHtml(value) {
-            return String(value !== undefined && value !== null ? value : '').replace(/[&<>"']/g, (ch) => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;',
-            })[ch] || ch);
+      // --- Visitor counter (wie Home)
+      (async () => {
+        const KEY = "taoma_last_counted_at";
+        const DAY = 24 * 60 * 60 * 1000;
+        const now = Date.now();
+        const last = parseInt(localStorage.getItem(KEY) || "0", 10);
+        const shouldCount = !last || now - last > DAY;
+        if (shouldCount) {
+          navigator.sendBeacon("/api/visits/increment");
+          localStorage.setItem(KEY, String(now));
         }
+        try {
+          const res = await fetch("/api/visits/value");
+          const { total } = await res.json();
+          document.getElementById("visitor-count").textContent =
+            total !== undefined && total !== null ? total : "0";
+        } catch {}
+      })();
 
-        function sanitizeUrl(raw) {
-            if (typeof raw !== 'string') return '';
-            const trimmed = raw.trim();
-            if (!trimmed) return '';
-            if (trimmed.startsWith('javascript:')) return '';
-            try {
-                const u = new URL(trimmed, window.location.origin);
-                if (['http:', 'https:'].includes(u.protocol)) {
-                    return trimmed.startsWith('http://') || trimmed.startsWith('https://') ? u.href : trimmed;
-                }
-            } catch (_) {
-                if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed;
-            }
-            return '';
+      function escapeHtml(value) {
+        return String(
+          value !== undefined && value !== null ? value : ""
+        ).replace(
+          /[&<>"']/g,
+          (ch) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[ch] || ch)
+        );
+      }
+
+      function sanitizeUrl(raw) {
+        if (typeof raw !== "string") return "";
+        const trimmed = raw.trim();
+        if (!trimmed) return "";
+        if (trimmed.startsWith("javascript:")) return "";
+        try {
+          const u = new URL(trimmed, window.location.origin);
+          if (["http:", "https:"].includes(u.protocol)) {
+            return trimmed.startsWith("http://") ||
+              trimmed.startsWith("https://")
+              ? u.href
+              : trimmed;
+          }
+        } catch (_) {
+          if (trimmed.startsWith("/") && !trimmed.startsWith("//"))
+            return trimmed;
         }
+        return "";
+      }
 
-        async function fetchSession() {
-            try {
-                const r = await fetch('/api/auth/verify', { credentials: 'include' });
-                if (!r.ok) return null;
-                return await r.json();
-            } catch (_) {
-                return null;
-            }
+      async function fetchSession() {
+        try {
+          const r = await fetch("/api/auth/verify", { credentials: "include" });
+          if (!r.ok) return null;
+          return await r.json();
+        } catch (_) {
+          return null;
         }
+      }
 
-        let currentUser = undefined;
-        let discordStatus = { linked: false };
-        async function refreshSession() {
-            const session = await fetchSession();
-            currentUser = (session && session.user) ? session.user : null;
-            return currentUser;
+      let currentUser = undefined;
+      let discordStatus = { linked: false };
+      async function refreshSession() {
+        const session = await fetchSession();
+        currentUser = session && session.user ? session.user : null;
+        return currentUser;
+      }
+
+      async function renderAuthHeader(userOverride) {
+        const slot = document.getElementById("authSlot");
+        if (!slot) return;
+        const user =
+          userOverride === undefined ? await refreshSession() : userOverride;
+        if (!user) {
+          slot.innerHTML = `<a class="btn sm ghost" href="/login?next=${encodeURIComponent(
+            location.href
+          )}">Login</a><a class="btn sm ghost" href="/register?next=${encodeURIComponent(
+            location.href
+          )}">Register</a>`;
+          return;
         }
-
-        async function renderAuthHeader(userOverride) {
-            const slot = document.getElementById('authSlot'); if (!slot) return;
-            const user = userOverride === undefined ? await refreshSession() : userOverride;
-            if (!user) {
-                slot.innerHTML = `<a class="btn sm ghost" href="/login?next=${encodeURIComponent(location.href)}">Login</a><a class="btn sm ghost" href="/register?next=${encodeURIComponent(location.href)}">Register</a>`;
-                return;
-            }
-            const unameRaw = user.username || 'User';
-            const uname = escapeHtml(unameRaw);
-            const initials = unameRaw.trim().slice(0, 2).toUpperCase() || 'U';
-            const pfp = sanitizeUrl(user.profile_picture ? String(user.profile_picture) : '');
-            slot.innerHTML = `
+        const unameRaw = user.username || "User";
+        const uname = escapeHtml(unameRaw);
+        const initials = unameRaw.trim().slice(0, 2).toUpperCase() || "U";
+        const pfp = sanitizeUrl(
+          user.profile_picture ? String(user.profile_picture) : ""
+        );
+        slot.innerHTML = `
         <div class="auth-box" style="position:relative">
           <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false">
-            ${pfp ? `<img class="avatar" src="${pfp}" alt="${uname}'s profile picture">` : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(initials)}</span>`}
+            ${
+              pfp
+                ? `<img class="avatar" src="${pfp}" alt="${uname}'s profile picture">`
+                : `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(
+                    initials
+                  )}</span>`
+            }
             <span class="uname" style="font-weight:700;font-size:.95rem">${uname}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
@@ -947,351 +1255,486 @@
             <button id="logoutBtnHdr" role="menuitem">Logout</button>
           </div>
         </div>`;
-            const btn = slot.querySelector('#avatarBtn'); const menu = slot.querySelector('#userMenu'); const logoutHdr = slot.querySelector('#logoutBtnHdr');
-            function closeMenu() { menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
-            btn.addEventListener('click', (e) => { e.stopPropagation(); const open = menu.classList.toggle('open'); btn.setAttribute('aria-expanded', String(open)); });
-            document.addEventListener('click', (e) => { if (!menu.contains(e.target) && !btn.contains(e.target)) closeMenu(); });
-            logoutHdr.addEventListener('click', doLogout, { passive: true });
+        const btn = slot.querySelector("#avatarBtn");
+        const menu = slot.querySelector("#userMenu");
+        const logoutHdr = slot.querySelector("#logoutBtnHdr");
+        function closeMenu() {
+          menu.classList.remove("open");
+          btn.setAttribute("aria-expanded", "false");
         }
-
-        // --- Profile page logic
-        const notLoggedEl = document.getElementById('notLogged');
-        const profileWrap = document.getElementById('profileWrap');
-        const msgEl = document.getElementById('msg');
-
-        function fmtDate(v) { if (!v) return '—'; const d = new Date(v); if (isNaN(d)) return '—'; return d.toLocaleString(); }
-        function showMsg(text, ok = false) { msgEl.textContent = text; msgEl.className = 'alert ' + (ok ? 'ok' : 'err'); msgEl.style.display = 'block'; setTimeout(() => { msgEl.style.display = 'none' }, 3500); }
-
-        async function doLogout() {
-            try {
-                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-            } catch { }
-            window.location.href = '/';
-        }
-
-        async function loadProfile() {
-            try {
-                const user = await refreshSession();
-                if (!user) { notLoggedEl.style.display = 'block'; setTimeout(() => location.href = '/login', 800); return; }
-
-                // Fill overview
-                document.getElementById('uname').textContent = user.username || 'User';
-                document.getElementById('uidChip').textContent = user.id ? `ID ${user.id}` : '#';
-                document.getElementById('badgeAdmin').style.display = user.admin ? 'inline-flex' : 'none';
-                document.getElementById('createdAt').textContent = fmtDate(user.created_at);
-                document.getElementById('updatedAt').textContent = fmtDate(user.updated_at);
-                const pfp = sanitizeUrl(user.profile_picture || '') || '/static/icon.png';
-                document.getElementById('pfp').src = pfp;
-                document.getElementById('adminLink').style.display = user.admin ? 'inline-flex' : 'none';
-
-                // Prefill forms
-                document.getElementById('inName').value = user.username || '';
-                document.getElementById('inPfp').value = user.profile_picture || '';
-                renderLinktreeSlot(user);
-                await loadDiscordStatus();
-                const lt = await fetchMyLinktree();
-                const frameToggle = document.getElementById('inDiscordFrameProfile');
-                if (frameToggle) {
-                    frameToggle.checked = !!(lt && lt.discord_frame_enabled);
-                }
-                updateDiscordUI();
-
-                // Page visible
-                profileWrap.style.display = 'grid';
-                await renderAuthHeader(user);
-            } catch (e) {
-                notLoggedEl.style.display = 'block';
-            }
-        }
-
-        // update helpers try PATCH /api/users/me, fallback POST /api/users/update
-        async function updateMe(payload) {
-            if (currentUser === undefined) {
-                await refreshSession();
-            }
-            if (!currentUser) { showMsg('Not logged in', false); return false; }
-            let ok = false, err = null;
-
-            try {
-                const r = await fetch('/api/users/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
-                if (r.ok) { ok = true; } else if (r.status !== 404) { err = await r.text(); }
-            } catch (e) { /* continue to fallback */ }
-
-            if (!ok) {
-                try {
-                    const r2 = await fetch('/api/users/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
-                    if (r2.ok) { ok = true; } else { err = (await r2.text()) || err; }
-                } catch (e2) { err = (e2 && e2.message) ? e2.message : err; }
-            }
-
-            if (!ok) { showMsg(err || 'Update failed', false); return false; }
-            showMsg('Saved', true);
-            await loadProfile(); // refresh
-            return true;
-        }
-
-        // Forms
-        document.getElementById('formName').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('inName').value.trim();
-            if (!name) { showMsg('Username cannot be empty', false); return; }
-            await updateMe({ username: name });
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const open = menu.classList.toggle("open");
+          btn.setAttribute("aria-expanded", String(open));
         });
-
-        document.getElementById('logoutBtn').addEventListener('click', doLogout, { passive: true });
-        document.getElementById('btnDiscordLink').addEventListener('click', startDiscordLink);
-        document.getElementById('btnDiscordUnlink').addEventListener('click', unlinkDiscord);
-        document.getElementById('inDiscordFrameProfile').addEventListener('change', toggleDiscordFrame);
-        window.addEventListener('message', async (evt) => {
-            if (evt && evt.data && evt.data.type === 'discord-linked') {
-                await loadDiscordStatus();
-                const lt = await fetchMyLinktree();
-                const frameToggle = document.getElementById('inDiscordFrameProfile');
-                if (frameToggle) frameToggle.checked = !!(lt && lt.discord_frame_enabled);
-                updateDiscordUI();
-                showMsg('Discord linked', true);
-            }
+        document.addEventListener("click", (e) => {
+          if (!menu.contains(e.target) && !btn.contains(e.target)) closeMenu();
         });
-        function renderLinktreeSlot(user) {
-            const ltSlot = document.getElementById("linktreeSlot");
-            if (!ltSlot) return;
-            const slug = user.linktree_slug;
-            ltSlot.textContent = '';
-            if (slug) {
-                const view = document.createElement('a');
-                view.href = `/tree/${encodeURIComponent(slug)}`;
-                view.target = '_blank';
-                view.className = 'btn sm';
-                view.textContent = 'View Linktree';
-                const config = document.createElement('a');
-                config.href = '/linktree/config';
-                config.className = 'btn sm ghost';
-                config.textContent = 'Configure';
-                ltSlot.appendChild(view);
-                ltSlot.appendChild(config);
+        logoutHdr.addEventListener("click", doLogout, { passive: true });
+      }
+
+      // --- Profile page logic
+      const notLoggedEl = document.getElementById("notLogged");
+      const profileWrap = document.getElementById("profileWrap");
+      const msgEl = document.getElementById("msg");
+
+      function fmtDate(v) {
+        if (!v) return "—";
+        const d = new Date(v);
+        if (isNaN(d)) return "—";
+        return d.toLocaleString();
+      }
+      function showMsg(text, ok = false) {
+        msgEl.textContent = text;
+        msgEl.className = "alert " + (ok ? "ok" : "err");
+        msgEl.style.display = "block";
+        setTimeout(() => {
+          msgEl.style.display = "none";
+        }, 3500);
+      }
+
+      async function doLogout() {
+        try {
+          await fetch("/api/auth/logout", {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch {}
+        window.location.href = "/";
+      }
+
+      async function loadProfile() {
+        try {
+          const user = await refreshSession();
+          if (!user) {
+            notLoggedEl.style.display = "block";
+            setTimeout(() => (location.href = "/login"), 800);
+            return;
+          }
+
+          // Fill overview
+          document.getElementById("uname").textContent =
+            user.username || "User";
+          document.getElementById("uidChip").textContent = user.id
+            ? `ID ${user.id}`
+            : "#";
+          document.getElementById("badgeAdmin").style.display = user.admin
+            ? "inline-flex"
+            : "none";
+          document.getElementById("createdAt").textContent = fmtDate(
+            user.created_at
+          );
+          document.getElementById("updatedAt").textContent = fmtDate(
+            user.updated_at
+          );
+          const pfp =
+            sanitizeUrl(user.profile_picture || "") || "/static/icon.png";
+          document.getElementById("pfp").src = pfp;
+          document.getElementById("adminLink").style.display = user.admin
+            ? "inline-flex"
+            : "none";
+
+          // Prefill forms
+          document.getElementById("inName").value = user.username || "";
+          document.getElementById("inPfp").value = user.profile_picture || "";
+          renderLinktreeSlot(user);
+          await loadDiscordStatus();
+          const lt = await fetchMyLinktree();
+          const frameToggle = document.getElementById("inDiscordFrameProfile");
+          if (frameToggle) {
+            frameToggle.checked = !!(lt && lt.discord_frame_enabled);
+          }
+          updateDiscordUI();
+
+          // Page visible
+          profileWrap.style.display = "grid";
+          await renderAuthHeader(user);
+        } catch (e) {
+          notLoggedEl.style.display = "block";
+        }
+      }
+
+      // update helpers try PATCH /api/users/me, fallback POST /api/users/update
+      async function updateMe(payload) {
+        if (currentUser === undefined) {
+          await refreshSession();
+        }
+        if (!currentUser) {
+          showMsg("Not logged in", false);
+          return false;
+        }
+        let ok = false,
+          err = null;
+
+        try {
+          const r = await fetch("/api/users/me", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          });
+          if (r.ok) {
+            ok = true;
+          } else if (r.status !== 404) {
+            err = await r.text();
+          }
+        } catch (e) {
+          /* continue to fallback */
+        }
+
+        if (!ok) {
+          try {
+            const r2 = await fetch("/api/users/update", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(payload),
+            });
+            if (r2.ok) {
+              ok = true;
             } else {
-                const create = document.createElement('a');
-                create.href = '/linktree/config';
-                create.className = 'btn sm';
-                create.textContent = 'Create Linktree';
-                ltSlot.appendChild(create);
+              err = (await r2.text()) || err;
             }
+          } catch (e2) {
+            err = e2 && e2.message ? e2.message : err;
+          }
         }
 
-        function updateDiscordUI() {
-            const statusEl = document.getElementById('discordStatusText');
-            const previewEl = document.getElementById('discordPreview');
-            const toggleEl = document.getElementById('inDiscordFrameProfile');
-            const linkBtn = document.getElementById('btnDiscordLink');
-            const unlinkBtn = document.getElementById('btnDiscordUnlink');
-            const linked = !!(discordStatus && discordStatus.linked);
-            if (statusEl) {
-                const name = (discordStatus && (discordStatus.global_name || discordStatus.username)) || 'Discord user';
-                statusEl.textContent = linked ? `Linked as ${name}` : 'Not linked';
-            }
-            if (linkBtn && unlinkBtn) {
-                linkBtn.style.display = linked ? 'none' : 'inline-flex';
-                unlinkBtn.style.display = linked ? 'inline-flex' : 'none';
-            }
-            if (toggleEl) {
-                toggleEl.disabled = !linked || !(currentUser && currentUser.linktree_id);
-                if (!linked) toggleEl.checked = false;
-            }
-            if (previewEl) {
-                previewEl.innerHTML = '';
-                previewEl.classList.remove('muted');
-                if (linked && discordStatus && discordStatus.decoration_url) {
-                    const wrap = document.createElement('div');
-                    wrap.className = 'pfp-preview';
-                    const img = document.createElement('img');
-                    img.src = discordStatus.decoration_url;
-                    img.alt = 'Discord profile frame';
-                    img.loading = 'lazy';
-                    wrap.appendChild(img);
-                    previewEl.appendChild(wrap);
-                } else {
-                    previewEl.classList.add('muted');
-                    previewEl.textContent = linked ? 'No Discord profile frame detected.' : 'Link Discord to use your Discord frame.';
-                }
-            }
+        if (!ok) {
+          showMsg(err || "Update failed", false);
+          return false;
         }
+        showMsg("Saved", true);
+        await loadProfile(); // refresh
+        return true;
+      }
 
-        async function loadDiscordStatus() {
-            if (!currentUser) { discordStatus = { linked: false }; updateDiscordUI(); return; }
-            try {
-                const r = await fetch('/api/discord/status', { credentials: 'include' });
-                discordStatus = r.ok ? await r.json() : { linked: false };
-            } catch (_) {
-                discordStatus = { linked: false };
-            }
-            updateDiscordUI();
-        }
-
-        async function fetchMyLinktree() {
-            if (!(currentUser && currentUser.linktree_id)) return null;
-            try {
-                const r = await fetch(`/api/linktrees/${currentUser.linktree_id}/manage`, { credentials: 'include' });
-                if (!r.ok) return null;
-                return await r.json();
-            } catch (_) {
-                return null;
-            }
-        }
-
-        async function startDiscordLink() {
-            try {
-                const r = await fetch('/api/discord/oauth-url', { credentials: 'include' });
-                if (!r.ok) { showMsg('Discord linking unavailable', false); return; }
-                const { url, configured, reason } = await r.json();
-                if (!configured || !url) {
-                    showMsg(reason || 'Discord linking not configured', false);
-                    return;
-                }
-                const w = window.open(url, 'discord_link', 'width=520,height=720');
-                if (!w) showMsg('Allow popups to link Discord', false);
-            } catch (e) {
-                showMsg('Discord link failed', false);
-            }
-        }
-
-        async function unlinkDiscord() {
-            try {
-                const r = await fetch('/api/discord/account', { method: 'DELETE', credentials: 'include' });
-                if (!r.ok) throw new Error(await r.text());
-                discordStatus = { linked: false };
-                const toggle = document.getElementById('inDiscordFrameProfile');
-                if (toggle) toggle.checked = false;
-                await loadDiscordStatus();
-                showMsg('Discord disconnected', true);
-                await loadProfile();
-            } catch (e) {
-                showMsg('Unlink failed', false);
-            }
-        }
-
-        async function toggleDiscordFrame(ev) {
-            const enabled = !!ev.target.checked;
-            if (!(currentUser && currentUser.linktree_id)) { showMsg('Create a Linktree first', false); ev.target.checked = false; return; }
-            if (!(discordStatus && discordStatus.linked)) { showMsg('Link Discord first', false); ev.target.checked = false; return; }
-            try {
-                const r = await fetch(`/api/linktrees/${currentUser.linktree_id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ discord_frame_enabled: enabled })
-                });
-                if (!r.ok) throw new Error(await r.text());
-                showMsg('Discord frame updated', true);
-            } catch (e) {
-                showMsg('Could not update Discord frame', false);
-                ev.target.checked = !enabled;
-            }
-        }
-        // boot
-        renderAuthHeader();
-        loadProfile();
-        // --- Tabs for avatar source
-        const tabs = document.querySelectorAll('[data-tab]');
-        const tabPanels = {
-            url: document.getElementById('tab-url'),
-            upload: document.getElementById('tab-upload'),
-            gallery: document.getElementById('tab-gallery')
-        };
-        let activeTab = 'url';
-        function setTab(name) {
-            activeTab = name;
-            for (const [k, el] of Object.entries(tabPanels)) {
-                el.style.display = (k === name) ? 'grid' : 'none';
-            }
-        }
-        tabs.forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
-
-        // --- Avatar URL save
-        document.getElementById('btnPfpSave').addEventListener('click', async () => {
-            const url = document.getElementById('inPfp').value.trim();
-            if (url && !/^https?:\/\//i.test(url)) return showMsg('Must be a valid http(s) URL', false);
-            await updateMe({ profile_picture: url || null });
+      // Forms
+      document
+        .getElementById("formName")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("inName").value.trim();
+          if (!name) {
+            showMsg("Username cannot be empty", false);
+            return;
+          }
+          await updateMe({ username: name });
         });
 
-        // --- Avatar upload
-        document.getElementById('btnUpload').addEventListener('click', async () => {
-            const f = (document.getElementById('inFile').files || [])[0];
-            if (!f) return showMsg('Choose a file first', false);
-            if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(f.type)) {
-                return showMsg('Unsupported type', false);
-            }
-            if (f.size > 2 * 1024 * 1024) return showMsg('File too large (max 2MB)', false);
-            if (currentUser === undefined) { await refreshSession(); }
-            if (!currentUser) return showMsg('Not logged in', false);
-
-            const fd = new FormData();
-            fd.append('file', f);
-            try {
-                const r = await fetch('/api/users/me/avatar', {
-                    method: 'POST',
-                    credentials: 'include',
-                    body: fd
-                });
-                if (!r.ok) return showMsg(await r.text(), false);
-                await loadProfile(); // refresh avatar
-                showMsg('Avatar updated', true);
-            } catch (e) {
-                showMsg('Upload failed', false);
-            }
-        });
-
-        // --- Avatar gallery
-        async function loadGallery() {
-            try {
-                const r = await fetch('/api/avatars');
-                const items = r.ok ? await r.json() : [];
-                const wrap = document.getElementById('galleryWrap');
-                wrap.innerHTML = '';
-                items.forEach(rawUrl => {
-                    const safe = sanitizeUrl(rawUrl);
-                    if (!safe) return;
-                    const b = document.createElement('button');
-                    b.type = 'button';
-                    b.className = 'btn ghost';
-                    b.style.padding = 0;
-                    b.style.borderRadius = '12px';
-                    b.style.overflow = 'hidden';
-                    const img = document.createElement('img');
-                    img.src = safe;
-                    img.alt = '';
-                    img.style.display = 'block';
-                    img.style.width = '72px';
-                    img.style.height = '72px';
-                    img.style.objectFit = 'cover';
-                    b.appendChild(img);
-                    b.addEventListener('click', async () => {
-                        await updateMe({ profile_picture: safe });
-                    });
-                    wrap.appendChild(b);
-                });
-            } catch { }
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", doLogout, { passive: true });
+      document
+        .getElementById("btnDiscordLink")
+        .addEventListener("click", startDiscordLink);
+      document
+        .getElementById("btnDiscordUnlink")
+        .addEventListener("click", unlinkDiscord);
+      document
+        .getElementById("inDiscordFrameProfile")
+        .addEventListener("change", toggleDiscordFrame);
+      window.addEventListener("message", async (evt) => {
+        if (evt && evt.data && evt.data.type === "discord-linked") {
+          await loadDiscordStatus();
+          const lt = await fetchMyLinktree();
+          const frameToggle = document.getElementById("inDiscordFrameProfile");
+          if (frameToggle)
+            frameToggle.checked = !!(lt && lt.discord_frame_enabled);
+          updateDiscordUI();
+          showMsg("Discord linked", true);
         }
+      });
+      function renderLinktreeSlot(user) {
+        const ltSlot = document.getElementById("linktreeSlot");
+        if (!ltSlot) return;
+        const slug = user.linktree_slug;
+        ltSlot.textContent = "";
+        if (slug) {
+          const view = document.createElement("a");
+          view.href = `/tree/${encodeURIComponent(slug)}`;
+          view.target = "_blank";
+          view.className = "btn sm";
+          view.textContent = "View Linktree";
+          const config = document.createElement("a");
+          config.href = "/linktree/config";
+          config.className = "btn sm ghost";
+          config.textContent = "Configure";
+          ltSlot.appendChild(view);
+          ltSlot.appendChild(config);
+        } else {
+          const create = document.createElement("a");
+          create.href = "/linktree/config";
+          create.className = "btn sm";
+          create.textContent = "Create Linktree";
+          ltSlot.appendChild(create);
+        }
+      }
 
-        // --- Password change
-        document.getElementById('formPwd').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const cur = document.getElementById('curPwd').value;
-            const n1 = document.getElementById('newPwd').value;
-            const n2 = document.getElementById('repPwd').value;
-            if (!cur || !n1 || !n2) return showMsg('Fill all password fields', false);
-            if (n1.length < 8) return showMsg('New password too short', false);
-            if (n1 !== n2) return showMsg('Passwords do not match', false);
-            const ok = await updateMe({ current_password: cur, new_password: n1 });
-            if (ok) {
-                document.getElementById('curPwd').value = '';
-                document.getElementById('newPwd').value = '';
-                document.getElementById('repPwd').value = '';
-            }
+      function updateDiscordUI() {
+        const statusEl = document.getElementById("discordStatusText");
+        const previewEl = document.getElementById("discordPreview");
+        const toggleEl = document.getElementById("inDiscordFrameProfile");
+        const linkBtn = document.getElementById("btnDiscordLink");
+        const unlinkBtn = document.getElementById("btnDiscordUnlink");
+        const linked = !!(discordStatus && discordStatus.linked);
+        if (statusEl) {
+          const name =
+            (discordStatus &&
+              (discordStatus.global_name || discordStatus.username)) ||
+            "Discord user";
+          statusEl.textContent = linked ? `Linked as ${name}` : "Not linked";
+        }
+        if (linkBtn && unlinkBtn) {
+          linkBtn.style.display = linked ? "none" : "inline-flex";
+          unlinkBtn.style.display = linked ? "inline-flex" : "none";
+        }
+        if (toggleEl) {
+          toggleEl.disabled =
+            !linked || !(currentUser && currentUser.linktree_id);
+          if (!linked) toggleEl.checked = false;
+        }
+        if (previewEl) {
+          previewEl.innerHTML = "";
+          previewEl.classList.remove("muted");
+          if (linked && discordStatus && discordStatus.decoration_url) {
+            const wrap = document.createElement("div");
+            wrap.className = "pfp-preview";
+            const img = document.createElement("img");
+            img.src = discordStatus.decoration_url;
+            img.alt = "Discord profile frame";
+            img.loading = "lazy";
+            wrap.appendChild(img);
+            previewEl.appendChild(wrap);
+          } else {
+            previewEl.classList.add("muted");
+            previewEl.textContent = linked
+              ? "No Discord profile frame detected."
+              : "Link Discord to use your Discord frame.";
+          }
+        }
+      }
+
+      async function loadDiscordStatus() {
+        if (!currentUser) {
+          discordStatus = { linked: false };
+          updateDiscordUI();
+          return;
+        }
+        try {
+          const r = await fetch("/api/discord/status", {
+            credentials: "include",
+          });
+          discordStatus = r.ok ? await r.json() : { linked: false };
+        } catch (_) {
+          discordStatus = { linked: false };
+        }
+        updateDiscordUI();
+      }
+
+      async function fetchMyLinktree() {
+        if (!(currentUser && currentUser.linktree_id)) return null;
+        try {
+          const r = await fetch(
+            `/api/linktrees/${currentUser.linktree_id}/manage`,
+            { credentials: "include" }
+          );
+          if (!r.ok) return null;
+          return await r.json();
+        } catch (_) {
+          return null;
+        }
+      }
+
+      async function startDiscordLink() {
+        try {
+          const r = await fetch("/api/discord/oauth-url", {
+            credentials: "include",
+          });
+          if (!r.ok) {
+            showMsg("Discord linking unavailable", false);
+            return;
+          }
+          const { url, configured, reason } = await r.json();
+          if (!configured || !url) {
+            showMsg(reason || "Discord linking not configured", false);
+            return;
+          }
+          const w = window.open(url, "discord_link", "width=520,height=720");
+          if (!w) showMsg("Allow popups to link Discord", false);
+        } catch (e) {
+          showMsg("Discord link failed", false);
+        }
+      }
+
+      async function unlinkDiscord() {
+        try {
+          const r = await fetch("/api/discord/account", {
+            method: "DELETE",
+            credentials: "include",
+          });
+          if (!r.ok) throw new Error(await r.text());
+          discordStatus = { linked: false };
+          const toggle = document.getElementById("inDiscordFrameProfile");
+          if (toggle) toggle.checked = false;
+          await loadDiscordStatus();
+          showMsg("Discord disconnected", true);
+          await loadProfile();
+        } catch (e) {
+          showMsg("Unlink failed", false);
+        }
+      }
+
+      async function toggleDiscordFrame(ev) {
+        const enabled = !!ev.target.checked;
+        if (!(currentUser && currentUser.linktree_id)) {
+          showMsg("Create a Linktree first", false);
+          ev.target.checked = false;
+          return;
+        }
+        if (!(discordStatus && discordStatus.linked)) {
+          showMsg("Link Discord first", false);
+          ev.target.checked = false;
+          return;
+        }
+        try {
+          const r = await fetch(`/api/linktrees/${currentUser.linktree_id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ discord_frame_enabled: enabled }),
+          });
+          if (!r.ok) throw new Error(await r.text());
+          showMsg("Discord frame updated", true);
+        } catch (e) {
+          showMsg("Could not update Discord frame", false);
+          ev.target.checked = !enabled;
+        }
+      }
+      // boot
+      renderAuthHeader();
+      loadProfile();
+      // --- Tabs for avatar source
+      const tabs = document.querySelectorAll("[data-tab]");
+      const tabPanels = {
+        url: document.getElementById("tab-url"),
+        upload: document.getElementById("tab-upload"),
+        gallery: document.getElementById("tab-gallery"),
+      };
+      let activeTab = "url";
+      function setTab(name) {
+        activeTab = name;
+        for (const [k, el] of Object.entries(tabPanels)) {
+          el.style.display = k === name ? "grid" : "none";
+        }
+      }
+      tabs.forEach((btn) =>
+        btn.addEventListener("click", () => setTab(btn.dataset.tab))
+      );
+
+      // --- Avatar URL save
+      document
+        .getElementById("btnPfpSave")
+        .addEventListener("click", async () => {
+          const url = document.getElementById("inPfp").value.trim();
+          if (url && !/^https?:\/\//i.test(url))
+            return showMsg("Must be a valid http(s) URL", false);
+          await updateMe({ profile_picture: url || null });
         });
 
-        // call gallery once on boot
-        loadGallery();
+      // --- Avatar upload
+      document
+        .getElementById("btnUpload")
+        .addEventListener("click", async () => {
+          const f = (document.getElementById("inFile").files || [])[0];
+          if (!f) return showMsg("Choose a file first", false);
+          if (
+            !["image/png", "image/jpeg", "image/webp", "image/gif"].includes(
+              f.type
+            )
+          ) {
+            return showMsg("Unsupported type", false);
+          }
+          if (f.size > 2 * 1024 * 1024)
+            return showMsg("File too large (max 2MB)", false);
+          if (currentUser === undefined) {
+            await refreshSession();
+          }
+          if (!currentUser) return showMsg("Not logged in", false);
+
+          const fd = new FormData();
+          fd.append("file", f);
+          try {
+            const r = await fetch("/api/users/me/avatar", {
+              method: "POST",
+              credentials: "include",
+              body: fd,
+            });
+            if (!r.ok) return showMsg(await r.text(), false);
+            await loadProfile(); // refresh avatar
+            showMsg("Avatar updated", true);
+          } catch (e) {
+            showMsg("Upload failed", false);
+          }
+        });
+
+      // --- Avatar gallery
+      async function loadGallery() {
+        try {
+          const r = await fetch("/api/avatars");
+          const items = r.ok ? await r.json() : [];
+          const wrap = document.getElementById("galleryWrap");
+          wrap.innerHTML = "";
+          items.forEach((rawUrl) => {
+            const safe = sanitizeUrl(rawUrl);
+            if (!safe) return;
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "btn ghost";
+            b.style.padding = 0;
+            b.style.borderRadius = "12px";
+            b.style.overflow = "hidden";
+            const img = document.createElement("img");
+            img.src = safe;
+            img.alt = "";
+            img.style.display = "block";
+            img.style.width = "72px";
+            img.style.height = "72px";
+            img.style.objectFit = "cover";
+            b.appendChild(img);
+            b.addEventListener("click", async () => {
+              await updateMe({ profile_picture: safe });
+            });
+            wrap.appendChild(b);
+          });
+        } catch {}
+      }
+
+      // --- Password change
+      document
+        .getElementById("formPwd")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const cur = document.getElementById("curPwd").value;
+          const n1 = document.getElementById("newPwd").value;
+          const n2 = document.getElementById("repPwd").value;
+          if (!cur || !n1 || !n2)
+            return showMsg("Fill all password fields", false);
+          if (n1.length < 8) return showMsg("New password too short", false);
+          if (n1 !== n2) return showMsg("Passwords do not match", false);
+          const ok = await updateMe({
+            current_password: cur,
+            new_password: n1,
+          });
+          if (ok) {
+            document.getElementById("curPwd").value = "";
+            document.getElementById("newPwd").value = "";
+            document.getElementById("repPwd").value = "";
+          }
+        });
+
+      // call gallery once on boot
+      loadGallery();
     </script>
-</body>
-
+  </body>
 </html>
