@@ -1,32 +1,33 @@
 <!DOCTYPE html>
+
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TAOMA Space — GIF API & Linktree</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <title>TAOMA Space — GIF API &amp; Linktree</title>
     <meta
-      name="description"
       content="Explore the Anime GIF API, add your own GIFs, and build a Linktree that actually converts."
+      name="description"
     />
-    <meta property="og:title" content="TAOMA Space — GIF API & Linktree" />
+    <meta content="TAOMA Space — GIF API &amp; Linktree" property="og:title" />
     <meta
+      content="Query the Anime GIF API, contribute new GIFs, and spin up a custom Linktree in minutes."
       property="og:description"
-      content="Query the Anime GIF API, contribute new GIFs, and spin up a custom Linktree in minutes."
     />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://taoma.space/" />
-    <meta property="og:image" content="https://taoma.space/static/icon.png" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="TAOMA Space — GIF API & Linktree" />
+    <meta content="website" property="og:type" />
+    <meta content="https://taoma.space/" property="og:url" />
+    <meta content="https://taoma.space/static/icon.png" property="og:image" />
+    <meta content="summary_large_image" name="twitter:card" />
+    <meta content="TAOMA Space — GIF API &amp; Linktree" name="twitter:title" />
     <meta
-      name="twitter:description"
       content="Query the Anime GIF API, contribute new GIFs, and spin up a custom Linktree in minutes."
+      name="twitter:description"
     />
-    <meta name="twitter:image" content="https://taoma.space/static/icon.png" />
-    <link rel="canonical" href="https://taoma.space/" />
-    <meta name="robots" content="index,follow" />
-    <meta name="theme-color" content="#0f1223" />
-    <link rel="icon" type="image/png" href="/static/icon.png" />
+    <meta content="https://taoma.space/static/icon.png" name="twitter:image" />
+    <link href="https://taoma.space/" rel="canonical" />
+    <meta content="index,follow" name="robots" />
+    <meta content="#0f1223" name="theme-color" />
+    <link href="/static/icon.png" rel="icon" type="image/png" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -48,48 +49,113 @@
       }
     </script>
     <style>
+      /* =========================================================
+   TAOMA — Home (UI refresh)
+   Goal: friendlier, clearer, more beginner-friendly
+   NOTE: No IDs/classes used by JS were changed.
+========================================================= */
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
       :root {
-        --bg: #0d1023;
-        --bg-2: #11163a;
-        --card: #171b3b;
-        --ink: #e9ebff;
-        --muted: #a5adcf;
-        --acc: #9b7bff;
-        --acc-2: #5fc7ff;
-        --success: #52d8a5;
-        --warning: #ffb347;
-        --ring: #9b7bff55;
-        --shadow: 0 16px 50px rgba(0, 0, 0, 0.35), 0 2px 10px rgba(0, 0, 0, 0.2);
-        --radius: 16px;
-        --space: clamp(16px, 2vw, 24px);
+        --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+          Inter, Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+
+        /* Dark default */
+        --bg: #0b1220;
+        --bg-grad-1: rgba(122, 162, 255, 0.18);
+        --bg-grad-2: rgba(93, 214, 194, 0.12);
+
+        --surface: #0f1a2e;
+        --surface-2: #12223d;
+        --card: rgba(255, 255, 255, 0.06);
+        --card-solid: #0f1a2e;
+
+        --ink: #eaf0ff;
+        --muted: rgba(234, 240, 255, 0.72);
+        --muted-2: rgba(234, 240, 255, 0.56);
+
+        --border: rgba(255, 255, 255, 0.12);
+        --border-2: rgba(255, 255, 255, 0.18);
+
+        --acc: #5dd6c2; /* teal */
+        --acc-2: #7aa2ff; /* blue */
+        --danger: #ff5a6a;
+        --ok: #2fe0a8;
+
+        --ring: rgba(93, 214, 194, 0.45);
+        --shadow: 0 18px 55px rgba(0, 0, 0, 0.35);
+        --shadow-soft: 0 10px 28px rgba(0, 0, 0, 0.22);
+
+        --r-12: 12px;
+        --r-16: 16px;
+        --r-20: 20px;
+
+        --space: clamp(14px, 2.2vw, 22px);
         --container: 1100px;
       }
 
-      * {
-        box-sizing: border-box;
-        font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
-          sans-serif;
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f6f8ff;
+          --bg-grad-1: rgba(122, 162, 255, 0.18);
+          --bg-grad-2: rgba(93, 214, 194, 0.18);
+
+          --surface: #ffffff;
+          --surface-2: #eef3ff;
+          --card: rgba(15, 23, 42, 0.04);
+          --card-solid: #ffffff;
+
+          --ink: #0f172a;
+          --muted: rgba(15, 23, 42, 0.72);
+          --muted-2: rgba(15, 23, 42, 0.56);
+
+          --border: rgba(15, 23, 42, 0.1);
+          --border-2: rgba(15, 23, 42, 0.14);
+
+          --shadow: 0 18px 55px rgba(2, 8, 23, 0.1);
+          --shadow-soft: 0 10px 28px rgba(2, 8, 23, 0.08);
+        }
+      }
+
+      html,
+      body {
+        height: 100%;
       }
 
       body {
         margin: 0;
-        background: radial-gradient(
-            1200px 900px at 12% -8%,
-            #1c214c 0%,
-            #1c214c 32%,
-            transparent 70%
-          ),
-          radial-gradient(
-            900px 700px at 86% 12%,
-            #112d62 0%,
-            #112d62 32%,
-            transparent 60%
-          ),
-          linear-gradient(145deg, #0b0d1d 0%, #0a0c18 30%, #0c1026 100%);
+        font: 15px/1.6 var(--font);
         color: var(--ink);
-        min-height: 100vh;
+        min-height: 100dvh;
         display: flex;
         flex-direction: column;
+        overflow-x: hidden;
+        max-width: 100vw;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background: radial-gradient(
+            1100px 820px at 8% -10%,
+            var(--bg-grad-1),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 700px at 92% 10%,
+            var(--bg-grad-2),
+            transparent 58%
+          ),
+          linear-gradient(
+            160deg,
+            color-mix(in oklab, var(--bg) 90%, #000 10%),
+            var(--bg)
+          );
       }
 
       a {
@@ -103,89 +169,150 @@
         padding: 0 var(--space);
       }
 
+      /* ---------- Header / Nav ---------- */
       header {
         position: sticky;
         top: 0;
-        z-index: 10;
-        backdrop-filter: saturate(1.05) blur(10px);
-        background: linear-gradient(180deg, #0d1026e6 0%, #0d102600 100%);
-        border-bottom: 1px solid #ffffff1a;
+        z-index: 50;
+        backdrop-filter: saturate(1.1) blur(10px);
+        -webkit-backdrop-filter: saturate(1.1) blur(10px);
+        background: linear-gradient(
+          180deg,
+          color-mix(in oklab, var(--bg) 86%, transparent),
+          transparent
+        );
+        border-bottom: 1px solid var(--border);
       }
 
       .nav {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 68px;
+        height: 66px;
+        gap: 12px;
       }
 
       .brand {
-        display: inline-flex;
+        display: flex;
         align-items: center;
         gap: 0.75rem;
-        font-weight: 800;
-        letter-spacing: 0.4px;
+        font-weight: 900;
+        letter-spacing: 0.3px;
+      }
+
+      .brand a:last-child {
+        padding: 0.35rem 0.55rem;
+        border-radius: 10px;
+      }
+
+      .brand a:last-child:hover {
+        background: color-mix(in oklab, var(--ink) 8%, transparent);
       }
 
       .brand .logo {
         width: 30px;
         height: 30px;
         border-radius: 10px;
+        display: block;
+        box-shadow: var(--shadow-soft);
       }
 
       .links {
         display: flex;
-        gap: 0.6rem;
+        gap: 0.4rem;
         align-items: center;
+        flex-wrap: wrap;
       }
 
       .links a {
-        padding: 0.55rem 0.8rem;
+        padding: 0.55rem 0.75rem;
         border-radius: 12px;
         border: 1px solid transparent;
-        transition: all 0.15s ease;
+        color: var(--muted);
+        font-weight: 750;
+        transition: background 0.15s ease, border-color 0.15s ease,
+          color 0.15s ease;
       }
 
       .links a:hover {
-        border-color: #ffffff22;
-        background: #ffffff0d;
+        background: color-mix(in oklab, var(--ink) 10%, transparent);
+        border-color: var(--border);
+        color: var(--ink);
       }
 
       .links a[aria-current="page"] {
-        border-color: #ffffff30;
-        background: #ffffff14;
+        background: color-mix(in oklab, var(--acc) 18%, transparent);
+        border-color: color-mix(in oklab, var(--acc) 40%, var(--border));
+        color: var(--ink);
       }
 
       .auth {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.55rem;
       }
 
-      .auth .btn.small {
-        padding: 0.5rem 0.7rem;
-        border-radius: 10px;
-        background: transparent;
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.55rem;
+        padding: 0.85rem 1.1rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in oklab, var(--acc) 26%, var(--border));
+        background: linear-gradient(120deg, var(--acc), var(--acc-2));
+        color: color-mix(in oklab, #071018 90%, var(--ink) 10%);
+        font-weight: 900;
+        letter-spacing: 0.2px;
+        box-shadow: var(--shadow-soft);
+        transition: transform 0.14s ease, filter 0.18s ease,
+          box-shadow 0.18s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        filter: saturate(1.06);
+        box-shadow: var(--shadow);
+      }
+      .btn:active {
+        transform: translateY(0px);
+      }
+
+      .btn.ghost {
+        background: color-mix(in oklab, var(--surface) 70%, transparent);
         color: var(--ink);
-        border: 1px solid #ffffff26;
+        border-color: var(--border);
         box-shadow: none;
-        font-weight: 700;
       }
 
+      .btn.ghost:hover {
+        background: color-mix(in oklab, var(--surface) 82%, transparent);
+      }
+
+      .btn.small {
+        padding: 0.55rem 0.75rem;
+        border-radius: 12px;
+        font-weight: 850;
+      }
+
+      /* Avatar menu (keeps JS hooks) */
       .auth-box {
         position: relative;
       }
-
       .avatar-btn {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.35rem 0.5rem;
-        border-radius: 12px;
-        background: #ffffff0d;
-        border: 1px solid #ffffff1a;
+        gap: 0.55rem;
+        padding: 0.38rem 0.55rem;
+        border-radius: 14px;
+        background: color-mix(in oklab, var(--surface) 78%, transparent);
+        border: 1px solid var(--border);
         color: var(--ink);
         cursor: pointer;
+      }
+
+      .avatar-btn:hover {
+        background: color-mix(in oklab, var(--surface) 90%, transparent);
       }
 
       .avatar {
@@ -193,57 +320,63 @@
         height: 30px;
         border-radius: 50%;
         object-fit: cover;
+        box-shadow: var(--shadow-soft);
       }
-
       .avatar-fallback {
         width: 30px;
         height: 30px;
         border-radius: 50%;
-        background: #ffffff1a;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        color: var(--ink);
+        display: grid;
+        place-items: center;
+        background: color-mix(in oklab, var(--ink) 10%, transparent);
+        border: 1px solid var(--border);
+        font-weight: 900;
       }
 
       .menu {
         position: absolute;
-        top: calc(100% + 8px);
+        top: calc(100% + 10px);
         right: 0;
-        background: #10142f;
-        border: 1px solid #ffffff22;
-        border-radius: 12px;
-        box-shadow: var(--shadow);
-        min-width: 180px;
+        min-width: 190px;
         display: none;
         flex-direction: column;
+        border-radius: 14px;
         overflow: hidden;
-        z-index: 20;
+        background: color-mix(in oklab, var(--surface) 92%, transparent);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
       }
-
       .menu.open {
         display: flex;
       }
 
       .menu a,
       .menu button {
-        padding: 0.65rem 0.9rem;
+        padding: 0.7rem 0.85rem;
         text-align: left;
         background: transparent;
-        color: var(--ink);
         border: 0;
+        color: var(--ink);
         cursor: pointer;
-        font-weight: 600;
+        font-weight: 750;
       }
-
       .menu a:hover,
       .menu button:hover {
-        background: #ffffff0f;
+        background: color-mix(in oklab, var(--ink) 10%, transparent);
       }
 
+      /* Mobile nav */
       .mobile-toggle {
         display: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: color-mix(in oklab, var(--surface) 70%, transparent);
+        color: var(--ink);
+      }
+      .mobile-toggle:hover {
+        background: color-mix(in oklab, var(--surface) 85%, transparent);
       }
 
       @media (max-width: 820px) {
@@ -251,65 +384,65 @@
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          border: 1px solid #ffffff26;
-          background: transparent;
-          color: var(--ink);
         }
-
         .links {
           position: fixed;
-          inset: 68px 0 auto 0;
+          inset: 66px 0 auto 0;
           padding: 1rem var(--space);
-          background: linear-gradient(180deg, #0b0f29f0, #0b0f29a5);
+          background: color-mix(in oklab, var(--bg) 80%, transparent);
+          border-bottom: 1px solid var(--border);
+          display: none;
           flex-direction: column;
           align-items: flex-start;
-          display: none;
+          gap: 0.35rem;
         }
-
         .links.open {
           display: flex;
         }
+        .links a {
+          width: 100%;
+        }
       }
 
+      /* ---------- Main / Sections ---------- */
       main {
         flex: 1;
         padding-bottom: 64px;
       }
 
       .hero {
-        padding: clamp(40px, 8vw, 100px) 0 clamp(30px, 6vw, 60px);
+        padding: clamp(36px, 7vw, 92px) 0 clamp(26px, 5vw, 54px);
         display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
-        gap: clamp(20px, 4vw, 36px);
+        grid-template-columns: 1.12fr 0.88fr;
+        gap: clamp(18px, 4vw, 34px);
         align-items: center;
       }
 
       .hero h1 {
-        margin: 0 0 0.6rem;
+        margin: 0 0 0.65rem;
         font-size: clamp(32px, 6vw, 56px);
-        line-height: 1.05;
+        line-height: 1.06;
+        letter-spacing: -0.02em;
       }
 
       .subtitle {
-        font-size: clamp(16px, 2.8vw, 20px);
+        margin: 0 0 1.35rem;
+        font-size: clamp(16px, 2.6vw, 20px);
         color: var(--muted);
-        margin: 0 0 1.4rem;
       }
 
       .eyebrow {
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
-        padding: 0.4rem 0.75rem;
+        gap: 0.45rem;
+        padding: 0.42rem 0.78rem;
         border-radius: 999px;
         background: color-mix(in oklab, var(--acc) 18%, transparent);
-        border: 1px solid #ffffff26;
-        font-weight: 700;
-        letter-spacing: 0.4px;
+        border: 1px solid color-mix(in oklab, var(--acc) 36%, var(--border));
         color: var(--ink);
+        font-weight: 850;
+        letter-spacing: 0.35px;
+        margin-bottom: 0.8rem;
       }
 
       .cta-row {
@@ -319,67 +452,37 @@
         align-items: center;
       }
 
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.55rem;
-        padding: 0.85rem 1.2rem;
-        border-radius: 12px;
-        background: linear-gradient(120deg, var(--acc), var(--acc-2));
-        color: #0b0c18;
-        font-weight: 800;
-        border: 1px solid #ffffff26;
-        box-shadow: var(--shadow);
-        transition: transform 0.15s ease, filter 0.2s ease;
-      }
-
-      .btn:hover {
-        transform: translateY(-1px);
-        filter: saturate(1.1);
-      }
-
-      .btn.ghost {
-        background: transparent;
-        color: var(--ink);
-        border: 1px solid #ffffff26;
-        box-shadow: none;
-      }
-
       .tagline {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 0.8rem;
-        margin-top: 1.4rem;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1.25rem;
       }
 
       .pill {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.6rem 0.8rem;
-        border-radius: 12px;
-        background: #ffffff10;
-        border: 1px solid #ffffff1a;
+        gap: 0.55rem;
+        padding: 0.65rem 0.8rem;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: color-mix(in oklab, var(--surface) 68%, transparent);
         color: var(--ink);
-        font-weight: 700;
+        font-weight: 800;
       }
 
-      .card {
-        background: linear-gradient(180deg, #161b3a, #121633);
-        border: 1px solid #ffffff16;
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        padding: clamp(18px, 2vw, 22px);
+      .section {
+        padding: clamp(26px, 5vw, 56px) 0;
       }
 
-      .card h3 {
-        margin: 0 0 0.35rem;
-        font-size: 1.1rem;
-        letter-spacing: 0.2px;
+      .section h2 {
+        margin: 0 0 0.55rem;
+        font-size: clamp(22px, 3vw, 30px);
+        letter-spacing: -0.01em;
       }
 
-      .card p {
-        margin: 0 0 0.9rem;
+      .helper {
+        margin: 0 0 1.2rem;
         color: var(--muted);
       }
 
@@ -389,58 +492,64 @@
         gap: clamp(14px, 2vw, 20px);
       }
 
+      .mini-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0.9rem;
+      }
+
+      .card {
+        background: linear-gradient(
+          180deg,
+          color-mix(in oklab, var(--surface) 86%, transparent),
+          color-mix(in oklab, var(--surface-2) 76%, transparent)
+        );
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: var(--shadow-soft);
+        padding: clamp(16px, 2vw, 22px);
+      }
+
+      .card h3 {
+        margin: 0 0 0.35rem;
+        font-size: 1.08rem;
+        letter-spacing: 0.2px;
+      }
+      .card p {
+        margin: 0 0 0.95rem;
+        color: var(--muted);
+      }
+
       .chip-row {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
-        margin-bottom: 0.8rem;
+        margin-bottom: 0.85rem;
       }
-
       .chip {
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
-        padding: 0.45rem 0.7rem;
+        gap: 0.4rem;
+        padding: 0.48rem 0.72rem;
         border-radius: 999px;
-        background: #ffffff0d;
-        border: 1px solid #ffffff1a;
+        border: 1px solid var(--border);
+        background: color-mix(in oklab, var(--surface) 70%, transparent);
         color: var(--ink);
-        font-weight: 600;
+        font-weight: 750;
         font-size: 0.95rem;
-      }
-
-      .section {
-        padding: clamp(30px, 5vw, 60px) 0;
-      }
-
-      .section h2 {
-        margin: 0 0 0.6rem;
-        font-size: clamp(22px, 3vw, 28px);
-      }
-
-      .helper {
-        color: var(--muted);
-        margin: 0 0 1.2rem;
       }
 
       .code {
-        font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
-        background: #0e132c;
-        color: #d8e0ff;
-        padding: 0.9rem 1rem;
-        border-radius: 14px;
-        border: 1px solid #ffffff1f;
-        box-shadow: var(--shadow);
+        font-family: var(--mono);
+        background: color-mix(in oklab, var(--bg) 60%, #000 40%);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 0.95rem 1rem;
         overflow-x: auto;
-        font-size: 0.95rem;
         white-space: pre;
         margin: 0;
-      }
-
-      .mini-grid {
-        display: grid;
-        gap: 0.8rem;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        box-shadow: inset 0 0 0 1px
+          color-mix(in oklab, var(--ink) 6%, transparent);
       }
 
       .notice {
@@ -449,11 +558,33 @@
         justify-content: space-between;
         gap: 1rem;
         flex-wrap: wrap;
-        padding: 1rem 1.2rem;
-        border-radius: 14px;
-        border: 1px dashed #ffffff30;
-        background: #ffffff08;
+        padding: 1rem 1.15rem;
+        border-radius: 16px;
+        border: 1px dashed color-mix(in oklab, var(--acc-2) 40%, var(--border));
+        background: color-mix(in oklab, var(--surface) 70%, transparent);
         color: var(--muted);
+      }
+
+      .notice strong {
+        color: var(--ink);
+      }
+
+      code {
+        font-family: var(--mono);
+        font-size: 0.95em;
+        padding: 0.1rem 0.35rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: color-mix(in oklab, var(--surface) 72%, transparent);
+      }
+
+      /* Focus / accessibility */
+      :focus {
+        outline: none;
+      }
+      :focus-visible {
+        outline: 3px solid var(--ring);
+        outline-offset: 2px;
       }
 
       @media (max-width: 900px) {
@@ -461,134 +592,55 @@
           grid-template-columns: 1fr;
         }
       }
-      header {
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        backdrop-filter: saturate(1.1) blur(10px);
-        background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
-        border-bottom: 1px solid #ffffff14;
-      }
-
-      .nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 64px;
-      }
-
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-weight: 800;
-        letter-spacing: 0.4px;
-      }
-
-      .brand .logo {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        display: block;
-      }
-
-      .links {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-      }
-
-      .links a {
-        padding: 0.45rem 0.7rem;
-        border-radius: 10px;
-        border: 1px solid transparent;
-      }
-
-      .links a:hover {
-        border-color: #ffffff1f;
-        background: #ffffff0f;
-      }
-
-      .mobile-toggle {
-        display: none;
-      }
-
-      @media (max-width: 800px) {
-        .mobile-toggle {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          border: 1px solid #ffffff26;
-          background: transparent;
-        }
-
-        .links {
-          position: fixed;
-          inset: 64px 0 auto 0;
-          background: linear-gradient(180deg, #0b0f29, #0b0f2945);
-          padding: 1rem;
-          display: none;
-          flex-direction: column;
-        }
-
-        .links.open {
-          display: flex;
-        }
-      }
     </style>
   </head>
-
   <body>
     <header>
-      <div class="container nav" role="navigation" aria-label="Primary">
+      <div aria-label="Primary" class="container nav" role="navigation">
         <div class="brand">
           <a href="/"
             ><img
-              class="logo"
-              src="/static/icon.png"
               alt="TAOMA logo"
-              width="30"
+              class="logo"
               height="30"
+              src="/static/icon.png"
+              width="30"
           /></a>
           <a href="/">TAOMA™</a>
         </div>
         <button
-          type="button"
-          class="mobile-toggle"
-          id="mobileToggle"
           aria-controls="primary-menu"
           aria-expanded="false"
           aria-label="Toggle menu"
+          class="mobile-toggle"
+          id="mobileToggle"
+          type="button"
         >
           <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
             aria-hidden="true"
+            fill="none"
+            height="20"
+            viewbox="0 0 24 24"
+            width="20"
           >
             <path
               d="M4 6H20M4 12H20M4 18H20"
               stroke="currentColor"
-              stroke-width="2"
               stroke-linecap="round"
-            />
+              stroke-width="2"
+            ></path>
           </svg>
         </button>
-        <nav id="primary-menu" class="links" aria-label="Site">
-          <a href="/" aria-current="page">Home</a>
+        <nav aria-label="Site" class="links" id="primary-menu">
+          <a aria-current="page" href="/">Home</a>
           <a href="/api">GIF API</a>
           <a href="/api/gif/admin">Add GIFs</a>
           <a href="/marketplace">Marketplace</a>
           <a href="/linktree/config">Linktree</a>
         </nav>
-        <div id="authSlot" class="auth"></div>
+        <div class="auth" id="authSlot"></div>
       </div>
     </header>
-
     <main>
       <div class="container">
         <section class="hero">
@@ -610,9 +662,9 @@
             </div>
             <div class="tagline">
               <span class="pill">⚡ Fast explorer + code snippets</span>
-              <span class="pill">🧩 Add & moderate GIFs with tags</span>
+              <span class="pill">🧩 Add &amp; moderate GIFs with tags</span>
               <span class="pill"
-                >🌐 Linktree with avatars, music & effects</span
+                >🌐 Linktree with avatars, music &amp; effects</span
               >
             </div>
           </div>
@@ -625,9 +677,9 @@
             <h3>Preview the API</h3>
             <p>Hit the endpoint directly. Swap params and keep moving.</p>
             <pre class="code">
-fetch("/api/gifs?character=gojo&nsfw=false")
-  .then(res => res.json())
-  .then(data => console.log(data));</pre
+fetch("/api/gifs?character=gojo&amp;nsfw=false")
+  .then(res =&gt; res.json())
+  .then(data =&gt; console.log(data));</pre
             >
             <div class="chip-row" style="margin-top: 1rem">
               <span class="chip" style="color: var(--success)"
@@ -639,8 +691,7 @@ fetch("/api/gifs?character=gojo&nsfw=false")
             </div>
           </div>
         </section>
-
-        <section class="section" aria-labelledby="entry-points">
+        <section aria-labelledby="entry-points" class="section">
           <div class="notice">
             <div>
               <strong>New navigation:</strong> Portfolio lives under
@@ -650,8 +701,7 @@ fetch("/api/gifs?character=gojo&nsfw=false")
             <a class="btn ghost" href="/portfolio">Go to portfolio</a>
           </div>
         </section>
-
-        <section class="section" aria-labelledby="paths">
+        <section aria-labelledby="paths" class="section">
           <div
             style="
               display: flex;
@@ -677,14 +727,13 @@ fetch("/api/gifs?character=gojo&nsfw=false")
               </p>
               <div class="chip-row">
                 <span class="chip">Query builder</span>
-                <span class="chip">cURL & Python snippets</span>
-                <span class="chip">Random & filtered</span>
+                <span class="chip">cURL &amp; Python snippets</span>
+                <span class="chip">Random &amp; filtered</span>
               </div>
               <a class="btn" href="/api">Open explorer</a>
             </article>
-
             <article class="card">
-              <h3>Add & manage GIFs</h3>
+              <h3>Add &amp; manage GIFs</h3>
               <p>
                 Submit new GIFs, tag characters, set NSFW flags, and keep the
                 library clean.
@@ -696,7 +745,6 @@ fetch("/api/gifs?character=gojo&nsfw=false")
               </div>
               <a class="btn" href="/api/gif/admin">Add a GIF</a>
             </article>
-
             <article class="card">
               <h3>Linktree Builder</h3>
               <p>
@@ -704,16 +752,15 @@ fetch("/api/gifs?character=gojo&nsfw=false")
                 that match your vibe.
               </p>
               <div class="chip-row">
-                <span class="chip">Avatars & backgrounds</span>
-                <span class="chip">Music & effects</span>
-                <span class="chip">Icons & ordering</span>
+                <span class="chip">Avatars &amp; backgrounds</span>
+                <span class="chip">Music &amp; effects</span>
+                <span class="chip">Icons &amp; ordering</span>
               </div>
               <a class="btn" href="/linktree/config">Configure Linktree</a>
             </article>
           </div>
         </section>
-
-        <section class="section" aria-labelledby="why">
+        <section aria-labelledby="why" class="section">
           <h2 id="why" style="margin: 0 0 0.4rem">Why these tools?</h2>
           <p class="helper">
             They're fast to try, easy to edit, and designed to be shared.
@@ -755,7 +802,6 @@ fetch("/api/gifs?character=gojo&nsfw=false")
         </section>
       </div>
     </main>
-
     <script>
       const toggle = document.getElementById("mobileToggle");
       const menu = document.getElementById("primary-menu");
