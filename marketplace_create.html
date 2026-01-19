@@ -533,9 +533,194 @@
           animation: none !important;
         }
       }
+
+      /* === UX add-ons (drafts, toasts, sticky actions) === */
+      .sticky-actions {
+        position: sticky;
+        bottom: 18px;
+        z-index: 25;
+        margin: 0 auto;
+        width: min(100%, var(--container));
+        padding: 0 var(--space) calc(var(--space) * 0.6);
+        pointer-events: none;
+      }
+      .sticky-actions .bar {
+        pointer-events: auto;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px solid var(--border2);
+        background: linear-gradient(
+          180deg,
+          color-mix(in oklab, var(--card) 92%, transparent),
+          color-mix(in oklab, var(--card) 78%, transparent)
+        );
+        box-shadow: var(--shadow);
+      }
+      .sticky-actions .left {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: color-mix(in oklab, var(--bg) 62%, var(--card));
+        color: color-mix(in oklab, var(--ink) 92%, var(--muted));
+        font-weight: 850;
+        font-size: 0.92rem;
+        white-space: nowrap;
+      }
+      .pill.ok {
+        border-color: color-mix(in oklab, var(--ok) 55%, var(--border2));
+        background: color-mix(in oklab, var(--ok) 14%, transparent);
+      }
+      .pill.warn {
+        border-color: color-mix(in oklab, var(--warn) 65%, var(--border2));
+        background: color-mix(in oklab, var(--warn) 12%, transparent);
+      }
+      .kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 0.92em;
+        padding: 0.15rem 0.45rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: color-mix(in oklab, var(--card2) 86%, transparent);
+        color: color-mix(in oklab, var(--ink) 92%, var(--muted));
+      }
+      .quick-setup {
+        margin-top: 1.1rem;
+        border-radius: var(--r);
+        border: 1px solid var(--border2);
+        background: linear-gradient(
+          180deg,
+          color-mix(in oklab, var(--acc2) 12%, var(--card)),
+          color-mix(in oklab, var(--acc3) 9%, var(--card))
+        );
+        box-shadow: var(--shadow2);
+        padding: clamp(14px, 2vw, 18px);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .quick-setup .qs-title {
+        font-weight: 950;
+        letter-spacing: -0.01em;
+        margin: 0 0 0.25rem 0;
+      }
+      .quick-setup .qs-sub {
+        margin: 0;
+        color: var(--muted);
+        max-width: 70ch;
+      }
+      .qs-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .toast-wrap {
+        position: fixed;
+        inset: auto 16px 16px auto;
+        z-index: 60;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+      }
+      .toast {
+        pointer-events: auto;
+        width: min(420px, calc(100vw - 32px));
+        border-radius: 16px;
+        border: 1px solid var(--border2);
+        background: linear-gradient(
+          180deg,
+          color-mix(in oklab, var(--card) 92%, transparent),
+          var(--card)
+        );
+        box-shadow: var(--shadow);
+        padding: 12px 12px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .toast .t-title {
+        font-weight: 950;
+        margin: 0;
+        line-height: 1.25;
+      }
+      .toast .t-text {
+        margin: 0.15rem 0 0;
+        color: var(--muted);
+        font-weight: 650;
+      }
+      .toast .t-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .toast .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-top: 5px;
+        background: color-mix(in oklab, var(--acc2) 70%, var(--acc));
+        box-shadow: 0 0 0 4px color-mix(in oklab, var(--acc2) 18%, transparent);
+        flex: 0 0 auto;
+      }
+      .toast.danger .dot {
+        background: var(--danger);
+        box-shadow: 0 0 0 4px
+          color-mix(in oklab, var(--danger) 18%, transparent);
+      }
+      .toast.ok .dot {
+        background: var(--ok);
+        box-shadow: 0 0 0 4px color-mix(in oklab, var(--ok) 16%, transparent);
+      }
+
+      .field .help {
+        margin: 0;
+        color: var(--muted2);
+        font-size: 0.92rem;
+        line-height: 1.35;
+      }
+      .input.invalid,
+      .select.invalid,
+      textarea.invalid {
+        border-color: color-mix(in oklab, var(--danger) 70%, var(--border2));
+        box-shadow: 0 0 0 4px
+          color-mix(in oklab, var(--danger) 18%, transparent);
+      }
+      .errline {
+        color: color-mix(in oklab, var(--danger) 86%, var(--ink));
+        font-weight: 800;
+        font-size: 0.92rem;
+        margin-top: 6px;
+      }
     </style>
   </head>
   <body>
+    <!-- UX: Toasts -->
+    <div
+      class="toast-wrap"
+      id="toastWrap"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+
     <header>
       <div class="container nav" role="navigation" aria-label="Primary">
         <div class="brand">
@@ -602,6 +787,30 @@
               </p>
             </div>
             <a class="btn ghost sm" href="/marketplace">Back to marketplace</a>
+          </div>
+        </section>
+
+        <section class="quick-setup" aria-label="Quick setup">
+          <div>
+            <p class="qs-title">Quick setup</p>
+            <p class="qs-sub">
+              New here? Start with the essentials: choose a base (import or
+              fresh), name your template, set a background, and hit
+              <strong>Create</strong>. Tip: press
+              <span class="kbd">Ctrl</span> + <span class="kbd">S</span> to
+              save.
+            </p>
+          </div>
+          <div class="qs-actions">
+            <button class="btn ghost sm" type="button" id="qsJumpDetails">
+              Template details
+            </button>
+            <button class="btn ghost sm" type="button" id="qsJumpLook">
+              Look & colors
+            </button>
+            <button class="btn sm" type="button" id="qsJumpCreate">
+              Create
+            </button>
           </div>
         </section>
 
@@ -923,6 +1132,31 @@
           </div>
           <div class="alert" id="formMsg"></div>
         </section>
+      </div>
+
+      <!-- UX: Sticky actions (shows when there are unsaved changes) -->
+      <div class="sticky-actions" id="stickyActions" style="display: none">
+        <div class="bar" role="region" aria-label="Unsaved changes">
+          <div class="left">
+            <span class="pill warn" id="dirtyPill">Unsaved changes</span>
+            <span class="pill" id="draftPill" style="display: none"
+              >Draft saved</span
+            >
+            <span class="pill" id="hintPill"
+              >Save anytime with <span class="kbd">Ctrl</span>+<span class="kbd"
+                >S</span
+              ></span
+            >
+          </div>
+          <div class="row" style="gap: 0.4rem">
+            <button class="btn ghost sm" type="button" id="btnDiscardDraft">
+              Discard
+            </button>
+            <button class="btn sm" type="button" id="btnStickySave">
+              Save
+            </button>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -1596,6 +1830,537 @@
       }
 
       renderAuthHeader();
+
+      /* =========================
+         UX Enhancements (no feature changes)
+         - Draft autosave (localStorage)
+         - Restore/discard prompts
+         - Unsaved changes sticky bar
+         - Ctrl+S save shortcut
+         - Friendly validation + URL normalization
+         ========================= */
+
+      const UX = (() => {
+        const DRAFT_VER = 1;
+
+        const toastWrap = document.getElementById("toastWrap");
+        const stickyActions = document.getElementById("stickyActions");
+        const dirtyPill = document.getElementById("dirtyPill");
+        const draftPill = document.getElementById("draftPill");
+        const btnStickySave = document.getElementById("btnStickySave");
+        const btnDiscardDraft = document.getElementById("btnDiscardDraft");
+
+        const qsDetails = document.getElementById("qsJumpDetails");
+        const qsLook = document.getElementById("qsJumpLook");
+        const qsCreate = document.getElementById("qsJumpCreate");
+
+        let dirty = false;
+        let draftTimer = null;
+        let initialSnapshot = null;
+
+        function nowISO() {
+          try {
+            return new Date().toISOString();
+          } catch {
+            return "";
+          }
+        }
+
+        function keyForDraft() {
+          const slug = (
+            presetSlug ||
+            (currentUser && currentUser.linktree_slug) ||
+            (currentUser && currentUser.username) ||
+            "anon"
+          ).toString();
+          const mode = (params.get("template_id") || "new").toString();
+          return `taoma:mp_create:draft:v${DRAFT_VER}:${slug}:${mode}`;
+        }
+
+        function toast({
+          title,
+          text,
+          variant = "info",
+          actions = [],
+          timeout = 6500,
+        } = {}) {
+          if (!toastWrap) return;
+
+          const el = document.createElement("div");
+          el.className = `toast ${
+            variant === "danger" ? "danger" : variant === "ok" ? "ok" : ""
+          }`;
+          el.innerHTML = `
+            <span class="dot" aria-hidden="true"></span>
+            <div style="min-width: 0">
+              <p class="t-title">${escapeHtml(title || "")}</p>
+              <p class="t-text">${escapeHtml(text || "")}</p>
+            </div>
+            <div class="t-actions"></div>
+          `;
+
+          const actionWrap = el.querySelector(".t-actions");
+          actions.forEach((a) => {
+            const b = document.createElement("button");
+            b.className = a.primary ? "btn sm" : "btn ghost sm";
+            b.type = "button";
+            b.textContent = a.label;
+            b.addEventListener("click", () => {
+              try {
+                a.onClick && a.onClick();
+              } finally {
+                el.remove();
+              }
+            });
+            actionWrap.appendChild(b);
+          });
+
+          toastWrap.appendChild(el);
+
+          if (timeout) {
+            setTimeout(() => {
+              if (el.isConnected) el.remove();
+            }, timeout);
+          }
+        }
+
+        function setDirty(on) {
+          dirty = !!on;
+          if (!stickyActions) return;
+          stickyActions.style.display = dirty ? "block" : "none";
+          if (dirtyPill)
+            dirtyPill.textContent = dirty
+              ? "Unsaved changes"
+              : "All changes saved";
+        }
+
+        function readCurrentState() {
+          const state = {
+            editingId: editingId || null,
+            presetSlug: presetSlug || "",
+            presetDevice: presetDevice || "",
+            currentDevice: currentDevice || "",
+            choiceMade: !!choiceMade,
+            form: {
+              tplCreator: $("tplCreator")?.value ?? "",
+              tplName: $("tplName")?.value ?? "",
+              tplDesc: $("tplDesc")?.value ?? "",
+              tplPublic: $("tplPublic")?.value ?? "true",
+              tplMode: $("tplMode")?.value ?? "pc",
+              tplDevice: $("tplDevice")?.value ?? "pc",
+            },
+            variantCache: variantCache || { pc: null, mobile: null },
+            ts: nowISO(),
+          };
+          return state;
+        }
+
+        function snapshot() {
+          try {
+            const s = readCurrentState();
+            // Don't store volatile timestamp in equality snapshot.
+            const { ts, ...rest } = s;
+            return JSON.stringify(rest);
+          } catch {
+            return null;
+          }
+        }
+
+        function saveDraftDebounced() {
+          if (!currentUser) return;
+          if (!choiceMade) return;
+          clearTimeout(draftTimer);
+          draftTimer = setTimeout(() => {
+            try {
+              const k = keyForDraft();
+              const data = readCurrentState();
+              localStorage.setItem(k, JSON.stringify(data));
+              if (draftPill) {
+                draftPill.style.display = "inline-flex";
+                draftPill.textContent = "Draft saved";
+              }
+            } catch {}
+          }, 500);
+        }
+
+        function loadDraft() {
+          try {
+            const raw = localStorage.getItem(keyForDraft());
+            if (!raw) return null;
+            return JSON.parse(raw);
+          } catch {
+            return null;
+          }
+        }
+
+        function discardDraft() {
+          try {
+            localStorage.removeItem(keyForDraft());
+          } catch {}
+          if (draftPill) draftPill.style.display = "none";
+          setDirty(false);
+          toast({
+            title: "Draft discarded",
+            text: "Local draft removed from this browser.",
+            variant: "ok",
+            timeout: 3500,
+          });
+        }
+
+        function applyDraft(d) {
+          if (!d) return;
+
+          // Ensure form visible if draft had progressed
+          if (d.choiceMade) {
+            choiceMade = true;
+            formSection.style.display = "flex";
+          }
+
+          // Restore top-level fields
+          if ($("tplCreator")) $("tplCreator").value = d.form?.tplCreator ?? "";
+          if ($("tplName")) $("tplName").value = d.form?.tplName ?? "";
+          if ($("tplDesc")) $("tplDesc").value = d.form?.tplDesc ?? "";
+          if ($("tplPublic"))
+            $("tplPublic").value = d.form?.tplPublic ?? "true";
+          if ($("tplMode"))
+            $("tplMode").value = d.form?.tplMode ?? $("tplMode").value;
+          if ($("tplDevice"))
+            $("tplDevice").value = d.form?.tplDevice ?? $("tplDevice").value;
+
+          // Restore variants
+          if (d.variantCache) {
+            variantCache = d.variantCache;
+          }
+
+          // Ensure UI in sync
+          ensureActiveVariant();
+          updateModeBadge();
+          updateSlugHint();
+
+          toast({
+            title: "Draft restored",
+            text: "We restored your local draft for this page.",
+            variant: "ok",
+            timeout: 3500,
+          });
+          setDirty(true);
+        }
+
+        function maybeOfferRestore() {
+          const d = loadDraft();
+          if (!d) return;
+
+          // If we already have a template loaded for editing, don't auto-prompt unless it matches.
+          // We'll still offer but be conservative.
+          toast({
+            title: "Restore your draft?",
+            text: "A local draft was found from a previous visit.",
+            actions: [
+              { label: "Restore", primary: true, onClick: () => applyDraft(d) },
+              { label: "Discard", onClick: () => discardDraft() },
+            ],
+            timeout: 0,
+          });
+        }
+
+        function isProbablyUrlField(id) {
+          return ["tplBackground", "tplSong", "tplCursorUrl"].includes(id);
+        }
+
+        function normalizeUrlField(el) {
+          if (!el) return;
+          const id = el.id;
+          if (!isProbablyUrlField(id)) return;
+
+          const before = (el.value || "").trim();
+          if (!before) return;
+
+          // Allow /media/... and other absolute paths
+          if (before.startsWith("/") && !before.startsWith("//")) return;
+
+          // Add https:// if missing scheme
+          if (!/^https?:\/\//i.test(before)) {
+            el.value = `https://${before}`;
+          }
+        }
+
+        function markInvalid(el, msg) {
+          if (!el) return;
+          el.classList.add("invalid");
+          el.setAttribute("aria-invalid", "true");
+          let err = el.parentElement?.querySelector(".errline");
+          if (!err) {
+            err = document.createElement("div");
+            err.className = "errline";
+            el.parentElement?.appendChild(err);
+          }
+          err.textContent = msg || "Invalid value";
+        }
+
+        function clearInvalid(el) {
+          if (!el) return;
+          el.classList.remove("invalid");
+          el.removeAttribute("aria-invalid");
+          const err = el.parentElement?.querySelector(".errline");
+          if (err) err.remove();
+        }
+
+        function validateHexInput(el) {
+          const v = (el?.value || "").trim();
+          if (!v) {
+            clearInvalid(el);
+            return true;
+          }
+          if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v)) {
+            clearInvalid(el);
+            return true;
+          }
+          markInvalid(el, "Use #RGB or #RRGGBB");
+          return false;
+        }
+
+        function validateUrlLike(el, required = false) {
+          const v = (el?.value || "").trim();
+          if (!v) {
+            if (required) {
+              markInvalid(el, "This field is required");
+              return false;
+            }
+            clearInvalid(el);
+            return true;
+          }
+          if (v.startsWith("/") && !v.startsWith("//")) {
+            clearInvalid(el);
+            return true;
+          }
+          if (/^https?:\/\//i.test(v)) {
+            clearInvalid(el);
+            return true;
+          }
+          markInvalid(el, "Use https://... or /media/...");
+          return false;
+        }
+
+        function validateFormFriendly() {
+          // Minimal: name + background per active variant
+          let ok = true;
+
+          const nameEl = $("tplName");
+          if (nameEl) {
+            if (!nameEl.value.trim()) {
+              markInvalid(nameEl, "Template name is required");
+              ok = false;
+            } else clearInvalid(nameEl);
+          }
+
+          // Active variant background required
+          ok = validateUrlLike($("tplBackground"), true) && ok;
+
+          // Optional URL-like fields
+          ok = validateUrlLike($("tplSong"), false) && ok;
+          ok = validateUrlLike($("tplCursorUrl"), false) && ok;
+
+          // Hex fields
+          [
+            "tplLinkColor",
+            "tplLinkBgColor",
+            "tplTextColor",
+            "tplNameColor",
+            "tplLocationColor",
+            "tplQuoteColor",
+            "tplCounterColor",
+            "tplCounterBgColor",
+          ].forEach((id) => {
+            ok = validateHexInput($(id)) && ok;
+          });
+
+          return ok;
+        }
+
+        function hookInputs() {
+          const all = Array.from(
+            document.querySelectorAll("input, select, textarea")
+          );
+          all.forEach((el) => {
+            el.addEventListener("input", () => {
+              setDirty(true);
+              saveDraftDebounced();
+              // live validate only for some fields
+              if (el.id && (el.id.startsWith("tpl") || el.id === "tplName")) {
+                if (el.classList.contains("invalid")) validateFormFriendly();
+              }
+            });
+            el.addEventListener("change", () => {
+              setDirty(true);
+              saveDraftDebounced();
+            });
+            // Normalize on blur for URL fields
+            el.addEventListener(
+              "blur",
+              () => {
+                if (el.id) normalizeUrlField(el);
+              },
+              { passive: true }
+            );
+          });
+        }
+
+        function hookStickyButtons() {
+          btnStickySave?.addEventListener("click", () => {
+            if (!choiceMade) ensureChoice();
+            // Before saving, ensure cached active variant is updated
+            const activeDevice = $("tplDevice")?.value || currentDevice || "pc";
+            const v = buildVariantFromForm(activeDevice);
+            if (v) variantCache[activeDevice] = v;
+
+            if (!validateFormFriendly()) {
+              toast({
+                title: "Fix a few fields",
+                text: "Some values look invalid. Check the highlighted inputs.",
+                variant: "danger",
+                timeout: 4500,
+              });
+              return;
+            }
+            saveTemplate();
+          });
+
+          btnDiscardDraft?.addEventListener("click", () => {
+            // Soft reset: discard local draft and revert to initial snapshot if possible
+            discardDraft();
+            // If we have an initial snapshot, reload the page state by re-running resetForm + optional template load
+            try {
+              const tplId = params.get("template_id");
+              resetForm();
+              if (tplId) loadTemplateForEdit(tplId);
+            } catch {}
+          });
+        }
+
+        function hookKeyboardShortcuts() {
+          document.addEventListener("keydown", (e) => {
+            const isMac = navigator.platform.toLowerCase().includes("mac");
+            const mod = isMac ? e.metaKey : e.ctrlKey;
+            if (mod && e.key.toLowerCase() === "s") {
+              e.preventDefault();
+              if (!choiceMade) ensureChoice();
+              if (!validateFormFriendly()) {
+                toast({
+                  title: "Fix a few fields",
+                  text: "Some values look invalid. Check the highlighted inputs.",
+                  variant: "danger",
+                  timeout: 4500,
+                });
+                return;
+              }
+              saveTemplate();
+            }
+          });
+        }
+
+        function hookQuickSetupJumps() {
+          function scrollToId(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+
+          qsDetails?.addEventListener("click", () => {
+            ensureChoice();
+            scrollToId("formSection");
+            $("tplName")?.focus?.();
+          });
+
+          qsLook?.addEventListener("click", () => {
+            ensureChoice();
+            scrollToId("tplBackground");
+            $("tplBackground")?.focus?.();
+          });
+
+          qsCreate?.addEventListener("click", () => {
+            ensureChoice();
+            scrollToId("btnSaveTemplate");
+            $("btnSaveTemplate")?.focus?.();
+          });
+        }
+
+        function compareAndSetDirty() {
+          const snap = snapshot();
+          if (!initialSnapshot) initialSnapshot = snap;
+          if (!snap || !initialSnapshot) return;
+          setDirty(snap !== initialSnapshot);
+        }
+
+        function startDirtyWatcher() {
+          // Periodically compare snapshots (cheap enough for this page)
+          setInterval(() => {
+            try {
+              compareAndSetDirty();
+            } catch {}
+          }, 900);
+        }
+
+        function onAfterBoot() {
+          // Initial baseline after boot/reset/template load.
+          initialSnapshot = snapshot();
+          setDirty(false);
+          hookInputs();
+          hookStickyButtons();
+          hookKeyboardShortcuts();
+          hookQuickSetupJumps();
+          maybeOfferRestore();
+          startDirtyWatcher();
+        }
+
+        return { onAfterBoot };
+      })();
+
+      // Call after boot completes (boot() is async)
+      (async () => {
+        // Wait until boot has done its first render.
+        // If boot redirects (not logged in), this won't matter.
+        try {
+          // Microtask + short delay to ensure resetForm/applyTemplate finished
+          await Promise.resolve();
+          setTimeout(() => {
+            try {
+              UX.onAfterBoot();
+            } catch {}
+          }, 0);
+        } catch {}
+      })();
+
+      // Patch: when we show the form due to user choice, create a new baseline
+      const _ensureChoice = ensureChoice;
+      ensureChoice = function () {
+        _ensureChoice();
+        try {
+          /* baseline will be recalculated by watcher; keep draft timer */
+        } catch {}
+      };
+
+      // Before saving in main button, run friendly validation too
+      const _saveTemplate = saveTemplate;
+      saveTemplate = async function () {
+        if (!validateFormFriendly()) {
+          // formMsg already used; add a toast too
+          try {
+            const tw = document.getElementById("toastWrap");
+            if (tw) {
+              // minimal fallback toast
+            }
+          } catch {}
+          showMsg(formMsg, "Please fix the highlighted fields", false);
+          return;
+        }
+        const before = snapshot();
+        await _saveTemplate();
+        // After successful saveTemplate() it navigates; but if not, we can clear dirty.
+        const after = snapshot();
+        if (before && after && before !== after) {
+          // keep dirty (save failed). If save succeeded but stayed, clear.
+        }
+      };
     </script>
   </body>
 </html>
