@@ -1430,15 +1430,7 @@
           </div>
           <div class="row">
             <div style="flex:1 1 160px">
-              <label>Background is video</label>
-              <select name="background_is_video">
-                <option value="">(no change)</option>
-                <option value="true">true</option>
-                <option value="false">false</option>
-              </select>
-            </div>
-            <div style="flex:1 1 160px">
-              <label>Transparency (0–100)</label>
+              <label>Transparency (0-100)</label>
               <input name="transparency" type="number" min="0" max="100" placeholder="">
             </div>
           </div>
@@ -1815,7 +1807,6 @@
       for (const k of ['slug', 'location', 'quote', 'song_url', 'background_url', 'name_effect', 'background_effect', 'display_name_mode']) {
         const v = f[k].value.trim(); if (v) body[k] = v;
       }
-      if (f.background_is_video.value !== '') body.background_is_video = (f.background_is_video.value === 'true');
       if (f.transparency.value !== '') body.transparency = Number(f.transparency.value);
 
       try {

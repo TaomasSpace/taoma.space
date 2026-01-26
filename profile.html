@@ -837,14 +837,11 @@
 
           <div class="hr"></div>
 
-          <!-- Avatar: Tabs (URL / Upload / Gallery) -->
+          <!-- Avatar: Tabs (Upload / Gallery) -->
           <div class="field">
             <label>Profile picture</label>
 
             <div class="row" role="tablist" aria-label="Avatar source">
-              <button type="button" class="btn sm ghost" data-tab="url">
-                URL
-              </button>
               <button type="button" class="btn sm ghost" data-tab="upload">
                 Upload
               </button>
@@ -853,20 +850,6 @@
               </button>
             </div>
 
-            <div id="tab-url" class="grid" style="margin-top: 0.6rem">
-              <input
-                id="inPfp"
-                class="input"
-                name="profile_picture"
-                placeholder="https://…/avatar.png"
-              />
-              <div class="row">
-                <button id="btnPfpSave" class="btn sm" type="button">
-                  Save Picture
-                </button>
-                <span class="help">Direct image URL. PNG/JPG/GIF/WebP.</span>
-              </div>
-            </div>
 
             <div
               id="tab-upload"
@@ -1336,7 +1319,6 @@
 
           // Prefill forms
           document.getElementById("inName").value = user.username || "";
-          document.getElementById("inPfp").value = user.profile_picture || "";
           renderLinktreeSlot(user);
           await loadDiscordStatus();
           const lt = await fetchMyLinktree();
@@ -1617,11 +1599,10 @@
       // --- Tabs for avatar source
       const tabs = document.querySelectorAll("[data-tab]");
       const tabPanels = {
-        url: document.getElementById("tab-url"),
         upload: document.getElementById("tab-upload"),
         gallery: document.getElementById("tab-gallery"),
       };
-      let activeTab = "url";
+      let activeTab = "upload";
       function setTab(name) {
         activeTab = name;
         for (const [k, el] of Object.entries(tabPanels)) {
@@ -1631,16 +1612,7 @@
       tabs.forEach((btn) =>
         btn.addEventListener("click", () => setTab(btn.dataset.tab))
       );
-
-      // --- Avatar URL save
-      document
-        .getElementById("btnPfpSave")
-        .addEventListener("click", async () => {
-          const url = document.getElementById("inPfp").value.trim();
-          if (url && !/^https?:\/\//i.test(url))
-            return showMsg("Must be a valid http(s) URL", false);
-          await updateMe({ profile_picture: url || null });
-        });
+      setTab(activeTab);
 
       // --- Avatar upload
       document

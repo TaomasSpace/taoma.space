@@ -948,13 +948,6 @@
               />
             </div>
             <div class="field">
-              <label for="tplBgVideo">Background is video</label>
-              <select id="tplBgVideo" class="select">
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-              </select>
-            </div>
-            <div class="field">
               <label for="tplTrans">Transparency (0-100)</label>
               <input
                 id="tplTrans"
@@ -1297,6 +1290,15 @@
         return null;
       }
 
+
+      const VIDEO_EXTENSIONS = [".mp4", ".webm", ".m4v", ".mov"];
+
+      function looksLikeVideoUrl(url) {
+        if (!url) return false;
+        const lower = String(url).toLowerCase();
+        return VIDEO_EXTENSIONS.some((ext) => lower.includes(ext));
+      }
+
       function normalizeVariant(raw, deviceFallback) {
         const v = { ...(raw || {}) };
         v.device_type = v.device_type || deviceFallback || "pc";
@@ -1422,7 +1424,6 @@
         $("tplSong").value = v.song_url || "";
         $("tplAudioPlayer").value = v.show_audio_player ? "true" : "false";
         $("tplBackground").value = v.background_url || "";
-        $("tplBgVideo").value = v.background_is_video ? "true" : "false";
         $("tplTrans").value =
           v.transparency !== undefined && v.transparency !== null
             ? v.transparency
@@ -1482,7 +1483,7 @@
           song_url: $("tplSong").value.trim() || "",
           show_audio_player: $("tplAudioPlayer").value === "true",
           background_url: $("tplBackground").value.trim(),
-          background_is_video: $("tplBgVideo").value === "true",
+          background_is_video: looksLikeVideoUrl($("tplBackground").value.trim()),
           transparency: Math.min(
             100,
             Math.max(0, parseInt($("tplTrans").value || "0", 10))

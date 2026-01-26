@@ -244,12 +244,13 @@
         margin: 0 auto 1.5rem;
         padding: 0.8rem 1rem;
         border-radius: 14px;
-        background: rgba(23, 27, 59, 0.6);
-        border: 1px solid #ffffff26;
+        background: var(--audio-bg, rgba(23, 27, 59, 0.6));
+        border: 1px solid var(--audio-border, #ffffff26);
         box-shadow: var(--shadow);
         display: grid;
         gap: 0.55rem;
         text-align: left;
+        color: var(--audio-text, var(--ink));
       }
 
       .audio-player.hidden {
@@ -261,18 +262,37 @@
         justify-content: space-between;
         align-items: center;
         font-size: 0.85rem;
-        color: var(--muted);
+        color: var(--audio-muted, var(--muted));
         gap: 0.5rem;
+      }
+
+      .audio-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        min-width: 0;
+      }
+
+      .audio-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        object-fit: cover;
+        display: block;
+      }
+
+      .audio-icon.hidden {
+        display: none;
       }
 
       .audio-title {
         font-weight: 700;
-        color: var(--ink);
+        color: var(--audio-text, var(--ink));
       }
 
       .audio-seek {
         width: 100%;
-        accent-color: var(--acc);
+        accent-color: var(--audio-accent, var(--acc));
       }
 
       .audio-controls {
@@ -285,18 +305,44 @@
 
       .audio-btn {
         border: 1px solid #ffffff26;
-        background: #ffffff14;
-        color: var(--ink);
+        background: var(--audio-btn-bg, #ffffff14);
+        color: var(--audio-text, var(--ink));
         border-radius: 999px;
         padding: 0.35rem 0.7rem;
         font-weight: 700;
         cursor: var(--cursor, pointer);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-width: 42px;
       }
 
       .audio-btn.primary {
-        background: var(--acc);
-        color: #0e1020;
-        border-color: color-mix(in oklab, var(--acc) 65%, #000);
+        background: var(--audio-accent, var(--acc));
+        color: var(--audio-accent-ink, #0e1020);
+        border-color: color-mix(
+          in oklab,
+          var(--audio-accent, var(--acc)) 65%,
+          #000
+        );
+      }
+
+      .audio-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .audio-btn .icon-pause {
+        display: none;
+      }
+
+      .audio-btn.is-playing .icon-pause {
+        display: block;
+      }
+
+      .audio-btn.is-playing .icon-play {
+        display: none;
       }
 
       .name {
@@ -1103,7 +1149,16 @@
 
         <div id="audioPlayer" class="audio-player hidden">
           <div class="audio-meta">
-            <span id="audioTitle" class="audio-title">Audio</span>
+            <div class="audio-title-wrap">
+              <img
+                id="audioIcon"
+                class="audio-icon hidden"
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+              <span id="audioTitle" class="audio-title">Audio</span>
+            </div>
             <span id="audioTime" class="audio-time">0:00 / 0:00</span>
           </div>
           <input
@@ -1121,7 +1176,9 @@
               type="button"
               aria-label="Back 10 seconds"
             >
-              -10s
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                <path d="M11 18V6l-6 6 6 6zM19 18V6l-6 6 6 6z" />
+              </svg>
             </button>
             <button
               id="audioPlay"
@@ -1129,7 +1186,22 @@
               type="button"
               aria-label="Play or pause"
             >
-              Play
+              <svg
+                class="icon-play"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                fill="currentColor"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <svg
+                class="icon-pause"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                fill="currentColor"
+              >
+                <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
+              </svg>
             </button>
             <button
               id="audioForward"
@@ -1137,7 +1209,9 @@
               type="button"
               aria-label="Forward 10 seconds"
             >
-              +10s
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                <path d="M13 6v12l6-6-6-6zM5 6v12l6-6-6-6z" />
+              </svg>
             </button>
           </div>
         </div>
@@ -1213,6 +1287,7 @@
         const soundBtn = document.getElementById("soundBtn");
         const soundLabel = document.getElementById("soundLabel");
         const audioPlayer = document.getElementById("audioPlayer");
+        const audioIcon = document.getElementById("audioIcon");
         const audioTitle = document.getElementById("audioTitle");
         const audioTime = document.getElementById("audioTime");
         const audioSeek = document.getElementById("audioSeek");
@@ -1301,10 +1376,9 @@
               safeMediaUrl(data.background_preview_url) ||
               null);
           const chosen = (low || primary || "").trim();
+          const isVideo = looksLikeVideo(chosen) || !!data.background_is_video;
           const useVideo =
-            data.background_is_video &&
-            looksLikeVideo(chosen) &&
-            !(preferLite && low && !looksLikeVideo(low));
+            isVideo && !(preferLite && low && !looksLikeVideo(low));
           return { url: chosen, isVideo: useVideo };
         }
 
@@ -1315,6 +1389,10 @@
         const DEFAULT_NAME_COLOR = "#e9ebff";
         const DEFAULT_LOCATION_COLOR = "#a2a9c8";
         const DEFAULT_QUOTE_COLOR = "#e9ebff";
+        const DEFAULT_AUDIO_BG_COLOR = "#171b3b";
+        const DEFAULT_AUDIO_BG_ALPHA = 60;
+        const DEFAULT_AUDIO_TEXT_COLOR = "#e9ebff";
+        const DEFAULT_AUDIO_ACCENT_COLOR = "#85a3ff";
 
         function sanitizeHexColor(raw) {
           if (typeof raw !== "string") return "";
@@ -1390,11 +1468,48 @@
           rootStyle.setProperty("--quote-color", quote);
         }
 
-      function createLocationIcon() {
-        const svg = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "svg"
-        );
+        function applyAudioPlayerStyles(data) {
+          if (!audioPlayer) return;
+          const bgHex =
+            sanitizeHexColor(data?.audio_player_bg_color) ||
+            DEFAULT_AUDIO_BG_COLOR;
+          const bgRgb = hexToRgb(bgHex) || hexToRgb(DEFAULT_AUDIO_BG_COLOR);
+          const rawAlpha = Number(data?.audio_player_bg_alpha);
+          const alpha = Number.isFinite(rawAlpha)
+            ? Math.min(100, Math.max(0, rawAlpha))
+            : DEFAULT_AUDIO_BG_ALPHA;
+          const bg = bgRgb ? rgbToRgba(bgRgb, alpha / 100) : "";
+          const border = bgRgb
+            ? rgbToRgba(lightenRgb(bgRgb, 0.12), Math.min(1, alpha / 100 + 0.12))
+            : "";
+          const btnBg = bgRgb
+            ? rgbToRgba(lightenRgb(bgRgb, 0.08), Math.min(1, alpha / 100 + 0.1))
+            : "";
+          const textHex =
+            sanitizeHexColor(data?.audio_player_text_color) ||
+            sanitizeHexColor(data?.text_color) ||
+            DEFAULT_AUDIO_TEXT_COLOR;
+          const textRgb = hexToRgb(textHex) || hexToRgb(DEFAULT_AUDIO_TEXT_COLOR);
+          const muted = textRgb ? rgbToRgba(textRgb, 0.72) : "";
+          const accentHex =
+            sanitizeHexColor(data?.audio_player_accent_color) ||
+            sanitizeHexColor(data?.link_color) ||
+            DEFAULT_AUDIO_ACCENT_COLOR;
+
+          if (bg) audioPlayer.style.setProperty("--audio-bg", bg);
+          if (border) audioPlayer.style.setProperty("--audio-border", border);
+          if (btnBg) audioPlayer.style.setProperty("--audio-btn-bg", btnBg);
+          if (textHex) audioPlayer.style.setProperty("--audio-text", textHex);
+          if (muted) audioPlayer.style.setProperty("--audio-muted", muted);
+          if (accentHex)
+            audioPlayer.style.setProperty("--audio-accent", accentHex);
+        }
+
+        function createLocationIcon() {
+          const svg = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "svg"
+          );
           svg.setAttribute("width", "16");
           svg.setAttribute("height", "16");
           svg.setAttribute("viewBox", "0 0 24 24");
@@ -1461,7 +1576,8 @@
           audioTime.textContent = "0:00 / 0:00";
           audioSeek.value = "0";
           audioSeek.max = "0";
-          audioPlayBtn.textContent = "Play";
+          audioPlayBtn.classList.remove("is-playing");
+          audioPlayBtn.setAttribute("aria-label", "Play");
           return;
         }
         const duration = Number.isFinite(bgAudio.duration)
@@ -1477,7 +1593,9 @@
         audioTime.textContent = `${formatTime(current)} / ${formatTime(
           duration
         )}`;
-        audioPlayBtn.textContent = bgAudio.paused ? "Play" : "Pause";
+        const playing = !bgAudio.paused;
+        audioPlayBtn.classList.toggle("is-playing", playing);
+        audioPlayBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
       }
 
       function bindAudioPlayer(audio) {
@@ -1611,7 +1729,7 @@
 
         function enterExperience() {
           showGate(false);
-          if (bgVideo) {
+          if (bgVideo && !bgAudio) {
             bgVideo.muted = false;
             bgVideo.play().catch(() => {});
           }
@@ -1900,11 +2018,22 @@
           }
           syncAudioUI();
           const songUrl = safeMediaUrl(data.song_url);
+          const songIconUrl = safeMediaUrl(data.song_icon_url);
           const showAudioPlayer = !!data.show_audio_player && !!songUrl;
           if (audioPlayer) {
+            applyAudioPlayerStyles(data);
             audioPlayer.classList.toggle("hidden", !showAudioPlayer);
             if (showAudioPlayer && audioTitle) {
               audioTitle.textContent = getAudioTitle(songUrl);
+            }
+          }
+          if (audioIcon) {
+            if (songIconUrl) {
+              audioIcon.src = songIconUrl;
+              audioIcon.classList.remove("hidden");
+            } else {
+              audioIcon.removeAttribute("src");
+              audioIcon.classList.add("hidden");
             }
           }
           if (songUrl) {
@@ -1924,6 +2053,9 @@
             if (soundBtn) soundBtn.classList.remove("hidden");
           } else {
             if (soundBtn) soundBtn.classList.add("hidden"); // nichts abzuspielen
+          }
+          if (bgVideo && songUrl) {
+            bgVideo.muted = true;
           }
           if (needsGate) {
             showGate(true);

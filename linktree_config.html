@@ -689,6 +689,18 @@
         max-width: 100%;
       }
 
+      .link-icon-upload {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 160px;
+        flex: 1 1 180px;
+      }
+
+      .link-icon-upload .muted {
+        font-size: 0.85rem;
+      }
+
       .icon-16 {
         width: 16px;
         height: 16px;
@@ -1201,12 +1213,20 @@
               ></textarea>
             </div>
             <div class="field">
-              <label for="inSong">Song URL</label>
-              <input
-                id="inSong"
-                class="input"
-                placeholder="https://…/song.mp3"
-              />
+              <label for="fileSong">Upload Song</label>
+              <input type="file" id="fileSong" accept="audio/*" />
+              <input type="hidden" id="inSong" />
+              <div id="songStatus" class="preview-note muted">
+                No song uploaded yet.
+              </div>
+            </div>
+            <div class="field">
+              <label for="fileSongIcon">Upload Song Icon</label>
+              <input type="file" id="fileSongIcon" accept="image/*" />
+              <input type="hidden" id="inSongIcon" />
+              <div id="songIconStatus" class="preview-note muted">
+                No icon uploaded.
+              </div>
             </div>
             <div class="field">
               <label class="row" style="gap: 0.4rem; align-items: center">
@@ -1214,48 +1234,65 @@
                 <span>Show audio player controls</span>
               </label>
               <div class="help">
-                Shows play/pause, seek, and skip controls when a song is set.
+                Shows the player when a song is uploaded.
               </div>
             </div>
-
-
             <div class="field">
-              <label for="inBg">Background URL (img/gif/video)</label>
-              <input id="inBg" class="input" placeholder="https://…/bg.webp" />
+              <label for="inAudioBgColor">Audio player background</label>
+              <input
+                id="inAudioBgColor"
+                class="input"
+                type="color"
+                value="#171b3b"
+              />
             </div>
             <div class="field">
-              <label for="fileSong">Upload Song</label>
-              <input type="file" id="fileSong" accept="audio/*" />
+              <label for="inAudioBgAlpha">Audio player transparency (0-100)</label>
+              <input
+                id="inAudioBgAlpha"
+                class="input"
+                type="number"
+                min="0"
+                max="100"
+                value="60"
+              />
+            </div>
+            <div class="field">
+              <label for="inAudioTextColor">Audio player text color</label>
+              <input
+                id="inAudioTextColor"
+                class="input"
+                type="color"
+                value="#e9ebff"
+              />
+            </div>
+            <div class="field">
+              <label for="inAudioAccentColor">Audio player accent color</label>
+              <input
+                id="inAudioAccentColor"
+                class="input"
+                type="color"
+                value="#85a3ff"
+              />
             </div>
             <div class="field">
               <label for="fileBg">Upload Background</label>
               <input type="file" id="fileBg" accept="image/*,video/*" />
-            </div>
-            <div class="field">
-              <label for="inCursor">Cursor URL (Desktop)</label>
-              <input
-                id="inCursor"
-                class="input"
-                placeholder="https://…/cursor.png"
-              />
-              <div class="preview-note muted">
-                Only applied on the desktop linktree.
+              <input type="hidden" id="inBg" />
+              <div id="bgStatus" class="preview-note muted">
+                No background uploaded yet.
               </div>
             </div>
             <div class="field">
               <label for="fileCursor">Upload Cursor (Desktop)</label>
               <input type="file" id="fileCursor" accept="image/*" />
+              <input type="hidden" id="inCursor" />
               <div class="preview-note muted">
                 Use a small PNG/WEBP for best results.
               </div>
-            </div>
-
-            <div class="field">
-              <label for="inVideo">Background is Video</label>
-              <select id="inVideo" class="select">
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-              </select>
+              <div id="cursorStatus" class="preview-note muted">
+                No cursor uploaded.
+              </div>
             </div>
             <div class="field">
               <label for="inTrans">Card Transparency (0-100)</label>
@@ -1547,14 +1584,10 @@
             <div class="field">
               <label for="fileIcon">Upload Link Icon</label>
               <input type="file" id="fileIcon" accept="image/*" />
-            </div>
-            <div class="field">
-              <label for="inLinkIcon">Icon URL</label>
-              <input
-                id="inLinkIcon"
-                class="input"
-                placeholder="https://…/icon.png"
-              />
+              <input type="hidden" id="inLinkIcon" />
+              <div id="linkIconStatus" class="preview-note muted">
+                No icon uploaded.
+              </div>
             </div>
             <div class="field">
               <label for="inLinkActive">Active</label>
@@ -1923,6 +1956,10 @@
       const DEFAULT_LINK_COLOR = "#e9ebff";
       const DEFAULT_LINK_BG_COLOR = "#171b3b";
       const DEFAULT_CARD_COLOR = "#171b3b";
+      const DEFAULT_AUDIO_BG_COLOR = "#171b3b";
+      const DEFAULT_AUDIO_BG_ALPHA = 60;
+      const DEFAULT_AUDIO_TEXT_COLOR = "#e9ebff";
+      const DEFAULT_AUDIO_ACCENT_COLOR = "#85a3ff";
       const DEFAULT_TEXT_COLOR = "#e9ebff";
       const DEFAULT_NAME_COLOR = "#e9ebff";
       const DEFAULT_LOCATION_COLOR = "#a2a9c8";
@@ -1944,6 +1981,34 @@
         return Math.min(100, Math.max(0, n));
       }
 
+
+      function fileNameFromUrl(url) {
+        if (!url) return "";
+        try {
+          const u = new URL(String(url), window.location.origin);
+          const name = (u.pathname || "").split("/").pop();
+          return name ? decodeURIComponent(name) : "";
+        } catch (_) {
+          return String(url);
+        }
+      }
+
+      function setUploadStatus(id, url, emptyText) {
+        const el = $(id);
+        if (!el) return;
+        const name = fileNameFromUrl(url || "");
+        el.textContent = name || emptyText;
+      }
+
+
+      const VIDEO_EXTENSIONS = [".mp4", ".webm", ".m4v", ".mov"];
+
+      function looksLikeVideoUrl(url) {
+        if (!url) return false;
+        const lower = String(url).toLowerCase();
+        return VIDEO_EXTENSIONS.some((ext) => lower.includes(ext));
+      }
+
       function templateDeviceLabel(device) {
         if (device === "both") return "Desktop + Mobile";
         if (device === "mobile") return "Mobile";
@@ -1958,9 +2023,19 @@
         $("inLocation").value = lt.location || "";
         $("inQuote").value = lt.quote || "";
         $("inSong").value = lt.song_url || "";
+        $("inSongIcon").value = lt.song_icon_url || "";
         $("inAudioPlayer").checked = !!lt.show_audio_player;
+        $("inAudioBgColor").value =
+          lt.audio_player_bg_color || DEFAULT_AUDIO_BG_COLOR;
+        $("inAudioBgAlpha").value =
+          lt.audio_player_bg_alpha !== undefined && lt.audio_player_bg_alpha !== null
+            ? lt.audio_player_bg_alpha
+            : DEFAULT_AUDIO_BG_ALPHA;
+        $("inAudioTextColor").value =
+          lt.audio_player_text_color || DEFAULT_AUDIO_TEXT_COLOR;
+        $("inAudioAccentColor").value =
+          lt.audio_player_accent_color || DEFAULT_AUDIO_ACCENT_COLOR;
         $("inBg").value = lt.background_url || "";
-        $("inVideo").value = String(!!lt.background_is_video);
         $("inDisplayName").value = lt.display_name_mode || "slug";
         $("inCustomName").value = lt.custom_display_name || "";
         const cardTrans =
@@ -1985,6 +2060,14 @@
             ? lt.link_bg_alpha
             : 100;
         $("inCursor").value = lt.cursor_url || "";
+        setUploadStatus("songStatus", lt.song_url, "No song uploaded yet.");
+        setUploadStatus("songIconStatus", lt.song_icon_url, "No icon uploaded.");
+        setUploadStatus(
+          "bgStatus",
+          lt.background_url,
+          "No background uploaded yet."
+        );
+        setUploadStatus("cursorStatus", lt.cursor_url, "No cursor uploaded.");
         $("inDiscordFrame").checked = !!lt.discord_frame_enabled;
         $("inDiscordPresence").checked = !!lt.discord_presence_enabled;
         $("inDiscordPresenceValue").value = lt.discord_presence || "online";
@@ -2038,9 +2121,18 @@
           location: lt.location || "",
           quote: lt.quote || "",
           song_url: lt.song_url || "",
+          song_icon_url: lt.song_icon_url || "",
           show_audio_player: !!lt.show_audio_player,
+          audio_player_bg_color: hexOrNull(lt.audio_player_bg_color),
+          audio_player_bg_alpha: clampPercent(
+            lt.audio_player_bg_alpha ?? DEFAULT_AUDIO_BG_ALPHA,
+            DEFAULT_AUDIO_BG_ALPHA
+          ),
+          audio_player_text_color: hexOrNull(lt.audio_player_text_color),
+          audio_player_accent_color: hexOrNull(lt.audio_player_accent_color),
           background_url: lt.background_url,
-          background_is_video: !!lt.background_is_video,
+          background_is_video:
+            looksLikeVideoUrl(lt.background_url) || !!lt.background_is_video,
           transparency: clampPercent(lt.transparency ?? 0, 0),
           name_effect: lt.name_effect || "none",
           background_effect: lt.background_effect || "none",
@@ -2088,7 +2180,7 @@
         if (!bgUrl) {
           showMsg(
             msgTemplates || msgMeta,
-            "Set a background URL before saving a template",
+            "Upload a background before saving a template",
             false
           );
           return null;
@@ -2104,9 +2196,17 @@
           location: $("inLocation").value.trim() || "",
           quote: $("inQuote").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
+          song_icon_url: $("inSongIcon").value.trim() || null,
           show_audio_player: $("inAudioPlayer").checked,
+          audio_player_bg_color: hexOrNull($("inAudioBgColor").value),
+          audio_player_bg_alpha: clampPercent(
+            $("inAudioBgAlpha").value ?? DEFAULT_AUDIO_BG_ALPHA,
+            DEFAULT_AUDIO_BG_ALPHA
+          ),
+          audio_player_text_color: hexOrNull($("inAudioTextColor").value),
+          audio_player_accent_color: hexOrNull($("inAudioAccentColor").value),
           background_url: bgUrl,
-          background_is_video: $("inVideo").value === "true",
+          background_is_video: looksLikeVideoUrl(bgUrl),
           transparency: 100 - cardAlphaInput,
           name_effect: $("inNameFx").value || "none",
           background_effect: $("inBgFx").value || "none",
@@ -2413,9 +2513,13 @@
         <input class="input" data-k="url" placeholder="https://…" value="${
           l.url
         }">
-        <input class="input" data-k="icon_url" placeholder="Icon URL" value="${
-          l.icon_url || ""
-        }">
+          <div class="link-icon-upload">
+            <input type="file" class="input" data-k="icon_file" accept="image/*">
+            <input type="hidden" data-k="icon_url" value="${(
+              l.icon_url || ""
+            ).replaceAll("\"", "&quot;")}">
+            <div class="muted" data-k="icon_status"></div>
+          </div>
         <select class="select" data-k="is_active">
           <option value="true"${l.is_active ? " selected" : ""}>Active</option>
           <option value="false"${
@@ -2427,6 +2531,37 @@
         <button class="btn sm" data-act="save">Save</button>
         <button class="btn sm danger" data-act="del">Delete</button>
       `;
+        const iconUrlInput = row.querySelector('[data-k="icon_url"]');
+        const iconStatus = row.querySelector('[data-k="icon_status"]');
+        if (iconStatus) {
+          iconStatus.textContent =
+            fileNameFromUrl(l.icon_url || "") || "No icon uploaded.";
+        }
+        const iconFile = row.querySelector('[data-k="icon_file"]');
+        if (iconFile) {
+          iconFile.addEventListener("change", async () => {
+            try {
+              const url = await uploadInlineFile(
+                iconFile,
+                "/api/users/me/linkicon"
+              );
+              if (!url) return;
+              if (iconUrlInput) iconUrlInput.value = url;
+              if (iconStatus) {
+                iconStatus.textContent =
+                  fileNameFromUrl(url) || "No icon uploaded.";
+              }
+              await apiUpdateLink(
+                l.id,
+                { icon_url: url },
+                { silent: true, skipRefresh: true }
+              );
+              showMsg(msgLinks, "Icon uploaded", true);
+            } catch (e) {
+              showMsg(msgLinks, "Icon upload failed", false);
+            }
+          });
+        }
           row
             .querySelector('[data-act="save"]')
             .addEventListener("click", async () => {
@@ -2671,15 +2806,26 @@
           100,
           Math.max(0, parseInt($("inTrans").value || "100", 10))
         );
+        const audioBgAlpha = clampPercent(
+          $("inAudioBgAlpha").value ?? DEFAULT_AUDIO_BG_ALPHA,
+          DEFAULT_AUDIO_BG_ALPHA
+        );
         const body = {
           slug: $("inSlug").value.trim(),
           device_type: currentDevice,
           location: $("inLocation").value.trim() || null,
           quote: $("inQuote").value.trim() || null,
           song_url: $("inSong").value.trim() || null,
+          song_icon_url: $("inSongIcon").value.trim() || null,
           show_audio_player: $("inAudioPlayer").checked,
+          audio_player_bg_color: hexOrNull($("inAudioBgColor").value),
+          audio_player_bg_alpha: Number.isFinite(audioBgAlpha)
+            ? audioBgAlpha
+            : DEFAULT_AUDIO_BG_ALPHA,
+          audio_player_text_color: hexOrNull($("inAudioTextColor").value),
+          audio_player_accent_color: hexOrNull($("inAudioAccentColor").value),
           background_url: $("inBg").value.trim() || null,
-          background_is_video: $("inVideo").value === "true",
+          background_is_video: looksLikeVideoUrl($("inBg").value.trim()),
           transparency: 100 - cardAlphaInput,
           name_effect: $("inNameFx").value,
           background_effect: $("inBgFx").value,
@@ -2884,6 +3030,8 @@
             $("inLinkUrl").value = "";
             $("inLinkLabel").value = "";
             $("inLinkIcon").value = "";
+            if ($("fileIcon")) $("fileIcon").value = "";
+            setUploadStatus("linkIconStatus", "", "No icon uploaded.");
             $("inLinkActive").value = "true";
             showMsg(msgLinks, "Link added", true);
             await refreshData();
@@ -3002,6 +3150,24 @@
       }
       boot();
 
+      async function uploadInlineFile(inputEl, endpoint) {
+        if (!inputEl || !inputEl.files || !inputEl.files[0]) return null;
+        if (!currentUser) {
+          const user = await renderAuthHeader();
+          if (!user) throw new Error("Not logged in");
+        }
+        const fd = new FormData();
+        fd.append("file", inputEl.files[0]);
+        const r = await fetch(endpoint, {
+          method: "POST",
+          credentials: "include",
+          body: fd,
+        });
+        if (!r.ok) throw new Error(await r.text());
+        const { url } = await r.json();
+        return url;
+      }
+
       async function uploadFile(inputId, endpoint) {
         const f = $(inputId).files[0];
         if (!f) return null;
@@ -3048,10 +3214,27 @@
             )}`
           );
           $("inSong").value = url;
+          setUploadStatus("songStatus", url, "No song uploaded yet.");
           showMsg(msgMeta, "Song uploaded", true);
         } catch (e) {
           showMsg(msgMeta, "Song upload failed", false);
         }
+      $("fileSongIcon").addEventListener("change", async () => {
+        try {
+          const url = await uploadFile(
+            "fileSongIcon",
+            `/api/users/me/songicon?device=${encodeURIComponent(
+              currentDevice || "pc"
+            )}`
+          );
+          $("inSongIcon").value = url;
+          setUploadStatus("songIconStatus", url, "No icon uploaded.");
+          showMsg(msgMeta, "Song icon uploaded", true);
+        } catch (e) {
+          showMsg(msgMeta, "Song icon upload failed", false);
+        }
+      });
+
       });
 
       $("fileBg").addEventListener("change", async () => {
@@ -3063,7 +3246,7 @@
             )}`
           );
           $("inBg").value = res.url;
-          if (res.is_video) $("inVideo").value = "true";
+          setUploadStatus("bgStatus", res.url, "No background uploaded yet.");
           showMsg(msgMeta, "Background uploaded", true);
         } catch (e) {
           showMsg(msgMeta, "Background upload failed", false);
@@ -3088,6 +3271,7 @@
             )}`
           );
           $("inCursor").value = url;
+          setUploadStatus("cursorStatus", url, "No cursor uploaded.");
           showMsg(msgMeta, "Cursor uploaded", true);
         } catch (e) {
           showMsg(msgMeta, "Cursor upload failed", false);
@@ -3098,6 +3282,7 @@
         try {
           const url = await uploadFile("fileIcon", "/api/users/me/linkicon");
           $("inLinkIcon").value = url;
+          setUploadStatus("linkIconStatus", url, "No icon uploaded.");
           showMsg(msgLinks, "Icon uploaded", true);
         } catch (e) {
           showMsg(msgLinks, "Icon upload failed", false);

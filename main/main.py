@@ -124,6 +124,7 @@ ALLOWED_IMAGE_CT = {
     "image/heif",
 }
 ALLOWED_VIDEO_CT = {"video/mp4", "video/quicktime", "video/webm"}
+VIDEO_EXTENSIONS = (".mp4", ".webm", ".m4v", ".mov")
 MAX_AUDIO_BYTES = 15 * 1024 * 1024  # 15 MB
 MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB (Avatare/Icons)
 MAX_BACKGROUND_BYTES = 50 * 1024 * 1024  # 50 MB (Hintergrund-Video/Bild)
@@ -262,6 +263,10 @@ def _count_db_references(url: str) -> int:
         total += int(cur.fetchone()[0])
         cur.execute("SELECT COUNT(*) FROM linktrees WHERE song_url = %s", (url,))
         total += int(cur.fetchone()[0])
+        cur.execute(
+            "SELECT COUNT(*) FROM linktrees WHERE song_icon_url = %s", (url,)
+        )
+        total += int(cur.fetchone()[0])
         cur.execute("SELECT COUNT(*) FROM linktrees WHERE background_url = %s", (url,))
         total += int(cur.fetchone()[0])
         cur.execute("SELECT COUNT(*) FROM linktrees WHERE cursor_url = %s", (url,))
@@ -322,7 +327,10 @@ def _template_doc_has_url(data: dict, url: str) -> bool:
     for variant in variants:
         if not isinstance(variant, dict):
             continue
-        if any(variant.get(k) == url for k in ("song_url", "background_url", "cursor_url")):
+        if any(
+            variant.get(k) == url
+            for k in ("song_url", "song_icon_url", "background_url", "cursor_url")
+        ):
             return True
         links = variant.get("links") or []
         for link in links:
@@ -330,7 +338,10 @@ def _template_doc_has_url(data: dict, url: str) -> bool:
                 return True
     legacy = data.get("data")
     if isinstance(legacy, dict):
-        if any(legacy.get(k) == url for k in ("song_url", "background_url", "cursor_url")):
+        if any(
+            legacy.get(k) == url
+            for k in ("song_url", "song_icon_url", "background_url", "cursor_url")
+        ):
             return True
         links = legacy.get("links") or []
         for link in links:
@@ -368,6 +379,7 @@ def _collect_template_media_urls() -> tuple[set[str], bool, list[str]]:
             if not isinstance(variant, dict):
                 continue
             _add_local_media_url(variant.get("song_url"), urls)
+            _add_local_media_url(variant.get("song_icon_url"), urls)
             _add_local_media_url(variant.get("background_url"), urls)
             _add_local_media_url(variant.get("cursor_url"), urls)
             links = variant.get("links") or []
@@ -377,6 +389,7 @@ def _collect_template_media_urls() -> tuple[set[str], bool, list[str]]:
         legacy = data.get("data")
         if isinstance(legacy, dict):
             _add_local_media_url(legacy.get("song_url"), urls)
+            _add_local_media_url(legacy.get("song_icon_url"), urls)
             _add_local_media_url(legacy.get("background_url"), urls)
             _add_local_media_url(legacy.get("cursor_url"), urls)
             links = legacy.get("links") or []
@@ -394,6 +407,7 @@ def _collect_media_references() -> tuple[set[str], bool, list[str]]:
             queries = (
                 "SELECT profile_picture FROM users WHERE profile_picture IS NOT NULL",
                 "SELECT song_url FROM linktrees WHERE song_url IS NOT NULL",
+                "SELECT song_icon_url FROM linktrees WHERE song_icon_url IS NOT NULL",
                 "SELECT background_url FROM linktrees WHERE background_url IS NOT NULL",
                 "SELECT cursor_url FROM linktrees WHERE cursor_url IS NOT NULL",
                 "SELECT icon_url FROM linktree_links WHERE icon_url IS NOT NULL",
@@ -690,7 +704,12 @@ class LinktreeCreateIn(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    song_icon_url: Optional[str] = None
     show_audio_player: bool = False
+    audio_player_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    audio_player_bg_alpha: int = Field(60, ge=0, le=100)
+    audio_player_text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    audio_player_accent_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     background_url: Optional[str] = None
     background_is_video: bool = False
     transparency: int = Field(0, ge=0, le=100)
@@ -727,7 +746,12 @@ class LinktreeUpdateIn(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    song_icon_url: Optional[str] = None
     show_audio_player: Optional[bool] = None
+    audio_player_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    audio_player_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
+    audio_player_text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    audio_player_accent_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     background_url: Optional[str] = None
     background_is_video: Optional[bool] = None
     transparency: Optional[int] = Field(None, ge=0, le=100)
@@ -780,7 +804,12 @@ class LinktreeOut(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    song_icon_url: Optional[str] = None
     show_audio_player: bool = False
+    audio_player_bg_color: Optional[str] = None
+    audio_player_bg_alpha: int = 60
+    audio_player_text_color: Optional[str] = None
+    audio_player_accent_color: Optional[str] = None
     background_url: Optional[str] = None
     background_is_video: bool
     transparency: int
@@ -1456,8 +1485,12 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         # Linktree-Stammdaten
         cur.execute(
             """
-            SELECT id, user_id, slug, location, quote, song_url, background_url,
+            SELECT id, user_id, slug, location, quote, song_url, song_icon_url, background_url,
                    COALESCE(show_audio_player, false) AS show_audio_player,
+                   audio_player_bg_color,
+                   COALESCE(audio_player_bg_alpha, 60) AS audio_player_bg_alpha,
+                   audio_player_text_color,
+                   audio_player_accent_color,
                    COALESCE(background_is_video, false) AS background_is_video,
                    COALESCE(transparency, 0)          AS transparency,
                    COALESCE(name_effect, 'none')       AS name_effect,
@@ -1549,6 +1582,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "location": lt.get("location"),
         "quote": lt.get("quote"),
         "song_url": lt.get("song_url"),
+        "song_icon_url": lt.get("song_icon_url"),
         "background_url": lt.get("background_url"),
         "background_is_video": bool(lt.get("background_is_video")),
         "transparency": int(lt.get("transparency") or 0),
@@ -1566,6 +1600,10 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "quote_color": lt.get("quote_color"),
         "cursor_url": lt.get("cursor_url"),
         "show_audio_player": bool(lt.get("show_audio_player", False)),
+        "audio_player_bg_color": lt.get("audio_player_bg_color"),
+        "audio_player_bg_alpha": int(lt.get("audio_player_bg_alpha", 60) or 60),
+        "audio_player_text_color": lt.get("audio_player_text_color"),
+        "audio_player_accent_color": lt.get("audio_player_accent_color"),
         "discord_frame_enabled": bool(lt.get("discord_frame_enabled", False)),
         "discord_decoration_url": decoration_url,
         "discord_presence_enabled": bool(lt.get("discord_presence_enabled", False)),
@@ -2329,6 +2367,13 @@ def _detect_video_ext(b: bytes, content_type: str | None) -> str:
     return ""
 
 
+def _looks_like_video_url(url: str | None) -> bool:
+    if not url:
+        return False
+    lower = str(url).lower()
+    return any(ext in lower for ext in VIDEO_EXTENSIONS)
+
+
 @app.post("/api/users/me/avatar", response_model=UserOut)
 async def upload_avatar(
     file: UploadFile = File(...), current: dict = Depends(require_user)
@@ -2483,7 +2528,12 @@ def get_linktree(
         "location": lt.get("location"),
         "quote": lt.get("quote"),
         "song_url": lt.get("song_url"),
+        "song_icon_url": lt.get("song_icon_url"),
         "show_audio_player": bool(lt.get("show_audio_player", False)),
+        "audio_player_bg_color": lt.get("audio_player_bg_color"),
+        "audio_player_bg_alpha": int(lt.get("audio_player_bg_alpha", 60) or 60),
+        "audio_player_text_color": lt.get("audio_player_text_color"),
+        "audio_player_accent_color": lt.get("audio_player_accent_color"),
         "background_url": lt.get("background_url"),
         "background_is_video": lt.get("background_is_video", False),
         "transparency": lt.get("transparency", 0),
@@ -2545,6 +2595,11 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
         if cur.fetchone():
             raise HTTPException(409, "Slug already in use")
     try:
+        bg_is_video = (
+            _looks_like_video_url(payload.background_url)
+            if payload.background_url
+            else payload.background_is_video
+        )
         linktree_id = db.create_linktree(
             user_id=user["id"],
             slug=payload.slug,
@@ -2552,9 +2607,14 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             location=payload.location,
             quote=payload.quote,
             song_url=payload.song_url,
+            song_icon_url=payload.song_icon_url,
             show_audio_player=payload.show_audio_player,
+            audio_player_bg_color=payload.audio_player_bg_color,
+            audio_player_bg_alpha=payload.audio_player_bg_alpha,
+            audio_player_text_color=payload.audio_player_text_color,
+            audio_player_accent_color=payload.audio_player_accent_color,
             background_url=payload.background_url,
-            background_is_video=payload.background_is_video,
+            background_is_video=bg_is_video,
             transparency=payload.transparency,
             name_effect=payload.name_effect,
             background_effect=payload.background_effect,
@@ -2721,6 +2781,10 @@ def update_link_ep(
     new_icon = payload.icon_url if payload.icon_url is not None else old_icon
 
     fields = payload.model_dump(exclude_unset=True)
+    if "background_url" in fields:
+        fields["background_is_video"] = _looks_like_video_url(
+            fields.get("background_url")
+        )
     if "url" in fields and fields["url"] is not None:
         fields["url"] = str(fields["url"])
 
@@ -2862,6 +2926,60 @@ async def upload_song(
         raise HTTPException(404, "Linktree for device not found")
 
     # Cleanup
+    if old_url and old_url != url:
+        _delete_if_unreferenced(old_url)
+
+    return {"url": url}
+
+
+@app.post("/api/users/me/songicon")
+async def upload_song_icon(
+    file: UploadFile = File(...),
+    current: dict = Depends(require_user),
+    device: DeviceType | None = Query(None, description="pc or mobile"),
+):
+    _ensure_pg()
+    if file.content_type not in ALLOWED_IMAGE_CT:
+        raise HTTPException(415, "Unsupported image type")
+    data = await file.read()
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(413, "File too large (max 5MB)")
+    ext = _detect_image_ext(data)
+    if not ext:
+        raise HTTPException(400, "File is not a valid image")
+    target_device = device or "pc"
+
+    old_url = None
+    try:
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT lt.song_icon_url
+                  FROM linktrees lt
+                 WHERE lt.user_id = %s AND lt.device_type = %s
+            """,
+                (current["id"], target_device),
+            )
+            row = cur.fetchone()
+            old_url = row[0] if row else None
+            if row is None:
+                raise HTTPException(404, "Linktree for device not found")
+    except HTTPException:
+        raise
+    except Exception:
+        old_url = None
+
+    fname = f"user{current['id']}_songicon_{uuid.uuid4().hex}.{ext}"
+    out_path = UPLOAD_DIR / fname
+    out_path.write_bytes(data)
+    url = f"/media/{UPLOAD_DIR.name}/{fname}"
+
+    updated = db.update_linktree_by_user_and_device(
+        current["id"], target_device, song_icon_url=url
+    )
+    if not updated:
+        raise HTTPException(404, "Linktree for device not found")
+
     if old_url and old_url != url:
         _delete_if_unreferenced(old_url)
 
@@ -3201,17 +3319,19 @@ def update_linktree_ep(
 
     # Vorherige Medien-URLs zum Aufräumen merken + device_type
     old_song = None
+    old_song_icon = None
     old_bg = None
     current_device_type = None
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
         cur.execute(
-            "SELECT song_url, background_url, device_type FROM linktrees WHERE id=%s",
+            "SELECT song_url, song_icon_url, background_url, device_type FROM linktrees WHERE id=%s",
             (linktree_id,),
         )
         row = cur.fetchone()
         if not row:
             raise HTTPException(404, "Linktree not found")
         old_song = row.get("song_url")
+        old_song_icon = row.get("song_icon_url")
         old_bg = row.get("background_url")
         current_device_type = row.get("device_type") or "pc"
 
@@ -3248,9 +3368,12 @@ def update_linktree_ep(
 
     # Medien-Cleanup, falls URLs gewechselt wurden
     new_song = fields.get("song_url", old_song)
+    new_song_icon = fields.get("song_icon_url", old_song_icon)
     new_bg = fields.get("background_url", old_bg)
     if old_song and old_song != new_song:
         _delete_if_unreferenced(old_song)
+    if old_song_icon and old_song_icon != new_song_icon:
+        _delete_if_unreferenced(old_song_icon)
     if old_bg and old_bg != new_bg:
         _delete_if_unreferenced(old_bg)
 
@@ -3304,7 +3427,12 @@ class TemplateVariantIn(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    song_icon_url: Optional[str] = None
     show_audio_player: bool = False
+    audio_player_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    audio_player_bg_alpha: int = Field(60, ge=0, le=100)
+    audio_player_text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    audio_player_accent_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     background_url: str = Field(..., min_length=1)
     background_is_video: bool = False
     transparency: int = Field(0, ge=0, le=100)
@@ -3385,6 +3513,7 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("background_effect", "none")
     data.setdefault("display_name_mode", "slug")
     data.setdefault("link_bg_alpha", 100)
+    data.setdefault("audio_player_bg_alpha", 60)
     data.setdefault("visit_counter_bg_alpha", 20)
     data.setdefault("show_visit_counter", False)
     data.setdefault("discord_frame_enabled", False)
@@ -3499,7 +3628,12 @@ def _extract_linktree_fields(data: dict) -> dict:
         "location",
         "quote",
         "song_url",
+        "song_icon_url",
         "show_audio_player",
+        "audio_player_bg_color",
+        "audio_player_bg_alpha",
+        "audio_player_text_color",
+        "audio_player_accent_color",
         "background_url",
         "background_is_video",
         "transparency",

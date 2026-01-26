@@ -82,7 +82,13 @@ CREATE TABLE IF NOT EXISTS linktrees (
     location            TEXT,
     quote               TEXT,
     song_url            TEXT,                     -- Audio-URL
+    song_icon_url       TEXT,
     show_audio_player   BOOLEAN NOT NULL DEFAULT FALSE,
+    audio_player_bg_color TEXT,
+    audio_player_bg_alpha SMALLINT NOT NULL DEFAULT 60
+                        CHECK (audio_player_bg_alpha BETWEEN 0 AND 100),
+    audio_player_text_color TEXT,
+    audio_player_accent_color TEXT,
     background_url      TEXT,                     -- Bild/GIF/Video
     background_is_video BOOLEAN NOT NULL DEFAULT FALSE,
     transparency        SMALLINT NOT NULL DEFAULT 0
@@ -334,6 +340,10 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS song_icon_url TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS link_bg_alpha SMALLINT;
                 """)
                 cur.execute("""
@@ -400,6 +410,44 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS show_audio_player BOOLEAN NOT NULL DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS audio_player_bg_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS audio_player_bg_alpha SMALLINT;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET audio_player_bg_alpha = 60
+   WHERE audio_player_bg_alpha IS NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN audio_player_bg_alpha SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN audio_player_bg_alpha SET DEFAULT 60;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_audio_player_bg_alpha_range;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_audio_player_bg_alpha_range
+  CHECK (audio_player_bg_alpha BETWEEN 0 AND 100);
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS audio_player_text_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS audio_player_accent_color TEXT;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1366,7 +1414,12 @@ class PgGifDB:
         location: str | None = None,
         quote: str | None = None,
         song_url: str | None = None,
+        song_icon_url: str | None = None,
         show_audio_player: bool = False,
+        audio_player_bg_color: str | None = None,
+        audio_player_bg_alpha: int = 60,
+        audio_player_text_color: str | None = None,
+        audio_player_accent_color: str | None = None,
         background_url: str | None = None,
         background_is_video: bool = False,
         transparency: int = 0,
@@ -1399,7 +1452,8 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, song_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, song_url, song_icon_url, show_audio_player,
+                    audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,          -- <-- NEU
@@ -1425,7 +1479,8 @@ class PgGifDB:
                     visit_counter_bg_alpha
                 )
                 VALUES (
-                    %s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,
                     %s,%s,
                     %s,%s,%s,
                     %s,
@@ -1453,7 +1508,8 @@ class PgGifDB:
                 RETURNING id
                 """,
                 (
-                    user_id, slug, device_type, location, quote, song_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, song_url, song_icon_url, show_audio_player,
+                    audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,
@@ -1496,7 +1552,12 @@ class PgGifDB:
             "location",
             "quote",
             "song_url",
+            "song_icon_url",
             "show_audio_player",
+            "audio_player_bg_color",
+            "audio_player_bg_alpha",
+            "audio_player_text_color",
+            "audio_player_accent_color",
             "background_url",
             "background_is_video",
             "transparency",
@@ -1561,7 +1622,8 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, song_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, song_url, song_icon_url, show_audio_player,
+                    audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode, custom_display_name,
@@ -1571,7 +1633,8 @@ class PgGifDB:
                     show_visit_counter,
                     visit_counter_color, visit_counter_bg_color, visit_counter_bg_alpha
                 ) VALUES (
-                    %s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,
                     %s,%s,
                     %s,%s,%s,
                     %s,%s,
@@ -1590,7 +1653,12 @@ class PgGifDB:
                     src.get("location"),
                     src.get("quote"),
                     src.get("song_url"),
+                    src.get("song_icon_url"),
                     src.get("show_audio_player", False),
+                    src.get("audio_player_bg_color"),
+                    src.get("audio_player_bg_alpha", 60),
+                    src.get("audio_player_text_color"),
+                    src.get("audio_player_accent_color"),
                     src.get("background_url"),
                     src.get("background_is_video"),
                     src.get("transparency"),
