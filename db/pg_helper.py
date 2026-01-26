@@ -200,6 +200,9 @@ CREATE TABLE IF NOT EXISTS discord_accounts (
     avatar_decoration   JSONB,                -- Rohdaten, falls du sie speichern willst
     public_flags        INTEGER NOT NULL DEFAULT 0,
     premium_type        SMALLINT NOT NULL DEFAULT 0,
+    presence_status     TEXT,
+    status_text         TEXT,
+    presence_updated_at TIMESTAMPTZ,
     access_token        TEXT NOT NULL,
     refresh_token       TEXT NOT NULL,
     token_expires_at    TIMESTAMP NOT NULL,
@@ -554,6 +557,18 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE discord_accounts
   ALTER COLUMN premium_type SET DEFAULT 0;
+                """)
+                cur.execute("""
+  ALTER TABLE discord_accounts
+  ADD COLUMN IF NOT EXISTS presence_status TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE discord_accounts
+  ADD COLUMN IF NOT EXISTS status_text TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE discord_accounts
+  ADD COLUMN IF NOT EXISTS presence_updated_at TIMESTAMPTZ;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1397,6 +1412,35 @@ class PgGifDB:
                 "SELECT * FROM discord_accounts WHERE user_id = %s LIMIT 1", (user_id,)
             )
             return cur.fetchone()
+
+    def list_discord_user_ids(self) -> list[str]:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute("SELECT discord_user_id FROM discord_accounts")
+            rows = cur.fetchall() or []
+            return [r[0] for r in rows if r and r[0]]
+
+    def update_discord_presence(
+        self,
+        discord_user_id: str,
+        *,
+        presence_status: str,
+        status_text: str | None,
+        updated_at: datetime | None = None,
+    ) -> bool:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE discord_accounts
+                   SET presence_status = %s,
+                       status_text = %s,
+                       presence_updated_at = COALESCE(%s, now())
+                 WHERE discord_user_id = %s
+                """,
+                (presence_status, status_text, updated_at, discord_user_id),
+            )
+            updated = cur.rowcount > 0
+            conn.commit()
+            return updated
 
     def delete_discord_account(self, user_id: int) -> None:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:

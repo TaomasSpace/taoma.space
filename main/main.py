@@ -10,6 +10,12 @@ import json, html
 from datetime import datetime, timezone, timedelta
 from fastapi import BackgroundTasks
 import asyncio, uuid
+import random
+import time
+try:
+    import websockets
+except Exception:
+    websockets = None
 from pydantic import BaseModel, Field
 from typing import Any
 from fastapi import FastAPI, HTTPException, Query, Header, Depends
@@ -80,6 +86,10 @@ class DiscordAccount(Base):
     discord_global_name = Column(String(100))
     avatar_hash = Column(String(128))
     avatar_decoration = Column(Text)  # oder JSON, je nach DB/Driver
+
+    presence_status = Column(String(16))
+    status_text = Column(Text)
+    presence_updated_at = Column(DateTime)
 
     access_token = Column(Text, nullable=False)
     refresh_token = Column(Text, nullable=False)
@@ -648,6 +658,207 @@ def _discord_badges_from_account(acct: dict) -> list[dict]:
     if premium > 0:
         badges.append({"code": "nitro", "label": "Discord Nitro", "icon_url": None})
     return badges
+
+
+DISCORD_BOT_TOKEN = (os.getenv("DISCORD_BOT_TOKEN") or "").strip()
+DISCORD_GATEWAY_URL = "wss://gateway.discord.gg/?v=10&encoding=json"
+DISCORD_PRESENCE_VALUES = {"online", "idle", "dnd", "offline"}
+DISCORD_STATUS_TEXT_MAX = 140
+DISCORD_INTENTS = (1 << 1) | (1 << 8)  # GUILD_MEMBERS + GUILD_PRESENCES
+
+
+def _normalize_presence_status(raw: str | None) -> str:
+    val = (raw or "").lower().strip()
+    return val if val in DISCORD_PRESENCE_VALUES else "offline"
+
+
+def _extract_custom_status(activities: list[dict] | None) -> str | None:
+    for act in activities or []:
+        if act.get("type") == 4:
+            text = (act.get("state") or "").strip()
+            if text:
+                return text[:DISCORD_STATUS_TEXT_MAX]
+            return None
+    return None
+
+
+def _resolve_discord_presence(
+    lt: dict, acct: dict | None
+) -> tuple[str, str | None]:
+    if not acct:
+        return ("offline", None)
+    presence = _normalize_presence_status(acct.get("presence_status"))
+    status_text = (acct.get("status_text") or "").strip() or None
+    return (presence, status_text)
+
+
+class DiscordPresenceGateway:
+    def __init__(self, token: str, db_ref: PgGifDB):
+        self._token = token
+        self._db = db_ref
+        self._task: asyncio.Task | None = None
+        self._seq: int | None = None
+        self._session_id: str | None = None
+        self._resume_url: str | None = None
+        self._known_ids: set[str] = set()
+        self._presence_cache: dict[str, tuple[str, str | None]] = {}
+        self._last_refresh = 0.0
+
+    def start(self) -> None:
+        if not self._token:
+            logger.warning("Discord presence sync disabled: DISCORD_BOT_TOKEN missing")
+            return
+        if websockets is None:
+            logger.warning("Discord presence sync disabled: websockets not available")
+            return
+        if not isinstance(self._db, PgGifDB):
+            logger.warning("Discord presence sync disabled: DB not available")
+            return
+        if self._task:
+            return
+        self._task = asyncio.create_task(self._run_forever())
+
+    def stop(self) -> None:
+        if self._task:
+            self._task.cancel()
+
+    async def _run_forever(self) -> None:
+        backoff = 2.0
+        while True:
+            try:
+                await self._run_gateway()
+                backoff = 2.0
+            except asyncio.CancelledError:
+                break
+            except Exception as exc:
+                logger.warning("Discord presence gateway error: %s", exc)
+                await asyncio.sleep(backoff)
+                backoff = min(60.0, backoff * 2)
+
+    def _refresh_known_ids(self, force: bool = False) -> None:
+        now = time.monotonic()
+        if not force and now - self._last_refresh < 120:
+            return
+        try:
+            ids = self._db.list_discord_user_ids()
+            self._known_ids = set(ids)
+            self._last_refresh = now
+        except Exception as exc:
+            logger.warning("Discord presence: failed to refresh linked IDs: %s", exc)
+
+    async def _send_json(self, ws, payload: dict) -> None:
+        await ws.send(json.dumps(payload))
+
+    async def _run_gateway(self) -> None:
+        url = self._resume_url or DISCORD_GATEWAY_URL
+        self._refresh_known_ids(force=True)
+        async with websockets.connect(url, max_size=2**20) as ws:
+            hello_raw = await ws.recv()
+            hello = json.loads(hello_raw)
+            if hello.get("op") != 10:
+                raise RuntimeError("Discord gateway did not send HELLO")
+            interval = (hello.get("d") or {}).get("heartbeat_interval", 45000) / 1000
+            heartbeat_task = asyncio.create_task(self._heartbeat(ws, interval))
+            try:
+                if self._session_id and self._seq:
+                    await self._send_json(
+                        ws,
+                        {
+                            "op": 6,
+                            "d": {
+                                "token": self._token,
+                                "session_id": self._session_id,
+                                "seq": self._seq,
+                            },
+                        },
+                    )
+                else:
+                    await self._send_json(
+                        ws,
+                        {
+                            "op": 2,
+                            "d": {
+                                "token": self._token,
+                                "intents": DISCORD_INTENTS,
+                                "properties": {
+                                    "$os": "linux",
+                                    "$browser": "taoma",
+                                    "$device": "taoma",
+                                },
+                            },
+                        },
+                    )
+                async for raw in ws:
+                    payload = json.loads(raw)
+                    op = payload.get("op")
+                    t = payload.get("t")
+                    d = payload.get("d")
+                    s = payload.get("s")
+                    if s is not None:
+                        self._seq = s
+
+                    if op == 0:
+                        await self._handle_dispatch(t, d)
+                    elif op == 1:
+                        await self._send_json(ws, {"op": 1, "d": self._seq})
+                    elif op == 7:
+                        logger.info("Discord gateway requested reconnect")
+                        break
+                    elif op == 9:
+                        self._session_id = None
+                        self._seq = None
+                        await asyncio.sleep(random.uniform(1, 5))
+                        break
+            finally:
+                heartbeat_task.cancel()
+
+    async def _heartbeat(self, ws, interval: float) -> None:
+        while True:
+            await asyncio.sleep(interval)
+            try:
+                await self._send_json(ws, {"op": 1, "d": self._seq})
+            except Exception:
+                break
+
+    async def _handle_dispatch(self, event: str | None, data: dict | None) -> None:
+        if not event:
+            return
+        if event == "READY":
+            if isinstance(data, dict):
+                self._session_id = data.get("session_id") or self._session_id
+                self._resume_url = data.get("resume_gateway_url") or self._resume_url
+            self._refresh_known_ids(force=True)
+            return
+        if event == "RESUMED":
+            self._refresh_known_ids(force=True)
+            return
+        if event != "PRESENCE_UPDATE":
+            return
+        if not isinstance(data, dict):
+            return
+        user = data.get("user") or {}
+        discord_user_id = user.get("id")
+        if not discord_user_id:
+            return
+        self._refresh_known_ids()
+        if self._known_ids and discord_user_id not in self._known_ids:
+            return
+        presence = _normalize_presence_status(data.get("status"))
+        status_text = _extract_custom_status(data.get("activities") or [])
+        cache_key = self._presence_cache.get(discord_user_id)
+        new_key = (presence, status_text)
+        if cache_key == new_key:
+            return
+        try:
+            updated = self._db.update_discord_presence(
+                discord_user_id,
+                presence_status=presence,
+                status_text=status_text,
+            )
+            if updated:
+                self._presence_cache[discord_user_id] = new_key
+        except Exception as exc:
+            logger.warning("Discord presence update failed: %s", exc)
 
 ALLOWED_ORIGINS = [
     o.strip()
@@ -1573,6 +1784,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
     discord_badges = (
         _discord_badges_from_account(discord_acct) if discord_linked else []
     )
+    presence_value, status_text = _resolve_discord_presence(lt, discord_acct)
 
     return {
         "id": lt["id"],
@@ -1607,9 +1819,9 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "discord_frame_enabled": bool(lt.get("discord_frame_enabled", False)),
         "discord_decoration_url": decoration_url,
         "discord_presence_enabled": bool(lt.get("discord_presence_enabled", False)),
-        "discord_presence": lt.get("discord_presence") or "online",
+        "discord_presence": presence_value,
         "discord_status_enabled": bool(lt.get("discord_status_enabled", False)),
-        "discord_status_text": lt.get("discord_status_text"),
+        "discord_status_text": status_text,
         "discord_badges_enabled": bool(lt.get("discord_badges_enabled", False)),
         "discord_badges": discord_badges if lt.get("discord_badges_enabled") else [],
         "discord_linked": discord_linked,
@@ -2174,6 +2386,8 @@ def discord_status(current: dict = Depends(require_user)):
     acct = _load_discord_account(current["id"])
     linked = bool(acct)
     badges = _discord_badges_from_account(acct) if linked else []
+    presence_value, status_text = _resolve_discord_presence({}, acct if linked else None)
+
     return {
         "linked": linked,
         "configured": _discord_configured(),
@@ -2182,6 +2396,8 @@ def discord_status(current: dict = Depends(require_user)):
         "global_name": acct.get("discord_global_name") if linked else None,
         "decoration_url": acct.get("decoration_url") if linked else None,
         "badges": badges,
+        "presence": presence_value if linked else "offline",
+        "status_text": status_text if linked else None,
     }
 
 
@@ -2553,9 +2769,9 @@ def get_linktree(
         "discord_frame_enabled": frame_enabled,
         "discord_decoration_url": decoration_url if frame_enabled else None,
         "discord_presence_enabled": bool(lt.get("discord_presence_enabled", False)),
-        "discord_presence": lt.get("discord_presence") or "online",
+        "discord_presence": presence_value,
         "discord_status_enabled": bool(lt.get("discord_status_enabled", False)),
-        "discord_status_text": lt.get("discord_status_text"),
+        "discord_status_text": status_text,
         "discord_badges_enabled": bool(lt.get("discord_badges_enabled", False)),
         "discord_badges": discord_badges if lt.get("discord_badges_enabled") else [],
         "discord_linked": discord_linked,
@@ -3382,6 +3598,7 @@ def update_linktree_ep(
 firestoreDB: Any | None = None
 TEMPLATE_COLLECTION = "LinktreeTemplate"
 TEMPLATE_SAVES_COLLECTION = "LinktreeTemplateSaves"
+discord_gateway: DiscordPresenceGateway | None = None
 
 
 def _fs():
@@ -3412,6 +3629,19 @@ async def _startup_media_gc():
         )
     except Exception as exc:
         logger.warning("Startup media GC failed: %s", exc)
+    global discord_gateway
+    try:
+        if discord_gateway is None:
+            discord_gateway = DiscordPresenceGateway(DISCORD_BOT_TOKEN, db)
+        discord_gateway.start()
+    except Exception as exc:
+        logger.warning("Discord presence gateway not started: %s", exc)
+
+
+@app.on_event("shutdown")
+async def _shutdown_presence_gateway():
+    if discord_gateway:
+        discord_gateway.stop()
 
 
 class TemplateLinkIn(BaseModel):

@@ -1998,7 +1998,6 @@
                 video.autoplay = false;
                 video.muted = true;
                 video.loop = true;
-                video.setAttribute("autoplay", "");
                 video.setAttribute("muted", "");
                 video.setAttribute("playsinline", "");
                 video.setAttribute("webkit-playsinline", "");
@@ -2008,7 +2007,6 @@
                 }
                 bgEl.appendChild(video);
                 bgVideo = video;
-                video.play().catch(() => {});
                 needsGate = true;
                 if (!visibilityHandlerAdded) {
                   document.addEventListener("visibilitychange", () => {

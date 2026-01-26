@@ -1464,16 +1464,8 @@
                 <input type="checkbox" id="inDiscordPresence" />
                 <span>Show my Discord activity status on my avatar</span>
               </label>
-              <div class="grid cols-2" style="margin-top: 0.5rem">
-                <div class="field">
-                  <label for="inDiscordPresenceValue">Activity status</label>
-                  <select id="inDiscordPresenceValue" class="select">
-                    <option value="online">Online</option>
-                    <option value="idle">Idle</option>
-                    <option value="dnd">Do not disturb</option>
-                    <option value="offline">Offline</option>
-                  </select>
-                </div>
+              <div class="help" style="margin-top: 0.35rem">
+                Status is read automatically from Discord (last known).
               </div>
               <label
                 class="row"
@@ -1482,15 +1474,8 @@
                 <input type="checkbox" id="inDiscordStatus" />
                 <span>Show my Discord status line on the linktree</span>
               </label>
-              <div class="field" style="margin-top: 0.35rem">
-                <label for="inDiscordStatusText">Status text</label>
-                <input
-                  id="inDiscordStatusText"
-                  class="input"
-                  maxlength="140"
-                  placeholder="e.g. Building something cool"
-                />
-                <div class="help">Leave empty to show only the activity status.</div>
+              <div class="help" style="margin-top: 0.35rem">
+                Custom status text is pulled from Discord automatically.
               </div>
               <label
                 class="row"
@@ -2070,9 +2055,7 @@
         setUploadStatus("cursorStatus", lt.cursor_url, "No cursor uploaded.");
         $("inDiscordFrame").checked = !!lt.discord_frame_enabled;
         $("inDiscordPresence").checked = !!lt.discord_presence_enabled;
-        $("inDiscordPresenceValue").value = lt.discord_presence || "online";
         $("inDiscordStatus").checked = !!lt.discord_status_enabled;
-        $("inDiscordStatusText").value = lt.discord_status_text || "";
         $("inDiscordBadges").checked = !!lt.discord_badges_enabled;
         $("inShowCounter").checked = !!lt.show_visit_counter;
         const vcEl = document.getElementById("inVisitCount");
@@ -2150,9 +2133,7 @@
           cursor_url: lt.cursor_url || null,
           discord_frame_enabled: !!lt.discord_frame_enabled,
           discord_presence_enabled: !!lt.discord_presence_enabled,
-          discord_presence: lt.discord_presence || "online",
           discord_status_enabled: !!lt.discord_status_enabled,
-          discord_status_text: lt.discord_status_text || null,
           discord_badges_enabled: !!lt.discord_badges_enabled,
           show_visit_counter: !!lt.show_visit_counter,
           visit_counter_color: hexOrNull(lt.visit_counter_color),
@@ -2223,9 +2204,7 @@
           cursor_url: $("inCursor").value.trim() || null,
           discord_frame_enabled: $("inDiscordFrame").checked,
           discord_presence_enabled: $("inDiscordPresence").checked,
-          discord_presence: $("inDiscordPresenceValue").value || "online",
           discord_status_enabled: $("inDiscordStatus").checked,
-          discord_status_text: $("inDiscordStatusText").value.trim() || null,
           discord_badges_enabled: $("inDiscordBadges").checked,
           show_visit_counter: $("inShowCounter").checked,
           visit_counter_color: hexOrNull($("inCounterColor").value),
@@ -2647,9 +2626,7 @@
         const previewEl = $("discordPreview");
         const toggleEl = $("inDiscordFrame");
         const presenceToggle = $("inDiscordPresence");
-        const presenceValue = $("inDiscordPresenceValue");
         const statusToggle = $("inDiscordStatus");
-        const statusText = $("inDiscordStatusText");
         const badgesToggle = $("inDiscordBadges");
         const linkBtn = $("btnDiscordLink");
         const unlinkBtn = $("btnDiscordUnlink");
@@ -2680,14 +2657,6 @@
         if (badgesToggle) {
           badgesToggle.disabled = !linked;
           if (!linked) badgesToggle.checked = false;
-        }
-        if (presenceValue) {
-          presenceValue.disabled =
-            !linked || !(presenceToggle && presenceToggle.checked);
-        }
-        if (statusText) {
-          statusText.disabled =
-            !linked || !(statusToggle && statusToggle.checked);
         }
         if (previewEl) {
           previewEl.innerHTML = "";
@@ -2842,9 +2811,7 @@
           cursor_url: $("inCursor").value.trim() || null,
           discord_frame_enabled: $("inDiscordFrame").checked,
           discord_presence_enabled: $("inDiscordPresence").checked,
-          discord_presence: $("inDiscordPresenceValue").value || "online",
           discord_status_enabled: $("inDiscordStatus").checked,
-          discord_status_text: $("inDiscordStatusText").value.trim() || null,
           discord_badges_enabled: $("inDiscordBadges").checked,
           show_visit_counter: $("inShowCounter").checked,
           visit_counter_color: $("inCounterColor").value || null,
