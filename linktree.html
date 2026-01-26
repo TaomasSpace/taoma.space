@@ -274,8 +274,8 @@
       }
 
       .audio-icon {
-        width: 24px;
-        height: 24px;
+        width: 50px;
+        height: 50px;
         border-radius: 6px;
         object-fit: cover;
         display: block;
@@ -2095,13 +2095,10 @@
             }
           }
           if (showAudioPlayer && audioTitle) {
-            if (songIconUrl) {
-              audioTitle.textContent = "";
-              audioTitle.style.display = "none";
-            } else {
-              audioTitle.style.display = "";
-              audioTitle.textContent = getAudioTitle(songUrl);
-            }
+            const songName = (data.song_name || "").trim();
+            const title = songName || getAudioTitle(songUrl);
+            audioTitle.style.display = "";
+            audioTitle.textContent = title || "Audio";
           }
           if (songUrl) {
             bgAudio = document.createElement("audio");

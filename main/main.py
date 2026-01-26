@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 from pydantic import BaseModel, EmailStr, Field
 import os, httpx
+import re
 from dotenv import load_dotenv
 import logging
 import json, html
@@ -255,6 +256,26 @@ def _path_from_media_url(url: str) -> pathlib.Path | None:
     except Exception:
         return None
     return p
+
+
+FILENAME_SAFE_RE = re.compile(r"[^A-Za-z0-9._ ()-]+")
+
+
+def _clean_upload_filename(name: str | None) -> str | None:
+    if not name:
+        return None
+    base = os.path.basename(str(name)).strip().replace("\x00", "")
+    if not base:
+        return None
+    cleaned = FILENAME_SAFE_RE.sub("", base)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    if not cleaned:
+        cleaned = "".join(ch for ch in base if ch.isprintable()).strip()
+    if not cleaned:
+        return None
+    if len(cleaned) > 120:
+        cleaned = cleaned[:120].rstrip()
+    return cleaned
 
 
 def _add_local_media_url(url: str | None, bucket: set[str]) -> None:
@@ -939,6 +960,7 @@ class LinktreeCreateIn(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
     show_audio_player: bool = False
     audio_player_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -981,6 +1003,7 @@ class LinktreeUpdateIn(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
     show_audio_player: Optional[bool] = None
     audio_player_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -1039,6 +1062,7 @@ class LinktreeOut(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    song_name: Optional[str] = None
     song_icon_url: Optional[str] = None
     show_audio_player: bool = False
     audio_player_bg_color: Optional[str] = None
@@ -1720,7 +1744,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         # Linktree-Stammdaten
         cur.execute(
             """
-            SELECT id, user_id, slug, location, quote, song_url, song_icon_url, background_url,
+            SELECT id, user_id, slug, location, quote, song_url, song_name, song_icon_url, background_url,
                    COALESCE(show_audio_player, false) AS show_audio_player,
                    audio_player_bg_color,
                    COALESCE(audio_player_bg_alpha, 60) AS audio_player_bg_alpha,
@@ -1818,6 +1842,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "location": lt.get("location"),
         "quote": lt.get("quote"),
         "song_url": lt.get("song_url"),
+        "song_name": lt.get("song_name"),
         "song_icon_url": lt.get("song_icon_url"),
         "background_url": lt.get("background_url"),
         "background_is_video": bool(lt.get("background_is_video")),
@@ -2770,6 +2795,7 @@ def get_linktree(
         "location": lt.get("location"),
         "quote": lt.get("quote"),
         "song_url": lt.get("song_url"),
+        "song_name": lt.get("song_name"),
         "song_icon_url": lt.get("song_icon_url"),
         "show_audio_player": bool(lt.get("show_audio_player", False)),
         "audio_player_bg_color": lt.get("audio_player_bg_color"),
@@ -2842,6 +2868,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             if payload.background_url
             else payload.background_is_video
         )
+        song_name = _clean_upload_filename(payload.song_name)
         linktree_id = db.create_linktree(
             user_id=user["id"],
             slug=payload.slug,
@@ -2849,6 +2876,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             location=payload.location,
             quote=payload.quote,
             song_url=payload.song_url,
+            song_name=song_name,
             song_icon_url=payload.song_icon_url,
             show_audio_player=payload.show_audio_player,
             audio_player_bg_color=payload.audio_player_bg_color,
@@ -3023,6 +3051,11 @@ def update_link_ep(
     new_icon = payload.icon_url if payload.icon_url is not None else old_icon
 
     fields = payload.model_dump(exclude_unset=True)
+    if "song_name" in fields:
+        fields["song_name"] = _clean_upload_filename(fields.get("song_name"))
+    if "song_url" in fields and not fields.get("song_url"):
+        fields["song_url"] = None
+        fields["song_name"] = None
     if "background_url" in fields:
         fields["background_is_video"] = _looks_like_video_url(
             fields.get("background_url")
@@ -3128,6 +3161,7 @@ async def upload_song(
     if len(data) > MAX_AUDIO_BYTES:
         raise HTTPException(413, "File too large (max 15MB)")
     target_device = device or "pc"
+    original_name = _clean_upload_filename(file.filename)
 
     old_url = None
     try:
@@ -3162,7 +3196,7 @@ async def upload_song(
     out_path.write_bytes(data)
     url = f"/media/{UPLOAD_DIR.name}/{fname}"
     updated = db.update_linktree_by_user_and_device(
-        current["id"], target_device, song_url=url
+        current["id"], target_device, song_url=url, song_name=original_name
     )
     if not updated:
         raise HTTPException(404, "Linktree for device not found")
@@ -3171,7 +3205,7 @@ async def upload_song(
     if old_url and old_url != url:
         _delete_if_unreferenced(old_url)
 
-    return {"url": url}
+    return {"url": url, "name": original_name}
 
 
 @app.post("/api/users/me/songicon")
@@ -3683,6 +3717,7 @@ class TemplateVariantIn(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
     show_audio_player: bool = False
     audio_player_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -3884,6 +3919,7 @@ def _extract_linktree_fields(data: dict) -> dict:
         "location",
         "quote",
         "song_url",
+        "song_name",
         "song_icon_url",
         "show_audio_player",
         "audio_player_bg_color",

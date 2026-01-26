@@ -3,3 +3,5 @@ main/__pycache__/main.cpython-312.pyc
 node_modules/
 main/__pycache__/firepbase.cpython-312.pyc
 db/__pycache__/db_helper.cpython-312.pyc
+db/__pycache__/pg_helper.cpython-312.pyc
+db/__pycache__/pg_helper.cpython-312.pyc

@@ -1216,6 +1216,7 @@
               <label for="fileSong">Upload Song</label>
               <input type="file" id="fileSong" accept="audio/*" />
               <input type="hidden" id="inSong" />
+              <input type="hidden" id="inSongName" />
               <div id="songStatus" class="preview-note muted">
                 No song uploaded yet.
               </div>
@@ -2003,10 +2004,11 @@
         }
       }
 
-      function setUploadStatus(id, url, emptyText) {
+      function setUploadStatus(id, url, emptyText, displayName) {
         const el = $(id);
         if (!el) return;
-        const name = fileNameFromUrl(url || "");
+        const preferred = String(displayName || "").trim();
+        const name = preferred || fileNameFromUrl(url || "");
         el.textContent = name || emptyText;
       }
 
@@ -2033,6 +2035,7 @@
         $("inLocation").value = lt.location || "";
         $("inQuote").value = lt.quote || "";
         $("inSong").value = lt.song_url || "";
+        $("inSongName").value = lt.song_name || "";
         $("inSongIcon").value = lt.song_icon_url || "";
         $("inAudioPlayer").checked = !!lt.show_audio_player;
         $("inAudioBgColor").value =
@@ -2070,7 +2073,12 @@
             ? lt.link_bg_alpha
             : 100;
         $("inCursor").value = lt.cursor_url || "";
-        setUploadStatus("songStatus", lt.song_url, "No song uploaded yet.");
+        setUploadStatus(
+          "songStatus",
+          lt.song_url,
+          "No song uploaded yet.",
+          lt.song_name
+        );
         setUploadStatus("songIconStatus", lt.song_icon_url, "No icon uploaded.");
         setUploadStatus(
           "bgStatus",
@@ -2129,6 +2137,7 @@
           location: lt.location || "",
           quote: lt.quote || "",
           song_url: lt.song_url || "",
+          song_name: lt.song_name || "",
           song_icon_url: lt.song_icon_url || "",
           show_audio_player: !!lt.show_audio_player,
           audio_player_bg_color: hexOrNull(lt.audio_player_bg_color),
@@ -2202,6 +2211,7 @@
           location: $("inLocation").value.trim() || "",
           quote: $("inQuote").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
+          song_name: $("inSongName").value.trim() || "",
           song_icon_url: $("inSongIcon").value.trim() || null,
           show_audio_player: $("inAudioPlayer").checked,
           audio_player_bg_color: hexOrNull($("inAudioBgColor").value),
@@ -2827,6 +2837,7 @@
           location: $("inLocation").value.trim() || null,
           quote: $("inQuote").value.trim() || null,
           song_url: $("inSong").value.trim() || null,
+          song_name: $("inSongName").value.trim() || null,
           song_icon_url: $("inSongIcon").value.trim() || null,
           show_audio_player: $("inAudioPlayer").checked,
           audio_player_bg_color: hexOrNull($("inAudioBgColor").value),
@@ -3192,8 +3203,16 @@
           body: fd,
         });
         if (!r.ok) throw new Error(await r.text());
-        const { url } = await r.json();
-        return url;
+        const data = await r.json();
+        if (!data) return { url: "" };
+        if (typeof data === "string") return { url: data };
+        if (typeof data === "object") {
+          return {
+            url: typeof data.url === "string" ? data.url : "",
+            name: typeof data.name === "string" ? data.name : "",
+          };
+        }
+        return { url: "" };
       }
 
       async function fetchUpload(inputId, endpoint) {
@@ -3241,14 +3260,17 @@
 
       $("fileSong").addEventListener("change", async () => {
         try {
-          const url = await uploadFile(
+          const res = await uploadFile(
             "fileSong",
             `/api/users/me/song?device=${encodeURIComponent(
               currentDevice || "pc"
             )}`
           );
+          const url = res?.url || "";
+          const name = res?.name || "";
           $("inSong").value = url;
-          setUploadStatus("songStatus", url, "No song uploaded yet.");
+          $("inSongName").value = name;
+          setUploadStatus("songStatus", url, "No song uploaded yet.", name);
           showMsg(msgMeta, "Song uploaded", true);
         } catch (e) {
           showMsg(msgMeta, "Song upload failed", false);
@@ -3256,6 +3278,7 @@
       });
 
       $("btnRemoveSong")?.addEventListener("click", async () => {
+        $("inSongName").value = "";
         await removeMetaUpload({
           fieldId: "inSong",
           fileId: "fileSong",
@@ -3267,12 +3290,13 @@
 
       $("fileSongIcon").addEventListener("change", async () => {
         try {
-          const url = await uploadFile(
+          const res = await uploadFile(
             "fileSongIcon",
             `/api/users/me/songicon?device=${encodeURIComponent(
               currentDevice || "pc"
             )}`
           );
+          const url = res?.url || "";
           $("inSongIcon").value = url;
           setUploadStatus("songIconStatus", url, "No icon uploaded.");
           showMsg(msgMeta, "Song icon uploaded", true);
@@ -3328,12 +3352,13 @@
           return;
         }
         try {
-          const url = await uploadFile(
+          const res = await uploadFile(
             "fileCursor",
             `/api/users/me/cursor?device=${encodeURIComponent(
               currentDevice || "pc"
             )}`
           );
+          const url = res?.url || "";
           $("inCursor").value = url;
           setUploadStatus("cursorStatus", url, "No cursor uploaded.");
           showMsg(msgMeta, "Cursor uploaded", true);
@@ -3361,7 +3386,8 @@
 
       $("fileIcon").addEventListener("change", async () => {
         try {
-          const url = await uploadFile("fileIcon", "/api/users/me/linkicon");
+          const res = await uploadFile("fileIcon", "/api/users/me/linkicon");
+          const url = res?.url || "";
           $("inLinkIcon").value = url;
           setUploadStatus("linkIconStatus", url, "No icon uploaded.");
           showMsg(msgLinks, "Icon uploaded", true);
