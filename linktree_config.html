@@ -1477,6 +1477,7 @@
                 Optional. Uses your current Discord profile frame if available.
               </div>
 
+              <div id="discordPresenceFeatures">
               <label
                 class="row"
                 style="margin-top: 0.75rem; gap: 0.4rem; align-items: center"
@@ -1496,6 +1497,20 @@
               </label>
               <div class="help" style="margin-top: 0.35rem">
                 Custom status text is pulled from Discord automatically.
+              </div>
+              </div>
+              <div
+                id="discordSharedNotice"
+                class="help"
+                style="margin-top: 0.5rem; display: none"
+              >
+                Join our Discord to access new features.
+                <a
+                  href="https://discord.gg/M5UhfwRD6J"
+                  target="_blank"
+                  rel="noreferrer"
+                  >Join our Discord</a
+                >
               </div>
               <label
                 class="row"
@@ -2670,9 +2685,12 @@
         const presenceToggle = $("inDiscordPresence");
         const statusToggle = $("inDiscordStatus");
         const badgesToggle = $("inDiscordBadges");
+        const presenceWrap = $("discordPresenceFeatures");
+        const sharedNote = $("discordSharedNotice");
         const linkBtn = $("btnDiscordLink");
         const unlinkBtn = $("btnDiscordUnlink");
         const linked = !!(discordStatus && discordStatus.linked);
+        const shared = linked && !!(discordStatus && discordStatus.shared_guild);
         if (statusEl) {
           const name =
             (discordStatus &&
@@ -2689,16 +2707,22 @@
           if (!linked) toggleEl.checked = false;
         }
         if (presenceToggle) {
-          presenceToggle.disabled = !linked;
-          if (!linked) presenceToggle.checked = false;
+          presenceToggle.disabled = !linked || !shared;
+          if (!linked || !shared) presenceToggle.checked = false;
         }
         if (statusToggle) {
-          statusToggle.disabled = !linked;
-          if (!linked) statusToggle.checked = false;
+          statusToggle.disabled = !linked || !shared;
+          if (!linked || !shared) statusToggle.checked = false;
         }
         if (badgesToggle) {
           badgesToggle.disabled = !linked;
           if (!linked) badgesToggle.checked = false;
+        }
+        if (presenceWrap) {
+          presenceWrap.style.display = linked && shared ? "block" : "none";
+        }
+        if (sharedNote) {
+          sharedNote.style.display = linked && !shared ? "block" : "none";
         }
         if (previewEl) {
           previewEl.innerHTML = "";
