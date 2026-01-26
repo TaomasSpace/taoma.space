@@ -2084,9 +2084,6 @@
           if (audioPlayer) {
             applyAudioPlayerStyles(data);
             audioPlayer.classList.toggle("hidden", !showAudioPlayer);
-            if (showAudioPlayer && audioTitle) {
-              audioTitle.textContent = getAudioTitle(songUrl);
-            }
           }
           if (audioIcon) {
             if (songIconUrl) {
@@ -2095,6 +2092,15 @@
             } else {
               audioIcon.removeAttribute("src");
               audioIcon.classList.add("hidden");
+            }
+          }
+          if (showAudioPlayer && audioTitle) {
+            if (songIconUrl) {
+              audioTitle.textContent = "";
+              audioTitle.style.display = "none";
+            } else {
+              audioTitle.style.display = "";
+              audioTitle.textContent = getAudioTitle(songUrl);
             }
           }
           if (songUrl) {
