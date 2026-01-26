@@ -232,8 +232,8 @@
       }
 
       .discord-badge img {
-        width: 16px;
-        height: 16px;
+        width: 28px;
+        height: 28px;
         object-fit: contain;
         display: block;
       }
@@ -1640,11 +1640,6 @@
         function showGate(show) {
           const gate = document.getElementById("enterOverlay");
           if (!gate) return;
-          if (gateDismissed) {
-            gate.classList.add("hidden");
-            gateActive = false;
-            return;
-          }
           if (show) {
             gate.classList.remove("hidden");
             gateActive = true;
@@ -1767,7 +1762,6 @@
         }
 
         async function enterExperience() {
-          gateDismissed = true;
           showGate(false);
           if (bgVideo) {
             bgVideo.dataset.userReady = "1";
@@ -1812,9 +1806,9 @@
         const CACHE_PREFIX = "taoma:linktree:v1:";
         const CACHE_MS = 90 * 1000; // short-lived cache to speed up repeat visits
         let lastData = null;
+        let initialRenderDone = false;
         let lastMediaMode = null;
         let lastDevice = null;
-        let gateDismissed = false;
         let discordStatusCache = null;
         let discordStatusPromise = null;
 
@@ -2039,7 +2033,8 @@
                 }
                 video.addEventListener("loadeddata", () => {
                   if (bgVideo !== video) return;
-                  if (video.dataset.userReady !== "1" || document.hidden) return;
+                  if (video.dataset.userReady !== "1" || document.hidden)
+                    return;
                   playBackgroundVideo(video.dataset.wantSound === "1");
                 });
                 bgEl.appendChild(video);
@@ -2405,8 +2400,9 @@
 
             const userPromise = fetchSessionUser();
             const cached = readCachedTree(cacheKey);
-            if (cached) {
+            if (cached && !initialRenderDone) {
               renderTree(cached, { preferLite, fromCache: true, device });
+              initialRenderDone = true;
               hydrateUserEnhancements(cached, device, userPromise).catch(
                 () => {}
               );
@@ -2417,13 +2413,16 @@
             let data = liveData || cached;
             if (!data) return;
             writeCachedTree(cacheKey, data);
-            renderTree(data, { preferLite, fromCache: false, device });
+            if (!initialRenderDone) {
+              renderTree(data, { preferLite, fromCache: false, device });
+              initialRenderDone = true;
+            } else {
+              lastData = data;
+            }
             hydrateUserEnhancements(data, device, userPromise).catch(() => {});
           } catch (e) {
             console.error("loadTree failed:", e);
           }
-          soundOn = false;
-          updateSoundUI();
         }
 
         const connection =
