@@ -135,9 +135,9 @@ ALLOWED_IMAGE_CT = {
 }
 ALLOWED_VIDEO_CT = {"video/mp4", "video/quicktime", "video/webm"}
 VIDEO_EXTENSIONS = (".mp4", ".webm", ".m4v", ".mov")
-MAX_AUDIO_BYTES = 15 * 1024 * 1024  # 15 MB
-MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB (Avatare/Icons)
-MAX_BACKGROUND_BYTES = 50 * 1024 * 1024  # 50 MB (Hintergrund-Video/Bild)
+MAX_AUDIO_BYTES = 30 * 1024 * 1024  # 15 MB
+MAX_IMAGE_BYTES = 10 * 1024 * 1024  # 5 MB (Avatare/Icons)
+MAX_BACKGROUND_BYTES = 100 * 1024 * 1024  # 50 MB (Hintergrund-Video/Bild)
 
 ALLOWED_USER_IDS = {
     int(x)
