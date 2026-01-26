@@ -1340,24 +1340,30 @@
           return "";
         }
 
-      const safeMediaUrl = (raw) =>
-        safeUrl(raw, {
-          allowRelative: true,
-          allowedProtocols: ["http:", "https:"],
-        });
+        const safeMediaUrl = (raw) =>
+          safeUrl(raw, {
+            allowRelative: true,
+            allowedProtocols: ["http:", "https:"],
+          });
 
-      function hexToRgba(hex, alpha = 1) {
-        const m = /^#?([a-fA-F0-9]{3}|[a-fA-F0-9]{6})$/.exec((hex || "").trim());
-        if (!m) return null;
-        let h = m[1];
-        if (h.length === 3) h = h.split("").map((c) => c + c).join("");
-        const int = parseInt(h, 16);
-        const r = (int >> 16) & 255;
-        const g = (int >> 8) & 255;
-        const b = int & 255;
-        const a = Math.min(1, Math.max(0, alpha));
-        return `rgba(${r}, ${g}, ${b}, ${a})`;
-      }
+        function hexToRgba(hex, alpha = 1) {
+          const m = /^#?([a-fA-F0-9]{3}|[a-fA-F0-9]{6})$/.exec(
+            (hex || "").trim()
+          );
+          if (!m) return null;
+          let h = m[1];
+          if (h.length === 3)
+            h = h
+              .split("")
+              .map((c) => c + c)
+              .join("");
+          const int = parseInt(h, 16);
+          const r = (int >> 16) & 255;
+          const g = (int >> 8) & 255;
+          const b = int & 255;
+          const a = Math.min(1, Math.max(0, alpha));
+          return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
         const safeLinkUrl = (raw) =>
           safeUrl(raw, {
             allowRelative: false,
@@ -1366,7 +1372,9 @@
 
         const VIDEO_EXTENSIONS = [".mp4", ".webm", ".m4v", ".mov"];
         const looksLikeVideo = (url) =>
-          VIDEO_EXTENSIONS.some((ext) => (url || "").toLowerCase().includes(ext));
+          VIDEO_EXTENSIONS.some((ext) =>
+            (url || "").toLowerCase().includes(ext)
+          );
 
         function pickBackgroundSource(data, preferLite) {
           const primary = safeMediaUrl(data.background_url);
@@ -1480,7 +1488,10 @@
             : DEFAULT_AUDIO_BG_ALPHA;
           const bg = bgRgb ? rgbToRgba(bgRgb, alpha / 100) : "";
           const border = bgRgb
-            ? rgbToRgba(lightenRgb(bgRgb, 0.12), Math.min(1, alpha / 100 + 0.12))
+            ? rgbToRgba(
+                lightenRgb(bgRgb, 0.12),
+                Math.min(1, alpha / 100 + 0.12)
+              )
             : "";
           const btnBg = bgRgb
             ? rgbToRgba(lightenRgb(bgRgb, 0.08), Math.min(1, alpha / 100 + 0.1))
@@ -1489,7 +1500,8 @@
             sanitizeHexColor(data?.audio_player_text_color) ||
             sanitizeHexColor(data?.text_color) ||
             DEFAULT_AUDIO_TEXT_COLOR;
-          const textRgb = hexToRgb(textHex) || hexToRgb(DEFAULT_AUDIO_TEXT_COLOR);
+          const textRgb =
+            hexToRgb(textHex) || hexToRgb(DEFAULT_AUDIO_TEXT_COLOR);
           const muted = textRgb ? rgbToRgba(textRgb, 0.72) : "";
           const accentHex =
             sanitizeHexColor(data?.audio_player_accent_color) ||
@@ -1523,99 +1535,101 @@
             "d",
             "M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"
           );
-        svg.appendChild(path);
-        return svg;
-      }
-
-      const PRESENCE_LABELS = {
-        online: "Online",
-        idle: "Idle",
-        dnd: "Do not disturb",
-        offline: "Offline",
-      };
-      const PRESENCE_CLASSES = [
-        "status-online",
-        "status-idle",
-        "status-dnd",
-        "status-offline",
-      ];
-
-      function normalizePresence(raw) {
-        const key = String(raw || "online").toLowerCase();
-        return ["online", "idle", "dnd", "offline"].includes(key)
-          ? key
-          : "online";
-      }
-
-      function applyPresenceClass(el, presence) {
-        if (!el) return;
-        PRESENCE_CLASSES.forEach((cls) => el.classList.remove(cls));
-        el.classList.add(`status-${normalizePresence(presence)}`);
-      }
-
-      function formatTime(seconds) {
-        if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${String(secs).padStart(2, "0")}`;
-      }
-
-      function getAudioTitle(url) {
-        if (!url) return "Audio";
-        try {
-          const u = new URL(url, window.location.origin);
-          const name = (u.pathname || "").split("/").pop();
-          if (name) return decodeURIComponent(name);
-        } catch (_) {}
-        return "Audio";
-      }
-
-      function syncAudioUI() {
-        if (!audioPlayer || !audioSeek || !audioTime || !audioPlayBtn) return;
-        if (!bgAudio) {
-          audioTime.textContent = "0:00 / 0:00";
-          audioSeek.value = "0";
-          audioSeek.max = "0";
-          audioPlayBtn.classList.remove("is-playing");
-          audioPlayBtn.setAttribute("aria-label", "Play");
-          return;
+          svg.appendChild(path);
+          return svg;
         }
-        const duration = Number.isFinite(bgAudio.duration)
-          ? bgAudio.duration
-          : 0;
-        const current = Number.isFinite(bgAudio.currentTime)
-          ? bgAudio.currentTime
-          : 0;
-        if (!audioSeekActive) {
-          audioSeek.max = duration ? String(duration) : "0";
-          audioSeek.value = String(Math.min(current, duration || current || 0));
-        }
-        audioTime.textContent = `${formatTime(current)} / ${formatTime(
-          duration
-        )}`;
-        const playing = !bgAudio.paused;
-        audioPlayBtn.classList.toggle("is-playing", playing);
-        audioPlayBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
-      }
 
-      function bindAudioPlayer(audio) {
-        if (!audio) return () => {};
-        const update = () => syncAudioUI();
-        const onPlay = () => syncAudioUI();
-        const onPause = () => syncAudioUI();
-        audio.addEventListener("timeupdate", update);
-        audio.addEventListener("loadedmetadata", update);
-        audio.addEventListener("play", onPlay);
-        audio.addEventListener("pause", onPause);
-        audio.addEventListener("ended", onPause);
-        return () => {
-          audio.removeEventListener("timeupdate", update);
-          audio.removeEventListener("loadedmetadata", update);
-          audio.removeEventListener("play", onPlay);
-          audio.removeEventListener("pause", onPause);
-          audio.removeEventListener("ended", onPause);
+        const PRESENCE_LABELS = {
+          online: "Online",
+          idle: "Idle",
+          dnd: "Do not disturb",
+          offline: "Offline",
         };
-      }
+        const PRESENCE_CLASSES = [
+          "status-online",
+          "status-idle",
+          "status-dnd",
+          "status-offline",
+        ];
+
+        function normalizePresence(raw) {
+          const key = String(raw || "online").toLowerCase();
+          return ["online", "idle", "dnd", "offline"].includes(key)
+            ? key
+            : "online";
+        }
+
+        function applyPresenceClass(el, presence) {
+          if (!el) return;
+          PRESENCE_CLASSES.forEach((cls) => el.classList.remove(cls));
+          el.classList.add(`status-${normalizePresence(presence)}`);
+        }
+
+        function formatTime(seconds) {
+          if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
+          const mins = Math.floor(seconds / 60);
+          const secs = Math.floor(seconds % 60);
+          return `${mins}:${String(secs).padStart(2, "0")}`;
+        }
+
+        function getAudioTitle(url) {
+          if (!url) return "Audio";
+          try {
+            const u = new URL(url, window.location.origin);
+            const name = (u.pathname || "").split("/").pop();
+            if (name) return decodeURIComponent(name);
+          } catch (_) {}
+          return "Audio";
+        }
+
+        function syncAudioUI() {
+          if (!audioPlayer || !audioSeek || !audioTime || !audioPlayBtn) return;
+          if (!bgAudio) {
+            audioTime.textContent = "0:00 / 0:00";
+            audioSeek.value = "0";
+            audioSeek.max = "0";
+            audioPlayBtn.classList.remove("is-playing");
+            audioPlayBtn.setAttribute("aria-label", "Play");
+            return;
+          }
+          const duration = Number.isFinite(bgAudio.duration)
+            ? bgAudio.duration
+            : 0;
+          const current = Number.isFinite(bgAudio.currentTime)
+            ? bgAudio.currentTime
+            : 0;
+          if (!audioSeekActive) {
+            audioSeek.max = duration ? String(duration) : "0";
+            audioSeek.value = String(
+              Math.min(current, duration || current || 0)
+            );
+          }
+          audioTime.textContent = `${formatTime(current)} / ${formatTime(
+            duration
+          )}`;
+          const playing = !bgAudio.paused;
+          audioPlayBtn.classList.toggle("is-playing", playing);
+          audioPlayBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
+        }
+
+        function bindAudioPlayer(audio) {
+          if (!audio) return () => {};
+          const update = () => syncAudioUI();
+          const onPlay = () => syncAudioUI();
+          const onPause = () => syncAudioUI();
+          audio.addEventListener("timeupdate", update);
+          audio.addEventListener("loadedmetadata", update);
+          audio.addEventListener("play", onPlay);
+          audio.addEventListener("pause", onPause);
+          audio.addEventListener("ended", onPause);
+          return () => {
+            audio.removeEventListener("timeupdate", update);
+            audio.removeEventListener("loadedmetadata", update);
+            audio.removeEventListener("play", onPlay);
+            audio.removeEventListener("pause", onPause);
+            audio.removeEventListener("ended", onPause);
+          };
+        }
 
         function updateSoundUI() {
           if (!soundBtn) return;
@@ -1773,7 +1787,10 @@
         let discordStatusPromise = null;
 
         function getConnectionProfile() {
-          const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+          const conn =
+            navigator.connection ||
+            navigator.mozConnection ||
+            navigator.webkitConnection;
           const downlink =
             conn && typeof conn.downlink === "number" ? conn.downlink : null;
           return {
@@ -1787,7 +1804,8 @@
         }
 
         function shouldUseLiteMedia(profile = getConnectionProfile()) {
-          const dl = typeof profile.downlink === "number" ? profile.downlink : null;
+          const dl =
+            typeof profile.downlink === "number" ? profile.downlink : null;
           const slow =
             profile.saveData ||
             ["slow-2g", "2g", "3g"].includes(profile.effectiveType || "") ||
@@ -1805,7 +1823,8 @@
             const raw = sessionStorage.getItem(key);
             if (!raw) return null;
             const parsed = JSON.parse(raw);
-            if (!parsed || typeof parsed.savedAt !== "number" || !parsed.data) return null;
+            if (!parsed || typeof parsed.savedAt !== "number" || !parsed.data)
+              return null;
             if (Date.now() - parsed.savedAt > CACHE_MS) {
               sessionStorage.removeItem(key);
               return null;
@@ -1862,7 +1881,8 @@
         }
 
         async function applyUserDiscordFrame(data) {
-          if (!data || !data.is_template_demo || !data.discord_frame_enabled) return;
+          if (!data || !data.is_template_demo || !data.discord_frame_enabled)
+            return;
           const status = await fetchDiscordStatus();
           if (!status || !status.linked || !status.decoration_url) return;
           const frame = document.getElementById("pfpFrame");
@@ -1890,7 +1910,9 @@
 
         async function fetchSessionUser() {
           try {
-            const r = await fetch("/api/auth/verify", { credentials: "include" });
+            const r = await fetch("/api/auth/verify", {
+              credentials: "include",
+            });
             if (!r.ok) return null;
             const json = await r.json();
             currentUser = json && json.user ? json.user : null;
@@ -1929,8 +1951,10 @@
             const data = { ...(chosen || {}) };
             data.slug = data.slug || tpl.name || "Template";
             data.device_type = data.device_type || device;
-            data.user_username = data.user_username || tpl.owner_username || "Template";
-            data.profile_picture = data.profile_picture || tpl.preview_image_url || null;
+            data.user_username =
+              data.user_username || tpl.owner_username || "Template";
+            data.profile_picture =
+              data.profile_picture || tpl.preview_image_url || null;
             data.is_template_demo = true;
             return data;
           }
@@ -1944,7 +1968,11 @@
 
         function renderTree(
           data,
-          { preferLite = shouldUseLiteMedia(), fromCache = false, device = detectDevice() } = {}
+          {
+            preferLite = shouldUseLiteMedia(),
+            fromCache = false,
+            device = detectDevice(),
+          } = {}
         ) {
           if (!data) return;
           lastData = data;
@@ -1967,7 +1995,7 @@
                 const video = document.createElement("video");
                 video.id = "bgvid";
                 video.src = bgUrl;
-                video.autoplay = true;
+                video.autoplay = false;
                 video.muted = true;
                 video.loop = true;
                 video.setAttribute("autoplay", "");
@@ -2070,10 +2098,14 @@
           const cardEl = document.getElementById("card");
           if (cardEl) {
             const raw = Number(data.transparency);
-            const clamped = Number.isFinite(raw) ? Math.min(100, Math.max(0, raw)) : 0;
+            const clamped = Number.isFinite(raw)
+              ? Math.min(100, Math.max(0, raw))
+              : 0;
             const cardAlpha = 1 - clamped / 100;
-            const cardHex = sanitizeHexColor(data.card_color) || DEFAULT_CARD_COLOR;
-            const cardBg = hexToRgba(cardHex, cardAlpha) || `rgba(23, 27, 59, ${cardAlpha})`;
+            const cardHex =
+              sanitizeHexColor(data.card_color) || DEFAULT_CARD_COLOR;
+            const cardBg =
+              hexToRgba(cardHex, cardAlpha) || `rgba(23, 27, 59, ${cardAlpha})`;
 
             if (cardAlpha <= 0) {
               cardEl.classList.add("transparent");
@@ -2084,14 +2116,21 @@
             }
           }
           applyTextColors(data);
-          applyLinkStyles(data.link_color, data.link_bg_color, data.link_bg_alpha);
+          applyLinkStyles(
+            data.link_color,
+            data.link_bg_color,
+            data.link_bg_alpha
+          );
 
           const cursorUrl = safeMediaUrl(data.cursor_url);
           if (cursorUrl && !isMobile) {
             resizeCursorImage(cursorUrl, 32)
               .then((resized) => {
                 const cursorDecl = `url("${resized}") 0 0, auto`;
-                document.documentElement.style.setProperty("--cursor", cursorDecl);
+                document.documentElement.style.setProperty(
+                  "--cursor",
+                  cursorDecl
+                );
               })
               .catch(() => {
                 document.documentElement.style.setProperty("--cursor", "auto");
@@ -2104,9 +2143,16 @@
           const pfp = document.getElementById("pfp");
           const pfpFrame = document.getElementById("pfpFrame");
           if (pfp) {
-            const prefersUserPfp = data.is_template_demo && currentUser && currentUser.profile_picture;
+            const prefersUserPfp =
+              data.is_template_demo &&
+              currentUser &&
+              currentUser.profile_picture;
             const profileUrl =
-              safeMediaUrl(prefersUserPfp ? currentUser.profile_picture : data.profile_picture) ||
+              safeMediaUrl(
+                prefersUserPfp
+                  ? currentUser.profile_picture
+                  : data.profile_picture
+              ) ||
               safeMediaUrl(currentUser && currentUser.profile_picture) ||
               "/static/icon.png";
             pfp.src = profileUrl;
@@ -2130,7 +2176,10 @@
             const showPresence = discordLinked && data.discord_presence_enabled;
             presenceEl.classList.toggle("hidden", !showPresence);
             applyPresenceClass(presenceEl, presence);
-            presenceEl.setAttribute("aria-label", `Discord status: ${presenceLabel}`);
+            presenceEl.setAttribute(
+              "aria-label",
+              `Discord status: ${presenceLabel}`
+            );
           }
           if (statusLine && statusTextEl) {
             const showStatus = discordLinked && data.discord_status_enabled;
@@ -2165,7 +2214,8 @@
           const locEl = document.getElementById("loc");
           if (locEl) {
             locEl.textContent = "";
-            const locText = typeof data.location === "string" ? data.location.trim() : "";
+            const locText =
+              typeof data.location === "string" ? data.location.trim() : "";
             if (locText) {
               const icon = createLocationIcon();
               const text = document.createElement("span");
@@ -2178,11 +2228,11 @@
           const discordBadgesEl = document.getElementById("discordBadges");
           if (discordBadgesEl) {
             discordBadgesEl.innerHTML = "";
-            const list = Array.isArray(data.discord_badges) ? data.discord_badges : [];
+            const list = Array.isArray(data.discord_badges)
+              ? data.discord_badges
+              : [];
             const showBadges =
-              discordLinked &&
-              data.discord_badges_enabled &&
-              list.length > 0;
+              discordLinked && data.discord_badges_enabled && list.length > 0;
             discordBadgesEl.classList.toggle("hidden", !showBadges);
             if (showBadges) {
               const frag = document.createDocumentFragment();
@@ -2274,13 +2324,17 @@
           const visitValue = document.getElementById("visitCounterValue");
           if (visitBox && visitValue) {
             if (data.show_visit_counter) {
-              visitValue.textContent = Number(data.visit_count || 0).toLocaleString();
+              visitValue.textContent = Number(
+                data.visit_count || 0
+              ).toLocaleString();
               const textColor =
                 hexToRgba(data.visit_counter_color, 1) ||
                 hexToRgba(data.text_color, 1) ||
                 null;
               if (textColor) visitBox.style.color = textColor;
-              const bgAlpha = Number.isFinite(Number(data.visit_counter_bg_alpha))
+              const bgAlpha = Number.isFinite(
+                Number(data.visit_counter_bg_alpha)
+              )
                 ? Number(data.visit_counter_bg_alpha)
                 : 20;
               const bgColor =
@@ -2301,12 +2355,18 @@
             const params = new URLSearchParams(location.search);
             let templateId = params.get("template_id");
             const parts = location.pathname.split("/").filter(Boolean);
-            if (!templateId && parts[0] === "marketplace" && parts[1] === "templates") {
+            if (
+              !templateId &&
+              parts[0] === "marketplace" &&
+              parts[1] === "templates"
+            ) {
               templateId = parts[2] || null;
             }
             const requestedDevice = params.get("device");
             const device = detectDevice(requestedDevice);
-            const slug = decodeURIComponent(location.pathname.split("/").pop() || "");
+            const slug = decodeURIComponent(
+              location.pathname.split("/").pop() || ""
+            );
             const cacheKey = makeCacheKey({ slug, templateId, device });
             const preferLite = shouldUseLiteMedia();
 
@@ -2314,7 +2374,9 @@
             const cached = readCachedTree(cacheKey);
             if (cached) {
               renderTree(cached, { preferLite, fromCache: true, device });
-              hydrateUserEnhancements(cached, device, userPromise).catch(() => {});
+              hydrateUserEnhancements(cached, device, userPromise).catch(
+                () => {}
+              );
             }
 
             const dataPromise = fetchTreeData({ templateId, slug, device });
@@ -2331,7 +2393,10 @@
           updateSoundUI();
         }
 
-        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        const connection =
+          navigator.connection ||
+          navigator.mozConnection ||
+          navigator.webkitConnection;
         const prefersReducedData =
           typeof window.matchMedia === "function"
             ? window.matchMedia("(prefers-reduced-data: reduce)")
@@ -2352,7 +2417,10 @@
           connection.addEventListener("change", handleMediaPreferenceChange);
         }
         if (prefersReducedData && prefersReducedData.addEventListener) {
-          prefersReducedData.addEventListener("change", handleMediaPreferenceChange);
+          prefersReducedData.addEventListener(
+            "change",
+            handleMediaPreferenceChange
+          );
         } else if (prefersReducedData && prefersReducedData.addListener) {
           prefersReducedData.addListener(handleMediaPreferenceChange);
         }
