@@ -1640,6 +1640,11 @@
         function showGate(show) {
           const gate = document.getElementById("enterOverlay");
           if (!gate) return;
+          if (gateDismissed) {
+            gate.classList.add("hidden");
+            gateActive = false;
+            return;
+          }
           if (show) {
             gate.classList.remove("hidden");
             gateActive = true;
@@ -1762,6 +1767,7 @@
         }
 
         async function enterExperience() {
+          gateDismissed = true;
           showGate(false);
           if (bgVideo) {
             bgVideo.dataset.userReady = "1";
@@ -1808,6 +1814,7 @@
         let lastData = null;
         let lastMediaMode = null;
         let lastDevice = null;
+        let gateDismissed = false;
         let discordStatusCache = null;
         let discordStatusPromise = null;
 

@@ -640,21 +640,21 @@ DISCORD_BADGE_MAP = [
 ]
 
 DISCORD_BADGE_ICON_MAP = {
-    "staff": "/static/discord-badges/staff.svg",
-    "partner": "/static/discord-badges/partner.svg",
-    "hypesquad": "/static/discord-badges/hypesquad.svg",
-    "bug_hunter_lvl1": "/static/discord-badges/bug_hunter_lvl1.svg",
-    "bravery": "/static/discord-badges/bravery.svg",
-    "brilliance": "/static/discord-badges/brilliance.svg",
-    "balance": "/static/discord-badges/balance.svg",
-    "early_supporter": "/static/discord-badges/early_supporter.svg",
-    "bug_hunter_lvl2": "/static/discord-badges/bug_hunter_lvl2.svg",
-    "verified_bot": "/static/discord-badges/verified_bot.svg",
-    "verified_dev": "/static/discord-badges/verified_dev.svg",
-    "certified_mod": "/static/discord-badges/certified_mod.svg",
-    "bot_http": "/static/discord-badges/bot_http.svg",
-    "active_dev": "/static/discord-badges/active_dev.svg",
-    "nitro": "/static/discord-badges/nitro.svg",
+    "staff": "/static/discord-badges/discordstaff.svg",
+    "partner": "/static/discord-badges/discordpartner.svg",
+    "hypesquad": "/static/discord-badges/hypesquadevents.svg",
+    "bug_hunter_lvl1": "/static/discord-badges/discordbughunter1.svg",
+    "bravery": "/static/discord-badges/hypesquadbravery.svg",
+    "brilliance": "/static/discord-badges/hypesquadbrilliance.svg",
+    "balance": "/static/discord-badges/hypesquadbalance.svg",
+    "early_supporter": "/static/discord-badges/discordearlysupporter.svg",
+    "bug_hunter_lvl2": "/static/discord-badges/discordbughunter2.svg",
+    "verified_bot": "/static/discord-badges/premiumbot.png",
+    "verified_dev": "/static/discord-badges/discordbotdev.svg",
+    "certified_mod": "/static/discord-badges/discordmod.svg",
+    "bot_http": "/static/discord-badges/supportscommands.svg",
+    "active_dev": "/static/discord-badges/activedeveloper.svg",
+    "nitro": "/static/discord-badges/discordnitro.svg",
 }
 
 
