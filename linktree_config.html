@@ -1208,6 +1208,16 @@
                 placeholder="https://…/song.mp3"
               />
             </div>
+            <div class="field">
+              <label class="row" style="gap: 0.4rem; align-items: center">
+                <input type="checkbox" id="inAudioPlayer" />
+                <span>Show audio player controls</span>
+              </label>
+              <div class="help">
+                Shows play/pause, seek, and skip controls when a song is set.
+              </div>
+            </div>
+
 
             <div class="field">
               <label for="inBg">Background URL (img/gif/video)</label>
@@ -1260,6 +1270,15 @@
               <div class="preview-note muted">
                 0 = transparent, 100 = opaque (matches link background slider).
               </div>
+            </div>
+            <div class="field">
+              <label for="inCardColor">Card/Base Color</label>
+              <input
+                id="inCardColor"
+                class="input"
+                type="color"
+                value="#171b3b"
+              />
             </div>
             <div class="field">
               <label for="inDisplayName">Display Name</label>
@@ -1400,6 +1419,49 @@
               <div class="help">
                 Optional. Uses your current Discord profile frame if available.
               </div>
+
+              <label
+                class="row"
+                style="margin-top: 0.75rem; gap: 0.4rem; align-items: center"
+              >
+                <input type="checkbox" id="inDiscordPresence" />
+                <span>Show my Discord activity status on my avatar</span>
+              </label>
+              <div class="grid cols-2" style="margin-top: 0.5rem">
+                <div class="field">
+                  <label for="inDiscordPresenceValue">Activity status</label>
+                  <select id="inDiscordPresenceValue" class="select">
+                    <option value="online">Online</option>
+                    <option value="idle">Idle</option>
+                    <option value="dnd">Do not disturb</option>
+                    <option value="offline">Offline</option>
+                  </select>
+                </div>
+              </div>
+              <label
+                class="row"
+                style="margin-top: 0.5rem; gap: 0.4rem; align-items: center"
+              >
+                <input type="checkbox" id="inDiscordStatus" />
+                <span>Show my Discord status line on the linktree</span>
+              </label>
+              <div class="field" style="margin-top: 0.35rem">
+                <label for="inDiscordStatusText">Status text</label>
+                <input
+                  id="inDiscordStatusText"
+                  class="input"
+                  maxlength="140"
+                  placeholder="e.g. Building something cool"
+                />
+                <div class="help">Leave empty to show only the activity status.</div>
+              </div>
+              <label
+                class="row"
+                style="margin-top: 0.5rem; gap: 0.4rem; align-items: center"
+              >
+                <input type="checkbox" id="inDiscordBadges" />
+                <span>Show my Discord badges</span>
+              </label>
 
               <label
                 class="row"
@@ -1860,6 +1922,7 @@
 
       const DEFAULT_LINK_COLOR = "#e9ebff";
       const DEFAULT_LINK_BG_COLOR = "#171b3b";
+      const DEFAULT_CARD_COLOR = "#171b3b";
       const DEFAULT_TEXT_COLOR = "#e9ebff";
       const DEFAULT_NAME_COLOR = "#e9ebff";
       const DEFAULT_LOCATION_COLOR = "#a2a9c8";
@@ -1895,6 +1958,7 @@
         $("inLocation").value = lt.location || "";
         $("inQuote").value = lt.quote || "";
         $("inSong").value = lt.song_url || "";
+        $("inAudioPlayer").checked = !!lt.show_audio_player;
         $("inBg").value = lt.background_url || "";
         $("inVideo").value = String(!!lt.background_is_video);
         $("inDisplayName").value = lt.display_name_mode || "slug";
@@ -1915,12 +1979,18 @@
           lt.quote_color || lt.text_color || DEFAULT_QUOTE_COLOR;
         $("inLinkColor").value = lt.link_color || DEFAULT_LINK_COLOR;
         $("inLinkBgColor").value = lt.link_bg_color || DEFAULT_LINK_BG_COLOR;
+        $("inCardColor").value = lt.card_color || DEFAULT_CARD_COLOR;
         $("inLinkBgAlpha").value =
           lt.link_bg_alpha !== undefined && lt.link_bg_alpha !== null
             ? lt.link_bg_alpha
             : 100;
         $("inCursor").value = lt.cursor_url || "";
         $("inDiscordFrame").checked = !!lt.discord_frame_enabled;
+        $("inDiscordPresence").checked = !!lt.discord_presence_enabled;
+        $("inDiscordPresenceValue").value = lt.discord_presence || "online";
+        $("inDiscordStatus").checked = !!lt.discord_status_enabled;
+        $("inDiscordStatusText").value = lt.discord_status_text || "";
+        $("inDiscordBadges").checked = !!lt.discord_badges_enabled;
         $("inShowCounter").checked = !!lt.show_visit_counter;
         const vcEl = document.getElementById("inVisitCount");
         if (vcEl)
@@ -1968,6 +2038,7 @@
           location: lt.location || "",
           quote: lt.quote || "",
           song_url: lt.song_url || "",
+          show_audio_player: !!lt.show_audio_player,
           background_url: lt.background_url,
           background_is_video: !!lt.background_is_video,
           transparency: clampPercent(lt.transparency ?? 0, 0),
@@ -1979,12 +2050,18 @@
           link_color: hexOrNull(lt.link_color),
           link_bg_color: hexOrNull(lt.link_bg_color),
           link_bg_alpha: clampPercent(lt.link_bg_alpha ?? 100, 100),
+          card_color: hexOrNull(lt.card_color),
           text_color: hexOrNull(lt.text_color),
           name_color: hexOrNull(lt.name_color),
           location_color: hexOrNull(lt.location_color),
           quote_color: hexOrNull(lt.quote_color),
           cursor_url: lt.cursor_url || null,
           discord_frame_enabled: !!lt.discord_frame_enabled,
+          discord_presence_enabled: !!lt.discord_presence_enabled,
+          discord_presence: lt.discord_presence || "online",
+          discord_status_enabled: !!lt.discord_status_enabled,
+          discord_status_text: lt.discord_status_text || null,
+          discord_badges_enabled: !!lt.discord_badges_enabled,
           show_visit_counter: !!lt.show_visit_counter,
           visit_counter_color: hexOrNull(lt.visit_counter_color),
           visit_counter_bg_color: hexOrNull(lt.visit_counter_bg_color),
@@ -2027,6 +2104,7 @@
           location: $("inLocation").value.trim() || "",
           quote: $("inQuote").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
+          show_audio_player: $("inAudioPlayer").checked,
           background_url: bgUrl,
           background_is_video: $("inVideo").value === "true",
           transparency: 100 - cardAlphaInput,
@@ -2037,12 +2115,18 @@
           link_color: hexOrNull($("inLinkColor").value),
           link_bg_color: hexOrNull($("inLinkBgColor").value),
           link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
+          card_color: hexOrNull($("inCardColor").value),
           text_color: hexOrNull($("inTextColor").value),
           name_color: hexOrNull($("inNameColor").value),
           location_color: hexOrNull($("inLocationColor").value),
           quote_color: hexOrNull($("inQuoteColor").value),
           cursor_url: $("inCursor").value.trim() || null,
           discord_frame_enabled: $("inDiscordFrame").checked,
+          discord_presence_enabled: $("inDiscordPresence").checked,
+          discord_presence: $("inDiscordPresenceValue").value || "online",
+          discord_status_enabled: $("inDiscordStatus").checked,
+          discord_status_text: $("inDiscordStatusText").value.trim() || null,
+          discord_badges_enabled: $("inDiscordBadges").checked,
           show_visit_counter: $("inShowCounter").checked,
           visit_counter_color: hexOrNull($("inCounterColor").value),
           visit_counter_bg_color: hexOrNull($("inCounterBgColor").value),
@@ -2427,6 +2511,11 @@
         const statusEl = $("discordStatusText");
         const previewEl = $("discordPreview");
         const toggleEl = $("inDiscordFrame");
+        const presenceToggle = $("inDiscordPresence");
+        const presenceValue = $("inDiscordPresenceValue");
+        const statusToggle = $("inDiscordStatus");
+        const statusText = $("inDiscordStatusText");
+        const badgesToggle = $("inDiscordBadges");
         const linkBtn = $("btnDiscordLink");
         const unlinkBtn = $("btnDiscordUnlink");
         const linked = !!(discordStatus && discordStatus.linked);
@@ -2444,6 +2533,26 @@
         if (toggleEl) {
           toggleEl.disabled = !linked;
           if (!linked) toggleEl.checked = false;
+        }
+        if (presenceToggle) {
+          presenceToggle.disabled = !linked;
+          if (!linked) presenceToggle.checked = false;
+        }
+        if (statusToggle) {
+          statusToggle.disabled = !linked;
+          if (!linked) statusToggle.checked = false;
+        }
+        if (badgesToggle) {
+          badgesToggle.disabled = !linked;
+          if (!linked) badgesToggle.checked = false;
+        }
+        if (presenceValue) {
+          presenceValue.disabled =
+            !linked || !(presenceToggle && presenceToggle.checked);
+        }
+        if (statusText) {
+          statusText.disabled =
+            !linked || !(statusToggle && statusToggle.checked);
         }
         if (previewEl) {
           previewEl.innerHTML = "";
@@ -2568,6 +2677,7 @@
           location: $("inLocation").value.trim() || null,
           quote: $("inQuote").value.trim() || null,
           song_url: $("inSong").value.trim() || null,
+          show_audio_player: $("inAudioPlayer").checked,
           background_url: $("inBg").value.trim() || null,
           background_is_video: $("inVideo").value === "true",
           transparency: 100 - cardAlphaInput,
@@ -2582,8 +2692,14 @@
           link_color: $("inLinkColor").value || null,
           link_bg_color: $("inLinkBgColor").value || null,
           link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
+          card_color: $("inCardColor").value || null,
           cursor_url: $("inCursor").value.trim() || null,
           discord_frame_enabled: $("inDiscordFrame").checked,
+          discord_presence_enabled: $("inDiscordPresence").checked,
+          discord_presence: $("inDiscordPresenceValue").value || "online",
+          discord_status_enabled: $("inDiscordStatus").checked,
+          discord_status_text: $("inDiscordStatusText").value.trim() || null,
+          discord_badges_enabled: $("inDiscordBadges").checked,
           show_visit_counter: $("inShowCounter").checked,
           visit_counter_color: $("inCounterColor").value || null,
           visit_counter_bg_color: $("inCounterBgColor").value || null,
@@ -2737,6 +2853,8 @@
       }
       $("btnDiscordLink").addEventListener("click", startDiscordLink);
       $("btnDiscordUnlink").addEventListener("click", unlinkDiscord);
+      $("inDiscordPresence").addEventListener("change", updateDiscordUI);
+      $("inDiscordStatus").addEventListener("change", updateDiscordUI);
 
       $("formMeta").addEventListener("submit", async (e) => {
         e.preventDefault();

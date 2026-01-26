@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS linktrees (
     location            TEXT,
     quote               TEXT,
     song_url            TEXT,                     -- Audio-URL
+    show_audio_player   BOOLEAN NOT NULL DEFAULT FALSE,
     background_url      TEXT,                     -- Bild/GIF/Video
     background_is_video BOOLEAN NOT NULL DEFAULT FALSE,
     transparency        SMALLINT NOT NULL DEFAULT 0
@@ -97,12 +98,19 @@ CREATE TABLE IF NOT EXISTS linktrees (
     link_bg_color       TEXT,
     link_bg_alpha       SMALLINT NOT NULL DEFAULT 100
                         CHECK (link_bg_alpha BETWEEN 0 AND 100),
+    card_color          TEXT,
     text_color          TEXT,
     name_color          TEXT,
     location_color      TEXT,
     quote_color         TEXT,
     cursor_url          TEXT,
     discord_frame_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    discord_presence_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    discord_presence    TEXT NOT NULL DEFAULT 'online'
+                        CHECK (discord_presence IN ('online','idle','dnd','offline')),
+    discord_status_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    discord_status_text TEXT,
+    discord_badges_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     show_visit_counter  BOOLEAN NOT NULL DEFAULT FALSE,
     visit_counter_color TEXT,
     visit_counter_bg_color TEXT,
@@ -184,6 +192,8 @@ CREATE TABLE IF NOT EXISTS discord_accounts (
     discord_global_name VARCHAR(100),         -- neuer "Global Name"
     avatar_hash         VARCHAR(128),
     avatar_decoration   JSONB,                -- Rohdaten, falls du sie speichern willst
+    public_flags        INTEGER NOT NULL DEFAULT 0,
+    premium_type        SMALLINT NOT NULL DEFAULT 0,
     access_token        TEXT NOT NULL,
     refresh_token       TEXT NOT NULL,
     token_expires_at    TIMESTAMP NOT NULL,
@@ -320,6 +330,10 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS card_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS link_bg_alpha SMALLINT;
                 """)
                 cur.execute("""
@@ -339,7 +353,53 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS discord_presence_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS discord_presence TEXT;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET discord_presence = 'online'
+   WHERE discord_presence IS NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN discord_presence SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN discord_presence SET DEFAULT 'online';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_discord_presence;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_discord_presence
+  CHECK (discord_presence IN ('online','idle','dnd','offline'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS discord_status_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS discord_status_text TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS discord_badges_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS show_visit_counter BOOLEAN NOT NULL DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS show_audio_player BOOLEAN NOT NULL DEFAULT FALSE;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -412,6 +472,40 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS cursor_url TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE discord_accounts
+  ADD COLUMN IF NOT EXISTS public_flags INTEGER;
+                """)
+                cur.execute("""
+  ALTER TABLE discord_accounts
+  ADD COLUMN IF NOT EXISTS premium_type SMALLINT;
+                """)
+                cur.execute("""
+  UPDATE discord_accounts
+     SET public_flags = 0
+   WHERE public_flags IS NULL;
+                """)
+                cur.execute("""
+  UPDATE discord_accounts
+     SET premium_type = 0
+   WHERE premium_type IS NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE discord_accounts
+  ALTER COLUMN public_flags SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE discord_accounts
+  ALTER COLUMN public_flags SET DEFAULT 0;
+                """)
+                cur.execute("""
+  ALTER TABLE discord_accounts
+  ALTER COLUMN premium_type SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE discord_accounts
+  ALTER COLUMN premium_type SET DEFAULT 0;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1200,6 +1294,8 @@ class PgGifDB:
         discord_global_name: str | None = None,
         avatar_hash: str | None = None,
         avatar_decoration: Any | None = None,
+        public_flags: int | None = None,
+        premium_type: int | None = None,
         access_token: str,
         refresh_token: str,
         token_expires_at,
@@ -1210,16 +1306,18 @@ class PgGifDB:
                 """
                 INSERT INTO discord_accounts (
                     user_id, discord_user_id, discord_username, discord_global_name,
-                    avatar_hash, avatar_decoration,
+                    avatar_hash, avatar_decoration, public_flags, premium_type,
                     access_token, refresh_token, token_expires_at, scopes
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 ON CONFLICT (user_id) DO UPDATE SET
                     discord_user_id = EXCLUDED.discord_user_id,
                     discord_username = EXCLUDED.discord_username,
                     discord_global_name = EXCLUDED.discord_global_name,
                     avatar_hash = EXCLUDED.avatar_hash,
                     avatar_decoration = EXCLUDED.avatar_decoration,
+                    public_flags = EXCLUDED.public_flags,
+                    premium_type = EXCLUDED.premium_type,
                     access_token = EXCLUDED.access_token,
                     refresh_token = EXCLUDED.refresh_token,
                     token_expires_at = EXCLUDED.token_expires_at,
@@ -1233,6 +1331,8 @@ class PgGifDB:
                     discord_global_name,
                     avatar_hash,
                     avatar_decoration,
+                    public_flags,
+                    premium_type,
                     access_token,
                     refresh_token,
                     token_expires_at,
@@ -1266,6 +1366,7 @@ class PgGifDB:
         location: str | None = None,
         quote: str | None = None,
         song_url: str | None = None,
+        show_audio_player: bool = False,
         background_url: str | None = None,
         background_is_video: bool = False,
         transparency: int = 0,
@@ -1277,12 +1378,18 @@ class PgGifDB:
         link_color: str | None = None,
         link_bg_color: str | None = None,
         link_bg_alpha: int = 100,
+        card_color: str | None = None,
         text_color: str | None = None,
         name_color: str | None = None,
         location_color: str | None = None,
         quote_color: str | None = None,
         cursor_url: str | None = None,
         discord_frame_enabled: bool = False,
+        discord_presence_enabled: bool = False,
+        discord_presence: str = "online",
+        discord_status_enabled: bool = False,
+        discord_status_text: str | None = None,
+        discord_badges_enabled: bool = False,
         show_visit_counter: bool = False,
         visit_counter_color: str | None = None,
         visit_counter_bg_color: str | None = None,
@@ -1292,7 +1399,7 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, song_url,
+                    user_id, slug, device_type, location, quote, song_url, show_audio_player,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,          -- <-- NEU
@@ -1300,22 +1407,53 @@ class PgGifDB:
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
+                    card_color,
                     text_color,
                     name_color,
                     location_color,
                     quote_color,
                     cursor_url,
                     discord_frame_enabled,
+                    discord_presence_enabled,
+                    discord_presence,
+                    discord_status_enabled,
+                    discord_status_text,
+                    discord_badges_enabled,
                     show_visit_counter,
                     visit_counter_color,
                     visit_counter_bg_color,
                     visit_counter_bg_alpha
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                VALUES (
+                    %s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,
+                    %s,%s,%s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s
+                )
                 RETURNING id
                 """,
                 (
-                    user_id, slug, device_type, location, quote, song_url,
+                    user_id, slug, device_type, location, quote, song_url, show_audio_player,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,
@@ -1323,12 +1461,18 @@ class PgGifDB:
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
+                    card_color,
                     text_color,
                     name_color,
                     location_color,
                     quote_color,
                     cursor_url,
                     discord_frame_enabled,
+                    discord_presence_enabled,
+                    discord_presence,
+                    discord_status_enabled,
+                    discord_status_text,
+                    discord_badges_enabled,
                     show_visit_counter,
                     visit_counter_color,
                     visit_counter_bg_color,
@@ -1352,6 +1496,7 @@ class PgGifDB:
             "location",
             "quote",
             "song_url",
+            "show_audio_player",
             "background_url",
             "background_is_video",
             "transparency",
@@ -1362,12 +1507,18 @@ class PgGifDB:
             "link_color",
             "link_bg_color",
             "link_bg_alpha",
+            "card_color",
             "text_color",
             "name_color",
             "location_color",
             "quote_color",
             "cursor_url",
             "discord_frame_enabled",
+            "discord_presence_enabled",
+            "discord_presence",
+            "discord_status_enabled",
+            "discord_status_text",
+            "discord_badges_enabled",
             "show_visit_counter",
             "visit_counter_color",
             "visit_counter_bg_color",
@@ -1410,14 +1561,26 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, song_url,
+                    user_id, slug, device_type, location, quote, song_url, show_audio_player,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode, custom_display_name,
-                    link_color, link_bg_color, link_bg_alpha, text_color,
-                    name_color, location_color, quote_color, cursor_url, discord_frame_enabled, show_visit_counter,
+                    link_color, link_bg_color, link_bg_alpha, card_color, text_color,
+                    name_color, location_color, quote_color, cursor_url, discord_frame_enabled,
+                    discord_presence_enabled, discord_presence, discord_status_enabled, discord_status_text, discord_badges_enabled,
+                    show_visit_counter,
                     visit_counter_color, visit_counter_bg_color, visit_counter_bg_alpha
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ) VALUES (
+                    %s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,
+                    %s,%s,%s,
+                    %s,%s,
+                    %s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,
+                    %s,
+                    %s,%s,%s
+                )
                 RETURNING id
                 """,
                 (
@@ -1427,6 +1590,7 @@ class PgGifDB:
                     src.get("location"),
                     src.get("quote"),
                     src.get("song_url"),
+                    src.get("show_audio_player", False),
                     src.get("background_url"),
                     src.get("background_is_video"),
                     src.get("transparency"),
@@ -1437,12 +1601,18 @@ class PgGifDB:
                     src.get("link_color"),
                     src.get("link_bg_color"),
                     src.get("link_bg_alpha", 100),
+                    src.get("card_color"),
                     src.get("text_color"),
                     src.get("name_color"),
                     src.get("location_color"),
                     src.get("quote_color"),
                     src.get("cursor_url"),
                     src.get("discord_frame_enabled", False),
+                    src.get("discord_presence_enabled", False),
+                    src.get("discord_presence", "online"),
+                    src.get("discord_status_enabled", False),
+                    src.get("discord_status_text"),
+                    src.get("discord_badges_enabled", False),
                     src.get("show_visit_counter", False),
                     src.get("visit_counter_color"),
                     src.get("visit_counter_bg_color"),

@@ -597,6 +597,44 @@ def _load_discord_account(user_id: int) -> dict:
     acct["decoration_url"] = _decoration_to_url(acct.get("avatar_decoration"))
     return acct
 
+
+DISCORD_BADGE_MAP = [
+    {"bit": 1 << 0, "code": "staff", "label": "Discord Staff"},
+    {"bit": 1 << 1, "code": "partner", "label": "Partner"},
+    {"bit": 1 << 2, "code": "hypesquad", "label": "HypeSquad Events"},
+    {"bit": 1 << 3, "code": "bug_hunter_lvl1", "label": "Bug Hunter Level 1"},
+    {"bit": 1 << 6, "code": "bravery", "label": "HypeSquad Bravery"},
+    {"bit": 1 << 7, "code": "brilliance", "label": "HypeSquad Brilliance"},
+    {"bit": 1 << 8, "code": "balance", "label": "HypeSquad Balance"},
+    {"bit": 1 << 9, "code": "early_supporter", "label": "Early Supporter"},
+    {"bit": 1 << 14, "code": "bug_hunter_lvl2", "label": "Bug Hunter Level 2"},
+    {"bit": 1 << 16, "code": "verified_bot", "label": "Verified Bot"},
+    {"bit": 1 << 17, "code": "verified_dev", "label": "Early Verified Bot Developer"},
+    {"bit": 1 << 18, "code": "certified_mod", "label": "Certified Moderator"},
+    {"bit": 1 << 19, "code": "bot_http", "label": "Bot HTTP Interactions"},
+    {"bit": 1 << 22, "code": "active_dev", "label": "Active Developer"},
+]
+
+
+def _discord_badges_from_account(acct: dict) -> list[dict]:
+    if not acct:
+        return []
+    flags = int(acct.get("public_flags") or 0)
+    badges = []
+    for badge in DISCORD_BADGE_MAP:
+        if flags & int(badge["bit"]):
+            badges.append(
+                {
+                    "code": badge["code"],
+                    "label": badge["label"],
+                    "icon_url": badge.get("icon_url"),
+                }
+            )
+    premium = int(acct.get("premium_type") or 0)
+    if premium > 0:
+        badges.append({"code": "nitro", "label": "Discord Nitro", "icon_url": None})
+    return badges
+
 ALLOWED_ORIGINS = [
     o.strip()
     for o in (
@@ -618,6 +656,7 @@ ALLOWED_MIME = ALLOWED_IMAGE_CT
 
 EffectName = Literal["none", "glow", "neon", "rainbow"]
 BgEffectName = Literal["none", "night", "rain", "snow"]
+DiscordPresence = Literal["online", "idle", "dnd", "offline"]
 HEX_COLOR_RE = r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
 
 
@@ -639,12 +678,19 @@ class IconOut(BaseModel):
     acquired_at: Optional[str] = None
 
 
+class DiscordBadgeOut(BaseModel):
+    code: str
+    label: str
+    icon_url: Optional[str] = None
+
+
 class LinktreeCreateIn(BaseModel):
     slug: str = Field(..., min_length=2, max_length=48, pattern=r"^[a-zA-Z0-9_-]+$")
     device_type: DeviceType = "pc"
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    show_audio_player: bool = False
     background_url: Optional[str] = None
     background_is_video: bool = False
     transparency: int = Field(0, ge=0, le=100)
@@ -655,12 +701,18 @@ class LinktreeCreateIn(BaseModel):
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
+    card_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
     discord_frame_enabled: bool = False
+    discord_presence_enabled: bool = False
+    discord_presence: DiscordPresence = "online"
+    discord_status_enabled: bool = False
+    discord_status_text: Optional[str] = Field(None, max_length=140)
+    discord_badges_enabled: bool = False
     show_visit_counter: bool = False
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -675,6 +727,7 @@ class LinktreeUpdateIn(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    show_audio_player: Optional[bool] = None
     background_url: Optional[str] = None
     background_is_video: Optional[bool] = None
     transparency: Optional[int] = Field(None, ge=0, le=100)
@@ -685,12 +738,18 @@ class LinktreeUpdateIn(BaseModel):
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
+    card_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
     discord_frame_enabled: Optional[bool] = None
+    discord_presence_enabled: Optional[bool] = None
+    discord_presence: Optional[DiscordPresence] = None
+    discord_status_enabled: Optional[bool] = None
+    discord_status_text: Optional[str] = Field(None, max_length=140)
+    discord_badges_enabled: Optional[bool] = None
     show_visit_counter: Optional[bool] = None
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -721,6 +780,7 @@ class LinktreeOut(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    show_audio_player: bool = False
     background_url: Optional[str] = None
     background_is_video: bool
     transparency: int
@@ -731,6 +791,7 @@ class LinktreeOut(BaseModel):
     link_color: Optional[str] = None
     link_bg_color: Optional[str] = None
     link_bg_alpha: int = 100
+    card_color: Optional[str] = None
     text_color: Optional[str] = None
     name_color: Optional[str] = None
     location_color: Optional[str] = None
@@ -738,6 +799,13 @@ class LinktreeOut(BaseModel):
     cursor_url: Optional[str] = None
     discord_frame_enabled: bool = False
     discord_decoration_url: Optional[str] = None
+    discord_presence_enabled: bool = False
+    discord_presence: DiscordPresence = "online"
+    discord_status_enabled: bool = False
+    discord_status_text: Optional[str] = None
+    discord_badges_enabled: bool = False
+    discord_badges: Optional[List[DiscordBadgeOut]] = None
+    discord_linked: bool = False
     profile_picture: Optional[str] = None  # NEU - fuer Avatar
     user_username: Optional[str] = None  # NEU - fuer "username"-Modus
     show_visit_counter: bool = False
@@ -1389,6 +1457,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         cur.execute(
             """
             SELECT id, user_id, slug, location, quote, song_url, background_url,
+                   COALESCE(show_audio_player, false) AS show_audio_player,
                    COALESCE(background_is_video, false) AS background_is_video,
                    COALESCE(transparency, 0)          AS transparency,
                    COALESCE(name_effect, 'none')       AS name_effect,
@@ -1399,12 +1468,18 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                     link_color,
                     link_bg_color,
                     COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
+                    card_color,
                    text_color,
                    name_color,
                    location_color,
                    quote_color,
                    cursor_url,
                    COALESCE(discord_frame_enabled, false) AS discord_frame_enabled,
+                    COALESCE(discord_presence_enabled, false) AS discord_presence_enabled,
+                    COALESCE(discord_presence, 'online') AS discord_presence,
+                    COALESCE(discord_status_enabled, false) AS discord_status_enabled,
+                    discord_status_text,
+                    COALESCE(discord_badges_enabled, false) AS discord_badges_enabled,
                     COALESCE(show_visit_counter, false) AS show_visit_counter,
                     visit_counter_color,
                     visit_counter_bg_color,
@@ -1460,7 +1535,11 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         visit_count = 0
 
     discord_acct = _load_discord_account(lt["user_id"])
+    discord_linked = bool(discord_acct)
     decoration_url = discord_acct.get("decoration_url") if discord_acct else None
+    discord_badges = (
+        _discord_badges_from_account(discord_acct) if discord_linked else []
+    )
 
     return {
         "id": lt["id"],
@@ -1480,13 +1559,22 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
+        "card_color": lt.get("card_color"),
         "text_color": lt.get("text_color"),
         "name_color": lt.get("name_color"),
         "location_color": lt.get("location_color"),
         "quote_color": lt.get("quote_color"),
         "cursor_url": lt.get("cursor_url"),
+        "show_audio_player": bool(lt.get("show_audio_player", False)),
         "discord_frame_enabled": bool(lt.get("discord_frame_enabled", False)),
         "discord_decoration_url": decoration_url,
+        "discord_presence_enabled": bool(lt.get("discord_presence_enabled", False)),
+        "discord_presence": lt.get("discord_presence") or "online",
+        "discord_status_enabled": bool(lt.get("discord_status_enabled", False)),
+        "discord_status_text": lt.get("discord_status_text"),
+        "discord_badges_enabled": bool(lt.get("discord_badges_enabled", False)),
+        "discord_badges": discord_badges if lt.get("discord_badges_enabled") else [],
+        "discord_linked": discord_linked,
         "profile_picture": user_pfp,
         "user_username": user_username,
         "show_visit_counter": bool(lt.get("show_visit_counter", False)),
@@ -2047,6 +2135,7 @@ def discord_status(current: dict = Depends(require_user)):
     _ensure_pg()
     acct = _load_discord_account(current["id"])
     linked = bool(acct)
+    badges = _discord_badges_from_account(acct) if linked else []
     return {
         "linked": linked,
         "configured": _discord_configured(),
@@ -2054,6 +2143,7 @@ def discord_status(current: dict = Depends(require_user)):
         "username": acct.get("discord_username") if linked else None,
         "global_name": acct.get("discord_global_name") if linked else None,
         "decoration_url": acct.get("decoration_url") if linked else None,
+        "badges": badges,
     }
 
 
@@ -2120,6 +2210,8 @@ async def discord_callback(code: str | None = None, state: str | None = None):
         data = user_res.json()
 
     decoration = data.get("avatar_decoration_data") or data.get("avatar_decoration")
+    public_flags = data.get("public_flags") or data.get("flags") or 0
+    premium_type = data.get("premium_type") or 0
     token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(expires_in))
     decoration_json = json.dumps(decoration) if decoration is not None else None
     db.upsert_discord_account(
@@ -2129,6 +2221,8 @@ async def discord_callback(code: str | None = None, state: str | None = None):
         discord_global_name=data.get("global_name"),
         avatar_hash=data.get("avatar"),
         avatar_decoration=decoration_json,
+        public_flags=int(public_flags or 0),
+        premium_type=int(premium_type or 0),
         access_token=access_token,
         refresh_token=refresh_token,
         token_expires_at=token_expires_at,
@@ -2159,7 +2253,15 @@ def discord_unlink(current: dict = Depends(require_user)):
         db.delete_discord_account(current["id"])
         with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
             cur.execute(
-                "UPDATE linktrees SET discord_frame_enabled = FALSE, updated_at = NOW() WHERE user_id=%s",
+                """
+                UPDATE linktrees
+                   SET discord_frame_enabled = FALSE,
+                       discord_presence_enabled = FALSE,
+                       discord_status_enabled = FALSE,
+                       discord_badges_enabled = FALSE,
+                       updated_at = NOW()
+                 WHERE user_id=%s
+                """,
                 (current["id"],),
             )
             conn.commit()
@@ -2323,9 +2425,14 @@ def get_linktree(
         if row:
             user_username, user_pfp = row[0], row[1]
     decoration_url = None
+    discord_linked = False
+    discord_badges = []
     try:
         acct = _load_discord_account(lt["user_id"])
+        discord_linked = bool(acct)
         decoration_url = acct.get("decoration_url") if acct else None
+        if discord_linked:
+            discord_badges = _discord_badges_from_account(acct)
     except Exception:
         decoration_url = None
 
@@ -2376,6 +2483,7 @@ def get_linktree(
         "location": lt.get("location"),
         "quote": lt.get("quote"),
         "song_url": lt.get("song_url"),
+        "show_audio_player": bool(lt.get("show_audio_player", False)),
         "background_url": lt.get("background_url"),
         "background_is_video": lt.get("background_is_video", False),
         "transparency": lt.get("transparency", 0),
@@ -2386,6 +2494,7 @@ def get_linktree(
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": lt.get("link_bg_alpha", 100),
+        "card_color": lt.get("card_color"),
         "text_color": lt.get("text_color"),
         "name_color": lt.get("name_color"),
         "location_color": lt.get("location_color"),
@@ -2393,6 +2502,13 @@ def get_linktree(
         "cursor_url": lt.get("cursor_url"),
         "discord_frame_enabled": frame_enabled,
         "discord_decoration_url": decoration_url if frame_enabled else None,
+        "discord_presence_enabled": bool(lt.get("discord_presence_enabled", False)),
+        "discord_presence": lt.get("discord_presence") or "online",
+        "discord_status_enabled": bool(lt.get("discord_status_enabled", False)),
+        "discord_status_text": lt.get("discord_status_text"),
+        "discord_badges_enabled": bool(lt.get("discord_badges_enabled", False)),
+        "discord_badges": discord_badges if lt.get("discord_badges_enabled") else [],
+        "discord_linked": discord_linked,
         "profile_picture": user_pfp,  # <= jetzt dabei
         "user_username": user_username,  # <= jetzt dabei
         "show_visit_counter": bool(lt.get("show_visit_counter", False)),
@@ -2436,6 +2552,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             location=payload.location,
             quote=payload.quote,
             song_url=payload.song_url,
+            show_audio_player=payload.show_audio_player,
             background_url=payload.background_url,
             background_is_video=payload.background_is_video,
             transparency=payload.transparency,
@@ -2446,12 +2563,18 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             link_color=payload.link_color,
             link_bg_color=payload.link_bg_color,
             link_bg_alpha=payload.link_bg_alpha,
+            card_color=payload.card_color,
             text_color=payload.text_color,
             name_color=payload.name_color,
             location_color=payload.location_color,
             quote_color=payload.quote_color,
             cursor_url=payload.cursor_url,
             discord_frame_enabled=payload.discord_frame_enabled,
+            discord_presence_enabled=payload.discord_presence_enabled,
+            discord_presence=payload.discord_presence,
+            discord_status_enabled=payload.discord_status_enabled,
+            discord_status_text=payload.discord_status_text,
+            discord_badges_enabled=payload.discord_badges_enabled,
             show_visit_counter=payload.show_visit_counter,
             visit_counter_color=payload.visit_counter_color,
             visit_counter_bg_color=payload.visit_counter_bg_color,
@@ -3181,6 +3304,7 @@ class TemplateVariantIn(BaseModel):
     location: Optional[str] = None
     quote: Optional[str] = None
     song_url: Optional[str] = None
+    show_audio_player: bool = False
     background_url: str = Field(..., min_length=1)
     background_is_video: bool = False
     transparency: int = Field(0, ge=0, le=100)
@@ -3191,12 +3315,18 @@ class TemplateVariantIn(BaseModel):
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
+    card_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
     discord_frame_enabled: bool = False
+    discord_presence_enabled: bool = False
+    discord_presence: DiscordPresence = "online"
+    discord_status_enabled: bool = False
+    discord_status_text: Optional[str] = Field(None, max_length=140)
+    discord_badges_enabled: bool = False
     show_visit_counter: bool = False
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -3258,6 +3388,11 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("visit_counter_bg_alpha", 20)
     data.setdefault("show_visit_counter", False)
     data.setdefault("discord_frame_enabled", False)
+    data.setdefault("show_audio_player", False)
+    data.setdefault("discord_presence_enabled", False)
+    data.setdefault("discord_presence", "online")
+    data.setdefault("discord_status_enabled", False)
+    data.setdefault("discord_badges_enabled", False)
     return data
 
 
@@ -3364,6 +3499,7 @@ def _extract_linktree_fields(data: dict) -> dict:
         "location",
         "quote",
         "song_url",
+        "show_audio_player",
         "background_url",
         "background_is_video",
         "transparency",
@@ -3374,12 +3510,18 @@ def _extract_linktree_fields(data: dict) -> dict:
         "link_color",
         "link_bg_color",
         "link_bg_alpha",
+        "card_color",
         "text_color",
         "name_color",
         "location_color",
         "quote_color",
         "cursor_url",
         "discord_frame_enabled",
+        "discord_presence_enabled",
+        "discord_presence",
+        "discord_status_enabled",
+        "discord_status_text",
+        "discord_badges_enabled",
         "show_visit_counter",
         "visit_counter_color",
         "visit_counter_bg_color",

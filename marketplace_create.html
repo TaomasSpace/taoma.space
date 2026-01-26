@@ -931,6 +931,13 @@
               <input id="tplSong" class="input" type="text" maxlength="500" />
             </div>
             <div class="field">
+              <label for="tplAudioPlayer">Show audio player</label>
+              <select id="tplAudioPlayer" class="select">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div class="field">
               <label for="tplBackground">Background URL *</label>
               <input
                 id="tplBackground"
@@ -956,6 +963,15 @@
                 min="0"
                 max="100"
                 value="0"
+              />
+            </div>
+            <div class="field">
+              <label for="tplCardColor">Card/base color</label>
+              <input
+                id="tplCardColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
               />
             </div>
             <div class="field">
@@ -1070,6 +1086,46 @@
             <div class="field">
               <label for="tplDiscordFrame">Discord frame enabled</label>
               <select id="tplDiscordFrame" class="select">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplDiscordPresence">Discord activity status</label>
+              <select id="tplDiscordPresence" class="select">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplDiscordPresenceValue">Activity status</label>
+              <select id="tplDiscordPresenceValue" class="select">
+                <option value="online">Online</option>
+                <option value="idle">Idle</option>
+                <option value="dnd">Do not disturb</option>
+                <option value="offline">Offline</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplDiscordStatusLine">Discord status line</label>
+              <select id="tplDiscordStatusLine" class="select">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplDiscordStatusText">Status text</label>
+              <input
+                id="tplDiscordStatusText"
+                class="input"
+                type="text"
+                maxlength="140"
+                placeholder="e.g. Building something cool"
+              />
+            </div>
+            <div class="field">
+              <label for="tplDiscordBadges">Discord badges</label>
+              <select id="tplDiscordBadges" class="select">
                 <option value="false">No</option>
                 <option value="true">Yes</option>
               </select>
@@ -1260,12 +1316,22 @@
         }
         v.link_color = hexOrNull(v.link_color);
         v.link_bg_color = hexOrNull(v.link_bg_color);
+        v.card_color = hexOrNull(v.card_color);
         v.text_color = hexOrNull(v.text_color);
         v.name_color = hexOrNull(v.name_color);
         v.location_color = hexOrNull(v.location_color);
         v.quote_color = hexOrNull(v.quote_color);
         v.visit_counter_color = hexOrNull(v.visit_counter_color);
         v.visit_counter_bg_color = hexOrNull(v.visit_counter_bg_color);
+        v.show_audio_player = !!v.show_audio_player;
+        v.discord_presence_enabled = !!v.discord_presence_enabled;
+        v.discord_presence =
+          (v.discord_presence || "online").toString().toLowerCase();
+        v.discord_status_enabled = !!v.discord_status_enabled;
+        v.discord_status_text = v.discord_status_text
+          ? String(v.discord_status_text).trim()
+          : null;
+        v.discord_badges_enabled = !!v.discord_badges_enabled;
         v.link_bg_alpha = Math.min(
           100,
           Math.max(0, parseInt(v.link_bg_alpha ?? 100, 10))
@@ -1319,6 +1385,7 @@
           location: "",
           quote: "",
           song_url: "",
+          show_audio_player: false,
           background_url: "",
           background_is_video: false,
           transparency: 0,
@@ -1329,12 +1396,18 @@
           link_color: "",
           link_bg_color: "",
           link_bg_alpha: 100,
+          card_color: "",
           text_color: "",
           name_color: "",
           location_color: "",
           quote_color: "",
           cursor_url: "",
           discord_frame_enabled: false,
+          discord_presence_enabled: false,
+          discord_presence: "online",
+          discord_status_enabled: false,
+          discord_status_text: "",
+          discord_badges_enabled: false,
           show_visit_counter: false,
           visit_counter_color: "",
           visit_counter_bg_color: "",
@@ -1347,6 +1420,7 @@
         $("tplLocation").value = v.location || "";
         $("tplQuote").value = v.quote || "";
         $("tplSong").value = v.song_url || "";
+        $("tplAudioPlayer").value = v.show_audio_player ? "true" : "false";
         $("tplBackground").value = v.background_url || "";
         $("tplBgVideo").value = v.background_is_video ? "true" : "false";
         $("tplTrans").value =
@@ -1363,12 +1437,22 @@
           v.link_bg_alpha !== undefined && v.link_bg_alpha !== null
             ? v.link_bg_alpha
             : 100;
+        $("tplCardColor").value = v.card_color || "";
         $("tplTextColor").value = v.text_color || "";
         $("tplNameColor").value = v.name_color || "";
         $("tplLocationColor").value = v.location_color || "";
         $("tplQuoteColor").value = v.quote_color || "";
         $("tplCursorUrl").value = v.cursor_url || "";
         $("tplDiscordFrame").value = v.discord_frame_enabled ? "true" : "false";
+        $("tplDiscordPresence").value = v.discord_presence_enabled
+          ? "true"
+          : "false";
+        $("tplDiscordPresenceValue").value = v.discord_presence || "online";
+        $("tplDiscordStatusLine").value = v.discord_status_enabled
+          ? "true"
+          : "false";
+        $("tplDiscordStatusText").value = v.discord_status_text || "";
+        $("tplDiscordBadges").value = v.discord_badges_enabled ? "true" : "false";
         $("tplShowCounter").value = v.show_visit_counter ? "true" : "false";
         $("tplCounterColor").value = v.visit_counter_color || "";
         $("tplCounterBgColor").value = v.visit_counter_bg_color || "";
@@ -1396,6 +1480,7 @@
           location: $("tplLocation").value.trim() || "",
           quote: $("tplQuote").value.trim() || "",
           song_url: $("tplSong").value.trim() || "",
+          show_audio_player: $("tplAudioPlayer").value === "true",
           background_url: $("tplBackground").value.trim(),
           background_is_video: $("tplBgVideo").value === "true",
           transparency: Math.min(
@@ -1412,12 +1497,18 @@
             100,
             Math.max(0, parseInt($("tplLinkBgAlpha").value || "100", 10))
           ),
+          card_color: hexOrNull($("tplCardColor").value),
           text_color: hexOrNull($("tplTextColor").value),
           name_color: hexOrNull($("tplNameColor").value),
           location_color: hexOrNull($("tplLocationColor").value),
           quote_color: hexOrNull($("tplQuoteColor").value),
           cursor_url: $("tplCursorUrl").value.trim() || null,
           discord_frame_enabled: $("tplDiscordFrame").value === "true",
+          discord_presence_enabled: $("tplDiscordPresence").value === "true",
+          discord_presence: $("tplDiscordPresenceValue").value || "online",
+          discord_status_enabled: $("tplDiscordStatusLine").value === "true",
+          discord_status_text: $("tplDiscordStatusText").value.trim() || null,
+          discord_badges_enabled: $("tplDiscordBadges").value === "true",
           show_visit_counter: $("tplShowCounter").value === "true",
           visit_counter_color: hexOrNull($("tplCounterColor").value),
           visit_counter_bg_color: hexOrNull($("tplCounterBgColor").value),
@@ -1462,6 +1553,7 @@
             location: lt.location || "",
             quote: lt.quote || "",
             song_url: lt.song_url || "",
+            show_audio_player: !!lt.show_audio_player,
             background_url: lt.background_url || "",
             background_is_video: !!lt.background_is_video,
             transparency: lt.transparency ?? 0,
@@ -1472,12 +1564,18 @@
             link_color: lt.link_color || "",
             link_bg_color: lt.link_bg_color || "",
             link_bg_alpha: lt.link_bg_alpha ?? 100,
+            card_color: lt.card_color || "",
             text_color: lt.text_color || "",
             name_color: lt.name_color || "",
             location_color: lt.location_color || "",
             quote_color: lt.quote_color || "",
             cursor_url: lt.cursor_url || "",
             discord_frame_enabled: !!lt.discord_frame_enabled,
+            discord_presence_enabled: !!lt.discord_presence_enabled,
+            discord_presence: lt.discord_presence || "online",
+            discord_status_enabled: !!lt.discord_status_enabled,
+            discord_status_text: lt.discord_status_text || "",
+            discord_badges_enabled: !!lt.discord_badges_enabled,
             show_visit_counter: !!lt.show_visit_counter,
             visit_counter_color: lt.visit_counter_color || "",
             visit_counter_bg_color: lt.visit_counter_bg_color || "",
@@ -2164,6 +2262,7 @@
           [
             "tplLinkColor",
             "tplLinkBgColor",
+            "tplCardColor",
             "tplTextColor",
             "tplNameColor",
             "tplLocationColor",

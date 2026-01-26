@@ -132,6 +132,173 @@
         z-index: 2;
       }
 
+      .discord-presence {
+        position: absolute;
+        right: 4px;
+        bottom: 4px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid rgba(15, 18, 35, 0.9);
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+        background: #8a90a8;
+        z-index: 3;
+      }
+
+      .discord-presence.hidden {
+        display: none;
+      }
+
+      .discord-presence.status-online {
+        background: #23a559;
+      }
+
+      .discord-presence.status-idle {
+        background: #f0b232;
+      }
+
+      .discord-presence.status-dnd {
+        background: #f23f43;
+      }
+
+      .discord-presence.status-offline {
+        background: #8a90a8;
+      }
+
+      .discord-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        font-size: 0.95rem;
+        color: var(--muted);
+        margin-bottom: 0.6rem;
+      }
+
+      .discord-status.hidden {
+        display: none;
+      }
+
+      .discord-status .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #8a90a8;
+      }
+
+      .discord-status.status-online .dot {
+        background: #23a559;
+      }
+
+      .discord-status.status-idle .dot {
+        background: #f0b232;
+      }
+
+      .discord-status.status-dnd .dot {
+        background: #f23f43;
+      }
+
+      .discord-status.status-offline .dot {
+        background: #8a90a8;
+      }
+
+      .discord-status .text {
+        font-weight: 600;
+      }
+
+      .discord-badges {
+        display: flex;
+        gap: 0.45rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.4rem;
+      }
+
+      .discord-badges.hidden {
+        display: none;
+      }
+
+      .discord-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        background: #ffffff14;
+        border: 1px solid #ffffff26;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .discord-badge img {
+        width: 16px;
+        height: 16px;
+        object-fit: contain;
+        display: block;
+      }
+
+      .audio-player {
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto 1.5rem;
+        padding: 0.8rem 1rem;
+        border-radius: 14px;
+        background: rgba(23, 27, 59, 0.6);
+        border: 1px solid #ffffff26;
+        box-shadow: var(--shadow);
+        display: grid;
+        gap: 0.55rem;
+        text-align: left;
+      }
+
+      .audio-player.hidden {
+        display: none;
+      }
+
+      .audio-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: var(--muted);
+        gap: 0.5rem;
+      }
+
+      .audio-title {
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .audio-seek {
+        width: 100%;
+        accent-color: var(--acc);
+      }
+
+      .audio-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .audio-btn {
+        border: 1px solid #ffffff26;
+        background: #ffffff14;
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem;
+        font-weight: 700;
+        cursor: var(--cursor, pointer);
+      }
+
+      .audio-btn.primary {
+        background: var(--acc);
+        color: #0e1020;
+        border-color: color-mix(in oklab, var(--acc) 65%, #000);
+      }
+
       .name {
         font-size: 1.8rem;
         font-weight: 800;
@@ -753,6 +920,25 @@
           height: 7px;
         }
 
+        .audio-player {
+          padding: 0.7rem 0.8rem;
+          margin-bottom: 1.2rem;
+        }
+
+        .audio-meta {
+          font-size: 0.8rem;
+        }
+
+        .audio-title {
+          font-size: 0.85rem;
+        }
+
+        .discord-presence {
+          width: 16px;
+          height: 16px;
+          border-width: 2px;
+        }
+
         footer {
           padding: 0.8rem 0.5rem;
           font-size: 0.8rem;
@@ -898,12 +1084,63 @@
             decoding="async"
             style="display: none"
           />
+          <span
+            id="discordPresence"
+            class="discord-presence hidden"
+            role="img"
+            aria-label="Discord status"
+          ></span>
         </div>
         <div id="name" class="name">User</div>
+        <div id="discordStatusLine" class="discord-status hidden">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="discordStatusText" class="text"></span>
+        </div>
         <div id="quote" class="quote">-</div>
         <div class="location" id="loc"></div>
+        <div class="discord-badges hidden" id="discordBadges"></div>
         <div class="badges" id="badges"></div>
 
+        <div id="audioPlayer" class="audio-player hidden">
+          <div class="audio-meta">
+            <span id="audioTitle" class="audio-title">Audio</span>
+            <span id="audioTime" class="audio-time">0:00 / 0:00</span>
+          </div>
+          <input
+            id="audioSeek"
+            class="audio-seek"
+            type="range"
+            min="0"
+            max="0"
+            value="0"
+          />
+          <div class="audio-controls">
+            <button
+              id="audioBack"
+              class="audio-btn"
+              type="button"
+              aria-label="Back 10 seconds"
+            >
+              -10s
+            </button>
+            <button
+              id="audioPlay"
+              class="audio-btn primary"
+              type="button"
+              aria-label="Play or pause"
+            >
+              Play
+            </button>
+            <button
+              id="audioForward"
+              class="audio-btn"
+              type="button"
+              aria-label="Forward 10 seconds"
+            >
+              +10s
+            </button>
+          </div>
+        </div>
         <div class="links" id="links"></div>
         <div id="visitCounter" class="visit-counter" style="display: none">
           <svg
@@ -975,10 +1212,19 @@
 
         const soundBtn = document.getElementById("soundBtn");
         const soundLabel = document.getElementById("soundLabel");
+        const audioPlayer = document.getElementById("audioPlayer");
+        const audioTitle = document.getElementById("audioTitle");
+        const audioTime = document.getElementById("audioTime");
+        const audioSeek = document.getElementById("audioSeek");
+        const audioPlayBtn = document.getElementById("audioPlay");
+        const audioBackBtn = document.getElementById("audioBack");
+        const audioForwardBtn = document.getElementById("audioForward");
         let bgVideo = null;
         let bgAudio = null;
         let soundOn = false;
         let gateActive = false;
+        let audioSeekActive = false;
+        let audioCleanup = null;
 
         function safeUrl(
           raw,
@@ -1064,6 +1310,7 @@
 
         const DEFAULT_LINK_COLOR = "#e9ebff";
         const DEFAULT_LINK_BG = "#171b3b";
+        const DEFAULT_CARD_COLOR = "#171b3b";
         const DEFAULT_TEXT_COLOR = "#e9ebff";
         const DEFAULT_NAME_COLOR = "#e9ebff";
         const DEFAULT_LOCATION_COLOR = "#a2a9c8";
@@ -1143,11 +1390,11 @@
           rootStyle.setProperty("--quote-color", quote);
         }
 
-        function createLocationIcon() {
-          const svg = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "svg"
-          );
+      function createLocationIcon() {
+        const svg = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "svg"
+        );
           svg.setAttribute("width", "16");
           svg.setAttribute("height", "16");
           svg.setAttribute("viewBox", "0 0 24 24");
@@ -1161,9 +1408,96 @@
             "d",
             "M12 2C7.6 2 4 5.6 4 10c0 5.3 8 12 8 12s8-6.7 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"
           );
-          svg.appendChild(path);
-          return svg;
+        svg.appendChild(path);
+        return svg;
+      }
+
+      const PRESENCE_LABELS = {
+        online: "Online",
+        idle: "Idle",
+        dnd: "Do not disturb",
+        offline: "Offline",
+      };
+      const PRESENCE_CLASSES = [
+        "status-online",
+        "status-idle",
+        "status-dnd",
+        "status-offline",
+      ];
+
+      function normalizePresence(raw) {
+        const key = String(raw || "online").toLowerCase();
+        return ["online", "idle", "dnd", "offline"].includes(key)
+          ? key
+          : "online";
+      }
+
+      function applyPresenceClass(el, presence) {
+        if (!el) return;
+        PRESENCE_CLASSES.forEach((cls) => el.classList.remove(cls));
+        el.classList.add(`status-${normalizePresence(presence)}`);
+      }
+
+      function formatTime(seconds) {
+        if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${String(secs).padStart(2, "0")}`;
+      }
+
+      function getAudioTitle(url) {
+        if (!url) return "Audio";
+        try {
+          const u = new URL(url, window.location.origin);
+          const name = (u.pathname || "").split("/").pop();
+          if (name) return decodeURIComponent(name);
+        } catch (_) {}
+        return "Audio";
+      }
+
+      function syncAudioUI() {
+        if (!audioPlayer || !audioSeek || !audioTime || !audioPlayBtn) return;
+        if (!bgAudio) {
+          audioTime.textContent = "0:00 / 0:00";
+          audioSeek.value = "0";
+          audioSeek.max = "0";
+          audioPlayBtn.textContent = "Play";
+          return;
         }
+        const duration = Number.isFinite(bgAudio.duration)
+          ? bgAudio.duration
+          : 0;
+        const current = Number.isFinite(bgAudio.currentTime)
+          ? bgAudio.currentTime
+          : 0;
+        if (!audioSeekActive) {
+          audioSeek.max = duration ? String(duration) : "0";
+          audioSeek.value = String(Math.min(current, duration || current || 0));
+        }
+        audioTime.textContent = `${formatTime(current)} / ${formatTime(
+          duration
+        )}`;
+        audioPlayBtn.textContent = bgAudio.paused ? "Play" : "Pause";
+      }
+
+      function bindAudioPlayer(audio) {
+        if (!audio) return () => {};
+        const update = () => syncAudioUI();
+        const onPlay = () => syncAudioUI();
+        const onPause = () => syncAudioUI();
+        audio.addEventListener("timeupdate", update);
+        audio.addEventListener("loadedmetadata", update);
+        audio.addEventListener("play", onPlay);
+        audio.addEventListener("pause", onPause);
+        audio.addEventListener("ended", onPause);
+        return () => {
+          audio.removeEventListener("timeupdate", update);
+          audio.removeEventListener("loadedmetadata", update);
+          audio.removeEventListener("play", onPlay);
+          audio.removeEventListener("pause", onPause);
+          audio.removeEventListener("ended", onPause);
+        };
+      }
 
         function updateSoundUI() {
           if (!soundBtn) return;
@@ -1198,6 +1532,7 @@
             soundOn = true;
             updateSoundUI();
             soundBtn.classList.remove("hidden");
+            syncAudioUI();
           } catch (_) {
             // bleibt off
           }
@@ -1213,6 +1548,7 @@
             }
             soundOn = false;
             updateSoundUI();
+            syncAudioUI();
           } catch (_) {}
         }
 
@@ -1220,6 +1556,56 @@
           soundBtn.addEventListener("click", () => {
             if (soundOn) turnSoundOff();
             else turnSoundOn();
+          });
+        }
+
+        if (audioSeek) {
+          audioSeek.addEventListener("pointerdown", () => {
+            audioSeekActive = true;
+          });
+          audioSeek.addEventListener("pointerup", () => {
+            audioSeekActive = false;
+            syncAudioUI();
+          });
+          audioSeek.addEventListener("pointercancel", () => {
+            audioSeekActive = false;
+            syncAudioUI();
+          });
+          audioSeek.addEventListener("input", () => {
+            if (!bgAudio) return;
+            const nextTime = Number(audioSeek.value || 0);
+            if (Number.isFinite(nextTime)) bgAudio.currentTime = nextTime;
+          });
+        }
+
+        if (audioPlayBtn) {
+          audioPlayBtn.addEventListener("click", async () => {
+            if (!bgAudio) return;
+            if (bgAudio.paused) {
+              await turnSoundOn();
+            } else {
+              bgAudio.pause();
+            }
+            syncAudioUI();
+          });
+        }
+
+        if (audioBackBtn) {
+          audioBackBtn.addEventListener("click", () => {
+            if (!bgAudio) return;
+            bgAudio.currentTime = Math.max(0, bgAudio.currentTime - 10);
+            syncAudioUI();
+          });
+        }
+
+        if (audioForwardBtn) {
+          audioForwardBtn.addEventListener("click", () => {
+            if (!bgAudio || !Number.isFinite(bgAudio.duration)) return;
+            bgAudio.currentTime = Math.min(
+              bgAudio.duration,
+              bgAudio.currentTime + 10
+            );
+            syncAudioUI();
           });
         }
 
@@ -1236,6 +1622,7 @@
               .then(() => {
                 soundOn = true;
                 updateSoundUI();
+                syncAudioUI();
               })
               .catch(() => {});
           }
@@ -1504,10 +1891,22 @@
             try {
               bgAudio.pause();
             } catch {}
+            if (audioCleanup) {
+              audioCleanup();
+              audioCleanup = null;
+            }
             bgAudio.remove();
             bgAudio = null;
           }
+          syncAudioUI();
           const songUrl = safeMediaUrl(data.song_url);
+          const showAudioPlayer = !!data.show_audio_player && !!songUrl;
+          if (audioPlayer) {
+            audioPlayer.classList.toggle("hidden", !showAudioPlayer);
+            if (showAudioPlayer && audioTitle) {
+              audioTitle.textContent = getAudioTitle(songUrl);
+            }
+          }
           if (songUrl) {
             bgAudio = document.createElement("audio");
             bgAudio.src = songUrl;
@@ -1516,6 +1915,8 @@
             bgAudio.muted = true; // Autoplay-friendly start, gate will unmute
             document.body.appendChild(bgAudio);
             bgAudio.play().catch(() => {});
+            audioCleanup = bindAudioPlayer(bgAudio);
+            syncAudioUI();
             needsGate = true;
             if (soundBtn) soundBtn.classList.remove("hidden"); // Button zeigen - Nutzer kann unmute'n
           } else if (bgIsVideo && bgVideo) {
@@ -1537,12 +1938,15 @@
             const raw = Number(data.transparency);
             const clamped = Number.isFinite(raw) ? Math.min(100, Math.max(0, raw)) : 0;
             const cardAlpha = 1 - clamped / 100;
+            const cardHex = sanitizeHexColor(data.card_color) || DEFAULT_CARD_COLOR;
+            const cardBg = hexToRgba(cardHex, cardAlpha) || `rgba(23, 27, 59, ${cardAlpha})`;
 
             if (cardAlpha <= 0) {
               cardEl.classList.add("transparent");
+              cardEl.style.background = "";
             } else {
               cardEl.classList.remove("transparent");
-              cardEl.style.setProperty("--card-alpha", cardAlpha.toString());
+              cardEl.style.background = cardBg;
             }
           }
           applyTextColors(data);
@@ -1582,6 +1986,29 @@
               pfpFrame.style.display = "none";
             }
           }
+          const presence = normalizePresence(data.discord_presence);
+          const presenceLabel = PRESENCE_LABELS[presence] || "Online";
+          const presenceEl = document.getElementById("discordPresence");
+          const statusLine = document.getElementById("discordStatusLine");
+          const statusTextEl = document.getElementById("discordStatusText");
+          const discordLinked = !!data.discord_linked;
+          if (presenceEl) {
+            const showPresence = discordLinked && data.discord_presence_enabled;
+            presenceEl.classList.toggle("hidden", !showPresence);
+            applyPresenceClass(presenceEl, presence);
+            presenceEl.setAttribute("aria-label", `Discord status: ${presenceLabel}`);
+          }
+          if (statusLine && statusTextEl) {
+            const showStatus = discordLinked && data.discord_status_enabled;
+            statusLine.classList.toggle("hidden", !showStatus);
+            if (showStatus) {
+              applyPresenceClass(statusLine, presence);
+              const statusText = (data.discord_status_text || "").trim();
+              statusTextEl.textContent = statusText || presenceLabel;
+            } else {
+              statusTextEl.textContent = "";
+            }
+          }
           const nameEl = document.getElementById("name");
           if (nameEl) {
             const mode = data.display_name_mode || "slug";
@@ -1611,6 +2038,42 @@
               text.textContent = ` ${locText}`;
               locEl.appendChild(icon);
               locEl.appendChild(text);
+            }
+          }
+
+          const discordBadgesEl = document.getElementById("discordBadges");
+          if (discordBadgesEl) {
+            discordBadgesEl.innerHTML = "";
+            const list = Array.isArray(data.discord_badges) ? data.discord_badges : [];
+            const showBadges =
+              discordLinked &&
+              data.discord_badges_enabled &&
+              list.length > 0;
+            discordBadgesEl.classList.toggle("hidden", !showBadges);
+            if (showBadges) {
+              const frag = document.createDocumentFragment();
+              list.forEach((badge) => {
+                if (!badge) return;
+                const item = document.createElement("span");
+                item.className = "discord-badge";
+                const label = badge.label || badge.code || "badge";
+                item.title = label;
+                item.setAttribute("aria-label", label);
+                const iconUrl = safeMediaUrl(badge.icon_url);
+                if (iconUrl) {
+                  const img = document.createElement("img");
+                  img.src = iconUrl;
+                  img.alt = "";
+                  img.loading = "lazy";
+                  img.decoding = "async";
+                  item.appendChild(img);
+                }
+                const text = document.createElement("span");
+                text.textContent = label;
+                item.appendChild(text);
+                frag.appendChild(item);
+              });
+              discordBadgesEl.appendChild(frag);
             }
           }
 

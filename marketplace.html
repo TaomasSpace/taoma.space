@@ -839,12 +839,22 @@
         }
         v.link_color = hexOrNull(v.link_color);
         v.link_bg_color = hexOrNull(v.link_bg_color);
+        v.card_color = hexOrNull(v.card_color);
         v.text_color = hexOrNull(v.text_color);
         v.name_color = hexOrNull(v.name_color);
         v.location_color = hexOrNull(v.location_color);
         v.quote_color = hexOrNull(v.quote_color);
         v.visit_counter_color = hexOrNull(v.visit_counter_color);
         v.visit_counter_bg_color = hexOrNull(v.visit_counter_bg_color);
+        v.show_audio_player = !!v.show_audio_player;
+        v.discord_presence_enabled = !!v.discord_presence_enabled;
+        v.discord_presence =
+          (v.discord_presence || "online").toString().toLowerCase();
+        v.discord_status_enabled = !!v.discord_status_enabled;
+        v.discord_status_text = v.discord_status_text
+          ? String(v.discord_status_text).trim()
+          : null;
+        v.discord_badges_enabled = !!v.discord_badges_enabled;
         v.link_bg_alpha = Math.min(
           100,
           Math.max(0, parseInt(v.link_bg_alpha ?? 100, 10))
@@ -1318,6 +1328,7 @@
             location: lt.location || "",
             quote: lt.quote || "",
             song_url: lt.song_url || "",
+            show_audio_player: !!lt.show_audio_player,
             background_url: lt.background_url || "",
             background_is_video: !!lt.background_is_video,
             transparency: lt.transparency ?? 0,
@@ -1328,12 +1339,18 @@
             link_color: lt.link_color || "",
             link_bg_color: lt.link_bg_color || "",
             link_bg_alpha: lt.link_bg_alpha ?? 100,
+            card_color: lt.card_color || "",
             text_color: lt.text_color || "",
             name_color: lt.name_color || "",
             location_color: lt.location_color || "",
             quote_color: lt.quote_color || "",
             cursor_url: lt.cursor_url || "",
             discord_frame_enabled: !!lt.discord_frame_enabled,
+            discord_presence_enabled: !!lt.discord_presence_enabled,
+            discord_presence: lt.discord_presence || "online",
+            discord_status_enabled: !!lt.discord_status_enabled,
+            discord_status_text: lt.discord_status_text || "",
+            discord_badges_enabled: !!lt.discord_badges_enabled,
             show_visit_counter: !!lt.show_visit_counter,
             visit_counter_color: lt.visit_counter_color || "",
             visit_counter_bg_color: lt.visit_counter_bg_color || "",
@@ -1343,6 +1360,7 @@
           $("tplLocation").value = data.location;
           $("tplQuote").value = data.quote;
           $("tplSong").value = data.song_url;
+          $("tplAudioPlayer").value = data.show_audio_player ? "true" : "false";
           $("tplBackground").value = data.background_url;
           $("tplBgVideo").value = data.background_is_video ? "true" : "false";
           $("tplTrans").value = data.transparency;
@@ -1353,12 +1371,24 @@
           $("tplLinkColor").value = data.link_color;
           $("tplLinkBgColor").value = data.link_bg_color;
           $("tplLinkBgAlpha").value = data.link_bg_alpha;
+          $("tplCardColor").value = data.card_color;
           $("tplTextColor").value = data.text_color;
           $("tplNameColor").value = data.name_color;
           $("tplLocationColor").value = data.location_color;
           $("tplQuoteColor").value = data.quote_color;
           $("tplCursorUrl").value = data.cursor_url;
           $("tplDiscordFrame").value = data.discord_frame_enabled
+            ? "true"
+            : "false";
+          $("tplDiscordPresence").value = data.discord_presence_enabled
+            ? "true"
+            : "false";
+          $("tplDiscordPresenceValue").value = data.discord_presence || "online";
+          $("tplDiscordStatusLine").value = data.discord_status_enabled
+            ? "true"
+            : "false";
+          $("tplDiscordStatusText").value = data.discord_status_text || "";
+          $("tplDiscordBadges").value = data.discord_badges_enabled
             ? "true"
             : "false";
           $("tplShowCounter").value = data.show_visit_counter
@@ -1388,6 +1418,7 @@
         $("tplLocation").value = "";
         $("tplQuote").value = "";
         $("tplSong").value = "";
+        $("tplAudioPlayer").value = "false";
         $("tplBackground").value = "";
         $("tplBgVideo").value = "false";
         $("tplTrans").value = "0";
@@ -1398,12 +1429,18 @@
         $("tplLinkColor").value = "";
         $("tplLinkBgColor").value = "";
         $("tplLinkBgAlpha").value = "100";
+        $("tplCardColor").value = "";
         $("tplTextColor").value = "";
         $("tplNameColor").value = "";
         $("tplLocationColor").value = "";
         $("tplQuoteColor").value = "";
         $("tplCursorUrl").value = "";
         $("tplDiscordFrame").value = "false";
+        $("tplDiscordPresence").value = "false";
+        $("tplDiscordPresenceValue").value = "online";
+        $("tplDiscordStatusLine").value = "false";
+        $("tplDiscordStatusText").value = "";
+        $("tplDiscordBadges").value = "false";
         $("tplShowCounter").value = "false";
         $("tplCounterColor").value = "";
         $("tplCounterBgColor").value = "";
@@ -1442,6 +1479,9 @@
           $("tplLocation").value = activeVariant.location || "";
           $("tplQuote").value = activeVariant.quote || "";
           $("tplSong").value = activeVariant.song_url || "";
+          $("tplAudioPlayer").value = activeVariant.show_audio_player
+            ? "true"
+            : "false";
           $("tplBackground").value = activeVariant.background_url || "";
           $("tplBgVideo").value = activeVariant.background_is_video
             ? "true"
@@ -1462,12 +1502,26 @@
             activeVariant.link_bg_alpha !== null
               ? activeVariant.link_bg_alpha
               : 100;
+          $("tplCardColor").value = activeVariant.card_color || "";
           $("tplTextColor").value = activeVariant.text_color || "";
           $("tplNameColor").value = activeVariant.name_color || "";
           $("tplLocationColor").value = activeVariant.location_color || "";
           $("tplQuoteColor").value = activeVariant.quote_color || "";
           $("tplCursorUrl").value = activeVariant.cursor_url || "";
           $("tplDiscordFrame").value = activeVariant.discord_frame_enabled
+            ? "true"
+            : "false";
+          $("tplDiscordPresence").value = activeVariant.discord_presence_enabled
+            ? "true"
+            : "false";
+          $("tplDiscordPresenceValue").value =
+            activeVariant.discord_presence || "online";
+          $("tplDiscordStatusLine").value = activeVariant.discord_status_enabled
+            ? "true"
+            : "false";
+          $("tplDiscordStatusText").value =
+            activeVariant.discord_status_text || "";
+          $("tplDiscordBadges").value = activeVariant.discord_badges_enabled
             ? "true"
             : "false";
           $("tplShowCounter").value = activeVariant.show_visit_counter
@@ -1523,6 +1577,7 @@
             location: $("tplLocation").value.trim() || "",
             quote: $("tplQuote").value.trim() || "",
             song_url: $("tplSong").value.trim() || "",
+            show_audio_player: $("tplAudioPlayer").value === "true",
             background_url: $("tplBackground").value.trim(),
             background_is_video: $("tplBgVideo").value === "true",
             transparency: Math.min(
@@ -1539,12 +1594,18 @@
               100,
               Math.max(0, parseInt($("tplLinkBgAlpha").value || "100", 10))
             ),
+            card_color: hexOrNull($("tplCardColor").value),
             text_color: hexOrNull($("tplTextColor").value),
             name_color: hexOrNull($("tplNameColor").value),
             location_color: hexOrNull($("tplLocationColor").value),
             quote_color: hexOrNull($("tplQuoteColor").value),
             cursor_url: $("tplCursorUrl").value.trim() || null,
             discord_frame_enabled: $("tplDiscordFrame").value === "true",
+            discord_presence_enabled: $("tplDiscordPresence").value === "true",
+            discord_presence: $("tplDiscordPresenceValue").value || "online",
+            discord_status_enabled: $("tplDiscordStatusLine").value === "true",
+            discord_status_text: $("tplDiscordStatusText").value.trim() || null,
+            discord_badges_enabled: $("tplDiscordBadges").value === "true",
             show_visit_counter: $("tplShowCounter").value === "true",
             visit_counter_color: hexOrNull($("tplCounterColor").value),
             visit_counter_bg_color: hexOrNull($("tplCounterBgColor").value),
