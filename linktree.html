@@ -711,6 +711,10 @@
         max-width: 100%;
       }
 
+      .location.hidden {
+        display: none;
+      }
+
       /* Quote - lange Texte */
       .quote {
         font-style: italic;
@@ -2259,6 +2263,7 @@
             locEl.textContent = "";
             const locText =
               typeof data.location === "string" ? data.location.trim() : "";
+            locEl.classList.toggle("hidden", !locText);
             if (locText) {
               const icon = createLocationIcon();
               const text = document.createElement("span");
