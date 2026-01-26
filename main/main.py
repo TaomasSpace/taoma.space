@@ -2688,6 +2688,7 @@ def get_linktree(
     decoration_url = None
     discord_linked = False
     discord_badges = []
+    acct = None
     try:
         acct = _load_discord_account(lt["user_id"])
         discord_linked = bool(acct)
@@ -2696,6 +2697,7 @@ def get_linktree(
             discord_badges = _discord_badges_from_account(acct)
     except Exception:
         decoration_url = None
+    presence_value, status_text = _resolve_discord_presence(lt, acct if discord_linked else None)
 
     icons = [
         {
