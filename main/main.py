@@ -639,6 +639,24 @@ DISCORD_BADGE_MAP = [
     {"bit": 1 << 22, "code": "active_dev", "label": "Active Developer"},
 ]
 
+DISCORD_BADGE_ICON_MAP = {
+    "staff": "/static/discord-badges/staff.svg",
+    "partner": "/static/discord-badges/partner.svg",
+    "hypesquad": "/static/discord-badges/hypesquad.svg",
+    "bug_hunter_lvl1": "/static/discord-badges/bug_hunter_lvl1.svg",
+    "bravery": "/static/discord-badges/bravery.svg",
+    "brilliance": "/static/discord-badges/brilliance.svg",
+    "balance": "/static/discord-badges/balance.svg",
+    "early_supporter": "/static/discord-badges/early_supporter.svg",
+    "bug_hunter_lvl2": "/static/discord-badges/bug_hunter_lvl2.svg",
+    "verified_bot": "/static/discord-badges/verified_bot.svg",
+    "verified_dev": "/static/discord-badges/verified_dev.svg",
+    "certified_mod": "/static/discord-badges/certified_mod.svg",
+    "bot_http": "/static/discord-badges/bot_http.svg",
+    "active_dev": "/static/discord-badges/active_dev.svg",
+    "nitro": "/static/discord-badges/nitro.svg",
+}
+
 
 def _discord_badges_from_account(acct: dict) -> list[dict]:
     if not acct:
@@ -651,12 +669,18 @@ def _discord_badges_from_account(acct: dict) -> list[dict]:
                 {
                     "code": badge["code"],
                     "label": badge["label"],
-                    "icon_url": badge.get("icon_url"),
+                    "icon_url": DISCORD_BADGE_ICON_MAP.get(badge["code"]),
                 }
             )
     premium = int(acct.get("premium_type") or 0)
     if premium > 0:
-        badges.append({"code": "nitro", "label": "Discord Nitro", "icon_url": None})
+        badges.append(
+            {
+                "code": "nitro",
+                "label": "Discord Nitro",
+                "icon_url": DISCORD_BADGE_ICON_MAP.get("nitro"),
+            }
+        )
     return badges
 
 

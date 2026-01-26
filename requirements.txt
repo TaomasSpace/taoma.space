@@ -10,3 +10,4 @@ python-multipart>=0.0.9
 sqlalchemy
 firebase_admin
 google-cloud-firestore
+websockets>=12.0

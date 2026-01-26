@@ -1684,6 +1684,26 @@
           } catch (_) {}
         }
 
+        async function playBackgroundVideo(unmute) {
+          if (!bgVideo) return false;
+          const tryPlay = async (mute) => {
+            bgVideo.muted = mute;
+            try {
+              await bgVideo.play();
+              return true;
+            } catch (_) {
+              return false;
+            }
+          };
+          if (unmute) {
+            if (await tryPlay(false)) return true;
+            if (await tryPlay(true)) return true;
+          } else if (await tryPlay(true)) {
+            return true;
+          }
+          return false;
+        }
+
         if (soundBtn) {
           soundBtn.addEventListener("click", () => {
             if (soundOn) turnSoundOff();
@@ -1741,11 +1761,16 @@
           });
         }
 
-        function enterExperience() {
+        async function enterExperience() {
           showGate(false);
-          if (bgVideo && !bgAudio) {
-            bgVideo.muted = false;
-            bgVideo.play().catch(() => {});
+          if (bgVideo) {
+            bgVideo.dataset.userReady = "1";
+            bgVideo.dataset.wantSound = bgAudio ? "0" : "1";
+            const ok = await playBackgroundVideo(!bgAudio);
+            if (ok && !bgAudio) {
+              soundOn = !bgVideo.muted;
+              updateSoundUI();
+            }
           }
           if (bgAudio) {
             bgAudio.muted = false;
@@ -2005,13 +2030,19 @@
                 if (preferLite) {
                   video.setAttribute("data-lite", "true");
                 }
+                video.addEventListener("loadeddata", () => {
+                  if (bgVideo !== video) return;
+                  if (video.dataset.userReady !== "1" || document.hidden) return;
+                  playBackgroundVideo(video.dataset.wantSound === "1");
+                });
                 bgEl.appendChild(video);
                 bgVideo = video;
                 needsGate = true;
                 if (!visibilityHandlerAdded) {
                   document.addEventListener("visibilitychange", () => {
-                    if (!document.hidden && !gateActive && bgVideo)
-                      bgVideo.play().catch(() => {});
+                    if (!document.hidden && !gateActive && bgVideo) {
+                      playBackgroundVideo(bgVideo.dataset.wantSound === "1");
+                    }
                   });
                   visibilityHandlerAdded = true;
                 }
@@ -2250,9 +2281,6 @@
                   img.decoding = "async";
                   item.appendChild(img);
                 }
-                const text = document.createElement("span");
-                text.textContent = label;
-                item.appendChild(text);
                 frag.appendChild(item);
               });
               discordBadgesEl.appendChild(frag);
