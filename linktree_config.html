@@ -3186,6 +3186,8 @@
         } catch (e) {
           showMsg(msgMeta, "Song upload failed", false);
         }
+      });
+
       $("fileSongIcon").addEventListener("change", async () => {
         try {
           const url = await uploadFile(
@@ -3200,8 +3202,6 @@
         } catch (e) {
           showMsg(msgMeta, "Song icon upload failed", false);
         }
-      });
-
       });
 
       $("fileBg").addEventListener("change", async () => {
