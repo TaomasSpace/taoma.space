@@ -1219,6 +1219,11 @@
               <div id="songStatus" class="preview-note muted">
                 No song uploaded yet.
               </div>
+              <div class="row" style="margin-top: 0.4rem">
+                <button class="btn sm ghost" type="button" id="btnRemoveSong">
+                  Remove Song
+                </button>
+              </div>
             </div>
             <div class="field">
               <label for="fileSongIcon">Upload Song Icon</label>
@@ -1226,6 +1231,11 @@
               <input type="hidden" id="inSongIcon" />
               <div id="songIconStatus" class="preview-note muted">
                 No icon uploaded.
+              </div>
+              <div class="row" style="margin-top: 0.4rem">
+                <button class="btn sm ghost" type="button" id="btnRemoveSongIcon">
+                  Remove Icon
+                </button>
               </div>
             </div>
             <div class="field">
@@ -1282,6 +1292,11 @@
               <div id="bgStatus" class="preview-note muted">
                 No background uploaded yet.
               </div>
+              <div class="row" style="margin-top: 0.4rem">
+                <button class="btn sm ghost" type="button" id="btnRemoveBg">
+                  Remove Background
+                </button>
+              </div>
             </div>
             <div class="field">
               <label for="fileCursor">Upload Cursor (Desktop)</label>
@@ -1292,6 +1307,11 @@
               </div>
               <div id="cursorStatus" class="preview-note muted">
                 No cursor uploaded.
+              </div>
+              <div class="row" style="margin-top: 0.4rem">
+                <button class="btn sm ghost" type="button" id="btnRemoveCursor">
+                  Remove Cursor
+                </button>
               </div>
             </div>
             <div class="field">
@@ -1572,6 +1592,11 @@
               <input type="hidden" id="inLinkIcon" />
               <div id="linkIconStatus" class="preview-note muted">
                 No icon uploaded.
+              </div>
+              <div class="row" style="margin-top: 0.4rem">
+                <button class="btn sm ghost" type="button" id="btnRemoveLinkIcon">
+                  Remove Icon
+                </button>
               </div>
             </div>
             <div class="field">
@@ -2498,6 +2523,9 @@
               l.icon_url || ""
             ).replaceAll("\"", "&quot;")}">
             <div class="muted" data-k="icon_status"></div>
+            <button class="btn sm ghost" type="button" data-act="icon-remove">
+              Remove Icon
+            </button>
           </div>
         <select class="select" data-k="is_active">
           <option value="true"${l.is_active ? " selected" : ""}>Active</option>
@@ -2539,6 +2567,20 @@
             } catch (e) {
               showMsg(msgLinks, "Icon upload failed", false);
             }
+          });
+        }
+        const iconRemove = row.querySelector('[data-act="icon-remove"]');
+        if (iconRemove) {
+          iconRemove.addEventListener("click", async () => {
+            if (iconUrlInput) iconUrlInput.value = "";
+            if (iconFile) iconFile.value = "";
+            if (iconStatus) iconStatus.textContent = "No icon uploaded.";
+            await apiUpdateLink(
+              l.id,
+              { icon_url: null },
+              { silent: true, skipRefresh: true }
+            );
+            showMsg(msgLinks, "Icon removed", true);
           });
         }
           row
@@ -3172,6 +3214,31 @@
         return await r.json();
       }
 
+      async function removeMetaUpload(opts) {
+        const { fieldId, fileId, statusId, emptyMsg, label, desktopOnly } =
+          opts || {};
+        const field = fieldId ? $(fieldId) : null;
+        if (!field) return;
+        if (desktopOnly && currentDevice !== "pc") {
+          showMsg(msgMeta, "Switch to Desktop to remove the cursor.", false);
+          return;
+        }
+        field.value = "";
+        if (fileId && $(fileId)) $(fileId).value = "";
+        if (statusId) setUploadStatus(statusId, "", emptyMsg || "");
+        if (!linktreeId) {
+          showMsg(msgMeta, "Create the Linktree first", false);
+          return;
+        }
+        try {
+          await apiEnsureOrUpdateMeta(true);
+          showMsg(msgMeta, `${label || "Upload"} removed`, true);
+          await refreshData();
+        } catch (e) {
+          showMsg(msgMeta, `${label || "Upload"} remove failed`, false);
+        }
+      }
+
       $("fileSong").addEventListener("change", async () => {
         try {
           const url = await uploadFile(
@@ -3186,6 +3253,16 @@
         } catch (e) {
           showMsg(msgMeta, "Song upload failed", false);
         }
+      });
+
+      $("btnRemoveSong")?.addEventListener("click", async () => {
+        await removeMetaUpload({
+          fieldId: "inSong",
+          fileId: "fileSong",
+          statusId: "songStatus",
+          emptyMsg: "No song uploaded yet.",
+          label: "Song",
+        });
       });
 
       $("fileSongIcon").addEventListener("change", async () => {
@@ -3204,6 +3281,16 @@
         }
       });
 
+      $("btnRemoveSongIcon")?.addEventListener("click", async () => {
+        await removeMetaUpload({
+          fieldId: "inSongIcon",
+          fileId: "fileSongIcon",
+          statusId: "songIconStatus",
+          emptyMsg: "No icon uploaded.",
+          label: "Song icon",
+        });
+      });
+
       $("fileBg").addEventListener("change", async () => {
         try {
           const res = await fetchUpload(
@@ -3218,6 +3305,16 @@
         } catch (e) {
           showMsg(msgMeta, "Background upload failed", false);
         }
+      });
+
+      $("btnRemoveBg")?.addEventListener("click", async () => {
+        await removeMetaUpload({
+          fieldId: "inBg",
+          fileId: "fileBg",
+          statusId: "bgStatus",
+          emptyMsg: "No background uploaded yet.",
+          label: "Background",
+        });
       });
 
       $("fileCursor").addEventListener("change", async () => {
@@ -3243,6 +3340,23 @@
         } catch (e) {
           showMsg(msgMeta, "Cursor upload failed", false);
         }
+      });
+
+      $("btnRemoveCursor")?.addEventListener("click", async () => {
+        await removeMetaUpload({
+          fieldId: "inCursor",
+          fileId: "fileCursor",
+          statusId: "cursorStatus",
+          emptyMsg: "No cursor uploaded.",
+          label: "Cursor",
+          desktopOnly: true,
+        });
+      });
+
+      $("btnRemoveLinkIcon")?.addEventListener("click", () => {
+        $("inLinkIcon").value = "";
+        if ($("fileIcon")) $("fileIcon").value = "";
+        setUploadStatus("linkIconStatus", "", "No icon uploaded.");
       });
 
       $("fileIcon").addEventListener("change", async () => {
