@@ -1967,9 +1967,10 @@
                 const video = document.createElement("video");
                 video.id = "bgvid";
                 video.src = bgUrl;
-                video.autoplay = false;
+                video.autoplay = true;
                 video.muted = true;
                 video.loop = true;
+                video.setAttribute("autoplay", "");
                 video.setAttribute("muted", "");
                 video.setAttribute("playsinline", "");
                 video.setAttribute("webkit-playsinline", "");
@@ -1979,6 +1980,7 @@
                 }
                 bgEl.appendChild(video);
                 bgVideo = video;
+                video.play().catch(() => {});
                 needsGate = true;
                 if (!visibilityHandlerAdded) {
                   document.addEventListener("visibilitychange", () => {
