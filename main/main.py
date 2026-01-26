@@ -2422,7 +2422,6 @@ def discord_status(current: dict = Depends(require_user)):
         "badges": badges,
         "presence": presence_value if linked else "offline",
         "status_text": status_text if linked else None,
-        "shared_guild": bool(acct.get("presence_updated_at")) if linked else False,
     }
 
 
@@ -2722,12 +2721,7 @@ def get_linktree(
             discord_badges = _discord_badges_from_account(acct)
     except Exception:
         decoration_url = None
-    presence_value, status_text = _resolve_discord_presence(
-        lt, acct if discord_linked else None
-    )
-    shared_guild = bool(acct.get("presence_updated_at")) if discord_linked else False
-    presence_enabled = bool(lt.get("discord_presence_enabled", False)) and shared_guild
-    status_enabled = bool(lt.get("discord_status_enabled", False)) and shared_guild
+    presence_value, status_text = _resolve_discord_presence(lt, acct if discord_linked else None)
 
     icons = [
         {
@@ -2800,9 +2794,9 @@ def get_linktree(
         "cursor_url": lt.get("cursor_url"),
         "discord_frame_enabled": frame_enabled,
         "discord_decoration_url": decoration_url if frame_enabled else None,
-        "discord_presence_enabled": presence_enabled,
+        "discord_presence_enabled": bool(lt.get("discord_presence_enabled", False)),
         "discord_presence": presence_value,
-        "discord_status_enabled": status_enabled,
+        "discord_status_enabled": bool(lt.get("discord_status_enabled", False)),
         "discord_status_text": status_text,
         "discord_badges_enabled": bool(lt.get("discord_badges_enabled", False)),
         "discord_badges": discord_badges if lt.get("discord_badges_enabled") else [],
