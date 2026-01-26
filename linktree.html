@@ -1572,12 +1572,20 @@
           return `${mins}:${String(secs).padStart(2, "0")}`;
         }
 
+        function stripFileExtension(name) {
+          if (!name) return "";
+          const base = String(name).trim();
+          const dot = base.lastIndexOf(".");
+          if (dot <= 0) return base;
+          return base.slice(0, dot);
+        }
+
         function getAudioTitle(url) {
           if (!url) return "Audio";
           try {
             const u = new URL(url, window.location.origin);
             const name = (u.pathname || "").split("/").pop();
-            if (name) return decodeURIComponent(name);
+            if (name) return stripFileExtension(decodeURIComponent(name));
           } catch (_) {}
           return "Audio";
         }
@@ -2096,7 +2104,7 @@
           }
           if (showAudioPlayer && audioTitle) {
             const songName = (data.song_name || "").trim();
-            const title = songName || getAudioTitle(songUrl);
+            const title = stripFileExtension(songName) || getAudioTitle(songUrl);
             audioTitle.style.display = "";
             audioTitle.textContent = title || "Audio";
           }
