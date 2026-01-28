@@ -1282,6 +1282,28 @@
       let variantCache = { pc: null, mobile: null };
       let choiceMade = false;
       let editingId = null;
+      let dirtyVisibility = false;
+      let dirtyMeta = false;
+      let dirtyVariant = false;
+
+      function resetChangeFlags() {
+        dirtyVisibility = false;
+        dirtyMeta = false;
+        dirtyVariant = false;
+      }
+
+      function markDirtyByField(id) {
+        if (!id) return;
+        if (id === "tplPublic") {
+          dirtyVisibility = true;
+          return;
+        }
+        if (id === "tplCreator" || id === "tplName" || id === "tplDesc") {
+          dirtyMeta = true;
+          return;
+        }
+        if (id.startsWith("tpl")) dirtyVariant = true;
+      }
 
       function hexOrNull(val) {
         const t = (val || "").trim();
@@ -1592,6 +1614,7 @@
 
       function resetForm() {
         editingId = null;
+        resetChangeFlags();
         $("tplCreator").value = (currentUser && currentUser.username) || "";
         $("tplName").value = "";
         $("tplDesc").value = "";
@@ -1607,6 +1630,22 @@
       }
 
       async function saveTemplate() {
+        const isPublic = $("tplPublic").value === "true";
+        if (editingId && dirtyVisibility && !dirtyMeta && !dirtyVariant) {
+          try {
+            await apiPatch(`/api/marketplace/templates/${editingId}`, {
+              is_public: isPublic,
+            });
+            showMsg(formMsg, "Template visibility updated", true);
+            resetChangeFlags();
+            setTimeout(() => {
+              location.href = "/marketplace";
+            }, 600);
+          } catch (e) {
+            showMsg(formMsg, `Save failed: ${e.message || e}`, false);
+          }
+          return;
+        }
         const name = $("tplName").value.trim();
         if (!name) {
           showMsg(formMsg, "Name required", false);
@@ -1644,7 +1683,7 @@
           name,
           description: desc || null,
           creator,
-          is_public: $("tplPublic").value === "true",
+          is_public: isPublic,
           preview_image_url: null,
           variants,
         };
@@ -1653,12 +1692,14 @@
           if (editingId) {
             await apiPatch(`/api/marketplace/templates/${editingId}`, payload);
             showMsg(formMsg, "Template updated", true);
+            resetChangeFlags();
             setTimeout(() => {
               location.href = "/marketplace";
             }, 600);
           } else {
             await apiPost("/api/marketplace/templates", payload);
             showMsg(formMsg, "Template created", true);
+            resetChangeFlags();
             setTimeout(() => {
               location.href = "/marketplace";
             }, 800);
@@ -1720,6 +1761,7 @@
           $("tplPublic").value = detail.is_public ? "true" : "false";
           $("btnSaveTemplate").textContent = "Update template";
           applyTemplateToForm(detail);
+          resetChangeFlags();
           showMsg(formMsg, "Template loaded for editing", true);
         } catch (e) {
           showMsg(formMsg, "Could not load template", false);
@@ -2283,6 +2325,7 @@
           );
           all.forEach((el) => {
             el.addEventListener("input", () => {
+              if (el.id) markDirtyByField(el.id);
               setDirty(true);
               saveDraftDebounced();
               // live validate only for some fields
@@ -2291,6 +2334,7 @@
               }
             });
             el.addEventListener("change", () => {
+              if (el.id) markDirtyByField(el.id);
               setDirty(true);
               saveDraftDebounced();
             });
