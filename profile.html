@@ -835,6 +835,21 @@
             </div>
           </form>
 
+          <form id="formEmail" class="field" autocomplete="off">
+            <label for="inEmail">Email</label>
+            <input
+              id="inEmail"
+              class="input"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+            />
+            <div class="row">
+              <button class="btn sm" type="submit">Save Email</button>
+              <span class="help">Used for login and password resets.</span>
+            </div>
+          </form>
+
           <div class="hr"></div>
 
           <!-- Avatar: Tabs (Upload / Gallery) -->
@@ -1319,6 +1334,8 @@
 
           // Prefill forms
           document.getElementById("inName").value = user.username || "";
+          const emailInput = document.getElementById("inEmail");
+          if (emailInput) emailInput.value = user.email || "";
           renderLinktreeSlot(user);
           await loadDiscordStatus();
           const lt = await fetchMyLinktree();
@@ -1402,6 +1419,18 @@
             return;
           }
           await updateMe({ username: name });
+        });
+
+      document
+        .getElementById("formEmail")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const email = document.getElementById("inEmail").value.trim();
+          if (!email) {
+            showMsg("Email cannot be empty", false);
+            return;
+          }
+          await updateMe({ email });
         });
 
       document

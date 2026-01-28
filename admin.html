@@ -1288,6 +1288,7 @@
         <h2>Users — Create</h2>
         <form id="fCreateUser">
           <label>Username</label><input name="username" required minlength="3" maxlength="32">
+          <label>Email</label><input name="email" type="email" placeholder="user@example.com">
           <label>Password</label><input name="password" type="password" required minlength="8">
           <label>Linktree ID (optional)</label><input name="linktree_id" type="number" min="1" placeholder="e.g. 1">
           <label>Profile Picture URL (optional)</label><input name="profile_picture" placeholder="/media/avatars/…">
@@ -1314,6 +1315,10 @@
           <div class="row">
             <div style="flex:1 1 240px">
               <label>Username</label><input name="username" minlength="3" maxlength="32"
+                placeholder="leave empty to keep">
+            </div>
+            <div style="flex:1 1 240px">
+              <label>Email</label><input name="email" type="email"
                 placeholder="leave empty to keep">
             </div>
             <div style="flex:1 1 240px">
@@ -1659,6 +1664,7 @@
       const f = e.target;
       const body = {
         username: f.username.value.trim(),
+        email: f.email.value.trim() || null,
         password: f.password.value,
         linktree_id: f.linktree_id.value ? Number(f.linktree_id.value) : null,
         profile_picture: f.profile_picture.value || null
@@ -1700,6 +1706,7 @@
       const f = e.target;
       const body = {};
       if (f.username.value.trim()) body.username = f.username.value.trim();
+      if (f.email.value.trim()) body.email = f.email.value.trim();
       if (f.password.value) body.password = f.password.value;
       if (f.linktree_id.value) body.linktree_id = Number(f.linktree_id.value);
       if (f.profile_picture.value) body.profile_picture = f.profile_picture.value;

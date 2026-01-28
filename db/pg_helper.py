@@ -64,6 +64,7 @@ ON CONFLICT (id) DO NOTHING;
 CREATE TABLE IF NOT EXISTS users (
     id                SERIAL PRIMARY KEY,
     username          TEXT NOT NULL,
+    email             TEXT,
     password          TEXT NOT NULL,
     linktree_id       INTEGER,
     profile_picture   TEXT,
@@ -71,6 +72,17 @@ CREATE TABLE IF NOT EXISTS users (
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at        TIMESTAMPTZ
 );
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id          SERIAL PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  TEXT NOT NULL UNIQUE,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    used_at     TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+CREATE INDEX IF NOT EXISTS idx_password_resets_expires ON password_resets(expires_at);
 
 CREATE TABLE IF NOT EXISTS linktrees (
     id                  SERIAL PRIMARY KEY,
@@ -627,6 +639,12 @@ class PgGifDB:
                 )
                 cur.execute(
                     """
+                    ALTER TABLE users
+                    ADD COLUMN IF NOT EXISTS email TEXT
+                """
+                )
+                cur.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_sessions_user
                     ON sessions(user_id)
                 """
@@ -635,6 +653,12 @@ class PgGifDB:
                     """
                     CREATE UNIQUE INDEX IF NOT EXISTS ux_users_username_ci
                     ON users (lower(username))
+                """
+                )
+                cur.execute(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS ux_users_email_ci
+                    ON users (lower(email))
                 """
                 )
                 cur.execute(
@@ -1186,6 +1210,11 @@ class PgGifDB:
             cur.execute("DELETE FROM sessions WHERE token=%s", (token,))
             conn.commit()
 
+    def revoke_user_tokens(self, user_id: int) -> None:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute("DELETE FROM sessions WHERE user_id=%s", (user_id,))
+            conn.commit()
+
     # ---- Suggest Helpers (identisch zu SQLite-Variante) ----
     def list_all_anime(self) -> list[str]:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
@@ -1254,6 +1283,7 @@ class PgGifDB:
     def createUser(
         self,
         username: str,
+        email: str | None,
         hashed_password: str,
         linktree_id: int | None = None,
         profile_picture: str | None = None,
@@ -1262,11 +1292,11 @@ class PgGifDB:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO users (username, password, linktree_id, profile_picture, admin)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO users (username, email, password, linktree_id, profile_picture, admin)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 RETURNING id
             """,
-                (username, hashed_password, linktree_id, profile_picture, admin),
+                (username, email, hashed_password, linktree_id, profile_picture, admin),
             )
             new_id = cur.fetchone()[0]
             conn.commit()
@@ -1277,6 +1307,7 @@ class PgGifDB:
         user_id: int,
         *,
         username: str | None = None,
+        email: str | None = None,
         password: str | None = None,
         linktree_id: int | None = None,
         profile_picture: str | None = None,
@@ -1286,6 +1317,10 @@ class PgGifDB:
             if username is not None:
                 cur.execute(
                     "UPDATE users SET username = %s WHERE id = %s", (username, user_id)
+                )
+            if email is not None:
+                cur.execute(
+                    "UPDATE users SET email = %s WHERE id = %s", (email, user_id)
                 )
             if password is not None:
                 cur.execute(
@@ -1335,6 +1370,7 @@ class PgGifDB:
                 SELECT
                     u.id,
                     u.username,
+                    u.email,
                     u.password,
                     u.admin,
                     u.profile_picture,
@@ -1348,6 +1384,32 @@ class PgGifDB:
                 LIMIT 1
                 """,
                 (username,),
+            )
+            return cur.fetchone()
+
+    def getUserByEmail(self, email: str) -> dict | None:
+        if not email:
+            return None
+        with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.password,
+                    u.admin,
+                    u.profile_picture,
+                    u.linktree_id,
+                    u.created_at,
+                    u.updated_at,
+                    l.slug AS linktree_slug
+                FROM users AS u
+                LEFT JOIN linktrees AS l ON l.id = u.linktree_id
+                WHERE LOWER(u.email) = LOWER(%s)
+                LIMIT 1
+                """,
+                (email,),
             )
             return cur.fetchone()
 

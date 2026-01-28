@@ -4,6 +4,9 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 from pydantic import BaseModel, EmailStr, Field
 import os, httpx
+import hashlib
+import smtplib
+from email.message import EmailMessage
 import re
 from dotenv import load_dotenv
 import logging
@@ -575,6 +578,92 @@ DISCORD_OAUTH_SCOPES = os.getenv("DISCORD_OAUTH_SCOPES", "identify")
 DISCORD_STATE_TTL = int(os.getenv("DISCORD_STATE_TTL", "600"))
 DISCORD_STATE_STORE: dict[str, dict] = {}
 logger = logging.getLogger("uvicorn.error")
+
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://taoma.space").rstrip("/")
+RESET_TOKEN_TTL_MINUTES = int(os.getenv("RESET_TOKEN_TTL_MINUTES", "30"))
+SMTP_HOST = os.getenv("SMTP_HOST")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587") or "587")
+SMTP_USER = os.getenv("SMTP_USER")
+SMTP_PASS = os.getenv("SMTP_PASS")
+SMTP_FROM = os.getenv("SMTP_FROM")
+SMTP_TLS = (os.getenv("SMTP_TLS", "true").lower() not in {"0", "false", "no"})
+
+
+def _email_configured() -> bool:
+    return bool(SMTP_HOST and SMTP_FROM)
+
+
+def _send_email(to_email: str, subject: str, body: str) -> bool:
+    if not _email_configured():
+        return False
+    msg = EmailMessage()
+    msg["From"] = SMTP_FROM
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.set_content(body)
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as smtp:
+            if SMTP_TLS:
+                smtp.starttls()
+            if SMTP_USER and SMTP_PASS:
+                smtp.login(SMTP_USER, SMTP_PASS)
+            smtp.send_message(msg)
+        return True
+    except Exception as exc:
+        logger.warning("Email send failed: %s", exc)
+        return False
+
+
+def _hash_reset_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _create_password_reset(user_id: int) -> str:
+    if not isinstance(db, PgGifDB):
+        raise HTTPException(501, "Password reset requires PostgreSQL.")
+    token = secrets.token_urlsafe(32)
+    token_hash = _hash_reset_token(token)
+    expires = datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_TTL_MINUTES)
+    with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM password_resets WHERE user_id=%s AND used_at IS NULL",
+            (user_id,),
+        )
+        cur.execute(
+            """
+            INSERT INTO password_resets (user_id, token_hash, expires_at)
+            VALUES (%s, %s, %s)
+            """,
+            (user_id, token_hash, expires),
+        )
+        conn.commit()
+    return token
+
+
+def _consume_password_reset(token: str) -> int:
+    if not isinstance(db, PgGifDB):
+        raise HTTPException(501, "Password reset requires PostgreSQL.")
+    token_hash = _hash_reset_token(token)
+    now = datetime.now(timezone.utc)
+    with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT id, user_id, expires_at, used_at
+            FROM password_resets
+            WHERE token_hash=%s
+            LIMIT 1
+            """,
+            (token_hash,),
+        )
+        row = cur.fetchone()
+        if not row or row.get("used_at") or row.get("expires_at") < now:
+            raise HTTPException(400, "Invalid or expired reset token")
+        cur.execute(
+            "UPDATE password_resets SET used_at=now() WHERE id=%s",
+            (row["id"],),
+        )
+        conn.commit()
+        return int(row["user_id"])
 
 
 def _ensure_discord_config():
@@ -1180,6 +1269,7 @@ class ToggleDisplayedIn(BaseModel):
 
 class MeUpdateIn(BaseModel):
     username: Optional[str] = Field(None, min_length=3, max_length=32)
+    email: Optional[EmailStr] = None
     profile_picture: Optional[str] = None
     linktree_id: Optional[int] = None
     current_password: Optional[str] = None
@@ -1248,6 +1338,7 @@ class Contact(BaseModel):
 class UserOut(BaseModel):
     id: int
     username: str
+    email: Optional[str] = None
     linktree_id: Optional[int] = None
     linktree_slug: Optional[str] = None  # <- add this
     profile_picture: Optional[str] = None
@@ -1258,6 +1349,7 @@ class UserOut(BaseModel):
 
 class UserCreateIn(BaseModel):
     username: str = Field(..., min_length=3, max_length=32)
+    email: Optional[EmailStr] = None
     password: str = Field(..., min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
@@ -1265,6 +1357,7 @@ class UserCreateIn(BaseModel):
 
 class UserUpdateIn(BaseModel):
     username: Optional[str] = Field(None, min_length=3, max_length=32)
+    email: Optional[EmailStr] = None
     password: Optional[str] = Field(None, min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
@@ -1275,12 +1368,17 @@ JOB_STORE: dict[str, dict] = {}
 
 
 class LoginUserIn(BaseModel):
-    username: str
+    identifier: str = Field(
+        ...,
+        validation_alias=AliasChoices("identifier", "username"),
+    )
     password: str
+    email: Optional[EmailStr] = None
 
 
 class RegisterIn(BaseModel):
     username: str = Field(..., min_length=3, max_length=32)
+    email: EmailStr
     password: str = Field(..., min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
@@ -1290,6 +1388,15 @@ class RegisterOut(BaseModel):
     token: str
     expires_at: Optional[str] = None
     user: UserOut
+
+
+class PasswordResetRequestIn(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetIn(BaseModel):
+    token: str = Field(..., min_length=20, max_length=200)
+    password: str = Field(..., min_length=8)
 
 
 
@@ -1717,6 +1824,7 @@ def verify(token: str = Depends(require_token)):
     user_out = {
         "id": user.get("id"),
         "username": user.get("username"),
+        "email": user.get("email"),
         "admin": bool(user.get("admin", False)),
         "linktree_id": user.get("linktree_id"),
         "linktree_slug": linktree_slug,  # <-- add this
@@ -2242,9 +2350,13 @@ def get_user(user_id: int, current: dict = Depends(require_user)):
     dependencies=[Depends(require_admin)],
 )
 def create_user(payload: UserCreateIn):
+    email = payload.email.strip().lower() if payload.email else None
+    if email and db.getUserByEmail(email):
+        raise HTTPException(status_code=409, detail="email already exists")
     try:
         new_id = db.createUser(
             username=payload.username.strip(),
+            email=email,
             hashed_password=hashPassword(payload.password),
             linktree_id=payload.linktree_id,
             profile_picture=payload.profile_picture,
@@ -2283,12 +2395,21 @@ def update_user(
     # Nicht-Admin darf nur sich selbst ändern und admin-Feld wird ignoriert
     if not is_admin and not is_self:
         raise HTTPException(403, "Forbidden")
+    if payload.email is not None:
+        email = payload.email.strip().lower()
+        if not email:
+            raise HTTPException(400, "email required")
+        other = db.getUserByEmail(email)
+        if other and other["id"] != user_id:
+            raise HTTPException(409, "email already exists")
+
     admin_value = payload.admin if is_admin else None
 
     try:
         db.updateUser(
             user_id,
             username=payload.username.strip() if payload.username is not None else None,
+            email=payload.email.strip().lower() if payload.email is not None else None,
             password=(
                 hashPassword(payload.password) if payload.password is not None else None
             ),
@@ -2311,11 +2432,29 @@ def update_user(
 
 @app.post("/api/auth/login_user", response_model=LoginOut)
 def login_user(payload: LoginUserIn):
-    user = db.getUserByUsername(payload.username.strip())
+    identifier = payload.identifier.strip()
+    email_input = payload.email.strip().lower() if payload.email else None
+    user = db.getUserByEmail(identifier) or db.getUserByUsername(identifier)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not CheckPassword(user["password"], payload.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    existing_email = (user.get("email") or "").strip()
+    if not existing_email:
+        if not email_input:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error": "email_required",
+                    "message": "Email required for this account.",
+                },
+            )
+        other = db.getUserByEmail(email_input)
+        if other and other["id"] != user["id"]:
+            raise HTTPException(status_code=409, detail="email already exists")
+        db.updateUser(user["id"], email=email_input)
+    elif email_input and existing_email.lower() != email_input.lower():
+        raise HTTPException(status_code=400, detail="email does not match this account")
     token = db.create_token(hours_valid=24, user_id=user["id"])
     expires = db.get_token_expiry(token)
     return _session_response({"token": token, "expires_at": expires}, token)
@@ -2324,8 +2463,11 @@ def login_user(payload: LoginUserIn):
 @app.post("/api/auth/register", response_model=RegisterOut)
 def register(payload: RegisterIn):
     uname = payload.username.strip()
+    email = payload.email.strip().lower()
     if db.getUserByUsername(uname):
         raise HTTPException(status_code=409, detail="username already exists")
+    if db.getUserByEmail(email):
+        raise HTTPException(status_code=409, detail="email already exists")
 
     # hash
     hashed = hashPassword(payload.password)
@@ -2333,6 +2475,7 @@ def register(payload: RegisterIn):
     try:
         new_id = db.createUser(
             username=uname,
+            email=email,
             hashed_password=hashed,
             linktree_id=payload.linktree_id,
             profile_picture=payload.profile_picture,
@@ -2350,6 +2493,7 @@ def register(payload: RegisterIn):
     user_out = {
         "id": row["id"],
         "username": row["username"],
+        "email": row.get("email"),
         "admin": bool(row.get("admin", False)),
         "linktree_id": row.get("linktree_id"),
         "profile_picture": row.get("profile_picture"),
@@ -2369,6 +2513,40 @@ def register(payload: RegisterIn):
     )
 
 
+
+@app.post("/api/auth/password/request")
+def request_password_reset(
+    payload: PasswordResetRequestIn, background: BackgroundTasks
+):
+    email = payload.email.strip().lower()
+    user = db.getUserByEmail(email)
+    if not user:
+        return {"ok": True}
+    token = _create_password_reset(user["id"])
+    reset_url = f"{PUBLIC_BASE_URL}/reset?token={token}"
+    subject = "Reset your TAOMA password"
+    body = (
+        "We received a request to reset your password.\n\n"
+        f"Reset link: {reset_url}\n\n"
+        "If you did not request this, you can ignore this email."
+    )
+    if _email_configured():
+        background.add_task(_send_email, email, subject, body)
+    else:
+        logger.warning("Password reset requested but SMTP is not configured")
+    return {"ok": True}
+
+
+@app.post("/api/auth/password/reset")
+def reset_password(payload: PasswordResetIn):
+    token = payload.token.strip()
+    user_id = _consume_password_reset(token)
+    db.updateUser(user_id, password=hashPassword(payload.password))
+    if isinstance(db, PgGifDB):
+        db.revoke_user_tokens(user_id)
+    return {"ok": True}
+
+
 @app.get("/register", include_in_schema=False)
 def register_page():
     return FileResponse("register.html")
@@ -2377,6 +2555,11 @@ def register_page():
 @app.get("/login", include_in_schema=False)
 def login_page():
     return FileResponse("login.html")
+
+
+@app.get("/reset", include_in_schema=False)
+def reset_page():
+    return FileResponse("reset.html")
 
 
 @app.post("/admin/users/{user_id}/grant", dependencies=[Depends(require_admin)])
@@ -2409,10 +2592,19 @@ def update_me(payload: MeUpdateIn, current: dict = Depends(require_user)):
         if other and other["id"] != current["id"]:
             raise HTTPException(409, "username already exists")
 
+    if payload.email is not None:
+        email = payload.email.strip().lower()
+        if not email:
+            raise HTTPException(400, "email required")
+        other = db.getUserByEmail(email)
+        if other and other["id"] != current["id"]:
+            raise HTTPException(409, "email already exists")
+
     try:
         db.updateUser(
             current["id"],
             username=payload.username.strip() if payload.username is not None else None,
+            email=payload.email.strip().lower() if payload.email is not None else None,
             password=(
                 hashPassword(payload.new_password)
                 if payload.new_password is not None
