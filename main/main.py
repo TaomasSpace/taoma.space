@@ -3782,6 +3782,10 @@ def globalChat():
 def privacyPolicy():
     return FileResponse("datenschutz.html")
 
+@app.get("/impressum.html", include_in_schema=False)
+def impressum_page():
+    return FileResponse("impressum.html")
+
 @app.patch("/api/linktrees/{linktree_id}", response_model=dict)
 def update_linktree_ep(
     linktree_id: int,
