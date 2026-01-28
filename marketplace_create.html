@@ -1144,6 +1144,14 @@
               />
             </div>
             <div class="field">
+              <label for="tplCursorFx">Cursor effect (Desktop)</label>
+              <select id="tplCursorFx" class="select">
+                <option value="none">none</option>
+                <option value="glow">glow</option>
+                <option value="particles">particles</option>
+              </select>
+            </div>
+            <div class="field">
               <label for="tplDiscordFrame">Discord frame enabled</label>
               <select id="tplDiscordFrame" class="select">
                 <option value="false">No</option>
@@ -1579,6 +1587,7 @@
           location_color: "",
           quote_color: "",
           cursor_url: "",
+          cursor_effect: "none",
           discord_frame_enabled: false,
           discord_presence_enabled: false,
           discord_presence: "online",
@@ -1633,6 +1642,7 @@
         $("tplLocationColor").value = v.location_color || "";
         $("tplQuoteColor").value = v.quote_color || "";
         $("tplCursorUrl").value = v.cursor_url || "";
+        $("tplCursorFx").value = v.cursor_effect || "none";
         $("tplDiscordFrame").value = v.discord_frame_enabled ? "true" : "false";
         $("tplDiscordPresence").value = v.discord_presence_enabled
           ? "true"
@@ -1706,6 +1716,7 @@
           location_color: hexOrNull($("tplLocationColor").value),
           quote_color: hexOrNull($("tplQuoteColor").value),
           cursor_url: $("tplCursorUrl").value.trim() || null,
+          cursor_effect: $("tplCursorFx").value || "none",
           discord_frame_enabled: $("tplDiscordFrame").value === "true",
           discord_presence_enabled: $("tplDiscordPresence").value === "true",
           discord_presence: $("tplDiscordPresenceValue").value || "online",
@@ -1804,6 +1815,7 @@
             location_color: lt.location_color || "",
             quote_color: lt.quote_color || "",
             cursor_url: lt.cursor_url || "",
+            cursor_effect: lt.cursor_effect || "none",
             discord_frame_enabled: !!lt.discord_frame_enabled,
             discord_presence_enabled: !!lt.discord_presence_enabled,
             discord_presence: lt.discord_presence || "online",

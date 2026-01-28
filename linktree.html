@@ -54,6 +54,7 @@
         --location-color: #a2a9c8;
         --quote-color: #e9ebff;
         --cursor: auto;
+        --cursor-fx-color: var(--acc);
       }
 
       body {
@@ -622,6 +623,48 @@
         background-size: cover;
         opacity: 0.5;
         pointer-events: none;
+      }
+
+      /* Cursor Effects */
+      .cursor-glow {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 8;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        background: radial-gradient(
+          circle,
+          color-mix(in oklab, var(--cursor-fx-color, #85a3ff) 65%, transparent),
+          transparent 70%
+        );
+        box-shadow: 0 0 18px
+            color-mix(
+              in oklab,
+              var(--cursor-fx-color, #85a3ff) 55%,
+              transparent
+            ),
+          0 0 42px
+            color-mix(
+              in oklab,
+              var(--cursor-fx-color, #85a3ff) 35%,
+              transparent
+            );
+        mix-blend-mode: screen;
+      }
+
+      .cursor-fx-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 8;
       }
 
       .card {
@@ -1522,6 +1565,228 @@
             audioPlayer.style.setProperty("--audio-accent", accentHex);
         }
 
+        let cursorFxMode = "none";
+        let cursorFxColor = DEFAULT_AUDIO_ACCENT_COLOR;
+        let cursorFxRgb = hexToRgb(DEFAULT_AUDIO_ACCENT_COLOR);
+        let cursorGlowEl = null;
+        let cursorFxCanvas = null;
+        let cursorFxCtx = null;
+        let cursorFxParticles = [];
+        let cursorFxRaf = null;
+        let cursorFxLastTime = 0;
+        let cursorFxLastSpawn = 0;
+        let cursorFxLastX = 0;
+        let cursorFxLastY = 0;
+        let cursorFxSize = { width: 0, height: 0, dpr: 1 };
+        let cursorFxMoveHandler = null;
+        let cursorFxLeaveHandler = null;
+        let cursorFxResizeHandler = null;
+
+        function setCursorFxColor(hex) {
+          const clean = sanitizeHexColor(hex) || DEFAULT_AUDIO_ACCENT_COLOR;
+          cursorFxColor = clean;
+          cursorFxRgb = hexToRgb(clean) || hexToRgb(DEFAULT_AUDIO_ACCENT_COLOR);
+          document.documentElement.style.setProperty("--cursor-fx-color", clean);
+        }
+
+        function prefersReducedMotion() {
+          return (
+            typeof window.matchMedia === "function" &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          );
+        }
+
+        function ensureCursorGlow() {
+          if (cursorGlowEl) return cursorGlowEl;
+          const el = document.createElement("div");
+          el.className = "cursor-glow";
+          el.setAttribute("aria-hidden", "true");
+          document.body.appendChild(el);
+          cursorGlowEl = el;
+          return el;
+        }
+
+        function ensureCursorCanvas() {
+          if (cursorFxCanvas && cursorFxCtx) return cursorFxCanvas;
+          const canvas = document.createElement("canvas");
+          canvas.className = "cursor-fx-canvas";
+          canvas.setAttribute("aria-hidden", "true");
+          document.body.appendChild(canvas);
+          cursorFxCanvas = canvas;
+          cursorFxCtx = canvas.getContext("2d");
+          resizeCursorCanvas();
+          return canvas;
+        }
+
+        function resizeCursorCanvas() {
+          if (!cursorFxCanvas || !cursorFxCtx) return;
+          const dpr = window.devicePixelRatio || 1;
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          cursorFxSize = { width, height, dpr };
+          cursorFxCanvas.width = Math.round(width * dpr);
+          cursorFxCanvas.height = Math.round(height * dpr);
+          cursorFxCanvas.style.width = `${width}px`;
+          cursorFxCanvas.style.height = `${height}px`;
+          cursorFxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function spawnCursorParticles(x, y, speed) {
+          const count = Math.min(6, Math.max(2, Math.round(speed / 8)));
+          for (let i = 0; i < count; i += 1) {
+            const life = 520 + Math.random() * 520;
+            cursorFxParticles.push({
+              x,
+              y,
+              vx: (Math.random() - 0.5) * 0.08,
+              vy: 0.06 + Math.random() * 0.09,
+              life,
+              maxLife: life,
+              size: 1 + Math.random() * 2.6,
+            });
+          }
+          if (cursorFxParticles.length > 180) {
+            cursorFxParticles.splice(0, cursorFxParticles.length - 180);
+          }
+        }
+
+        function tickCursorParticles(now) {
+          if (!cursorFxCtx) return;
+          const dt = Math.min(32, now - cursorFxLastTime);
+          cursorFxLastTime = now;
+          cursorFxCtx.clearRect(
+            0,
+            0,
+            cursorFxSize.width,
+            cursorFxSize.height
+          );
+          const rgb = cursorFxRgb || { r: 133, g: 163, b: 255 };
+          for (let i = cursorFxParticles.length - 1; i >= 0; i -= 1) {
+            const p = cursorFxParticles[i];
+            p.life -= dt;
+            if (p.life <= 0) {
+              cursorFxParticles.splice(i, 1);
+              continue;
+            }
+            p.vy += 0.0005 * dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            const alpha = (p.life / p.maxLife) * 0.85;
+            cursorFxCtx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+            cursorFxCtx.beginPath();
+            cursorFxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            cursorFxCtx.fill();
+          }
+          if (
+            cursorFxParticles.length ||
+            now - cursorFxLastSpawn < 140
+          ) {
+            cursorFxRaf = requestAnimationFrame(tickCursorParticles);
+          } else {
+            cursorFxRaf = null;
+          }
+        }
+
+        function startCursorGlow() {
+          const el = ensureCursorGlow();
+          el.style.display = "block";
+          cursorFxMoveHandler = (event) => {
+            el.style.left = `${event.clientX}px`;
+            el.style.top = `${event.clientY}px`;
+            el.style.opacity = "1";
+          };
+          cursorFxLeaveHandler = (event) => {
+            if (event.type === "mouseout" && event.relatedTarget) return;
+            el.style.opacity = "0";
+          };
+          document.addEventListener("pointermove", cursorFxMoveHandler, {
+            passive: true,
+          });
+          document.addEventListener("mouseout", cursorFxLeaveHandler, {
+            passive: true,
+          });
+        }
+
+        function startCursorParticles() {
+          ensureCursorCanvas();
+          if (cursorFxCanvas) cursorFxCanvas.style.display = "block";
+          cursorFxParticles = [];
+          cursorFxLastTime = performance.now();
+          cursorFxLastSpawn = 0;
+          cursorFxLastX = 0;
+          cursorFxLastY = 0;
+          cursorFxMoveHandler = (event) => {
+            const x = event.clientX;
+            const y = event.clientY;
+            const speed = Math.hypot(x - cursorFxLastX, y - cursorFxLastY);
+            cursorFxLastX = x;
+            cursorFxLastY = y;
+            const now = performance.now();
+            if (now - cursorFxLastSpawn < 16) return;
+            cursorFxLastSpawn = now;
+            spawnCursorParticles(x, y, speed);
+            if (!cursorFxRaf) {
+              cursorFxLastTime = now;
+              cursorFxRaf = requestAnimationFrame(tickCursorParticles);
+            }
+          };
+          cursorFxResizeHandler = () => resizeCursorCanvas();
+          document.addEventListener("pointermove", cursorFxMoveHandler, {
+            passive: true,
+          });
+          window.addEventListener("resize", cursorFxResizeHandler, {
+            passive: true,
+          });
+        }
+
+        function stopCursorFx() {
+          if (cursorFxMoveHandler) {
+            document.removeEventListener("pointermove", cursorFxMoveHandler);
+            cursorFxMoveHandler = null;
+          }
+          if (cursorFxLeaveHandler) {
+            document.removeEventListener("mouseout", cursorFxLeaveHandler);
+            cursorFxLeaveHandler = null;
+          }
+          if (cursorFxResizeHandler) {
+            window.removeEventListener("resize", cursorFxResizeHandler);
+            cursorFxResizeHandler = null;
+          }
+          if (cursorFxRaf) {
+            cancelAnimationFrame(cursorFxRaf);
+            cursorFxRaf = null;
+          }
+          cursorFxParticles = [];
+          if (cursorFxCtx && cursorFxSize.width && cursorFxSize.height) {
+            cursorFxCtx.clearRect(
+              0,
+              0,
+              cursorFxSize.width,
+              cursorFxSize.height
+            );
+          }
+          if (cursorFxCanvas) cursorFxCanvas.style.display = "none";
+          if (cursorGlowEl) cursorGlowEl.style.opacity = "0";
+          cursorFxMode = "none";
+        }
+
+        function applyCursorEffect(mode, { isMobile } = {}) {
+          const normalized = String(mode || "none").toLowerCase();
+          const allowed =
+            normalized === "glow" || normalized === "particles"
+              ? normalized
+              : "none";
+          const next =
+            allowed === "none" || isMobile || prefersReducedMotion()
+              ? "none"
+              : allowed;
+          if (next === cursorFxMode) return;
+          stopCursorFx();
+          if (next === "glow") startCursorGlow();
+          if (next === "particles") startCursorParticles();
+          cursorFxMode = next;
+        }
+
         function createLocationIcon() {
           const svg = document.createElementNS(
             "http://www.w3.org/2000/svg",
@@ -2168,6 +2433,12 @@
             data.link_bg_color,
             data.link_bg_alpha
           );
+          const cursorFxHex =
+            sanitizeHexColor(data.link_color) ||
+            sanitizeHexColor(data.name_color) ||
+            DEFAULT_AUDIO_ACCENT_COLOR;
+          setCursorFxColor(cursorFxHex);
+          applyCursorEffect(data.cursor_effect || "none", { isMobile });
 
           const cursorUrl = safeMediaUrl(data.cursor_url);
           if (cursorUrl && !isMobile) {

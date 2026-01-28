@@ -1316,6 +1316,17 @@
               </div>
             </div>
             <div class="field">
+              <label for="inCursorFx">Cursor effect (Desktop)</label>
+              <select id="inCursorFx" class="select">
+                <option value="none">none</option>
+                <option value="glow">glow</option>
+                <option value="particles">particles</option>
+              </select>
+              <div class="preview-note muted">
+                Runs only on desktop screens.
+              </div>
+            </div>
+            <div class="field">
               <label for="inTrans">Card Transparency (0-100)</label>
               <input
                 id="inTrans"
@@ -2073,6 +2084,7 @@
             ? lt.link_bg_alpha
             : 100;
         $("inCursor").value = lt.cursor_url || "";
+        $("inCursorFx").value = lt.cursor_effect || "none";
         setUploadStatus(
           "songStatus",
           lt.song_url,
@@ -2165,6 +2177,7 @@
           location_color: hexOrNull(lt.location_color),
           quote_color: hexOrNull(lt.quote_color),
           cursor_url: lt.cursor_url || null,
+          cursor_effect: lt.cursor_effect || "none",
           discord_frame_enabled: !!lt.discord_frame_enabled,
           discord_presence_enabled: !!lt.discord_presence_enabled,
           discord_status_enabled: !!lt.discord_status_enabled,
@@ -2237,6 +2250,7 @@
           location_color: hexOrNull($("inLocationColor").value),
           quote_color: hexOrNull($("inQuoteColor").value),
           cursor_url: $("inCursor").value.trim() || null,
+          cursor_effect: $("inCursorFx").value || "none",
           discord_frame_enabled: $("inDiscordFrame").checked,
           discord_presence_enabled: $("inDiscordPresence").checked,
           discord_status_enabled: $("inDiscordStatus").checked,
@@ -2862,6 +2876,7 @@
           link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
           card_color: $("inCardColor").value || null,
           cursor_url: $("inCursor").value.trim() || null,
+          cursor_effect: $("inCursorFx").value || "none",
           discord_frame_enabled: $("inDiscordFrame").checked,
           discord_presence_enabled: $("inDiscordPresence").checked,
           discord_status_enabled: $("inDiscordStatus").checked,
