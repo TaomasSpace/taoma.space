@@ -319,7 +319,7 @@
                 </div>
                 <div class="row">
                     <button class="btn" id="requestBtn" type="button">Send reset link</button>
-                    <a class="btn ghost" href="/login">Back to Login</a>
+                    <a class="btn ghost" href="/login?next=/">Back to Login</a>
                 </div>
             </div>
 
@@ -340,7 +340,7 @@
                 </div>
                 <div class="row">
                     <button class="btn" id="resetBtn" type="button">Set new password</button>
-                    <a class="btn ghost" href="/login">Back to Login</a>
+                    <a class="btn ghost" href="/login?next=/">Back to Login</a>
                 </div>
             </div>
         </section>
@@ -416,7 +416,7 @@
                     return;
                 }
                 showOk('Password updated. Redirecting to login...');
-                setTimeout(() => { window.location.href = '/login'; }, 800);
+                setTimeout(() => { window.location.href = '/login?next=/'; }, 800);
             } catch (e) {
                 showErr('Network error: ' + (e?.message || e));
             }

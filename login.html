@@ -474,7 +474,17 @@
         // Redirect target
         const params = new URLSearchParams(location.search);
         const storedNext = sessionStorage.getItem('taoma_next');
-        const nextUrl = params.get('next') || storedNext || document.referrer || '/';
+        const rawNext = params.get('next') || storedNext || document.referrer || '/';
+        const nextUrl = (() => {
+            try {
+                const url = new URL(rawNext, location.origin);
+                if (url.origin !== location.origin) return '/';
+                if (url.pathname === '/reset') return '/';
+                return url.pathname + url.search + url.hash;
+            } catch {
+                return '/';
+            }
+        })();
         if (nextUrl) sessionStorage.setItem('taoma_next', nextUrl);
         const registerLink = document.querySelector('a[href="/register"]');
         if (registerLink) registerLink.href = `/register?next=${encodeURIComponent(nextUrl)}`;

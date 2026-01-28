@@ -1350,7 +1350,7 @@ class UserOut(BaseModel):
 class UserCreateIn(BaseModel):
     username: str = Field(..., min_length=3, max_length=32)
     email: Optional[EmailStr] = None
-    password: str = Field(..., min_length=8)
+    password: Optional[str] = Field(None, min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
 
@@ -2353,11 +2353,16 @@ def create_user(payload: UserCreateIn):
     email = payload.email.strip().lower() if payload.email else None
     if email and db.getUserByEmail(email):
         raise HTTPException(status_code=409, detail="email already exists")
+    password_raw = payload.password.strip() if payload.password else None
+    if not password_raw:
+        if not email:
+            raise HTTPException(status_code=400, detail="email required")
+        password_raw = secrets.token_urlsafe(12)
     try:
         new_id = db.createUser(
             username=payload.username.strip(),
             email=email,
-            hashed_password=hashPassword(payload.password),
+            hashed_password=hashPassword(password_raw),
             linktree_id=payload.linktree_id,
             profile_picture=payload.profile_picture,
             admin=False,  # ← hart
