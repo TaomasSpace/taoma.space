@@ -123,6 +123,8 @@ CREATE TABLE IF NOT EXISTS linktrees (
     location_color      TEXT,
     quote_color         TEXT,
     cursor_url          TEXT,
+    cursor_effect       TEXT NOT NULL DEFAULT 'none'
+                        CHECK (cursor_effect IN ('none','glow','particles')),
     discord_frame_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     discord_presence_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     discord_presence    TEXT NOT NULL DEFAULT 'online'
@@ -540,6 +542,32 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS cursor_url TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS cursor_effect TEXT;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET cursor_effect = 'none'
+   WHERE cursor_effect IS NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN cursor_effect SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN cursor_effect SET DEFAULT 'none';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_cursor_effect;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_cursor_effect
+  CHECK (cursor_effect IN ('none','glow','particles'));
                 """)
                 cur.execute("""
   ALTER TABLE discord_accounts
@@ -1549,6 +1577,7 @@ class PgGifDB:
         location_color: str | None = None,
         quote_color: str | None = None,
         cursor_url: str | None = None,
+        cursor_effect: str = "none",
         discord_frame_enabled: bool = False,
         discord_presence_enabled: bool = False,
         discord_presence: str = "online",
@@ -1579,6 +1608,7 @@ class PgGifDB:
                     location_color,
                     quote_color,
                     cursor_url,
+                    cursor_effect,
                     discord_frame_enabled,
                     discord_presence_enabled,
                     discord_presence,
@@ -1595,6 +1625,8 @@ class PgGifDB:
                     %s,%s,%s,%s,
                     %s,%s,
                     %s,%s,%s,
+                    %s,
+                    %s,
                     %s,
                     %s,
                     %s,
@@ -1635,6 +1667,7 @@ class PgGifDB:
                     location_color,
                     quote_color,
                     cursor_url,
+                    cursor_effect,
                     discord_frame_enabled,
                     discord_presence_enabled,
                     discord_presence,
@@ -1687,6 +1720,7 @@ class PgGifDB:
             "location_color",
             "quote_color",
             "cursor_url",
+            "cursor_effect",
             "discord_frame_enabled",
             "discord_presence_enabled",
             "discord_presence",
@@ -1741,7 +1775,7 @@ class PgGifDB:
                     transparency, name_effect, background_effect,
                     display_name_mode, custom_display_name,
                     link_color, link_bg_color, link_bg_alpha, card_color, text_color,
-                    name_color, location_color, quote_color, cursor_url, discord_frame_enabled,
+                    name_color, location_color, quote_color, cursor_url, cursor_effect, discord_frame_enabled,
                     discord_presence_enabled, discord_presence, discord_status_enabled, discord_status_text, discord_badges_enabled,
                     show_visit_counter,
                     visit_counter_color, visit_counter_bg_color, visit_counter_bg_alpha
@@ -1750,12 +1784,29 @@ class PgGifDB:
                     %s,%s,%s,%s,
                     %s,%s,
                     %s,%s,%s,
-                    %s,%s,
-                    %s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,
                     %s,
-                    %s,%s,%s
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s
                 )
                 RETURNING id
                 """,
@@ -1789,6 +1840,7 @@ class PgGifDB:
                     src.get("location_color"),
                     src.get("quote_color"),
                     src.get("cursor_url"),
+                    src.get("cursor_effect"),
                     src.get("discord_frame_enabled", False),
                     src.get("discord_presence_enabled", False),
                     src.get("discord_presence", "online"),
