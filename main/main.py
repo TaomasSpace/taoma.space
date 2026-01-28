@@ -993,6 +993,10 @@ class LinktreeCreateIn(BaseModel):
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_alpha: int = Field(20, ge=0, le=100)
+    demo_show_links: bool = False
+    demo_link_label: Optional[str] = Field(None, max_length=80)
+    demo_link_url: Optional[str] = Field(None, max_length=500)
+    demo_link_icon_url: Optional[str] = Field(None, max_length=500)
 
 
 class LinktreeUpdateIn(BaseModel):
@@ -3813,6 +3817,10 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("discord_presence", "online")
     data.setdefault("discord_status_enabled", False)
     data.setdefault("discord_badges_enabled", False)
+    data.setdefault("demo_show_links", False)
+    for key in ("demo_link_label", "demo_link_url", "demo_link_icon_url"):
+        if key in data and isinstance(data[key], str):
+            data[key] = data[key].strip() or None
     return data
 
 

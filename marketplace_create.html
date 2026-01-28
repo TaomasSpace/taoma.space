@@ -938,6 +938,20 @@
               </select>
             </div>
             <div class="field">
+              <label for="tplSongName">Song name (optional)</label>
+              <input id="tplSongName" class="input" type="text" maxlength="120" />
+            </div>
+            <div class="field">
+              <label for="tplSongIcon">Song icon URL (optional)</label>
+              <input
+                id="tplSongIcon"
+                class="input"
+                type="text"
+                maxlength="500"
+                placeholder="/media/... or https://"
+              />
+            </div>
+            <div class="field">
               <label for="tplBackground">Background URL *</label>
               <input
                 id="tplBackground"
@@ -1161,6 +1175,43 @@
                 value="20"
               />
             </div>
+            <div class="field">
+              <label for="tplDemoLinkShow">Show demo link (preview)</label>
+              <select id="tplDemoLinkShow" class="select">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplDemoLinkLabel">Demo link label (optional)</label>
+              <input
+                id="tplDemoLinkLabel"
+                class="input"
+                type="text"
+                maxlength="80"
+                placeholder="e.g. My homepage"
+              />
+            </div>
+            <div class="field">
+              <label for="tplDemoLinkUrl">Demo link URL (optional)</label>
+              <input
+                id="tplDemoLinkUrl"
+                class="input"
+                type="text"
+                maxlength="500"
+                placeholder="https://example.com"
+              />
+            </div>
+            <div class="field">
+              <label for="tplDemoLinkIcon">Demo link icon URL (optional)</label>
+              <input
+                id="tplDemoLinkIcon"
+                class="input"
+                type="text"
+                maxlength="500"
+                placeholder="/media/... or https://"
+              />
+            </div>
           </div>
 
           <div class="hr"></div>
@@ -1347,6 +1398,10 @@
         v.quote_color = hexOrNull(v.quote_color);
         v.visit_counter_color = hexOrNull(v.visit_counter_color);
         v.visit_counter_bg_color = hexOrNull(v.visit_counter_bg_color);
+        v.song_name = v.song_name ? String(v.song_name).trim() : null;
+        v.song_icon_url = v.song_icon_url
+          ? String(v.song_icon_url).trim()
+          : null;
         v.show_audio_player = !!v.show_audio_player;
         v.discord_presence_enabled = !!v.discord_presence_enabled;
         v.discord_presence =
@@ -1356,6 +1411,14 @@
           ? String(v.discord_status_text).trim()
           : null;
         v.discord_badges_enabled = !!v.discord_badges_enabled;
+        v.demo_show_links = !!v.demo_show_links;
+        v.demo_link_label = v.demo_link_label
+          ? String(v.demo_link_label).trim()
+          : null;
+        v.demo_link_url = v.demo_link_url ? String(v.demo_link_url).trim() : null;
+        v.demo_link_icon_url = v.demo_link_icon_url
+          ? String(v.demo_link_icon_url).trim()
+          : null;
         v.link_bg_alpha = Math.min(
           100,
           Math.max(0, parseInt(v.link_bg_alpha ?? 100, 10))
@@ -1409,6 +1472,8 @@
           location: "",
           quote: "",
           song_url: "",
+          song_name: "",
+          song_icon_url: "",
           show_audio_player: false,
           background_url: "",
           background_is_video: false,
@@ -1436,6 +1501,10 @@
           visit_counter_color: "",
           visit_counter_bg_color: "",
           visit_counter_bg_alpha: 20,
+          demo_show_links: false,
+          demo_link_label: "",
+          demo_link_url: "",
+          demo_link_icon_url: "",
         };
         applyVariantToForm(variantCache[d]);
       }
@@ -1444,6 +1513,8 @@
         $("tplLocation").value = v.location || "";
         $("tplQuote").value = v.quote || "";
         $("tplSong").value = v.song_url || "";
+        $("tplSongName").value = v.song_name || "";
+        $("tplSongIcon").value = v.song_icon_url || "";
         $("tplAudioPlayer").value = v.show_audio_player ? "true" : "false";
         $("tplBackground").value = v.background_url || "";
         $("tplTrans").value =
@@ -1484,6 +1555,10 @@
           v.visit_counter_bg_alpha !== null
             ? v.visit_counter_bg_alpha
             : 20;
+        $("tplDemoLinkShow").value = v.demo_show_links ? "true" : "false";
+        $("tplDemoLinkLabel").value = v.demo_link_label || "";
+        $("tplDemoLinkUrl").value = v.demo_link_url || "";
+        $("tplDemoLinkIcon").value = v.demo_link_icon_url || "";
       }
 
       function buildVariantFromForm(device) {
@@ -1503,6 +1578,8 @@
           location: $("tplLocation").value.trim() || "",
           quote: $("tplQuote").value.trim() || "",
           song_url: $("tplSong").value.trim() || "",
+          song_name: $("tplSongName").value.trim() || null,
+          song_icon_url: $("tplSongIcon").value.trim() || null,
           show_audio_player: $("tplAudioPlayer").value === "true",
           background_url: $("tplBackground").value.trim(),
           background_is_video: looksLikeVideoUrl($("tplBackground").value.trim()),
@@ -1539,6 +1616,10 @@
             100,
             Math.max(0, parseInt($("tplCounterBgAlpha").value || "20", 10))
           ),
+          demo_show_links: $("tplDemoLinkShow").value === "true",
+          demo_link_label: $("tplDemoLinkLabel").value.trim() || null,
+          demo_link_url: $("tplDemoLinkUrl").value.trim() || null,
+          demo_link_icon_url: $("tplDemoLinkIcon").value.trim() || null,
         };
       }
 
@@ -1576,6 +1657,8 @@
             location: lt.location || "",
             quote: lt.quote || "",
             song_url: lt.song_url || "",
+            song_name: lt.song_name || "",
+            song_icon_url: lt.song_icon_url || "",
             show_audio_player: !!lt.show_audio_player,
             background_url: lt.background_url || "",
             background_is_video: !!lt.background_is_video,
@@ -1603,6 +1686,10 @@
             visit_counter_color: lt.visit_counter_color || "",
             visit_counter_bg_color: lt.visit_counter_bg_color || "",
             visit_counter_bg_alpha: lt.visit_counter_bg_alpha ?? 20,
+            demo_show_links: false,
+            demo_link_label: "",
+            demo_link_url: "",
+            demo_link_icon_url: "",
           };
           variantCache[device] = data;
           applyVariantToForm(data);
@@ -2205,7 +2292,14 @@
         }
 
         function isProbablyUrlField(id) {
-          return ["tplBackground", "tplSong", "tplCursorUrl"].includes(id);
+          return [
+            "tplBackground",
+            "tplSong",
+            "tplSongIcon",
+            "tplCursorUrl",
+            "tplDemoLinkUrl",
+            "tplDemoLinkIcon",
+          ].includes(id);
         }
 
         function normalizeUrlField(el) {
@@ -2299,7 +2393,10 @@
 
           // Optional URL-like fields
           ok = validateUrlLike($("tplSong"), false) && ok;
+          ok = validateUrlLike($("tplSongIcon"), false) && ok;
           ok = validateUrlLike($("tplCursorUrl"), false) && ok;
+          ok = validateUrlLike($("tplDemoLinkUrl"), false) && ok;
+          ok = validateUrlLike($("tplDemoLinkIcon"), false) && ok;
 
           // Hex fields
           [

@@ -2339,7 +2339,23 @@
           if (linksEl) {
             linksEl.textContent = "";
             const frag = document.createDocumentFragment();
-            (data.links || []).forEach((l) => {
+            const rawLinks = Array.isArray(data.links) ? data.links : [];
+            let linkItems = rawLinks;
+            if (data.is_template_demo && data.demo_show_links) {
+              const label =
+                (data.demo_link_label || "").trim() || "Example Link";
+              let url = (data.demo_link_url || "").trim();
+              if (!url) url = "https://example.com";
+              const iconUrl = (data.demo_link_icon_url || "").trim() || null;
+              const demoLink = {
+                label,
+                url,
+                icon_url: iconUrl,
+                is_active: true,
+              };
+              linkItems = rawLinks.length ? rawLinks : [demoLink];
+            }
+            (linkItems || []).forEach((l) => {
               if (!l.is_active) return;
               const href = safeLinkUrl(l.url);
               if (!href) return;
