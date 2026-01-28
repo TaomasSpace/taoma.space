@@ -819,8 +819,16 @@
             <strong>Import my current Linktree</strong>
             <p class="muted">
               Pull your existing Linktree settings (backgrounds, colors,
-              effects) for desktop or mobile.
+              effects) for desktop, mobile, or both.
             </p>
+            <div class="row" style="gap: 0.5rem; align-items: center">
+              <label class="muted" for="tplImportScopeQuick">Import scope</label>
+              <select id="tplImportScopeQuick" class="select">
+                <option value="pc">Desktop</option>
+                <option value="mobile">Mobile</option>
+                <option value="both">Desktop + Mobile</option>
+              </select>
+            </div>
             <button class="btn sm" id="btnChoiceImport">
               Use current setup
             </button>
@@ -903,6 +911,11 @@
           >
             <div class="muted" id="slugHint"></div>
             <div class="row" style="gap: 0.4rem">
+              <select id="tplImportScope" class="select">
+                <option value="pc">Import desktop</option>
+                <option value="mobile">Import mobile</option>
+                <option value="both">Import both</option>
+              </select>
               <button class="btn ghost sm" id="btnResetVariant">
                 Start blank for this device
               </button>
@@ -936,6 +949,46 @@
                 <option value="false">No</option>
                 <option value="true">Yes</option>
               </select>
+            </div>
+            <div class="field">
+              <label for="tplAudioBgColor">Audio player background</label>
+              <input
+                id="tplAudioBgColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
+            </div>
+            <div class="field">
+              <label for="tplAudioBgAlpha"
+                >Audio player background alpha (0-100)</label
+              >
+              <input
+                id="tplAudioBgAlpha"
+                class="input"
+                type="number"
+                min="0"
+                max="100"
+                value="60"
+              />
+            </div>
+            <div class="field">
+              <label for="tplAudioTextColor">Audio player text color</label>
+              <input
+                id="tplAudioTextColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
+            </div>
+            <div class="field">
+              <label for="tplAudioAccentColor">Audio player accent color</label>
+              <input
+                id="tplAudioAccentColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
             </div>
             <div class="field">
               <label for="tplSongName">Song name (optional)</label>
@@ -1398,6 +1451,9 @@
         v.quote_color = hexOrNull(v.quote_color);
         v.visit_counter_color = hexOrNull(v.visit_counter_color);
         v.visit_counter_bg_color = hexOrNull(v.visit_counter_bg_color);
+        v.audio_player_bg_color = hexOrNull(v.audio_player_bg_color);
+        v.audio_player_text_color = hexOrNull(v.audio_player_text_color);
+        v.audio_player_accent_color = hexOrNull(v.audio_player_accent_color);
         v.song_name = v.song_name ? String(v.song_name).trim() : null;
         v.song_icon_url = v.song_icon_url
           ? String(v.song_icon_url).trim()
@@ -1427,6 +1483,10 @@
           100,
           Math.max(0, parseInt(v.transparency ?? 0, 10))
         );
+        v.audio_player_bg_alpha = Math.min(
+          100,
+          Math.max(0, parseInt(v.audio_player_bg_alpha ?? 60, 10))
+        );
         v.visit_counter_bg_alpha = Math.min(
           100,
           Math.max(0, parseInt(v.visit_counter_bg_alpha ?? 20, 10))
@@ -1454,6 +1514,7 @@
         } else {
           modeBadge.textContent = "Desktop";
         }
+        syncImportScope();
       }
 
       function updateSlugHint() {
@@ -1461,8 +1522,31 @@
           presetSlug ||
           (currentUser && currentUser.linktree_slug) ||
           "your-slug";
-        const device = $("tplDevice").value || currentDevice || "pc";
-        slugHint.textContent = `Import uses /linktrees/${slug} for ${device}.`;
+        const scope =
+          readImportScope("tplImportScope") ||
+          $("tplDevice").value ||
+          currentDevice ||
+          "pc";
+        if (scope === "both") {
+          slugHint.textContent = `Import uses /linktrees/${slug} for desktop + mobile.`;
+        } else {
+          slugHint.textContent = `Import uses /linktrees/${slug} for ${scope}.`;
+        }
+      }
+
+      function readImportScope(elId, fallback) {
+        const el = elId ? $(elId) : null;
+        const raw = (el && el.value) || fallback || "";
+        if (raw === "both" || raw === "mobile" || raw === "pc") return raw;
+        return null;
+      }
+
+      function syncImportScope() {
+        const mode = $("tplMode")?.value || "pc";
+        const scope =
+          mode === "both" ? "both" : $("tplDevice")?.value || "pc";
+        if ($("tplImportScope")) $("tplImportScope").value = scope;
+        if ($("tplImportScopeQuick")) $("tplImportScopeQuick").value = scope;
       }
 
       function resetVariant(device) {
@@ -1475,6 +1559,10 @@
           song_name: "",
           song_icon_url: "",
           show_audio_player: false,
+          audio_player_bg_color: "",
+          audio_player_bg_alpha: 60,
+          audio_player_text_color: "",
+          audio_player_accent_color: "",
           background_url: "",
           background_is_video: false,
           transparency: 0,
@@ -1516,6 +1604,14 @@
         $("tplSongName").value = v.song_name || "";
         $("tplSongIcon").value = v.song_icon_url || "";
         $("tplAudioPlayer").value = v.show_audio_player ? "true" : "false";
+        $("tplAudioBgColor").value = v.audio_player_bg_color || "";
+        $("tplAudioBgAlpha").value =
+          v.audio_player_bg_alpha !== undefined &&
+          v.audio_player_bg_alpha !== null
+            ? v.audio_player_bg_alpha
+            : 60;
+        $("tplAudioTextColor").value = v.audio_player_text_color || "";
+        $("tplAudioAccentColor").value = v.audio_player_accent_color || "";
         $("tplBackground").value = v.background_url || "";
         $("tplTrans").value =
           v.transparency !== undefined && v.transparency !== null
@@ -1581,6 +1677,13 @@
           song_name: $("tplSongName").value.trim() || null,
           song_icon_url: $("tplSongIcon").value.trim() || null,
           show_audio_player: $("tplAudioPlayer").value === "true",
+          audio_player_bg_color: hexOrNull($("tplAudioBgColor").value),
+          audio_player_bg_alpha: Math.min(
+            100,
+            Math.max(0, parseInt($("tplAudioBgAlpha").value || "60", 10))
+          ),
+          audio_player_text_color: hexOrNull($("tplAudioTextColor").value),
+          audio_player_accent_color: hexOrNull($("tplAudioAccentColor").value),
           background_url: $("tplBackground").value.trim(),
           background_is_video: looksLikeVideoUrl($("tplBackground").value.trim()),
           transparency: Math.min(
@@ -1635,9 +1738,25 @@
         updateSlugHint();
       }
 
-      async function importFromLinktree(deviceOverride) {
-        const device =
+      async function importFromLinktree(deviceOverride, opts = {}) {
+        const { silent = false } = opts;
+        const requested =
           deviceOverride || $("tplDevice").value || currentDevice || "pc";
+        if (requested === "both") {
+          $("tplMode").value = "both";
+          updateModeBadge();
+          const devices = ["pc", "mobile"];
+          for (const dev of devices) {
+            await importFromLinktree(dev, { silent: true });
+          }
+          const active = $("tplDevice").value || currentDevice || "pc";
+          if (variantCache[active]) applyVariantToForm(variantCache[active]);
+          if (!silent) {
+            showMsg(formMsg, "Imported desktop + mobile settings", true);
+          }
+          return;
+        }
+        const device = requested === "mobile" ? "mobile" : "pc";
         const slug =
           presetSlug ||
           (currentUser && currentUser.linktree_slug) ||
@@ -1645,6 +1764,11 @@
         if (!slug) {
           showMsg(formMsg, "Set a Linktree slug first", false);
           return;
+        }
+        if (!silent) {
+          $("tplMode").value = device;
+          $("tplDevice").value = device;
+          updateModeBadge();
         }
         try {
           const lt = await apiGet(
@@ -1660,6 +1784,10 @@
             song_name: lt.song_name || "",
             song_icon_url: lt.song_icon_url || "",
             show_audio_player: !!lt.show_audio_player,
+            audio_player_bg_color: lt.audio_player_bg_color || "",
+            audio_player_bg_alpha: lt.audio_player_bg_alpha ?? 60,
+            audio_player_text_color: lt.audio_player_text_color || "",
+            audio_player_accent_color: lt.audio_player_accent_color || "",
             background_url: lt.background_url || "",
             background_is_video: !!lt.background_is_video,
             transparency: lt.transparency ?? 0,
@@ -1692,8 +1820,8 @@
             demo_link_icon_url: "",
           };
           variantCache[device] = data;
-          applyVariantToForm(data);
-          showMsg(formMsg, `Imported ${device} settings`, true);
+          if (!silent) applyVariantToForm(data);
+          if (!silent) showMsg(formMsg, `Imported ${device} settings`, true);
         } catch (e) {
           showMsg(formMsg, "Import failed", false);
         }
@@ -1710,6 +1838,7 @@
           presetDevice === "both" ? "both" : presetDevice || "pc";
         $("tplDevice").value = currentDevice || "pc";
         $("btnSaveTemplate").textContent = "Create template";
+        syncImportScope();
         variantCache = { pc: null, mobile: null };
         resetVariant($("tplDevice").value);
         updateModeBadge();
@@ -1882,9 +2011,16 @@
         updateModeBadge();
         ensureActiveVariant();
       });
+      $("tplImportScope")?.addEventListener("change", () => {
+        updateSlugHint();
+      });
+      $("tplImportScopeQuick")?.addEventListener("change", () => {
+        updateSlugHint();
+      });
       $("btnImportVariant").addEventListener("click", async () => {
         ensureChoice();
-        await importFromLinktree();
+        const scope = readImportScope("tplImportScope");
+        await importFromLinktree(scope);
       });
       $("btnResetVariant").addEventListener("click", () => {
         ensureChoice();
@@ -1901,7 +2037,11 @@
       });
       $("btnChoiceImport").addEventListener("click", async () => {
         ensureChoice();
-        await importFromLinktree(currentDevice);
+        const scope =
+          readImportScope("tplImportScopeQuick") ||
+          readImportScope("tplImportScope") ||
+          currentDevice;
+        await importFromLinktree(scope);
       });
       $("btnChoiceFresh").addEventListener("click", () => {
         ensureChoice();
@@ -2400,6 +2540,9 @@
 
           // Hex fields
           [
+            "tplAudioBgColor",
+            "tplAudioTextColor",
+            "tplAudioAccentColor",
             "tplLinkColor",
             "tplLinkBgColor",
             "tplCardColor",

@@ -1218,6 +1218,10 @@
       }
 
       function useTemplate(item, deviceOverride) {
+        if (!deviceOverride && item.device_type === "both") {
+          openModal(item, { preferUse: true });
+          return;
+        }
         const sourceDevice = deviceOverride || item.device_type || "pc";
         const target =
           sourceDevice === "both"
@@ -1240,7 +1244,7 @@
         )}&device=${encodeURIComponent(target)}`;
       }
 
-      function openModal(item) {
+      function openModal(item, opts = {}) {
         const modal = $("detailModal");
         const frame = $("demoFrame");
         const actions = $("modalActions");
@@ -1279,13 +1283,29 @@
           });
           actions.appendChild(toggleWrap);
         }
-        const useBtn = document.createElement("button");
-        useBtn.className = "btn sm";
-        useBtn.textContent = "Use template";
-        useBtn.addEventListener("click", () =>
-          useTemplate(item, item.device_type)
-        );
-        actions.appendChild(useBtn);
+        const useWrap = document.createElement("div");
+        useWrap.className = "row";
+        useWrap.style.gap = "0.4rem";
+        const addUseBtn = (label, target, primary = false) => {
+          const btn = document.createElement("button");
+          btn.className = primary ? "btn sm" : "btn sm ghost";
+          btn.textContent = label;
+          btn.addEventListener("click", () => {
+            useTemplate(item, target);
+            closeModal();
+          });
+          useWrap.appendChild(btn);
+        };
+        if (item.device_type === "both") {
+          addUseBtn("Use desktop", "pc", true);
+          addUseBtn("Use mobile", "mobile");
+          addUseBtn("Use both", "both");
+        } else {
+          const label =
+            item.device_type === "mobile" ? "Use mobile" : "Use desktop";
+          addUseBtn(label, item.device_type || "pc", true);
+        }
+        actions.appendChild(useWrap);
         const saveBtn = document.createElement("button");
         saveBtn.className = "btn sm ghost";
         saveBtn.textContent = savedIds.has(item.id) ? "Saved" : "Save";
@@ -1302,6 +1322,10 @@
         actions.appendChild(demoLink);
         modal.classList.add("open");
         modal.setAttribute("aria-hidden", "false");
+        if (opts.preferUse) {
+          const firstUse = useWrap.querySelector("button");
+          firstUse?.focus?.();
+        }
       }
 
       function closeModal() {
