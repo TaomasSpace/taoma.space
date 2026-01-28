@@ -2456,7 +2456,7 @@
           startDirtyWatcher();
         }
 
-        return { onAfterBoot };
+        return { onAfterBoot, validateFormFriendly, snapshot };
       })();
 
       // Call after boot completes (boot() is async)
@@ -2486,7 +2486,7 @@
       // Before saving in main button, run friendly validation too
       const _saveTemplate = saveTemplate;
       saveTemplate = async function () {
-        if (!validateFormFriendly()) {
+        if (UX.validateFormFriendly && !UX.validateFormFriendly()) {
           // formMsg already used; add a toast too
           try {
             const tw = document.getElementById("toastWrap");
@@ -2497,10 +2497,10 @@
           showMsg(formMsg, "Please fix the highlighted fields", false);
           return;
         }
-        const before = snapshot();
+        const before = UX.snapshot ? UX.snapshot() : null;
         await _saveTemplate();
         // After successful saveTemplate() it navigates; but if not, we can clear dirty.
-        const after = snapshot();
+        const after = UX.snapshot ? UX.snapshot() : null;
         if (before && after && before !== after) {
           // keep dirty (save failed). If save succeeded but stayed, clear.
         }
