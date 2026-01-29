@@ -478,6 +478,45 @@
         letter-spacing: 0.2px;
       }
 
+      details.fold {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0.5rem 0.7rem;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      details.fold > summary {
+        list-style: none;
+        cursor: pointer;
+        user-select: none;
+        font-weight: 800;
+        font-size: 0.9rem;
+        letter-spacing: 0.2px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      details.fold > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details.fold > summary::after {
+        content: "▾";
+        font-size: 0.9rem;
+        transition: transform 0.18s ease;
+      }
+
+      details.fold[open] > summary::after {
+        transform: rotate(180deg);
+      }
+
+      .fold-body {
+        margin-top: 0.6rem;
+        display: grid;
+        gap: 0.6rem;
+      }
+
       .input,
       .select,
       textarea {
@@ -1202,6 +1241,20 @@
             <div class="field">
               <label for="inLocation">Location</label>
               <input id="inLocation" class="input" placeholder="Switzerland" />
+              <details class="fold">
+                <summary>Location styling</summary>
+                <div class="fold-body">
+                  <div class="field">
+                    <label for="inLocationColor">Location Color</label>
+                    <input
+                      id="inLocationColor"
+                      class="input"
+                      type="color"
+                      value="#a2a9c8"
+                    />
+                  </div>
+                </div>
+              </details>
             </div>
 
             <div class="field" style="grid-column: 1 / -1">
@@ -1211,6 +1264,20 @@
                 class="input"
                 placeholder="Write your bio/quote…"
               ></textarea>
+              <details class="fold">
+                <summary>Quote styling</summary>
+                <div class="fold-body">
+                  <div class="field">
+                    <label for="inQuoteColor">Quote Color</label>
+                    <input
+                      id="inQuoteColor"
+                      class="input"
+                      type="color"
+                      value="#e9ebff"
+                    />
+                  </div>
+                </div>
+              </details>
             </div>
             <div class="field">
               <label for="fileSong">Upload Song</label>
@@ -1248,44 +1315,51 @@
                 Shows the player when a song is uploaded.
               </div>
             </div>
-            <div class="field">
-              <label for="inAudioBgColor">Audio player background</label>
-              <input
-                id="inAudioBgColor"
-                class="input"
-                type="color"
-                value="#171b3b"
-              />
-            </div>
-            <div class="field">
-              <label for="inAudioBgAlpha">Audio player transparency (0-100)</label>
-              <input
-                id="inAudioBgAlpha"
-                class="input"
-                type="number"
-                min="0"
-                max="100"
-                value="60"
-              />
-            </div>
-            <div class="field">
-              <label for="inAudioTextColor">Audio player text color</label>
-              <input
-                id="inAudioTextColor"
-                class="input"
-                type="color"
-                value="#e9ebff"
-              />
-            </div>
-            <div class="field">
-              <label for="inAudioAccentColor">Audio player accent color</label>
-              <input
-                id="inAudioAccentColor"
-                class="input"
-                type="color"
-                value="#85a3ff"
-              />
-            </div>
+            <details class="fold" style="grid-column: 1 / -1">
+              <summary>Audio player styling</summary>
+              <div class="fold-body grid cols-2">
+                <div class="field">
+                  <label for="inAudioBgColor">Audio player background</label>
+                  <input
+                    id="inAudioBgColor"
+                    class="input"
+                    type="color"
+                    value="#171b3b"
+                  />
+                </div>
+                <div class="field">
+                  <label for="inAudioBgAlpha"
+                    >Audio player transparency (0-100)</label
+                  >
+                  <input
+                    id="inAudioBgAlpha"
+                    class="input"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value="60"
+                  />
+                </div>
+                <div class="field">
+                  <label for="inAudioTextColor">Audio player text color</label>
+                  <input
+                    id="inAudioTextColor"
+                    class="input"
+                    type="color"
+                    value="#e9ebff"
+                  />
+                </div>
+                <div class="field">
+                  <label for="inAudioAccentColor">Audio player accent color</label>
+                  <input
+                    id="inAudioAccentColor"
+                    class="input"
+                    type="color"
+                    value="#85a3ff"
+                  />
+                </div>
+              </div>
+            </details>
             <div class="field">
               <label for="fileBg">Upload Background</label>
               <input type="file" id="fileBg" accept="image/*,video/*" />
@@ -1315,65 +1389,75 @@
                 </button>
               </div>
             </div>
-            <div class="field">
-              <label for="inCursorFx">Cursor effect (Desktop)</label>
-              <select id="inCursorFx" class="select">
-                <option value="none">none</option>
-                <option value="glow">glow</option>
-                <option value="particles">particles</option>
-              </select>
-              <div class="preview-note muted">
-                Runs only on desktop screens.
+            <details class="fold" style="grid-column: 1 / -1">
+              <summary>Cursor effects</summary>
+              <div class="fold-body grid cols-2">
+                <div class="field">
+                  <label for="inCursorFx">Cursor effect (Desktop)</label>
+                  <select id="inCursorFx" class="select">
+                    <option value="none">none</option>
+                    <option value="glow">glow</option>
+                    <option value="particles">particles</option>
+                  </select>
+                  <div class="preview-note muted">
+                    Runs only on desktop screens.
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="inCursorFxColor">Cursor effect color</label>
+                  <input
+                    id="inCursorFxColor"
+                    class="input"
+                    type="color"
+                    value="#85a3ff"
+                  />
+                </div>
+                <div class="field" style="grid-column: 1 / -1">
+                  <label for="inCursorFxAlpha"
+                    >Cursor effect intensity (0-100)</label
+                  >
+                  <input
+                    id="inCursorFxAlpha"
+                    class="input"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value="70"
+                  />
+                  <div class="preview-note muted">
+                    Applies to glow and particles.
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="field">
-              <label for="inCursorFxColor">Cursor effect color</label>
-              <input
-                id="inCursorFxColor"
-                class="input"
-                type="color"
-                value="#85a3ff"
-              />
-            </div>
-            <div class="field">
-              <label for="inCursorFxAlpha"
-                >Cursor effect intensity (0-100)</label
-              >
-              <input
-                id="inCursorFxAlpha"
-                class="input"
-                type="number"
-                min="0"
-                max="100"
-                value="70"
-              />
-              <div class="preview-note muted">
-                Applies to glow and particles.
+            </details>
+            <details class="fold" style="grid-column: 1 / -1">
+              <summary>Card styling</summary>
+              <div class="fold-body grid cols-2">
+                <div class="field">
+                  <label for="inTrans">Card Transparency (0-100)</label>
+                  <input
+                    id="inTrans"
+                    class="input"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value="100"
+                  />
+                  <div class="preview-note muted">
+                    0 = transparent, 100 = opaque (matches link background slider).
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="inCardColor">Card/Base Color</label>
+                  <input
+                    id="inCardColor"
+                    class="input"
+                    type="color"
+                    value="#171b3b"
+                  />
+                </div>
               </div>
-            </div>
-            <div class="field">
-              <label for="inTrans">Card Transparency (0-100)</label>
-              <input
-                id="inTrans"
-                class="input"
-                type="number"
-                min="0"
-                max="100"
-                value="100"
-              />
-              <div class="preview-note muted">
-                0 = transparent, 100 = opaque (matches link background slider).
-              </div>
-            </div>
-            <div class="field">
-              <label for="inCardColor">Card/Base Color</label>
-              <input
-                id="inCardColor"
-                class="input"
-                type="color"
-                value="#171b3b"
-              />
-            </div>
+            </details>
             <div class="field">
               <label for="inDisplayName">Display Name</label>
               <select id="inDisplayName" class="select">
@@ -1394,91 +1478,93 @@
                 Used when Display Name is set to Custom.
               </div>
             </div>
-            <div class="field">
-              <label for="inNameFx">Name Effect</label>
-              <select id="inNameFx" class="select">
-                <option value="none">none</option>
-                <option value="glow">glow</option>
-                <option value="neon">neon</option>
-                <option value="rainbow">rainbow</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="inTextColor">Text Color</label>
-              <input
-                id="inTextColor"
-                class="input"
-                type="color"
-                value="#e9ebff"
-              />
-            </div>
-            <div class="field">
-              <label for="inNameColor">Name Color</label>
-              <input
-                id="inNameColor"
-                class="input"
-                type="color"
-                value="#e9ebff"
-              />
-            </div>
-            <div class="field">
-              <label for="inLocationColor">Location Color</label>
-              <input
-                id="inLocationColor"
-                class="input"
-                type="color"
-                value="#a2a9c8"
-              />
-            </div>
-            <div class="field">
-              <label for="inQuoteColor">Quote Color</label>
-              <input
-                id="inQuoteColor"
-                class="input"
-                type="color"
-                value="#e9ebff"
-              />
-            </div>
-            <div class="field">
-              <label for="inLinkColor">Link Text Color</label>
-              <input
-                id="inLinkColor"
-                class="input"
-                type="color"
-                value="#e9ebff"
-              />
-            </div>
-            <div class="field">
-              <label for="inLinkBgColor">Link Background Color</label>
-              <input
-                id="inLinkBgColor"
-                class="input"
-                type="color"
-                value="#171b3b"
-              />
-            </div>
-            <div class="field">
-              <label for="inLinkBgAlpha"
-                >Link Background Transparency (0-100)</label
-              >
-              <input
-                id="inLinkBgAlpha"
-                class="input"
-                type="number"
-                min="0"
-                max="100"
-                value="100"
-              />
-            </div>
-            <div class="field">
-              <label for="inBgFx">Background Effect</label>
-              <select id="inBgFx" class="select">
-                <option value="none">none</option>
-                <option value="night">night</option>
-                <option value="rain">rain</option>
-                <option value="snow">snow</option>
-              </select>
-            </div>
+            <details class="fold" style="grid-column: 1 / -1">
+              <summary>Name styling</summary>
+              <div class="fold-body grid cols-2">
+                <div class="field">
+                  <label for="inNameFx">Name Effect</label>
+                  <select id="inNameFx" class="select">
+                    <option value="none">none</option>
+                    <option value="glow">glow</option>
+                    <option value="neon">neon</option>
+                    <option value="rainbow">rainbow</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="inNameColor">Name Color</label>
+                  <input
+                    id="inNameColor"
+                    class="input"
+                    type="color"
+                    value="#e9ebff"
+                  />
+                </div>
+              </div>
+            </details>
+            <details class="fold" style="grid-column: 1 / -1">
+              <summary>Text styling</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label for="inTextColor">Text Color</label>
+                  <input
+                    id="inTextColor"
+                    class="input"
+                    type="color"
+                    value="#e9ebff"
+                  />
+                </div>
+              </div>
+            </details>
+            <details class="fold" style="grid-column: 1 / -1">
+              <summary>Link styling</summary>
+              <div class="fold-body grid cols-2">
+                <div class="field">
+                  <label for="inLinkColor">Link Text Color</label>
+                  <input
+                    id="inLinkColor"
+                    class="input"
+                    type="color"
+                    value="#e9ebff"
+                  />
+                </div>
+                <div class="field">
+                  <label for="inLinkBgColor">Link Background Color</label>
+                  <input
+                    id="inLinkBgColor"
+                    class="input"
+                    type="color"
+                    value="#171b3b"
+                  />
+                </div>
+                <div class="field" style="grid-column: 1 / -1">
+                  <label for="inLinkBgAlpha"
+                    >Link Background Transparency (0-100)</label
+                  >
+                  <input
+                    id="inLinkBgAlpha"
+                    class="input"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value="100"
+                  />
+                </div>
+              </div>
+            </details>
+            <details class="fold" style="grid-column: 1 / -1">
+              <summary>Background effects</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label for="inBgFx">Background Effect</label>
+                  <select id="inBgFx" class="select">
+                    <option value="none">none</option>
+                    <option value="night">night</option>
+                    <option value="rain">rain</option>
+                    <option value="snow">snow</option>
+                  </select>
+                </div>
+              </div>
+            </details>
 
             <div class="field" style="grid-column: 1 / -1">
               <label>Discord (optional)</label>
@@ -1553,39 +1639,42 @@
                 Counts unique visitors (shared desktop/mobile). Current:
                 <strong id="inVisitCount">0</strong>
               </div>
-              <div class="grid cols-2" style="margin-top: 0.75rem">
-                <div class="field">
-                  <label for="inCounterColor">Counter Text/Icon Color</label>
-                  <input
-                    id="inCounterColor"
-                    class="input"
-                    type="color"
-                    value="#e9ebff"
-                  />
+              <details class="fold" style="margin-top: 0.75rem">
+                <summary>Counter styling</summary>
+                <div class="fold-body grid cols-2">
+                  <div class="field">
+                    <label for="inCounterColor">Counter Text/Icon Color</label>
+                    <input
+                      id="inCounterColor"
+                      class="input"
+                      type="color"
+                      value="#e9ebff"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="inCounterBgColor">Counter Background Color</label>
+                    <input
+                      id="inCounterBgColor"
+                      class="input"
+                      type="color"
+                      value="#ffffff"
+                    />
+                  </div>
+                  <div class="field" style="grid-column: 1 / -1">
+                    <label for="inCounterBgAlpha"
+                      >Counter Background Transparency (0-100)</label
+                    >
+                    <input
+                      id="inCounterBgAlpha"
+                      class="input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value="20"
+                    />
+                  </div>
                 </div>
-                <div class="field">
-                  <label for="inCounterBgColor">Counter Background Color</label>
-                  <input
-                    id="inCounterBgColor"
-                    class="input"
-                    type="color"
-                    value="#ffffff"
-                  />
-                </div>
-                <div class="field">
-                  <label for="inCounterBgAlpha"
-                    >Counter Background Transparency (0-100)</label
-                  >
-                  <input
-                    id="inCounterBgAlpha"
-                    class="input"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value="20"
-                  />
-                </div>
-              </div>
+              </details>
             </div>
 
             <div class="row" style="grid-column: 1 / -1; margin-top: 0.4rem">
