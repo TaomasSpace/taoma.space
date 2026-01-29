@@ -55,7 +55,6 @@
         --quote-color: #e9ebff;
         --cursor: auto;
         --cursor-fx-color: var(--acc);
-        --cursor-fx-alpha: 0.7;
       }
 
       body {
@@ -598,400 +597,32 @@
       }
 
       /* Background Effects */
-      .bg::before,
-      .bg::after {
+      .bg.night::after {
         content: "";
         position: absolute;
         inset: 0;
-        pointer-events: none;
-        opacity: 0;
-      }
-
-      .bg img,
-      .bg video {
-        position: relative;
-        z-index: 1;
-      }
-
-      .bg::before {
-        z-index: 2;
-      }
-
-      .bg::after {
-        z-index: 3;
-      }
-
-      .bg.night::after {
         background: rgba(0, 0, 50, 0.4);
         mix-blend-mode: multiply;
-        opacity: 0.6;
       }
 
       .bg.rain::after {
+        content: "";
+        position: absolute;
+        inset: 0;
         background-image: url("/static/effects/rain.gif");
         background-size: cover;
         opacity: 0.4;
+        pointer-events: none;
       }
 
       .bg.snow::after {
+        content: "";
+        position: absolute;
+        inset: 0;
         background-image: url("/static/effects/snow.gif");
         background-size: cover;
         opacity: 0.5;
-      }
-
-      .bg.noise::after {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
-        background-size: 160px 160px;
-        mix-blend-mode: soft-light;
-        opacity: 0.35;
-        animation: noiseShift 1.6s steps(2, end) infinite;
-      }
-
-      .bg.gradient::before {
-        background: linear-gradient(
-          120deg,
-          rgba(133, 163, 255, 0.2),
-          rgba(93, 214, 194, 0.2),
-          rgba(255, 255, 255, 0.06)
-        );
-        background-size: 200% 200%;
-        mix-blend-mode: screen;
-        opacity: 0.7;
-        animation: gradientDrift 18s ease infinite;
-      }
-
-      .bg.parallax::before {
-        background: radial-gradient(
-            560px 340px at 12% 10%,
-            rgba(133, 163, 255, 0.28),
-            transparent 70%
-          ),
-          radial-gradient(
-            520px 360px at 88% 20%,
-            rgba(93, 214, 194, 0.24),
-            transparent 70%
-          );
-        mix-blend-mode: screen;
-        opacity: 0.6;
-        animation: parallaxSlow 22s ease-in-out infinite;
-      }
-
-      .bg.parallax::after {
-        background: radial-gradient(
-            420px 260px at 20% 85%,
-            rgba(255, 255, 255, 0.16),
-            transparent 70%
-          ),
-          radial-gradient(
-            380px 240px at 86% 78%,
-            rgba(133, 163, 255, 0.18),
-            transparent 70%
-          );
-        mix-blend-mode: screen;
-        opacity: 0.5;
-        animation: parallaxFast 14s ease-in-out infinite;
-      }
-
-      .bg.particles::after {
-        background-image: radial-gradient(
-            circle at 20% 30%,
-            rgba(255, 255, 255, 0.35) 0,
-            rgba(255, 255, 255, 0) 55%
-          ),
-          radial-gradient(
-            circle at 80% 20%,
-            rgba(133, 163, 255, 0.35) 0,
-            rgba(133, 163, 255, 0) 60%
-          ),
-          radial-gradient(
-            circle at 40% 70%,
-            rgba(93, 214, 194, 0.35) 0,
-            rgba(93, 214, 194, 0) 60%
-          ),
-          radial-gradient(
-            circle at 70% 80%,
-            rgba(255, 255, 255, 0.28) 0,
-            rgba(255, 255, 255, 0) 55%
-          );
-        background-size: 240px 240px;
-        mix-blend-mode: screen;
-        opacity: 0.35;
-        filter: blur(0.2px);
-        animation: particleDrift 26s linear infinite;
-      }
-
-      .bg.sweep::after {
-        background: linear-gradient(
-          120deg,
-          transparent 0%,
-          rgba(255, 255, 255, 0.35) 45%,
-          transparent 70%
-        );
-        mix-blend-mode: screen;
-        opacity: 0.5;
-        transform: translateX(-120%);
-        animation: lightSweep 22s ease-in-out infinite;
-      }
-
-      .bg.mesh::before {
-        background: radial-gradient(
-            520px 360px at 20% 20%,
-            rgba(133, 163, 255, 0.32),
-            transparent 65%
-          ),
-          radial-gradient(
-            520px 340px at 80% 25%,
-            rgba(93, 214, 194, 0.28),
-            transparent 65%
-          ),
-          radial-gradient(
-            640px 440px at 50% 85%,
-            rgba(255, 255, 255, 0.14),
-            transparent 70%
-          );
-        background-size: 180% 180%;
-        mix-blend-mode: screen;
-        opacity: 0.7;
-        animation: meshShift 20s ease-in-out infinite;
-      }
-
-      .bg.grid::before {
-        background-image: linear-gradient(
-            to right,
-            rgba(255, 255, 255, 0.08) 1px,
-            transparent 1px
-          ),
-          linear-gradient(
-            to bottom,
-            rgba(255, 255, 255, 0.08) 1px,
-            transparent 1px
-          );
-        background-size: 48px 48px;
-        mix-blend-mode: soft-light;
-        opacity: 0.25;
-        animation: gridShift 16s linear infinite;
-      }
-
-      .bg.vignette::after {
-        background: radial-gradient(
-          ellipse at center,
-          rgba(0, 0, 0, 0) 40%,
-          rgba(0, 0, 0, 0.55) 100%
-        );
-        mix-blend-mode: multiply;
-        opacity: 0.65;
-      }
-
-      .bg.scanlines::after {
-        background-image: repeating-linear-gradient(
-          0deg,
-          rgba(255, 255, 255, 0.06) 0,
-          rgba(255, 255, 255, 0.06) 1px,
-          transparent 2px,
-          transparent 4px
-        );
-        mix-blend-mode: soft-light;
-        opacity: 0.2;
-        animation: scanMove 6s linear infinite;
-      }
-
-      .bg.glitch::before {
-        background: linear-gradient(
-          90deg,
-          rgba(255, 90, 120, 0.3),
-          transparent 55%
-        );
-        mix-blend-mode: screen;
-        opacity: 0.35;
-        animation: glitchSweep 3.6s steps(2, end) infinite;
-      }
-
-      .bg.glitch::after {
-        background: linear-gradient(
-          90deg,
-          rgba(80, 210, 255, 0.25),
-          transparent 60%
-        );
-        mix-blend-mode: screen;
-        opacity: 0.3;
-        animation: glitchSweepAlt 4.4s steps(2, end) infinite;
-      }
-
-      .bg.glitch img,
-      .bg.glitch video {
-        animation: glitchJitter 7s infinite;
-      }
-
-      body.is-scrolling .bg.glitch img,
-      body.is-scrolling .bg.glitch video {
-        filter: saturate(1.1) contrast(1.05);
-      }
-
-      @keyframes noiseShift {
-        0% {
-          transform: translate(0, 0);
-        }
-        20% {
-          transform: translate(-1%, 1%);
-        }
-        40% {
-          transform: translate(1%, -1%);
-        }
-        60% {
-          transform: translate(-1%, -1%);
-        }
-        80% {
-          transform: translate(1%, 1%);
-        }
-        100% {
-          transform: translate(0, 0);
-        }
-      }
-
-      @keyframes gradientDrift {
-        0% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
-
-      @keyframes parallaxSlow {
-        0% {
-          transform: translate3d(-2%, -2%, 0);
-        }
-        50% {
-          transform: translate3d(2%, 2%, 0);
-        }
-        100% {
-          transform: translate3d(-2%, -2%, 0);
-        }
-      }
-
-      @keyframes parallaxFast {
-        0% {
-          transform: translate3d(2%, -1%, 0);
-        }
-        50% {
-          transform: translate3d(-2%, 1%, 0);
-        }
-        100% {
-          transform: translate3d(2%, -1%, 0);
-        }
-      }
-
-      @keyframes particleDrift {
-        0% {
-          background-position: 0 0;
-        }
-        100% {
-          background-position: 220px 160px;
-        }
-      }
-
-      @keyframes lightSweep {
-        0% {
-          transform: translateX(-120%);
-        }
-        45% {
-          transform: translateX(120%);
-        }
-        100% {
-          transform: translateX(120%);
-        }
-      }
-
-      @keyframes meshShift {
-        0% {
-          background-position: 0% 0%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 0%;
-        }
-      }
-
-      @keyframes gridShift {
-        0% {
-          background-position: 0 0;
-        }
-        100% {
-          background-position: 48px 48px;
-        }
-      }
-
-      @keyframes scanMove {
-        0% {
-          background-position: 0 0;
-        }
-        100% {
-          background-position: 0 120px;
-        }
-      }
-
-      @keyframes glitchSweep {
-        0% {
-          transform: translateX(-4%);
-        }
-        50% {
-          transform: translateX(4%);
-        }
-        100% {
-          transform: translateX(-4%);
-        }
-      }
-
-      @keyframes glitchSweepAlt {
-        0% {
-          transform: translateX(3%);
-        }
-        50% {
-          transform: translateX(-3%);
-        }
-        100% {
-          transform: translateX(3%);
-        }
-      }
-
-      @keyframes glitchJitter {
-        0%,
-        92%,
-        100% {
-          transform: translate3d(0, 0, 0);
-        }
-        93% {
-          transform: translate3d(-2px, 1px, 0);
-        }
-        95% {
-          transform: translate3d(2px, -1px, 0);
-        }
-        97% {
-          transform: translate3d(-1px, 2px, 0);
-        }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .bg.noise::after,
-        .bg.gradient::before,
-        .bg.parallax::before,
-        .bg.parallax::after,
-        .bg.particles::after,
-        .bg.sweep::after,
-        .bg.mesh::before,
-        .bg.grid::before,
-        .bg.scanlines::after,
-        .bg.glitch::before,
-        .bg.glitch::after,
-        .bg.glitch img,
-        .bg.glitch video {
-          animation: none;
-        }
+        pointer-events: none;
       }
 
       /* Cursor Effects */
@@ -1034,228 +665,6 @@
         height: 100%;
         pointer-events: none;
         z-index: 8;
-      }
-
-      .cursor-fx-orb {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 0;
-        height: 0;
-        pointer-events: none;
-        z-index: 9;
-        opacity: 0;
-        transition: opacity 0.2s ease;
-        will-change: transform;
-      }
-
-      .cursor-fx-orb.is-active {
-        opacity: 1;
-      }
-
-      .cursor-fx-ring,
-      .cursor-fx-dot {
-        position: absolute;
-        left: 0;
-        top: 0;
-        transform: translate(-50%, -50%);
-        pointer-events: none;
-      }
-
-      .cursor-fx-ring {
-        width: var(--cursor-ring, 36px);
-        height: var(--cursor-ring, 36px);
-        border-radius: 50%;
-        border: 1px solid
-          color-mix(
-            in oklab,
-            var(--cursor-fx-color, #85a3ff) 55%,
-            transparent
-          );
-        background: radial-gradient(
-          circle,
-          color-mix(
-            in oklab,
-            var(--cursor-fx-color, #85a3ff) 18%,
-            transparent
-          ),
-          transparent 72%
-        );
-        box-shadow: 0 0 18px
-            color-mix(
-              in oklab,
-              var(--cursor-fx-color, #85a3ff) 45%,
-              transparent
-            ),
-          0 0 36px
-            color-mix(
-              in oklab,
-              var(--cursor-fx-color, #85a3ff) 28%,
-              transparent
-            );
-        opacity: var(--cursor-fx-alpha, 0.7);
-        mix-blend-mode: screen;
-        transform: translate(-50%, -50%)
-          scale(var(--ring-scale-x, 1), var(--ring-scale-y, 1))
-          rotate(var(--ring-rotate, 0deg));
-        transition: width 0.14s ease, height 0.14s ease,
-          border-radius 0.14s ease;
-      }
-
-      .cursor-fx-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: color-mix(
-          in oklab,
-          var(--cursor-fx-color, #85a3ff) 70%,
-          white
-        );
-        box-shadow: 0 0 12px
-            color-mix(
-              in oklab,
-              var(--cursor-fx-color, #85a3ff) 50%,
-              transparent
-            ),
-          0 0 24px
-            color-mix(
-              in oklab,
-              var(--cursor-fx-color, #85a3ff) 35%,
-              transparent
-            );
-        opacity: var(--cursor-fx-alpha, 0.7);
-      }
-
-      .cursor-fx-label {
-        position: absolute;
-        left: 12px;
-        top: 16px;
-        padding: 0.2rem 0.5rem;
-        border-radius: 999px;
-        background: rgba(15, 18, 35, 0.75);
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        color: var(--ink);
-        font-size: 0.7rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        white-space: nowrap;
-        opacity: 0;
-        transform: translate(10px, 10px);
-        transition: opacity 0.15s ease, transform 0.15s ease;
-        display: none;
-      }
-
-      .cursor-fx-label.visible {
-        opacity: 1;
-        transform: translate(16px, 12px);
-      }
-
-      .cursor-fx-orb.fx-aura {
-        --cursor-ring: 46px;
-      }
-
-      .cursor-fx-orb.fx-magnet {
-        --cursor-ring: 42px;
-      }
-
-      .cursor-fx-orb.fx-snap {
-        --cursor-ring: 44px;
-      }
-
-      .cursor-fx-orb.fx-velocity {
-        --cursor-ring: 38px;
-      }
-
-      .cursor-fx-orb.fx-trail .cursor-fx-ring,
-      .cursor-fx-orb.fx-ripple .cursor-fx-ring {
-        display: none;
-      }
-
-      .cursor-fx-orb.fx-blend .cursor-fx-ring,
-      .cursor-fx-orb.fx-blend .cursor-fx-dot {
-        mix-blend-mode: difference;
-      }
-
-      .cursor-fx-orb.fx-morph.is-hover .cursor-fx-ring {
-        width: var(--cursor-target-w, 120px);
-        height: var(--cursor-target-h, 40px);
-        border-radius: 12px;
-      }
-
-      .cursor-fx-orb.fx-snap.is-hover .cursor-fx-ring {
-        width: var(--cursor-target-w, 140px);
-        height: var(--cursor-target-h, 48px);
-        border-radius: 14px;
-      }
-
-      .cursor-fx-orb.fx-rotate .cursor-fx-ring {
-        border-style: dashed;
-      }
-
-      .cursor-fx-orb.fx-sticky .cursor-fx-label {
-        display: block;
-      }
-
-      .cursor-fx-trail-dot {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: color-mix(
-          in oklab,
-          var(--cursor-fx-color, #85a3ff) 60%,
-          white
-        );
-        box-shadow: 0 0 16px
-          color-mix(
-            in oklab,
-            var(--cursor-fx-color, #85a3ff) 35%,
-            transparent
-          );
-        opacity: 0;
-        pointer-events: none;
-        z-index: 8;
-        transform: translate3d(0, 0, 0) scale(var(--trail-scale, 1));
-        transition: opacity 0.2s ease;
-      }
-
-      .cursor-ripple {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 1px solid
-          color-mix(
-            in oklab,
-            var(--ripple-color, #85a3ff) 70%,
-            transparent
-          );
-        box-shadow: 0 0 18px
-          color-mix(
-            in oklab,
-            var(--ripple-color, #85a3ff) 35%,
-            transparent
-          );
-        transform: translate(-50%, -50%) scale(0.4);
-        opacity: var(--cursor-fx-alpha, 0.7);
-        pointer-events: none;
-        z-index: 9;
-        animation: cursorRipple 0.7s ease-out forwards;
-      }
-
-      @keyframes cursorRipple {
-        0% {
-          transform: translate(-50%, -50%) scale(0.4);
-          opacity: var(--cursor-fx-alpha, 0.7);
-        }
-        100% {
-          transform: translate(-50%, -50%) scale(3);
-          opacity: 0;
-        }
       }
 
       .card {
@@ -2042,43 +1451,6 @@
         const DEFAULT_AUDIO_ACCENT_COLOR = "#85a3ff";
         const DEFAULT_CURSOR_FX_ALPHA = 0.7;
         const CURSOR_IMAGE_SIZE = 32;
-        const BG_EFFECTS = [
-          "night",
-          "rain",
-          "snow",
-          "noise",
-          "gradient",
-          "parallax",
-          "particles",
-          "sweep",
-          "mesh",
-          "grid",
-          "vignette",
-          "scanlines",
-          "glitch",
-        ];
-        const CURSOR_FX_MODES = new Set([
-          "glow",
-          "particles",
-          "trail",
-          "aura",
-          "magnet",
-          "morph",
-          "snap",
-          "velocity",
-          "ripple",
-          "blend",
-          "sticky",
-          "rotate",
-        ]);
-        const CURSOR_FX_HOVER_MODES = new Set([
-          "magnet",
-          "morph",
-          "snap",
-          "sticky",
-        ]);
-        const INTERACTIVE_SELECTOR =
-          "a, button, .link, .btn, input, select, textarea";
 
         function sanitizeHexColor(raw) {
           if (typeof raw !== "string") return "";
@@ -2214,20 +1586,6 @@
         let cursorFxMoveHandler = null;
         let cursorFxLeaveHandler = null;
         let cursorFxResizeHandler = null;
-        let cursorFxOrb = null;
-        let cursorFxRing = null;
-        let cursorFxDot = null;
-        let cursorFxLabel = null;
-        let cursorFxTrail = [];
-        let cursorFxTrailPoints = [];
-        let cursorFxTarget = { x: 0, y: 0 };
-        let cursorFxPos = { x: 0, y: 0 };
-        let cursorFxHoverEl = null;
-        let cursorFxHoverRect = null;
-        let cursorFxHoverText = "";
-        let cursorFxSpin = 0;
-        let cursorFxClickHandler = null;
-        let cursorFxHasMoved = false;
 
         function setCursorFxSettings({ color, alpha } = {}) {
           const clean = sanitizeHexColor(color) || DEFAULT_AUDIO_ACCENT_COLOR;
@@ -2238,11 +1596,6 @@
             ? Math.min(100, Math.max(0, rawAlpha)) / 100
             : DEFAULT_CURSOR_FX_ALPHA;
           document.documentElement.style.setProperty("--cursor-fx-color", clean);
-          document.documentElement.style.setProperty(
-            "--cursor-fx-alpha",
-            cursorFxAlpha
-          );
-          syncCursorTrailOpacity();
         }
 
         function setCursorFxOffset(px) {
@@ -2256,304 +1609,6 @@
             typeof window.matchMedia === "function" &&
             window.matchMedia("(prefers-reduced-motion: reduce)").matches
           );
-        }
-
-        function getInteractiveTarget(node) {
-          if (!node || typeof node.closest !== "function") return null;
-          return node.closest(INTERACTIVE_SELECTOR);
-        }
-
-        function getHoverLabel(el) {
-          if (!el) return "";
-          const label =
-            el.getAttribute("aria-label") ||
-            el.getAttribute("data-cursor-label") ||
-            el.textContent ||
-            "";
-          return label.replace(/\s+/g, " ").trim().slice(0, 32);
-        }
-
-        function refreshCursorHoverRect() {
-          if (!cursorFxHoverEl) return null;
-          const rect = cursorFxHoverEl.getBoundingClientRect();
-          const width = Math.min(220, Math.max(28, rect.width));
-          const height = Math.min(120, Math.max(24, rect.height));
-          cursorFxHoverRect = {
-            x: rect.left + rect.width / 2,
-            y: rect.top + rect.height / 2,
-            width,
-            height,
-          };
-          if (cursorFxOrb) {
-            cursorFxOrb.style.setProperty("--cursor-target-w", `${width}px`);
-            cursorFxOrb.style.setProperty("--cursor-target-h", `${height}px`);
-          }
-          return cursorFxHoverRect;
-        }
-
-        function updateCursorHover(target) {
-          if (target === cursorFxHoverEl) {
-            refreshCursorHoverRect();
-            return;
-          }
-          cursorFxHoverEl = target || null;
-          if (!cursorFxHoverEl) {
-            cursorFxHoverRect = null;
-            cursorFxHoverText = "";
-            if (cursorFxOrb) cursorFxOrb.classList.remove("is-hover");
-            if (cursorFxLabel) {
-              cursorFxLabel.textContent = "";
-              cursorFxLabel.classList.remove("visible");
-            }
-            return;
-          }
-          refreshCursorHoverRect();
-          if (cursorFxOrb) cursorFxOrb.classList.add("is-hover");
-          cursorFxHoverText = getHoverLabel(cursorFxHoverEl);
-          if (cursorFxLabel) {
-            if (cursorFxHoverText) {
-              cursorFxLabel.textContent = cursorFxHoverText;
-              cursorFxLabel.classList.add("visible");
-            } else {
-              cursorFxLabel.textContent = "";
-              cursorFxLabel.classList.remove("visible");
-            }
-          }
-        }
-
-        function ensureCursorOrb() {
-          if (cursorFxOrb) return cursorFxOrb;
-          const orb = document.createElement("div");
-          orb.className = "cursor-fx-orb";
-          orb.setAttribute("aria-hidden", "true");
-          const ring = document.createElement("div");
-          ring.className = "cursor-fx-ring";
-          const dot = document.createElement("div");
-          dot.className = "cursor-fx-dot";
-          const label = document.createElement("div");
-          label.className = "cursor-fx-label";
-          orb.append(ring, dot, label);
-          document.body.appendChild(orb);
-          cursorFxOrb = orb;
-          cursorFxRing = ring;
-          cursorFxDot = dot;
-          cursorFxLabel = label;
-          return orb;
-        }
-
-        function syncCursorTrailOpacity() {
-          if (!cursorFxTrail.length) return;
-          const count = cursorFxTrail.length;
-          cursorFxTrail.forEach((dot, index) => {
-            const fade = 1 - index / (count + 1);
-            const base = Math.max(0, cursorFxAlpha * fade);
-            dot.dataset.baseOpacity = String(base);
-            dot.style.opacity = "0";
-          });
-        }
-
-        function ensureCursorTrail(count = 6) {
-          if (cursorFxTrail.length) {
-            cursorFxTrailPoints = cursorFxTrail.map(() => ({
-              x: cursorFxTarget.x || 0,
-              y: cursorFxTarget.y || 0,
-            }));
-            syncCursorTrailOpacity();
-            return cursorFxTrail;
-          }
-          const dots = [];
-          for (let i = 0; i < count; i += 1) {
-            const dot = document.createElement("div");
-            dot.className = "cursor-fx-trail-dot";
-            dot.setAttribute("aria-hidden", "true");
-            const scale = Math.max(0.4, 1 - i / (count + 1));
-            dot.dataset.scale = String(scale);
-            dot.style.setProperty("--trail-scale", String(scale));
-            document.body.appendChild(dot);
-            dots.push(dot);
-          }
-          cursorFxTrail = dots;
-          cursorFxTrailPoints = dots.map(() => ({
-            x: cursorFxTarget.x || 0,
-            y: cursorFxTarget.y || 0,
-          }));
-          syncCursorTrailOpacity();
-          return dots;
-        }
-
-        function setTrailVisible(show) {
-          if (!cursorFxTrail.length) return;
-          cursorFxTrail.forEach((dot) => {
-            const base = dot.dataset.baseOpacity || "0";
-            dot.style.opacity = show ? base : "0";
-          });
-        }
-
-        function spawnCursorRipple(x, y) {
-          const ripple = document.createElement("span");
-          ripple.className = "cursor-ripple";
-          ripple.style.left = `${x}px`;
-          ripple.style.top = `${y}px`;
-          ripple.style.setProperty("--ripple-color", cursorFxColor);
-          document.body.appendChild(ripple);
-          ripple.addEventListener("animationend", () => {
-            ripple.remove();
-          });
-        }
-
-        function updateTrailDots() {
-          if (!cursorFxTrail.length) return;
-          let prevX = cursorFxPos.x;
-          let prevY = cursorFxPos.y;
-          const ease = 0.25;
-          for (let i = 0; i < cursorFxTrail.length; i += 1) {
-            const point = cursorFxTrailPoints[i];
-            point.x += (prevX - point.x) * ease;
-            point.y += (prevY - point.y) * ease;
-            const dot = cursorFxTrail[i];
-            const scale = dot.dataset.scale || "1";
-            dot.style.transform = `translate3d(${point.x}px, ${point.y}px, 0) scale(${scale})`;
-            prevX = point.x;
-            prevY = point.y;
-          }
-        }
-
-        function tickCursorOrb(now) {
-          const dt = Math.min(40, now - cursorFxLastTime || 16);
-          cursorFxLastTime = now;
-          let targetX = cursorFxTarget.x;
-          let targetY = cursorFxTarget.y;
-          if (
-            cursorFxHoverRect &&
-            (cursorFxMode === "magnet" ||
-              cursorFxMode === "snap" ||
-              cursorFxMode === "sticky")
-          ) {
-            const centerX = cursorFxHoverRect.x + cursorFxOffsetX;
-            const centerY = cursorFxHoverRect.y + cursorFxOffsetY;
-            if (cursorFxMode === "magnet") {
-              targetX += (centerX - targetX) * 0.35;
-              targetY += (centerY - targetY) * 0.35;
-            } else {
-              targetX = centerX;
-              targetY = centerY;
-            }
-          }
-
-          const dx = targetX - cursorFxPos.x;
-          const dy = targetY - cursorFxPos.y;
-          const ease =
-            cursorFxMode === "snap"
-              ? 0.35
-              : cursorFxMode === "magnet"
-              ? 0.25
-              : 0.2;
-          cursorFxPos.x += dx * ease;
-          cursorFxPos.y += dy * ease;
-
-          if (cursorFxOrb) {
-            cursorFxOrb.style.transform = `translate3d(${cursorFxPos.x}px, ${cursorFxPos.y}px, 0)`;
-          }
-
-          const speed = Math.min(2.5, Math.hypot(dx, dy) / Math.max(1, dt));
-          let scaleX = 1;
-          let scaleY = 1;
-          let rotateDeg = 0;
-          if (cursorFxMode === "velocity") {
-            const stretch = Math.min(0.7, speed * 0.7);
-            scaleX = 1 + stretch;
-            scaleY = 1 - stretch * 0.5;
-            rotateDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
-          } else if (cursorFxMode === "rotate") {
-            cursorFxSpin = (cursorFxSpin + dt * 0.12) % 360;
-            rotateDeg = cursorFxSpin;
-          } else {
-            cursorFxSpin = 0;
-          }
-          if (cursorFxOrb) {
-            cursorFxOrb.style.setProperty("--ring-scale-x", scaleX.toFixed(2));
-            cursorFxOrb.style.setProperty("--ring-scale-y", scaleY.toFixed(2));
-            cursorFxOrb.style.setProperty(
-              "--ring-rotate",
-              `${rotateDeg.toFixed(2)}deg`
-            );
-          }
-
-          if (cursorFxMode === "trail") {
-            updateTrailDots();
-          }
-
-          cursorFxRaf = requestAnimationFrame(tickCursorOrb);
-        }
-
-        function startCursorOrb(mode) {
-          const orb = ensureCursorOrb();
-          orb.className = `cursor-fx-orb fx-${mode}`;
-          orb.style.display = "block";
-          orb.classList.remove("is-active");
-          orb.classList.remove("is-hover");
-          cursorFxTarget = {
-            x: window.innerWidth / 2,
-            y: window.innerHeight / 2,
-          };
-          cursorFxPos = { ...cursorFxTarget };
-          cursorFxLastTime = performance.now();
-          cursorFxSpin = 0;
-          cursorFxHasMoved = false;
-          updateCursorHover(null);
-          if (mode === "trail") {
-            ensureCursorTrail(7);
-            setTrailVisible(true);
-          } else {
-            setTrailVisible(false);
-          }
-
-          cursorFxMoveHandler = (event) => {
-            cursorFxTarget = {
-              x: event.clientX + cursorFxOffsetX,
-              y: event.clientY + cursorFxOffsetY,
-            };
-            if (!cursorFxHasMoved) {
-              cursorFxPos = { ...cursorFxTarget };
-              cursorFxHasMoved = true;
-              if (cursorFxMode === "trail" && cursorFxTrailPoints.length) {
-                cursorFxTrailPoints = cursorFxTrailPoints.map(() => ({
-                  x: cursorFxTarget.x,
-                  y: cursorFxTarget.y,
-                }));
-              }
-            }
-            if (CURSOR_FX_HOVER_MODES.has(cursorFxMode)) {
-              updateCursorHover(getInteractiveTarget(event.target));
-            } else if (cursorFxHoverEl) {
-              updateCursorHover(null);
-            }
-            if (cursorFxOrb) cursorFxOrb.classList.add("is-active");
-            if (cursorFxMode === "trail") setTrailVisible(true);
-          };
-          cursorFxLeaveHandler = (event) => {
-            if (event.type === "mouseout" && event.relatedTarget) return;
-            if (cursorFxOrb) cursorFxOrb.classList.remove("is-active");
-            setTrailVisible(false);
-          };
-          if (mode === "ripple") {
-            cursorFxClickHandler = (event) => {
-              spawnCursorRipple(
-                event.clientX + cursorFxOffsetX,
-                event.clientY + cursorFxOffsetY
-              );
-            };
-            document.addEventListener("pointerdown", cursorFxClickHandler, {
-              passive: true,
-            });
-          }
-          document.addEventListener("pointermove", cursorFxMoveHandler, {
-            passive: true,
-          });
-          document.addEventListener("mouseout", cursorFxLeaveHandler, {
-            passive: true,
-          });
-          cursorFxRaf = requestAnimationFrame(tickCursorOrb);
         }
 
         function ensureCursorGlow() {
@@ -2704,10 +1759,6 @@
             document.removeEventListener("pointermove", cursorFxMoveHandler);
             cursorFxMoveHandler = null;
           }
-          if (cursorFxClickHandler) {
-            document.removeEventListener("pointerdown", cursorFxClickHandler);
-            cursorFxClickHandler = null;
-          }
           if (cursorFxLeaveHandler) {
             document.removeEventListener("mouseout", cursorFxLeaveHandler);
             cursorFxLeaveHandler = null;
@@ -2731,42 +1782,24 @@
           }
           if (cursorFxCanvas) cursorFxCanvas.style.display = "none";
           if (cursorGlowEl) cursorGlowEl.style.opacity = "0";
-          if (cursorFxOrb) {
-            cursorFxOrb.className = "cursor-fx-orb";
-            cursorFxOrb.classList.remove("is-active");
-            cursorFxOrb.style.display = "none";
-          }
-          if (cursorFxLabel) {
-            cursorFxLabel.textContent = "";
-            cursorFxLabel.classList.remove("visible");
-          }
-          cursorFxHoverEl = null;
-          cursorFxHoverRect = null;
-          cursorFxHoverText = "";
-          setTrailVisible(false);
-          cursorFxTrailPoints = [];
-          cursorFxSpin = 0;
-          cursorFxHasMoved = false;
           cursorFxMode = "none";
         }
 
         function applyCursorEffect(mode, { isMobile } = {}) {
           const normalized = String(mode || "none").toLowerCase();
-          const allowed = CURSOR_FX_MODES.has(normalized)
-            ? normalized
-            : "none";
+          const allowed =
+            normalized === "glow" || normalized === "particles"
+              ? normalized
+              : "none";
           const next =
             allowed === "none" || isMobile || prefersReducedMotion()
               ? "none"
               : allowed;
           if (next === cursorFxMode) return;
           stopCursorFx();
-          cursorFxMode = next;
           if (next === "glow") startCursorGlow();
           if (next === "particles") startCursorParticles();
-          if (next !== "none" && next !== "glow" && next !== "particles") {
-            startCursorOrb(next);
-          }
+          cursorFxMode = next;
         }
 
         function createLocationIcon() {
@@ -3319,10 +2352,9 @@
             }
           }
           if (bgEl) {
-            BG_EFFECTS.forEach((fx) => bgEl.classList.remove(fx));
-            const bgFx = String(data.background_effect || "none").toLowerCase();
-            if (bgFx !== "none" && BG_EFFECTS.includes(bgFx)) {
-              bgEl.classList.add(bgFx);
+            bgEl.classList.remove("night", "rain", "snow");
+            if (data.background_effect && data.background_effect !== "none") {
+              bgEl.classList.add(data.background_effect);
             }
           }
 
@@ -3752,16 +2784,6 @@
         } else if (prefersReducedData && prefersReducedData.addListener) {
           prefersReducedData.addListener(handleMediaPreferenceChange);
         }
-
-        let scrollFxTimer = null;
-        function bumpScrollFx() {
-          document.body.classList.add("is-scrolling");
-          if (scrollFxTimer) window.clearTimeout(scrollFxTimer);
-          scrollFxTimer = window.setTimeout(() => {
-            document.body.classList.remove("is-scrolling");
-          }, 220);
-        }
-        window.addEventListener("scroll", bumpScrollFx, { passive: true });
 
         loadTree();
         document.addEventListener("DOMContentLoaded", () => {
