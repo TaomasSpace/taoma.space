@@ -1449,6 +1449,8 @@
         const DEFAULT_AUDIO_BG_ALPHA = 60;
         const DEFAULT_AUDIO_TEXT_COLOR = "#e9ebff";
         const DEFAULT_AUDIO_ACCENT_COLOR = "#85a3ff";
+        const DEFAULT_CURSOR_FX_ALPHA = 0.7;
+        const CURSOR_IMAGE_SIZE = 32;
 
         function sanitizeHexColor(raw) {
           if (typeof raw !== "string") return "";
@@ -1568,6 +1570,9 @@
         let cursorFxMode = "none";
         let cursorFxColor = DEFAULT_AUDIO_ACCENT_COLOR;
         let cursorFxRgb = hexToRgb(DEFAULT_AUDIO_ACCENT_COLOR);
+        let cursorFxAlpha = DEFAULT_CURSOR_FX_ALPHA;
+        let cursorFxOffsetX = 0;
+        let cursorFxOffsetY = 0;
         let cursorGlowEl = null;
         let cursorFxCanvas = null;
         let cursorFxCtx = null;
@@ -1582,11 +1587,21 @@
         let cursorFxLeaveHandler = null;
         let cursorFxResizeHandler = null;
 
-        function setCursorFxColor(hex) {
-          const clean = sanitizeHexColor(hex) || DEFAULT_AUDIO_ACCENT_COLOR;
+        function setCursorFxSettings({ color, alpha } = {}) {
+          const clean = sanitizeHexColor(color) || DEFAULT_AUDIO_ACCENT_COLOR;
           cursorFxColor = clean;
           cursorFxRgb = hexToRgb(clean) || hexToRgb(DEFAULT_AUDIO_ACCENT_COLOR);
+          const rawAlpha = Number(alpha);
+          cursorFxAlpha = Number.isFinite(rawAlpha)
+            ? Math.min(100, Math.max(0, rawAlpha)) / 100
+            : DEFAULT_CURSOR_FX_ALPHA;
           document.documentElement.style.setProperty("--cursor-fx-color", clean);
+        }
+
+        function setCursorFxOffset(px) {
+          const offset = Number.isFinite(px) ? px : 0;
+          cursorFxOffsetX = offset;
+          cursorFxOffsetY = offset;
         }
 
         function prefersReducedMotion() {
@@ -1671,7 +1686,7 @@
             p.vy += 0.0005 * dt;
             p.x += p.vx * dt;
             p.y += p.vy * dt;
-            const alpha = (p.life / p.maxLife) * 0.85;
+            const alpha = (p.life / p.maxLife) * 0.85 * cursorFxAlpha;
             cursorFxCtx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
             cursorFxCtx.beginPath();
             cursorFxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -1691,9 +1706,9 @@
           const el = ensureCursorGlow();
           el.style.display = "block";
           cursorFxMoveHandler = (event) => {
-            el.style.left = `${event.clientX}px`;
-            el.style.top = `${event.clientY}px`;
-            el.style.opacity = "1";
+            el.style.left = `${event.clientX + cursorFxOffsetX}px`;
+            el.style.top = `${event.clientY + cursorFxOffsetY}px`;
+            el.style.opacity = String(cursorFxAlpha);
           };
           cursorFxLeaveHandler = (event) => {
             if (event.type === "mouseout" && event.relatedTarget) return;
@@ -1716,8 +1731,8 @@
           cursorFxLastX = 0;
           cursorFxLastY = 0;
           cursorFxMoveHandler = (event) => {
-            const x = event.clientX;
-            const y = event.clientY;
+            const x = event.clientX + cursorFxOffsetX;
+            const y = event.clientY + cursorFxOffsetY;
             const speed = Math.hypot(x - cursorFxLastX, y - cursorFxLastY);
             cursorFxLastX = x;
             cursorFxLastY = y;
@@ -2434,15 +2449,24 @@
             data.link_bg_alpha
           );
           const cursorFxHex =
+            sanitizeHexColor(data.cursor_effect_color) ||
             sanitizeHexColor(data.link_color) ||
             sanitizeHexColor(data.name_color) ||
             DEFAULT_AUDIO_ACCENT_COLOR;
-          setCursorFxColor(cursorFxHex);
+          const rawCursorFxAlpha = data.cursor_effect_alpha;
+          const cursorFxAlpha =
+            rawCursorFxAlpha === undefined || rawCursorFxAlpha === null
+              ? 70
+              : Number(rawCursorFxAlpha);
+          setCursorFxSettings({ color: cursorFxHex, alpha: cursorFxAlpha });
+          const cursorUrl = safeMediaUrl(data.cursor_url);
+          setCursorFxOffset(
+            cursorUrl && !isMobile ? CURSOR_IMAGE_SIZE / 2 : 0
+          );
           applyCursorEffect(data.cursor_effect || "none", { isMobile });
 
-          const cursorUrl = safeMediaUrl(data.cursor_url);
           if (cursorUrl && !isMobile) {
-            resizeCursorImage(cursorUrl, 32)
+            resizeCursorImage(cursorUrl, CURSOR_IMAGE_SIZE)
               .then((resized) => {
                 const cursorDecl = `url("${resized}") 0 0, auto`;
                 document.documentElement.style.setProperty(

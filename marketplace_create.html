@@ -1152,6 +1152,28 @@
               </select>
             </div>
             <div class="field">
+              <label for="tplCursorFxColor">Cursor effect color</label>
+              <input
+                id="tplCursorFxColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
+            </div>
+            <div class="field">
+              <label for="tplCursorFxAlpha"
+                >Cursor effect intensity (0-100)</label
+              >
+              <input
+                id="tplCursorFxAlpha"
+                class="input"
+                type="number"
+                min="0"
+                max="100"
+                placeholder="70"
+              />
+            </div>
+            <div class="field">
               <label for="tplDiscordFrame">Discord frame enabled</label>
               <select id="tplDiscordFrame" class="select">
                 <option value="false">No</option>
@@ -1457,6 +1479,7 @@
         v.name_color = hexOrNull(v.name_color);
         v.location_color = hexOrNull(v.location_color);
         v.quote_color = hexOrNull(v.quote_color);
+        v.cursor_effect_color = hexOrNull(v.cursor_effect_color);
         v.visit_counter_color = hexOrNull(v.visit_counter_color);
         v.visit_counter_bg_color = hexOrNull(v.visit_counter_bg_color);
         v.audio_player_bg_color = hexOrNull(v.audio_player_bg_color);
@@ -1498,6 +1521,10 @@
         v.visit_counter_bg_alpha = Math.min(
           100,
           Math.max(0, parseInt(v.visit_counter_bg_alpha ?? 20, 10))
+        );
+        v.cursor_effect_alpha = Math.min(
+          100,
+          Math.max(0, parseInt(v.cursor_effect_alpha ?? 70, 10))
         );
         v.background_url = (v.background_url || "").trim();
         if (!v.background_url) {
@@ -1588,6 +1615,8 @@
           quote_color: "",
           cursor_url: "",
           cursor_effect: "none",
+          cursor_effect_color: "",
+          cursor_effect_alpha: 70,
           discord_frame_enabled: false,
           discord_presence_enabled: false,
           discord_presence: "online",
@@ -1643,6 +1672,11 @@
         $("tplQuoteColor").value = v.quote_color || "";
         $("tplCursorUrl").value = v.cursor_url || "";
         $("tplCursorFx").value = v.cursor_effect || "none";
+        $("tplCursorFxColor").value = v.cursor_effect_color || "";
+        $("tplCursorFxAlpha").value =
+          v.cursor_effect_alpha !== undefined && v.cursor_effect_alpha !== null
+            ? v.cursor_effect_alpha
+            : 70;
         $("tplDiscordFrame").value = v.discord_frame_enabled ? "true" : "false";
         $("tplDiscordPresence").value = v.discord_presence_enabled
           ? "true"
@@ -1717,6 +1751,11 @@
           quote_color: hexOrNull($("tplQuoteColor").value),
           cursor_url: $("tplCursorUrl").value.trim() || null,
           cursor_effect: $("tplCursorFx").value || "none",
+          cursor_effect_color: hexOrNull($("tplCursorFxColor").value),
+          cursor_effect_alpha: Math.min(
+            100,
+            Math.max(0, parseInt($("tplCursorFxAlpha").value || "70", 10))
+          ),
           discord_frame_enabled: $("tplDiscordFrame").value === "true",
           discord_presence_enabled: $("tplDiscordPresence").value === "true",
           discord_presence: $("tplDiscordPresenceValue").value || "online",
@@ -1816,6 +1855,8 @@
             quote_color: lt.quote_color || "",
             cursor_url: lt.cursor_url || "",
             cursor_effect: lt.cursor_effect || "none",
+            cursor_effect_color: lt.cursor_effect_color || "",
+            cursor_effect_alpha: lt.cursor_effect_alpha ?? 70,
             discord_frame_enabled: !!lt.discord_frame_enabled,
             discord_presence_enabled: !!lt.discord_presence_enabled,
             discord_presence: lt.discord_presence || "online",
@@ -2562,6 +2603,7 @@
             "tplNameColor",
             "tplLocationColor",
             "tplQuoteColor",
+            "tplCursorFxColor",
             "tplCounterColor",
             "tplCounterBgColor",
           ].forEach((id) => {

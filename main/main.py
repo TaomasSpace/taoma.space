@@ -1074,6 +1074,8 @@ class LinktreeCreateIn(BaseModel):
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
     cursor_effect: CursorEffectName = "none"
+    cursor_effect_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    cursor_effect_alpha: int = Field(70, ge=0, le=100)
     discord_frame_enabled: bool = False
     discord_presence_enabled: bool = False
     discord_presence: DiscordPresence = "online"
@@ -1122,6 +1124,8 @@ class LinktreeUpdateIn(BaseModel):
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
     cursor_effect: Optional[CursorEffectName] = None
+    cursor_effect_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    cursor_effect_alpha: Optional[int] = Field(None, ge=0, le=100)
     discord_frame_enabled: Optional[bool] = None
     discord_presence_enabled: Optional[bool] = None
     discord_presence: Optional[DiscordPresence] = None
@@ -1182,6 +1186,8 @@ class LinktreeOut(BaseModel):
     quote_color: Optional[str] = None
     cursor_url: Optional[str] = None
     cursor_effect: CursorEffectName = "none"
+    cursor_effect_color: Optional[str] = None
+    cursor_effect_alpha: int = 70
     discord_frame_enabled: bool = False
     discord_decoration_url: Optional[str] = None
     discord_presence_enabled: bool = False
@@ -1883,6 +1889,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    quote_color,
                    cursor_url,
                    COALESCE(cursor_effect, 'none') AS cursor_effect,
+                   cursor_effect_color,
+                   COALESCE(cursor_effect_alpha, 70) AS cursor_effect_alpha,
                    COALESCE(discord_frame_enabled, false) AS discord_frame_enabled,
                     COALESCE(discord_presence_enabled, false) AS discord_presence_enabled,
                     COALESCE(discord_presence, 'online') AS discord_presence,
@@ -1978,6 +1986,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "quote_color": lt.get("quote_color"),
         "cursor_url": lt.get("cursor_url"),
         "cursor_effect": lt.get("cursor_effect") or "none",
+        "cursor_effect_color": lt.get("cursor_effect_color"),
+        "cursor_effect_alpha": int(lt.get("cursor_effect_alpha") or 70),
         "show_audio_player": bool(lt.get("show_audio_player", False)),
         "audio_player_bg_color": lt.get("audio_player_bg_color"),
         "audio_player_bg_alpha": int(lt.get("audio_player_bg_alpha", 60) or 60),
@@ -3026,6 +3036,8 @@ def get_linktree(
         "quote_color": lt.get("quote_color"),
         "cursor_url": lt.get("cursor_url"),
         "cursor_effect": lt.get("cursor_effect") or "none",
+        "cursor_effect_color": lt.get("cursor_effect_color"),
+        "cursor_effect_alpha": int(lt.get("cursor_effect_alpha") or 70),
         "discord_frame_enabled": frame_enabled,
         "discord_decoration_url": decoration_url if frame_enabled else None,
         "discord_presence_enabled": bool(lt.get("discord_presence_enabled", False)),
@@ -3108,6 +3120,8 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             quote_color=payload.quote_color,
             cursor_url=payload.cursor_url,
             cursor_effect=payload.cursor_effect,
+            cursor_effect_color=payload.cursor_effect_color,
+            cursor_effect_alpha=payload.cursor_effect_alpha,
             discord_frame_enabled=payload.discord_frame_enabled,
             discord_presence_enabled=payload.discord_presence_enabled,
             discord_presence=payload.discord_presence,
@@ -3954,6 +3968,8 @@ class TemplateVariantIn(BaseModel):
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
     cursor_effect: CursorEffectName = "none"
+    cursor_effect_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    cursor_effect_alpha: int = Field(70, ge=0, le=100)
     discord_frame_enabled: bool = False
     discord_presence_enabled: bool = False
     discord_presence: DiscordPresence = "online"
@@ -4017,6 +4033,7 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("name_effect", "none")
     data.setdefault("background_effect", "none")
     data.setdefault("cursor_effect", "none")
+    data.setdefault("cursor_effect_alpha", 70)
     data.setdefault("display_name_mode", "slug")
     data.setdefault("link_bg_alpha", 100)
     data.setdefault("audio_player_bg_alpha", 60)
@@ -4162,6 +4179,8 @@ def _extract_linktree_fields(data: dict) -> dict:
         "quote_color",
         "cursor_url",
         "cursor_effect",
+        "cursor_effect_color",
+        "cursor_effect_alpha",
         "discord_frame_enabled",
         "discord_presence_enabled",
         "discord_presence",

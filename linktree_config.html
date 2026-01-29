@@ -1327,6 +1327,31 @@
               </div>
             </div>
             <div class="field">
+              <label for="inCursorFxColor">Cursor effect color</label>
+              <input
+                id="inCursorFxColor"
+                class="input"
+                type="color"
+                value="#85a3ff"
+              />
+            </div>
+            <div class="field">
+              <label for="inCursorFxAlpha"
+                >Cursor effect intensity (0-100)</label
+              >
+              <input
+                id="inCursorFxAlpha"
+                class="input"
+                type="number"
+                min="0"
+                max="100"
+                value="70"
+              />
+              <div class="preview-note muted">
+                Applies to glow and particles.
+              </div>
+            </div>
+            <div class="field">
               <label for="inTrans">Card Transparency (0-100)</label>
               <input
                 id="inTrans"
@@ -1986,6 +2011,8 @@
       const DEFAULT_NAME_COLOR = "#e9ebff";
       const DEFAULT_LOCATION_COLOR = "#a2a9c8";
       const DEFAULT_QUOTE_COLOR = "#e9ebff";
+      const DEFAULT_CURSOR_FX_COLOR = DEFAULT_AUDIO_ACCENT_COLOR;
+      const DEFAULT_CURSOR_FX_ALPHA = 70;
       const PRIVATE_TEMPLATE_DESC =
         "Private snapshot created from Linktree Config.";
       const PRIVATE_TEMPLATE_MARKER = PRIVATE_TEMPLATE_DESC.toLowerCase();
@@ -2085,6 +2112,12 @@
             : 100;
         $("inCursor").value = lt.cursor_url || "";
         $("inCursorFx").value = lt.cursor_effect || "none";
+        $("inCursorFxColor").value =
+          lt.cursor_effect_color || DEFAULT_CURSOR_FX_COLOR;
+        $("inCursorFxAlpha").value =
+          lt.cursor_effect_alpha !== undefined && lt.cursor_effect_alpha !== null
+            ? lt.cursor_effect_alpha
+            : DEFAULT_CURSOR_FX_ALPHA;
         setUploadStatus(
           "songStatus",
           lt.song_url,
@@ -2178,6 +2211,11 @@
           quote_color: hexOrNull(lt.quote_color),
           cursor_url: lt.cursor_url || null,
           cursor_effect: lt.cursor_effect || "none",
+          cursor_effect_color: hexOrNull(lt.cursor_effect_color),
+          cursor_effect_alpha: clampPercent(
+            lt.cursor_effect_alpha ?? DEFAULT_CURSOR_FX_ALPHA,
+            DEFAULT_CURSOR_FX_ALPHA
+          ),
           discord_frame_enabled: !!lt.discord_frame_enabled,
           discord_presence_enabled: !!lt.discord_presence_enabled,
           discord_status_enabled: !!lt.discord_status_enabled,
@@ -2215,6 +2253,10 @@
         }
         const linkBgAlpha = clampPercent($("inLinkBgAlpha").value ?? 100, 100);
         const cardAlphaInput = clampPercent($("inTrans").value ?? 100, 100);
+        const cursorFxAlpha = clampPercent(
+          $("inCursorFxAlpha").value ?? DEFAULT_CURSOR_FX_ALPHA,
+          DEFAULT_CURSOR_FX_ALPHA
+        );
         const counterAlpha = clampPercent(
           $("inCounterBgAlpha").value ?? 20,
           20
@@ -2251,6 +2293,10 @@
           quote_color: hexOrNull($("inQuoteColor").value),
           cursor_url: $("inCursor").value.trim() || null,
           cursor_effect: $("inCursorFx").value || "none",
+          cursor_effect_color: hexOrNull($("inCursorFxColor").value),
+          cursor_effect_alpha: Number.isFinite(cursorFxAlpha)
+            ? cursorFxAlpha
+            : DEFAULT_CURSOR_FX_ALPHA,
           discord_frame_enabled: $("inDiscordFrame").checked,
           discord_presence_enabled: $("inDiscordPresence").checked,
           discord_status_enabled: $("inDiscordStatus").checked,
@@ -2845,6 +2891,10 @@
           $("inAudioBgAlpha").value ?? DEFAULT_AUDIO_BG_ALPHA,
           DEFAULT_AUDIO_BG_ALPHA
         );
+        const cursorFxAlpha = clampPercent(
+          $("inCursorFxAlpha").value ?? DEFAULT_CURSOR_FX_ALPHA,
+          DEFAULT_CURSOR_FX_ALPHA
+        );
         const body = {
           slug: $("inSlug").value.trim(),
           device_type: currentDevice,
@@ -2877,6 +2927,10 @@
           card_color: $("inCardColor").value || null,
           cursor_url: $("inCursor").value.trim() || null,
           cursor_effect: $("inCursorFx").value || "none",
+          cursor_effect_color: $("inCursorFxColor").value || null,
+          cursor_effect_alpha: Number.isFinite(cursorFxAlpha)
+            ? cursorFxAlpha
+            : DEFAULT_CURSOR_FX_ALPHA,
           discord_frame_enabled: $("inDiscordFrame").checked,
           discord_presence_enabled: $("inDiscordPresence").checked,
           discord_status_enabled: $("inDiscordStatus").checked,
