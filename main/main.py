@@ -1014,8 +1014,37 @@ ALLOWED_MIME = ALLOWED_IMAGE_CT
 
 
 EffectName = Literal["none", "glow", "neon", "rainbow"]
-BgEffectName = Literal["none", "night", "rain", "snow"]
-CursorEffectName = Literal["none", "glow", "particles"]
+BgEffectName = Literal[
+    "none",
+    "night",
+    "rain",
+    "snow",
+    "noise",
+    "gradient",
+    "parallax",
+    "particles",
+    "sweep",
+    "mesh",
+    "grid",
+    "vignette",
+    "scanlines",
+    "glitch",
+]
+CursorEffectName = Literal[
+    "none",
+    "glow",
+    "particles",
+    "trail",
+    "aura",
+    "magnet",
+    "morph",
+    "snap",
+    "velocity",
+    "ripple",
+    "blend",
+    "sticky",
+    "rotate",
+]
 DiscordPresence = Literal["online", "idle", "dnd", "offline"]
 HEX_COLOR_RE = r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
 

@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS linktrees (
     name_effect         TEXT NOT NULL DEFAULT 'none'
                         CHECK (name_effect IN ('none','glow','neon','rainbow')),
     background_effect   TEXT NOT NULL DEFAULT 'none'
-                        CHECK (background_effect IN ('none','night','rain','snow')),
+                        CHECK (background_effect IN ('none','night','rain','snow','noise','gradient','parallax','particles','sweep','mesh','grid','vignette','scanlines','glitch')),
     display_name_mode   TEXT NOT NULL DEFAULT 'slug'
                         CHECK (display_name_mode IN ('slug','username','custom')),
     custom_display_name TEXT,
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS linktrees (
     quote_color         TEXT,
     cursor_url          TEXT,
     cursor_effect       TEXT NOT NULL DEFAULT 'none'
-                        CHECK (cursor_effect IN ('none','glow','particles')),
+                        CHECK (cursor_effect IN ('none','glow','particles','trail','aura','magnet','morph','snap','velocity','ripple','blend','sticky','rotate')),
     cursor_effect_color TEXT,
     cursor_effect_alpha SMALLINT NOT NULL DEFAULT 70
                         CHECK (cursor_effect_alpha BETWEEN 0 AND 100),
@@ -586,12 +586,25 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_background_effect;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS linktrees_background_effect_check;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_background_effect
+  CHECK (background_effect IN ('none','night','rain','snow','noise','gradient','parallax','particles','sweep','mesh','grid','vignette','scanlines','glitch'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
   DROP CONSTRAINT IF EXISTS chk_linktrees_cursor_effect;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
   ADD CONSTRAINT chk_linktrees_cursor_effect
-  CHECK (cursor_effect IN ('none','glow','particles'));
+  CHECK (cursor_effect IN ('none','glow','particles','trail','aura','magnet','morph','snap','velocity','ripple','blend','sticky','rotate'));
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
