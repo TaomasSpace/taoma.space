@@ -1721,11 +1721,12 @@
         $("tplDemoLinkIcon").value = v.demo_link_icon_url || "";
       }
 
-      function buildVariantFromForm(device) {
+      function buildVariantFromForm(device, opts = {}) {
+        const { silent = false } = opts;
         const d = device || currentDevice || "pc";
         const displayMode = $("tplDisplayName").value || "slug";
         const customName = $("tplCustomName").value.trim();
-        if (displayMode === "custom" && !customName) {
+        if (displayMode === "custom" && !customName && !silent) {
           showMsg(
             formMsg,
             "Custom display name is required when mode is Custom",
@@ -1733,6 +1734,8 @@
           );
           return null;
         }
+        const customNameOut =
+          displayMode === "custom" ? customName : silent ? customName : null;
         return {
           device_type: d,
           location: $("tplLocation").value.trim() || "",
@@ -1757,7 +1760,7 @@
           name_effect: $("tplNameFx").value || "none",
           background_effect: $("tplBgFx").value || "none",
           display_name_mode: displayMode,
-          custom_display_name: displayMode === "custom" ? customName : null,
+          custom_display_name: customNameOut,
           link_color: hexOrNull($("tplLinkColor").value),
           link_bg_color: hexOrNull($("tplLinkBgColor").value),
           link_bg_alpha: Math.min(
@@ -1797,12 +1800,15 @@
       }
 
       function ensureActiveVariant() {
-        const dev = $("tplDevice").value || currentDevice || "pc";
-        currentDevice = dev;
-        if (!variantCache[dev]) {
-          resetVariant(dev);
+        const next = $("tplDevice").value || currentDevice || "pc";
+        const prev = currentDevice || next || "pc";
+        const snap = buildVariantFromForm(prev, { silent: true });
+        if (snap) variantCache[prev] = snap;
+        currentDevice = next;
+        if (!variantCache[next]) {
+          resetVariant(next);
         } else {
-          applyVariantToForm(variantCache[dev]);
+          applyVariantToForm(variantCache[next]);
         }
         updateModeBadge();
         updateSlugHint();

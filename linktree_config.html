@@ -3154,6 +3154,29 @@
           (params.toString() ? "?" + params.toString() : "");
       }
 
+      async function autoSaveBeforeDeviceSwitch() {
+        if (!currentUser) {
+          showMsg(msgMeta, "Not logged in", false);
+          return false;
+        }
+        const slug = $("inSlug").value.trim();
+        if (!slug) {
+          showMsg(msgMeta, "Set a slug before switching devices", false);
+          return false;
+        }
+        try {
+          const exists = !!linktreeId;
+          const res = await apiEnsureOrUpdateMeta(exists);
+          if (!exists && res && res.id) {
+            linktreeId = res.id;
+          }
+          return true;
+        } catch (err) {
+          showMsg(msgMeta, String(err), false);
+          return false;
+        }
+      }
+
       $("inSlug").addEventListener("input", (e) => {
         $("slugPreview").textContent = e.target.value.trim() || "-";
         $("btnOpenPublic").href = `/tree/${encodeURIComponent(
@@ -3165,7 +3188,15 @@
       toggleCustomNameField();
 
       $("inDevice").addEventListener("change", async (e) => {
-        currentDevice = e.target.value || "pc";
+        const nextDevice = e.target.value || "pc";
+        const prevDevice = currentDevice || "pc";
+        if (nextDevice === prevDevice) return;
+        const ok = await autoSaveBeforeDeviceSwitch();
+        if (!ok) {
+          e.target.value = prevDevice;
+          return;
+        }
+        currentDevice = nextDevice;
         updateCreateTemplateLink();
         await refreshData();
       });
