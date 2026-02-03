@@ -1394,6 +1394,16 @@
             allowedProtocols: ["http:", "https:"],
           });
 
+        function hashString(input) {
+          let h = 2166136261;
+          const str = String(input || "");
+          for (let i = 0; i < str.length; i += 1) {
+            h ^= str.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+          }
+          return (h >>> 0).toString(16);
+        }
+
         function hexToRgba(hex, alpha = 1) {
           const m = /^#?([a-fA-F0-9]{3}|[a-fA-F0-9]{6})$/.exec(
             (hex || "").trim()
@@ -2056,6 +2066,11 @@
 
         async function enterExperience() {
           showGate(false);
+          if (gateCacheKey) {
+            try {
+              sessionStorage.setItem(gateCacheKey, "1");
+            } catch (_) {}
+          }
           if (bgVideo) {
             bgVideo.dataset.userReady = "1";
             bgVideo.dataset.wantSound = bgAudio ? "0" : "1";
@@ -2102,6 +2117,11 @@
         let initialRenderDone = false;
         let lastMediaMode = null;
         let lastDevice = null;
+        let lastMediaSig = null;
+        let lastBgSig = null;
+        let lastAudioSig = null;
+        let lastCursorSig = null;
+        let gateCacheKey = null;
         let discordStatusCache = null;
         let discordStatusPromise = null;
 
@@ -2300,54 +2320,86 @@
           const isMobile = device === "mobile";
           let needsGate = false;
 
-          let bgIsVideo = false;
-          let bgUrl = "";
+          const bgSource = pickBackgroundSource(data, preferLite);
+          const bgUrlNext = bgSource.url || "";
+          const bgIsVideoNext = bgSource.isVideo;
+          const songUrlNext = safeMediaUrl(data.song_url);
+          const songIconUrlNext = safeMediaUrl(data.song_icon_url);
+          const showAudioPlayer = !!data.show_audio_player && !!songUrlNext;
+          const cursorUrl = safeMediaUrl(data.cursor_url);
+          const bgSig = hashString(
+            `bg|${bgIsVideoNext ? "v" : "i"}|${bgUrlNext}`
+          );
+          const audioSig = hashString(
+            `audio|${songUrlNext}|${songIconUrlNext}|${
+              showAudioPlayer ? "1" : "0"
+            }`
+          );
+          const cursorSig = hashString(
+            `cursor|${cursorUrl}|${data.cursor_effect || "none"}|${
+              isMobile ? "m" : "d"
+            }|${data.cursor_effect_color || ""}|${
+              data.cursor_effect_alpha ?? ""
+            }`
+          );
+          const mediaSig = hashString(`${bgSig}|${audioSig}|${cursorSig}`);
+          const bgChanged = bgSig !== lastBgSig;
+          const audioChanged = audioSig !== lastAudioSig;
+          const cursorChanged = cursorSig !== lastCursorSig;
+          gateCacheKey = `taoma:linktree:gate:${mediaSig}`;
+          const gateDismissed = (() => {
+            try {
+              return sessionStorage.getItem(gateCacheKey) === "1";
+            } catch (_) {
+              return false;
+            }
+          })();
+
           const bgEl = document.getElementById("bg");
-          bgVideo = null;
-          if (bgEl) {
-            bgEl.textContent = "";
-            const bgSource = pickBackgroundSource(data, preferLite);
-            bgUrl = bgSource.url;
-            bgIsVideo = bgSource.isVideo;
-            if (bgUrl) {
-              if (bgIsVideo) {
-                const video = document.createElement("video");
-                video.id = "bgvid";
-                video.src = bgUrl;
-                video.autoplay = false;
-                video.muted = true;
-                video.loop = true;
-                video.setAttribute("muted", "");
-                video.setAttribute("playsinline", "");
-                video.setAttribute("webkit-playsinline", "");
-                video.preload = preferLite ? "metadata" : "auto";
-                if (preferLite) {
-                  video.setAttribute("data-lite", "true");
-                }
-                video.addEventListener("loadeddata", () => {
-                  if (bgVideo !== video) return;
-                  if (video.dataset.userReady !== "1" || document.hidden)
-                    return;
-                  playBackgroundVideo(video.dataset.wantSound === "1");
-                });
-                bgEl.appendChild(video);
-                bgVideo = video;
-                needsGate = true;
-                if (!visibilityHandlerAdded) {
-                  document.addEventListener("visibilitychange", () => {
-                    if (!document.hidden && !gateActive && bgVideo) {
-                      playBackgroundVideo(bgVideo.dataset.wantSound === "1");
-                    }
+          if (bgChanged) {
+            bgVideo = null;
+            if (bgEl) {
+              bgEl.textContent = "";
+              if (bgUrlNext) {
+                if (bgIsVideoNext) {
+                  const video = document.createElement("video");
+                  video.id = "bgvid";
+                  video.src = bgUrlNext;
+                  video.autoplay = false;
+                  video.muted = true;
+                  video.loop = true;
+                  video.setAttribute("muted", "");
+                  video.setAttribute("playsinline", "");
+                  video.setAttribute("webkit-playsinline", "");
+                  video.preload = preferLite ? "metadata" : "auto";
+                  if (preferLite) {
+                    video.setAttribute("data-lite", "true");
+                  }
+                  video.addEventListener("loadeddata", () => {
+                    if (bgVideo !== video) return;
+                    if (video.dataset.userReady !== "1" || document.hidden)
+                      return;
+                    playBackgroundVideo(video.dataset.wantSound === "1");
                   });
-                  visibilityHandlerAdded = true;
+                  bgEl.appendChild(video);
+                  bgVideo = video;
+                  needsGate = true;
+                  if (!visibilityHandlerAdded) {
+                    document.addEventListener("visibilitychange", () => {
+                      if (!document.hidden && !gateActive && bgVideo) {
+                        playBackgroundVideo(bgVideo.dataset.wantSound === "1");
+                      }
+                    });
+                    visibilityHandlerAdded = true;
+                  }
+                } else {
+                  const img = document.createElement("img");
+                  img.src = bgUrlNext;
+                  img.alt = "Background";
+                  img.loading = "lazy";
+                  img.decoding = "async";
+                  bgEl.appendChild(img);
                 }
-              } else {
-                const img = document.createElement("img");
-                img.src = bgUrl;
-                img.alt = "Background";
-                img.loading = "lazy";
-                img.decoding = "async";
-                bgEl.appendChild(img);
               }
             }
           }
@@ -2359,28 +2411,34 @@
           }
 
           // Audio (Song hat Vorrang vor Video-Ton)
-          if (bgAudio) {
-            try {
-              bgAudio.pause();
-            } catch {}
-            if (audioCleanup) {
-              audioCleanup();
-              audioCleanup = null;
+          if (audioChanged) {
+            if (bgAudio) {
+              try {
+                bgAudio.pause();
+              } catch {}
+              if (audioCleanup) {
+                audioCleanup();
+                audioCleanup = null;
+              }
+              bgAudio.remove();
+              bgAudio = null;
             }
-            bgAudio.remove();
-            bgAudio = null;
           }
           syncAudioUI();
-          const songUrl = safeMediaUrl(data.song_url);
-          const songIconUrl = safeMediaUrl(data.song_icon_url);
-          const showAudioPlayer = !!data.show_audio_player && !!songUrl;
           if (audioPlayer) {
             applyAudioPlayerStyles(data);
             audioPlayer.classList.toggle("hidden", !showAudioPlayer);
           }
           if (audioIcon) {
-            if (songIconUrl) {
-              audioIcon.src = songIconUrl;
+            if (songIconUrlNext) {
+              const abs = (() => {
+                try {
+                  return new URL(songIconUrlNext, window.location.origin).href;
+                } catch (_) {
+                  return songIconUrlNext;
+                }
+              })();
+              if (audioIcon.src !== abs) audioIcon.src = songIconUrlNext;
               audioIcon.classList.remove("hidden");
             } else {
               audioIcon.removeAttribute("src");
@@ -2389,38 +2447,50 @@
           }
           if (showAudioPlayer && audioTitle) {
             const songName = (data.song_name || "").trim();
-            const title = stripFileExtension(songName) || getAudioTitle(songUrl);
+            const title =
+              stripFileExtension(songName) || getAudioTitle(songUrlNext);
             audioTitle.style.display = "";
             audioTitle.textContent = title || "Audio";
           }
-          if (songUrl) {
-            bgAudio = document.createElement("audio");
-            bgAudio.src = songUrl;
-            bgAudio.loop = true;
-            bgAudio.preload = preferLite ? "metadata" : "auto";
-            bgAudio.muted = true; // Autoplay-friendly start, gate will unmute
-            document.body.appendChild(bgAudio);
-            bgAudio.play().catch(() => {});
-            audioCleanup = bindAudioPlayer(bgAudio);
-            syncAudioUI();
+          if (songUrlNext) {
+            if (!bgAudio) {
+              bgAudio = document.createElement("audio");
+              bgAudio.src = songUrlNext;
+              bgAudio.loop = true;
+              bgAudio.preload = preferLite ? "metadata" : "auto";
+              bgAudio.muted = true; // Autoplay-friendly start, gate will unmute
+              document.body.appendChild(bgAudio);
+              bgAudio.play().catch(() => {});
+              audioCleanup = bindAudioPlayer(bgAudio);
+              syncAudioUI();
+            }
             needsGate = true;
             if (soundBtn) soundBtn.classList.remove("hidden"); // Button zeigen - Nutzer kann unmute'n
-          } else if (bgIsVideo && bgVideo) {
+          } else if (bgIsVideoNext && bgVideo) {
             // Kein Song -> Videoton anbieten
             if (soundBtn) soundBtn.classList.remove("hidden");
           } else {
             if (soundBtn) soundBtn.classList.add("hidden"); // nichts abzuspielen
           }
-          if (bgVideo && songUrl) {
+          if (bgVideo && songUrlNext) {
             bgVideo.muted = true;
           }
-          if (needsGate) {
-            showGate(true);
-          } else {
-            showGate(false);
+          const hasVideo = bgChanged ? bgIsVideoNext : !!bgVideo;
+          const hasAudio = audioChanged ? !!songUrlNext : !!bgAudio;
+          needsGate = needsGate || hasVideo || hasAudio;
+          if (bgChanged || audioChanged) {
+            if (needsGate && !gateDismissed) {
+              showGate(true);
+            } else {
+              showGate(false);
+            }
+            soundOn = false;
+            updateSoundUI();
           }
-          soundOn = false;
-          updateSoundUI();
+          lastMediaSig = mediaSig;
+          lastBgSig = bgSig;
+          lastAudioSig = audioSig;
+          lastCursorSig = cursorSig;
 
           const cardEl = document.getElementById("card");
           if (cardEl) {
@@ -2459,24 +2529,25 @@
               ? 70
               : Number(rawCursorFxAlpha);
           setCursorFxSettings({ color: cursorFxHex, alpha: cursorFxAlpha });
-          const cursorUrl = safeMediaUrl(data.cursor_url);
           setCursorFxOffset(
             cursorUrl && !isMobile ? CURSOR_IMAGE_SIZE / 2 : 0
           );
           applyCursorEffect(data.cursor_effect || "none", { isMobile });
 
           if (cursorUrl && !isMobile) {
-            resizeCursorImage(cursorUrl, CURSOR_IMAGE_SIZE)
-              .then((resized) => {
-                const cursorDecl = `url("${resized}") 0 0, auto`;
-                document.documentElement.style.setProperty(
-                  "--cursor",
-                  cursorDecl
-                );
-              })
-              .catch(() => {
-                document.documentElement.style.setProperty("--cursor", "auto");
-              });
+            if (cursorChanged) {
+              resizeCursorImage(cursorUrl, CURSOR_IMAGE_SIZE)
+                .then((resized) => {
+                  const cursorDecl = `url("${resized}") 0 0, auto`;
+                  document.documentElement.style.setProperty(
+                    "--cursor",
+                    cursorDecl
+                  );
+                })
+                .catch(() => {
+                  document.documentElement.style.setProperty("--cursor", "auto");
+                });
+            }
           } else {
             document.documentElement.style.setProperty("--cursor", "auto");
           }

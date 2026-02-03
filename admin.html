@@ -1780,9 +1780,39 @@ $('#fUpdateUser')?.addEventListener('submit', async (e) => {
     });
 
     // --- ICONS: upload, preview, set URL ---
+    const hashedFileCache = new WeakMap();
+    async function withHashedFile(file) {
+      if (!file) return null;
+      if (hashedFileCache.has(file)) return hashedFileCache.get(file);
+      const name = file.name || "upload";
+      const dot = name.lastIndexOf(".");
+      const base = dot > 0 ? name.slice(0, dot) : name;
+      const ext = dot > 0 ? name.slice(dot) : "";
+      let hash = "";
+      try {
+        const buf = await file.arrayBuffer();
+        const digest = await crypto.subtle.digest("SHA-256", buf);
+        hash = Array.from(new Uint8Array(digest))
+          .map(b => b.toString(16).padStart(2, "0"))
+          .join("")
+          .slice(0, 16);
+      } catch (_) {
+        hash = Math.random().toString(16).slice(2, 10);
+      }
+      const safeBase = base.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const hashedName = `${safeBase}--${hash}${ext}`;
+      const hashed = new File([file], hashedName, {
+        type: file.type,
+        lastModified: file.lastModified
+      });
+      hashedFileCache.set(file, hashed);
+      return hashed;
+    }
+
     async function uploadIconFile(inputId) {
       const inp = document.getElementById(inputId);
-      const file = inp?.files?.[0];
+      const raw = inp?.files?.[0];
+      const file = (await withHashedFile(raw)) || raw;
       if (!file) return null;
       const fd = new FormData();
       fd.append('file', file);

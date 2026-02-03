@@ -3359,14 +3359,45 @@
       }
       boot();
 
+      const hashedFileCache = new WeakMap();
+      async function withHashedFile(file) {
+        if (!file) return null;
+        if (hashedFileCache.has(file)) return hashedFileCache.get(file);
+        const name = file.name || "upload";
+        const dot = name.lastIndexOf(".");
+        const base = dot > 0 ? name.slice(0, dot) : name;
+        const ext = dot > 0 ? name.slice(dot) : "";
+        let hash = "";
+        try {
+          const buf = await file.arrayBuffer();
+          const digest = await crypto.subtle.digest("SHA-256", buf);
+          hash = Array.from(new Uint8Array(digest))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("")
+            .slice(0, 16);
+        } catch (_) {
+          hash = Math.random().toString(16).slice(2, 10);
+        }
+        const safeBase = base.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const hashedName = `${safeBase}--${hash}${ext}`;
+        const hashed = new File([file], hashedName, {
+          type: file.type,
+          lastModified: file.lastModified,
+        });
+        hashedFileCache.set(file, hashed);
+        return hashed;
+      }
+
       async function uploadInlineFile(inputEl, endpoint) {
         if (!inputEl || !inputEl.files || !inputEl.files[0]) return null;
         if (!currentUser) {
           const user = await renderAuthHeader();
           if (!user) throw new Error("Not logged in");
         }
+        const raw = inputEl.files[0];
+        const file = (await withHashedFile(raw)) || raw;
         const fd = new FormData();
-        fd.append("file", inputEl.files[0]);
+        fd.append("file", file);
         const r = await fetch(endpoint, {
           method: "POST",
           credentials: "include",
@@ -3378,7 +3409,8 @@
       }
 
       async function uploadFile(inputId, endpoint) {
-        const f = $(inputId).files[0];
+        const raw = $(inputId).files[0];
+        const f = (await withHashedFile(raw)) || raw;
         if (!f) return null;
         if (!currentUser) {
           const user = await renderAuthHeader();
@@ -3405,7 +3437,8 @@
       }
 
       async function fetchUpload(inputId, endpoint) {
-        const f = $(inputId).files[0];
+        const raw = $(inputId).files[0];
+        const f = (await withHashedFile(raw)) || raw;
         if (!f) return null;
         if (!currentUser) {
           const user = await renderAuthHeader();
