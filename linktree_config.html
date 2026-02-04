@@ -3466,6 +3466,16 @@
             parseInt($("inEntryBgAlpha").value || DEFAULT_ENTRY_BG_ALPHA, 10)
           )
         );
+        const entryOverlayAlpha = Math.min(
+          100,
+          Math.max(
+            0,
+            parseInt(
+              $("inEntryOverlayAlpha").value || DEFAULT_ENTRY_OVERLAY_ALPHA,
+              10
+            )
+          )
+        );
         const body = {
           slug: $("inSlug").value.trim(),
           device_type: currentDevice,
@@ -3485,6 +3495,9 @@
           entry_bg_alpha: Number.isFinite(entryBgAlpha)
             ? entryBgAlpha
             : DEFAULT_ENTRY_BG_ALPHA,
+          entry_overlay_alpha: Number.isFinite(entryOverlayAlpha)
+            ? entryOverlayAlpha
+            : DEFAULT_ENTRY_OVERLAY_ALPHA,
           entry_text_color: hexOrNull($("inEntryTextColor").value),
           entry_font_size: Number.isFinite(entryFontSize)
             ? entryFontSize
