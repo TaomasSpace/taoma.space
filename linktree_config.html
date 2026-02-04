@@ -1322,6 +1322,19 @@
                   value="42"
                 />
               </div>
+              <div class="field">
+                <label for="inQuotePause"
+                  >Pause before next quote (ms)</label
+                >
+                <input
+                  id="inQuotePause"
+                  class="input"
+                  type="number"
+                  min="200"
+                  max="10000"
+                  value="1200"
+                />
+              </div>
               <details class="fold">
                 <summary>Quote styling</summary>
                 <div class="fold-body">
@@ -2181,6 +2194,7 @@
       const DEFAULT_LOCATION_COLOR = "#a2a9c8";
       const DEFAULT_QUOTE_COLOR = "#e9ebff";
       const DEFAULT_QUOTE_SPEED = 42;
+      const DEFAULT_QUOTE_PAUSE = 1200;
       const DEFAULT_QUOTE_SIZE = 15;
       const DEFAULT_CURSOR_FX_COLOR = DEFAULT_AUDIO_ACCENT_COLOR;
       const DEFAULT_CURSOR_FX_ALPHA = 70;
@@ -2254,6 +2268,10 @@
           lt.quote_typing_speed !== undefined && lt.quote_typing_speed !== null
             ? lt.quote_typing_speed
             : DEFAULT_QUOTE_SPEED;
+        $("inQuotePause").value =
+          lt.quote_typing_pause !== undefined && lt.quote_typing_pause !== null
+            ? lt.quote_typing_pause
+            : DEFAULT_QUOTE_PAUSE;
         $("inQuoteSize").value =
           lt.quote_font_size !== undefined && lt.quote_font_size !== null
             ? lt.quote_font_size
@@ -2367,11 +2385,15 @@
         const enabled = $("inQuoteTyping").checked;
         const wrap = $("quoteTypingFields");
         const speedWrap = $("quoteTypingSpeedWrap");
+        const pauseInput = $("inQuotePause");
         if (wrap) {
           wrap.style.display = enabled ? "grid" : "none";
         }
         if (speedWrap) {
           speedWrap.style.display = enabled ? "block" : "none";
+        }
+        if (pauseInput && pauseInput.parentElement) {
+          pauseInput.parentElement.style.display = enabled ? "block" : "none";
         }
       }
 
@@ -2411,6 +2433,10 @@
             lt.quote_typing_speed !== undefined && lt.quote_typing_speed !== null
               ? lt.quote_typing_speed
               : DEFAULT_QUOTE_SPEED,
+          quote_typing_pause:
+            lt.quote_typing_pause !== undefined && lt.quote_typing_pause !== null
+              ? lt.quote_typing_pause
+              : DEFAULT_QUOTE_PAUSE,
           quote_font_size:
             lt.quote_font_size !== undefined && lt.quote_font_size !== null
               ? lt.quote_font_size
@@ -2504,6 +2530,13 @@
           200,
           Math.max(20, parseInt($("inQuoteSpeed").value || DEFAULT_QUOTE_SPEED, 10))
         );
+        const quotePause = Math.min(
+          10000,
+          Math.max(
+            200,
+            parseInt($("inQuotePause").value || DEFAULT_QUOTE_PAUSE, 10)
+          )
+        );
         const quoteSize = Math.min(
           40,
           Math.max(10, parseInt($("inQuoteSize").value || DEFAULT_QUOTE_SIZE, 10))
@@ -2517,6 +2550,9 @@
           quote_typing_speed: Number.isFinite(quoteSpeed)
             ? quoteSpeed
             : DEFAULT_QUOTE_SPEED,
+          quote_typing_pause: Number.isFinite(quotePause)
+            ? quotePause
+            : DEFAULT_QUOTE_PAUSE,
           quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
           entry_text: $("inEntryText").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
@@ -3240,6 +3276,13 @@
           200,
           Math.max(20, parseInt($("inQuoteSpeed").value || DEFAULT_QUOTE_SPEED, 10))
         );
+        const quotePause = Math.min(
+          10000,
+          Math.max(
+            200,
+            parseInt($("inQuotePause").value || DEFAULT_QUOTE_PAUSE, 10)
+          )
+        );
         const quoteSize = Math.min(
           40,
           Math.max(10, parseInt($("inQuoteSize").value || DEFAULT_QUOTE_SIZE, 10))
@@ -3254,6 +3297,9 @@
           quote_typing_speed: Number.isFinite(quoteSpeed)
             ? quoteSpeed
             : DEFAULT_QUOTE_SPEED,
+          quote_typing_pause: Number.isFinite(quotePause)
+            ? quotePause
+            : DEFAULT_QUOTE_PAUSE,
           quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
           entry_text: $("inEntryText").value.trim() || null,
           song_url: $("inSong").value.trim() || null,

@@ -407,7 +407,7 @@
       }
 
       .quote.quote-cursor::after {
-        content: " /";
+        content: " |";
         display: inline-block;
         opacity: 1;
       }
@@ -1742,9 +1742,14 @@
           const speed = Number.isFinite(rawSpeed)
             ? Math.min(200, Math.max(20, rawSpeed))
             : 42;
+          const rawPause = Number(data?.quote_typing_pause);
+          const pause = Number.isFinite(rawPause)
+            ? Math.min(10000, Math.max(200, rawPause))
+            : 1200;
           startQuoteTyping(quoteEl, cleaned, {
             typeDelay: speed,
             eraseDelay: Math.max(20, Math.round(speed * 0.7)),
+            holdDelay: pause,
           });
         }
 

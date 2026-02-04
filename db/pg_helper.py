@@ -96,6 +96,7 @@ CREATE TABLE IF NOT EXISTS linktrees (
     quote_typing_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     quote_typing_texts  TEXT,
     quote_typing_speed  SMALLINT,
+    quote_typing_pause  SMALLINT,
     quote_font_size     SMALLINT,
     entry_text          TEXT,
     song_url            TEXT,                     -- Audio-URL
@@ -563,6 +564,10 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS quote_typing_speed SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS quote_typing_pause SMALLINT;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1631,6 +1636,7 @@ class PgGifDB:
         quote_typing_enabled: bool = False,
         quote_typing_texts: str | None = None,
         quote_typing_speed: int | None = None,
+        quote_typing_pause: int | None = None,
         quote_font_size: int | None = None,
         entry_text: str | None = None,
         song_url: str | None = None,
@@ -1677,7 +1683,7 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_font_size, entry_text, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, entry_text, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
@@ -1712,12 +1718,12 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
                 (
-                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_font_size, entry_text, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, entry_text, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
@@ -1845,7 +1851,7 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_font_size, entry_text, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, entry_text, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
@@ -1860,7 +1866,7 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
@@ -1873,6 +1879,7 @@ class PgGifDB:
                     src.get("quote_typing_enabled", False),
                     src.get("quote_typing_texts"),
                     src.get("quote_typing_speed"),
+                    src.get("quote_typing_pause"),
                     src.get("quote_font_size"),
                     src.get("entry_text"),
                     src.get("song_url"),
