@@ -396,6 +396,22 @@
         font-weight: 800;
         font-size: 0.92rem;
       }
+      .icon-16 {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+      .badge-item {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.55rem 0.7rem;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        width: 100%;
+        flex-wrap: wrap;
+        background: color-mix(in oklab, var(--card2) 86%, transparent);
+      }
 
       .grid {
         display: grid;
@@ -936,8 +952,110 @@
               />
             </div>
             <div class="field">
+              <label for="tplEntryText">Entry overlay text</label>
+              <input
+                id="tplEntryText"
+                class="input"
+                type="text"
+                maxlength="120"
+                placeholder="Click to enter"
+              />
+              <div class="help">Shown on the entry gate before media plays.</div>
+            </div>
+            <div class="field" style="grid-column: 1 / -1">
               <label for="tplQuote">Quote (optional)</label>
               <input id="tplQuote" class="input" type="text" maxlength="240" />
+              <label
+                class="row"
+                style="gap: 0.4rem; align-items: center; margin-top: 0.35rem"
+              >
+                <input type="checkbox" id="tplQuoteTyping" />
+                <span>Typewriter quote (cycle up to 3 texts)</span>
+              </label>
+              <div
+                class="grid cols-2"
+                id="tplQuoteTypingFields"
+                style="margin-top: 0.5rem"
+              >
+                <div class="field">
+                  <label for="tplQuoteAlt1">Quote text 2</label>
+                  <input
+                    id="tplQuoteAlt1"
+                    class="input"
+                    type="text"
+                    maxlength="180"
+                    placeholder="Second quote text"
+                  />
+                </div>
+                <div class="field">
+                  <label for="tplQuoteAlt2">Quote text 3</label>
+                  <input
+                    id="tplQuoteAlt2"
+                    class="input"
+                    type="text"
+                    maxlength="180"
+                    placeholder="Third quote text"
+                  />
+                </div>
+              </div>
+              <div
+                class="field"
+                id="tplQuoteSpeedWrap"
+                style="margin-top: 0.5rem"
+              >
+                <label for="tplQuoteSpeed"
+                  >Typewriter speed (ms per char)</label
+                >
+                <input
+                  id="tplQuoteSpeed"
+                  class="input"
+                  type="number"
+                  min="20"
+                  max="200"
+                  value="42"
+                />
+              </div>
+              <div class="field" id="tplQuotePauseWrap">
+                <label for="tplQuotePause">Pause before next quote (ms)</label>
+                <input
+                  id="tplQuotePause"
+                  class="input"
+                  type="number"
+                  min="200"
+                  max="10000"
+                  value="1200"
+                />
+              </div>
+              <div class="field">
+                <label for="tplQuoteSize">Quote font size (px)</label>
+                <input
+                  id="tplQuoteSize"
+                  class="input"
+                  type="number"
+                  min="10"
+                  max="40"
+                  value="15"
+                />
+              </div>
+              <div class="field">
+                <label for="tplQuoteFont">Quote font style</label>
+                <select id="tplQuoteFont" class="select">
+                  <option value="default">Default</option>
+                  <option value="serif">Serif</option>
+                  <option value="mono">Mono</option>
+                  <option value="script">Script</option>
+                  <option value="display">Display</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplQuoteEffect">Quote effect</label>
+                <select id="tplQuoteEffect" class="select">
+                  <option value="none">None</option>
+                  <option value="glow">Glow</option>
+                  <option value="neon">Neon</option>
+                  <option value="rainbow">Rainbow</option>
+                </select>
+              </div>
             </div>
             <div class="field">
               <label for="tplSong">Song URL (optional)</label>
@@ -1240,6 +1358,11 @@
                 <option value="true">Yes</option>
               </select>
             </div>
+            <div class="field" style="grid-column: 1 / -1">
+              <label>Discord badge selection</label>
+              <div id="tplDiscordBadgesList" class="grid cols-2"></div>
+              <p id="tplDiscordBadgesHint" class="help"></p>
+            </div>
             <div class="field">
               <label for="tplShowCounter">Show visit counter</label>
               <select id="tplShowCounter" class="select">
@@ -1365,6 +1488,12 @@
 
     <script>
       const $ = (id) => document.getElementById(id);
+      const DEFAULT_QUOTE_SPEED = 42;
+      const DEFAULT_QUOTE_PAUSE = 1200;
+      const DEFAULT_QUOTE_SIZE = 15;
+
+      let discordStatus = null;
+      let discordBadgeCodes = [];
 
       function showMsg(el, text, ok = false) {
         if (!el) return;
@@ -1381,6 +1510,18 @@
       async function fetchSession() {
         try {
           const r = await fetch("/api/auth/verify", { credentials: "include" });
+          if (!r.ok) return null;
+          return await r.json();
+        } catch (_) {
+          return null;
+        }
+      }
+
+      async function fetchDiscordStatus() {
+        try {
+          const r = await fetch("/api/discord/status", {
+            credentials: "include",
+          });
           if (!r.ok) return null;
           return await r.json();
         } catch (_) {
@@ -1475,6 +1616,100 @@
         return VIDEO_EXTENSIONS.some((ext) => lower.includes(ext));
       }
 
+      function toggleQuoteTypingFields() {
+        const enabled = $("tplQuoteTyping")?.checked;
+        const wrap = $("tplQuoteTypingFields");
+        const speedWrap = $("tplQuoteSpeedWrap");
+        const pauseWrap = $("tplQuotePauseWrap");
+        if (wrap) wrap.style.display = enabled ? "grid" : "none";
+        if (speedWrap) speedWrap.style.display = enabled ? "block" : "none";
+        if (pauseWrap) pauseWrap.style.display = enabled ? "block" : "none";
+      }
+
+      function collectQuoteTexts() {
+        const list = [
+          $("tplQuote")?.value.trim(),
+          $("tplQuoteAlt1")?.value.trim(),
+          $("tplQuoteAlt2")?.value.trim(),
+        ].filter(Boolean);
+        return list.slice(0, 3);
+      }
+
+      function collectDiscordBadgeCodes() {
+        const box = $("tplDiscordBadgesList");
+        if (!box) {
+          return Array.isArray(discordBadgeCodes) ? discordBadgeCodes : [];
+        }
+        const inputs = box.querySelectorAll(
+          'input[type="checkbox"][data-code]'
+        );
+        if (!inputs.length) {
+          return Array.isArray(discordBadgeCodes) ? discordBadgeCodes : [];
+        }
+        return Array.from(inputs)
+          .filter((input) => input.checked)
+          .map((input) => input.getAttribute("data-code"))
+          .filter(Boolean);
+      }
+
+      function renderTemplateDiscordBadges() {
+        const box = $("tplDiscordBadgesList");
+        const hint = $("tplDiscordBadgesHint");
+        if (!box) return;
+        box.innerHTML = "";
+        if (hint) hint.textContent = "";
+
+        if (!discordStatus) {
+          if (hint) hint.textContent = "Loading Discord badges...";
+          return;
+        }
+        const linked = !!discordStatus.linked;
+        if (!linked) {
+          if (hint) hint.textContent = "Link Discord to choose badges.";
+          return;
+        }
+        const list = Array.isArray(discordStatus.badges)
+          ? discordStatus.badges
+          : [];
+        if (!list.length) {
+          if (hint) hint.textContent = "No Discord badges found on your account.";
+          return;
+        }
+
+        const codes = Array.isArray(discordBadgeCodes) ? discordBadgeCodes : [];
+        list.forEach((badge) => {
+          if (!badge) return;
+          const item = document.createElement("div");
+          item.className = "badge-item";
+          const label = badge.label || badge.code || "badge";
+          const icon = sanitizeUrl(badge.icon_url ? String(badge.icon_url) : "");
+          const checked = codes.includes(badge.code);
+          item.innerHTML = `
+            <img src="${icon}" alt="${escapeHtml(badge.code || "")}" class="icon-16">
+            <strong>${escapeHtml(badge.code || "badge")}</strong>
+            <span class="muted">${escapeHtml(label)}</span>
+            <label class="row" style="margin-left:auto;gap:.35rem">
+              <span class="muted">Displayed</span>
+              <input type="checkbox" data-code="${escapeHtml(
+                badge.code || ""
+              )}" ${checked ? "checked" : ""} aria-label="Displayed">
+            </label>
+          `;
+          const chk = item.querySelector('input[type="checkbox"]');
+          chk.addEventListener("change", () => {
+            discordBadgeCodes = collectDiscordBadgeCodes();
+            const dev = $("tplDevice")?.value || currentDevice || "pc";
+            if (variantCache[dev]) {
+              variantCache[dev].discord_badge_codes = discordBadgeCodes;
+            }
+            markDirtyByField("tplDiscordBadges");
+            setDirty(true);
+            saveDraftDebounced();
+          });
+          box.appendChild(item);
+        });
+      }
+
       function normalizeVariant(raw, deviceFallback) {
         const v = { ...(raw || {}) };
         v.device_type = v.device_type || deviceFallback || "pc";
@@ -1492,6 +1727,39 @@
         } else {
           v.custom_display_name = null;
         }
+        v.entry_text = v.entry_text ? String(v.entry_text).trim() : null;
+        const rawQuoteTexts = Array.isArray(v.quote_typing_texts)
+          ? v.quote_typing_texts
+          : [];
+        const cleanedQuoteTexts = rawQuoteTexts
+          .map((t) => String(t || "").trim())
+          .filter(Boolean);
+        if (!cleanedQuoteTexts.length && v.quote) {
+          cleanedQuoteTexts.push(String(v.quote).trim());
+        }
+        v.quote_typing_texts = cleanedQuoteTexts.slice(0, 3);
+        v.quote = v.quote_typing_texts[0] || (v.quote ? String(v.quote).trim() : "");
+        v.quote_typing_enabled = !!v.quote_typing_enabled;
+        const speedRaw = Number(v.quote_typing_speed);
+        const pauseRaw = Number(v.quote_typing_pause);
+        const sizeRaw = Number(v.quote_font_size);
+        v.quote_typing_speed = Number.isFinite(speedRaw)
+          ? Math.min(200, Math.max(20, Math.round(speedRaw)))
+          : DEFAULT_QUOTE_SPEED;
+        v.quote_typing_pause = Number.isFinite(pauseRaw)
+          ? Math.min(10000, Math.max(200, Math.round(pauseRaw)))
+          : DEFAULT_QUOTE_PAUSE;
+        v.quote_font_size = Number.isFinite(sizeRaw)
+          ? Math.min(40, Math.max(10, Math.round(sizeRaw)))
+          : DEFAULT_QUOTE_SIZE;
+        const fam = (v.quote_font_family || "default").toString().toLowerCase();
+        v.quote_font_family =
+          fam && ["default", "serif", "mono", "script", "display"].includes(fam)
+            ? fam
+            : "default";
+        const fx = (v.quote_effect || "none").toString().toLowerCase();
+        v.quote_effect =
+          fx && ["none", "glow", "neon", "rainbow"].includes(fx) ? fx : "none";
         v.link_color = hexOrNull(v.link_color);
         v.link_bg_color = hexOrNull(v.link_bg_color);
         v.card_color = hexOrNull(v.card_color);
@@ -1518,6 +1786,13 @@
           ? String(v.discord_status_text).trim()
           : null;
         v.discord_badges_enabled = !!v.discord_badges_enabled;
+        const badgeCodes = Array.isArray(v.discord_badge_codes)
+          ? v.discord_badge_codes
+          : [];
+        v.discord_badge_codes = badgeCodes
+          .map((code) => String(code || "").trim())
+          .filter(Boolean)
+          .slice(0, 50);
         v.demo_show_links = !!v.demo_show_links;
         v.demo_link_label = v.demo_link_label
           ? String(v.demo_link_label).trim()
@@ -1610,6 +1885,14 @@
           device_type: d,
           location: "",
           quote: "",
+          entry_text: "",
+          quote_typing_enabled: false,
+          quote_typing_texts: [],
+          quote_typing_speed: DEFAULT_QUOTE_SPEED,
+          quote_typing_pause: DEFAULT_QUOTE_PAUSE,
+          quote_font_size: DEFAULT_QUOTE_SIZE,
+          quote_font_family: "default",
+          quote_effect: "none",
           song_url: "",
           song_name: "",
           song_icon_url: "",
@@ -1643,6 +1926,7 @@
           discord_status_enabled: false,
           discord_status_text: "",
           discord_badges_enabled: false,
+          discord_badge_codes: [],
           show_visit_counter: false,
           visit_counter_color: "",
           visit_counter_bg_color: "",
@@ -1657,7 +1941,27 @@
 
       function applyVariantToForm(v) {
         $("tplLocation").value = v.location || "";
-        $("tplQuote").value = v.quote || "";
+        $("tplEntryText").value = v.entry_text || "";
+        const qt = Array.isArray(v.quote_typing_texts) ? v.quote_typing_texts : [];
+        const mainQuote = qt[0] || v.quote || "";
+        $("tplQuote").value = mainQuote;
+        $("tplQuoteAlt1").value = qt[1] || "";
+        $("tplQuoteAlt2").value = qt[2] || "";
+        $("tplQuoteTyping").checked = !!v.quote_typing_enabled;
+        $("tplQuoteSpeed").value =
+          v.quote_typing_speed !== undefined && v.quote_typing_speed !== null
+            ? v.quote_typing_speed
+            : DEFAULT_QUOTE_SPEED;
+        $("tplQuotePause").value =
+          v.quote_typing_pause !== undefined && v.quote_typing_pause !== null
+            ? v.quote_typing_pause
+            : DEFAULT_QUOTE_PAUSE;
+        $("tplQuoteSize").value =
+          v.quote_font_size !== undefined && v.quote_font_size !== null
+            ? v.quote_font_size
+            : DEFAULT_QUOTE_SIZE;
+        $("tplQuoteFont").value = v.quote_font_family || "default";
+        $("tplQuoteEffect").value = v.quote_effect || "none";
         $("tplSong").value = v.song_url || "";
         $("tplSongName").value = v.song_name || "";
         $("tplSongIcon").value = v.song_icon_url || "";
@@ -1707,6 +2011,10 @@
           : "false";
         $("tplDiscordStatusText").value = v.discord_status_text || "";
         $("tplDiscordBadges").value = v.discord_badges_enabled ? "true" : "false";
+        discordBadgeCodes = Array.isArray(v.discord_badge_codes)
+          ? v.discord_badge_codes
+          : [];
+        renderTemplateDiscordBadges();
         $("tplShowCounter").value = v.show_visit_counter ? "true" : "false";
         $("tplCounterColor").value = v.visit_counter_color || "";
         $("tplCounterBgColor").value = v.visit_counter_bg_color || "";
@@ -1719,6 +2027,7 @@
         $("tplDemoLinkLabel").value = v.demo_link_label || "";
         $("tplDemoLinkUrl").value = v.demo_link_url || "";
         $("tplDemoLinkIcon").value = v.demo_link_icon_url || "";
+        toggleQuoteTypingFields();
       }
 
       function buildVariantFromForm(device, opts = {}) {
@@ -1726,6 +2035,10 @@
         const d = device || currentDevice || "pc";
         const displayMode = $("tplDisplayName").value || "slug";
         const customName = $("tplCustomName").value.trim();
+        const quoteTexts = collectQuoteTexts();
+        const quoteSpeed = parseInt($("tplQuoteSpeed").value || "", 10);
+        const quotePause = parseInt($("tplQuotePause").value || "", 10);
+        const quoteSize = parseInt($("tplQuoteSize").value || "", 10);
         if (displayMode === "custom" && !customName && !silent) {
           showMsg(
             formMsg,
@@ -1739,7 +2052,21 @@
         return {
           device_type: d,
           location: $("tplLocation").value.trim() || "",
-          quote: $("tplQuote").value.trim() || "",
+          entry_text: $("tplEntryText").value.trim() || null,
+          quote: quoteTexts[0] || "",
+          quote_typing_enabled: $("tplQuoteTyping").checked,
+          quote_typing_texts: quoteTexts,
+          quote_typing_speed: Number.isFinite(quoteSpeed)
+            ? quoteSpeed
+            : DEFAULT_QUOTE_SPEED,
+          quote_typing_pause: Number.isFinite(quotePause)
+            ? quotePause
+            : DEFAULT_QUOTE_PAUSE,
+          quote_font_size: Number.isFinite(quoteSize)
+            ? quoteSize
+            : DEFAULT_QUOTE_SIZE,
+          quote_font_family: $("tplQuoteFont").value || "default",
+          quote_effect: $("tplQuoteEffect").value || "none",
           song_url: $("tplSong").value.trim() || "",
           song_name: $("tplSongName").value.trim() || null,
           song_icon_url: $("tplSongIcon").value.trim() || null,
@@ -1785,6 +2112,7 @@
           discord_status_enabled: $("tplDiscordStatusLine").value === "true",
           discord_status_text: $("tplDiscordStatusText").value.trim() || null,
           discord_badges_enabled: $("tplDiscordBadges").value === "true",
+          discord_badge_codes: collectDiscordBadgeCodes(),
           show_visit_counter: $("tplShowCounter").value === "true",
           visit_counter_color: hexOrNull($("tplCounterColor").value),
           visit_counter_bg_color: hexOrNull($("tplCounterBgColor").value),
@@ -1856,6 +2184,25 @@
             device_type: device,
             location: lt.location || "",
             quote: lt.quote || "",
+            entry_text: lt.entry_text || "",
+            quote_typing_enabled: !!lt.quote_typing_enabled,
+            quote_typing_texts: Array.isArray(lt.quote_typing_texts)
+              ? lt.quote_typing_texts
+              : [],
+            quote_typing_speed:
+              lt.quote_typing_speed !== undefined && lt.quote_typing_speed !== null
+                ? lt.quote_typing_speed
+                : DEFAULT_QUOTE_SPEED,
+            quote_typing_pause:
+              lt.quote_typing_pause !== undefined && lt.quote_typing_pause !== null
+                ? lt.quote_typing_pause
+                : DEFAULT_QUOTE_PAUSE,
+            quote_font_size:
+              lt.quote_font_size !== undefined && lt.quote_font_size !== null
+                ? lt.quote_font_size
+                : DEFAULT_QUOTE_SIZE,
+            quote_font_family: lt.quote_font_family || "default",
+            quote_effect: lt.quote_effect || "none",
             song_url: lt.song_url || "",
             song_name: lt.song_name || "",
             song_icon_url: lt.song_icon_url || "",
@@ -1889,6 +2236,9 @@
             discord_status_enabled: !!lt.discord_status_enabled,
             discord_status_text: lt.discord_status_text || "",
             discord_badges_enabled: !!lt.discord_badges_enabled,
+            discord_badge_codes: Array.isArray(lt.discord_badge_codes)
+              ? lt.discord_badge_codes
+              : [],
             show_visit_counter: !!lt.show_visit_counter,
             visit_counter_color: lt.visit_counter_color || "",
             visit_counter_bg_color: lt.visit_counter_bg_color || "",
@@ -2074,6 +2424,7 @@
           location.href = `/login?next=${encodeURIComponent(location.href)}`;
           return;
         }
+        const discordPromise = fetchDiscordStatus();
         if (userBadge) {
           userBadge.textContent = currentUser.username || "User";
         }
@@ -2083,6 +2434,8 @@
         if (tplId) {
           await loadTemplateForEdit(tplId);
         }
+        discordStatus = await discordPromise;
+        renderTemplateDiscordBadges();
       }
 
       $("tplDevice").addEventListener("change", ensureActiveVariant);
@@ -2096,6 +2449,7 @@
       $("tplImportScopeQuick")?.addEventListener("change", () => {
         updateSlugHint();
       });
+      $("tplQuoteTyping")?.addEventListener("change", toggleQuoteTypingFields);
       $("btnImportVariant").addEventListener("click", async () => {
         ensureChoice();
         const scope = readImportScope("tplImportScope");

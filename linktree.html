@@ -405,11 +405,37 @@
         margin-bottom: 1.5rem;
         max-width: 600px;
       }
+      .quote.font-serif {
+        font-family: Georgia, "Times New Roman", serif;
+      }
+      .quote.font-mono {
+        font-family:
+          ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Monaco,
+          Consolas,
+          "Liberation Mono",
+          "Courier New",
+          monospace;
+        font-style: normal;
+      }
+      .quote.font-script {
+        font-family: "Segoe Script", "Comic Sans MS", cursive;
+      }
+      .quote.font-display {
+        font-family: Impact, "Arial Black", "Franklin Gothic", sans-serif;
+        letter-spacing: 0.4px;
+      }
 
       .quote.quote-cursor::after {
         content: " |";
         display: inline-block;
         opacity: 1;
+      }
+      .quote.rainbow.quote-cursor::after {
+        color: var(--quote-color);
+        -webkit-text-fill-color: var(--quote-color);
       }
 
       .quote.quote-cursor.cursor-blink::after {
@@ -653,6 +679,41 @@
         100% {
           background-position: 100% 50%;
         }
+      }
+
+      /* Quote Effects */
+      .quote.glow {
+        text-shadow:
+          0 0 8px color-mix(in oklab, currentColor 70%, transparent),
+          0 0 12px color-mix(in oklab, currentColor 55%, transparent),
+          0 0 18px color-mix(in oklab, currentColor 40%, transparent);
+      }
+
+      .quote.neon {
+        text-shadow:
+          0 0 6px color-mix(in oklab, currentColor 80%, transparent),
+          0 0 14px color-mix(in oklab, currentColor 60%, transparent),
+          0 0 24px color-mix(in oklab, currentColor 50%, transparent);
+        filter: drop-shadow(
+          0 0 10px color-mix(in oklab, currentColor 45%, transparent)
+        );
+      }
+
+      .quote.rainbow {
+        background: linear-gradient(
+          90deg,
+          red,
+          orange,
+          yellow,
+          green,
+          cyan,
+          blue,
+          violet
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: rainbow 3s linear infinite;
       }
 
       /* Background Effects */
@@ -3120,6 +3181,28 @@
               nameEl.classList.remove("has-id");
               nameEl.removeAttribute("data-id");
               nameEl.removeAttribute("title");
+            }
+          }
+          const quoteEl = document.getElementById("quote");
+          if (quoteEl) {
+            quoteEl.classList.remove(
+              "glow",
+              "neon",
+              "rainbow",
+              "font-serif",
+              "font-mono",
+              "font-script",
+              "font-display",
+            );
+            const fx = (data.quote_effect || "none").toString().toLowerCase();
+            if (fx && fx !== "none") {
+              quoteEl.classList.add(fx);
+            }
+            const fontFamily = (data.quote_font_family || "default")
+              .toString()
+              .toLowerCase();
+            if (fontFamily && fontFamily !== "default") {
+              quoteEl.classList.add(`font-${fontFamily}`);
             }
           }
           updateQuoteDisplay(data);

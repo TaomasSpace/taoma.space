@@ -1348,6 +1348,25 @@
                     />
                   </div>
                   <div class="field">
+                    <label for="inQuoteFont">Quote font style</label>
+                    <select id="inQuoteFont" class="select">
+                      <option value="default">Default</option>
+                      <option value="serif">Serif</option>
+                      <option value="mono">Mono</option>
+                      <option value="script">Script</option>
+                      <option value="display">Display</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="inQuoteEffect">Quote effect</label>
+                    <select id="inQuoteEffect" class="select">
+                      <option value="none">None</option>
+                      <option value="glow">Glow</option>
+                      <option value="neon">Neon</option>
+                      <option value="rainbow">Rainbow</option>
+                    </select>
+                  </div>
+                  <div class="field">
                     <label for="inQuoteSize">Quote font size (px)</label>
                     <input
                       id="inQuoteSize"
@@ -2308,6 +2327,8 @@
           lt.location_color || lt.text_color || DEFAULT_LOCATION_COLOR;
         $("inQuoteColor").value =
           lt.quote_color || lt.text_color || DEFAULT_QUOTE_COLOR;
+        $("inQuoteFont").value = lt.quote_font_family || "default";
+        $("inQuoteEffect").value = lt.quote_effect || "none";
         $("inLinkColor").value = lt.link_color || DEFAULT_LINK_COLOR;
         $("inLinkBgColor").value = lt.link_bg_color || DEFAULT_LINK_BG_COLOR;
         $("inCardColor").value = lt.card_color || DEFAULT_CARD_COLOR;
@@ -2441,6 +2462,8 @@
             lt.quote_font_size !== undefined && lt.quote_font_size !== null
               ? lt.quote_font_size
               : DEFAULT_QUOTE_SIZE,
+          quote_font_family: lt.quote_font_family || "default",
+          quote_effect: lt.quote_effect || "none",
           entry_text: lt.entry_text || "",
           song_url: lt.song_url || "",
           song_name: lt.song_name || "",
@@ -2554,6 +2577,8 @@
             ? quotePause
             : DEFAULT_QUOTE_PAUSE,
           quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
+          quote_font_family: $("inQuoteFont").value || "default",
+          quote_effect: $("inQuoteEffect").value || "none",
           entry_text: $("inEntryText").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
           song_name: $("inSongName").value.trim() || "",
@@ -3301,6 +3326,8 @@
             ? quotePause
             : DEFAULT_QUOTE_PAUSE,
           quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
+          quote_font_family: $("inQuoteFont").value || "default",
+          quote_effect: $("inQuoteEffect").value || "none",
           entry_text: $("inEntryText").value.trim() || null,
           song_url: $("inSong").value.trim() || null,
           song_name: $("inSongName").value.trim() || null,
