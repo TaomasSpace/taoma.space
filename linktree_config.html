@@ -1305,6 +1305,23 @@
                   />
                 </div>
               </div>
+              <div
+                class="field"
+                id="quoteTypingSpeedWrap"
+                style="margin-top: 0.5rem"
+              >
+                <label for="inQuoteSpeed"
+                  >Typewriter speed (ms per char)</label
+                >
+                <input
+                  id="inQuoteSpeed"
+                  class="input"
+                  type="number"
+                  min="20"
+                  max="200"
+                  value="42"
+                />
+              </div>
               <details class="fold">
                 <summary>Quote styling</summary>
                 <div class="fold-body">
@@ -1315,6 +1332,17 @@
                       class="input"
                       type="color"
                       value="#e9ebff"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="inQuoteSize">Quote font size (px)</label>
+                    <input
+                      id="inQuoteSize"
+                      class="input"
+                      type="number"
+                      min="10"
+                      max="40"
+                      value="15"
                     />
                   </div>
                 </div>
@@ -2152,6 +2180,8 @@
       const DEFAULT_NAME_COLOR = "#e9ebff";
       const DEFAULT_LOCATION_COLOR = "#a2a9c8";
       const DEFAULT_QUOTE_COLOR = "#e9ebff";
+      const DEFAULT_QUOTE_SPEED = 42;
+      const DEFAULT_QUOTE_SIZE = 15;
       const DEFAULT_CURSOR_FX_COLOR = DEFAULT_AUDIO_ACCENT_COLOR;
       const DEFAULT_CURSOR_FX_ALPHA = 70;
       const PRIVATE_TEMPLATE_DESC =
@@ -2220,6 +2250,14 @@
         $("inQuoteAlt1").value = qt[1] || "";
         $("inQuoteAlt2").value = qt[2] || "";
         $("inQuoteTyping").checked = !!lt.quote_typing_enabled;
+        $("inQuoteSpeed").value =
+          lt.quote_typing_speed !== undefined && lt.quote_typing_speed !== null
+            ? lt.quote_typing_speed
+            : DEFAULT_QUOTE_SPEED;
+        $("inQuoteSize").value =
+          lt.quote_font_size !== undefined && lt.quote_font_size !== null
+            ? lt.quote_font_size
+            : DEFAULT_QUOTE_SIZE;
         $("inEntryText").value = lt.entry_text || "";
         $("inSong").value = lt.song_url || "";
         $("inSongName").value = lt.song_name || "";
@@ -2328,8 +2366,12 @@
       function toggleQuoteTypingFields() {
         const enabled = $("inQuoteTyping").checked;
         const wrap = $("quoteTypingFields");
+        const speedWrap = $("quoteTypingSpeedWrap");
         if (wrap) {
           wrap.style.display = enabled ? "grid" : "none";
+        }
+        if (speedWrap) {
+          speedWrap.style.display = enabled ? "block" : "none";
         }
       }
 
@@ -2365,6 +2407,14 @@
           quote_typing_texts: Array.isArray(lt.quote_typing_texts)
             ? lt.quote_typing_texts
             : [],
+          quote_typing_speed:
+            lt.quote_typing_speed !== undefined && lt.quote_typing_speed !== null
+              ? lt.quote_typing_speed
+              : DEFAULT_QUOTE_SPEED,
+          quote_font_size:
+            lt.quote_font_size !== undefined && lt.quote_font_size !== null
+              ? lt.quote_font_size
+              : DEFAULT_QUOTE_SIZE,
           entry_text: lt.entry_text || "",
           song_url: lt.song_url || "",
           song_name: lt.song_name || "",
@@ -2450,12 +2500,24 @@
           20
         );
         const quoteTexts = collectQuoteTexts();
+        const quoteSpeed = Math.min(
+          200,
+          Math.max(20, parseInt($("inQuoteSpeed").value || DEFAULT_QUOTE_SPEED, 10))
+        );
+        const quoteSize = Math.min(
+          40,
+          Math.max(10, parseInt($("inQuoteSize").value || DEFAULT_QUOTE_SIZE, 10))
+        );
         return {
           device_type: dev,
           location: $("inLocation").value.trim() || "",
           quote: quoteTexts[0] || "",
           quote_typing_enabled: $("inQuoteTyping").checked,
           quote_typing_texts: quoteTexts,
+          quote_typing_speed: Number.isFinite(quoteSpeed)
+            ? quoteSpeed
+            : DEFAULT_QUOTE_SPEED,
+          quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
           entry_text: $("inEntryText").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
           song_name: $("inSongName").value.trim() || "",
@@ -3174,6 +3236,14 @@
           DEFAULT_CURSOR_FX_ALPHA
         );
         const quoteTexts = collectQuoteTexts();
+        const quoteSpeed = Math.min(
+          200,
+          Math.max(20, parseInt($("inQuoteSpeed").value || DEFAULT_QUOTE_SPEED, 10))
+        );
+        const quoteSize = Math.min(
+          40,
+          Math.max(10, parseInt($("inQuoteSize").value || DEFAULT_QUOTE_SIZE, 10))
+        );
         const body = {
           slug: $("inSlug").value.trim(),
           device_type: currentDevice,
@@ -3181,6 +3251,10 @@
           quote: quoteTexts[0] || null,
           quote_typing_enabled: $("inQuoteTyping").checked,
           quote_typing_texts: quoteTexts,
+          quote_typing_speed: Number.isFinite(quoteSpeed)
+            ? quoteSpeed
+            : DEFAULT_QUOTE_SPEED,
+          quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
           entry_text: $("inEntryText").value.trim() || null,
           song_url: $("inSong").value.trim() || null,
           song_name: $("inSongName").value.trim() || null,

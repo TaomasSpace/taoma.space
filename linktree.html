@@ -1608,7 +1608,7 @@
           quoteTypingToken += 1;
         }
 
-        function startQuoteTyping(el, texts) {
+        function startQuoteTyping(el, texts, opts = {}) {
           if (!el) return;
           const list = (texts || []).filter((t) => typeof t === "string");
           if (!list.length) {
@@ -1616,10 +1616,22 @@
             return;
           }
           const token = ++quoteTypingToken;
-          const typeDelay = 42;
-          const eraseDelay = 28;
-          const holdDelay = 1200;
-          const gapDelay = 320;
+          const typeDelay =
+            Number.isFinite(Number(opts.typeDelay)) && Number(opts.typeDelay) > 0
+              ? Number(opts.typeDelay)
+              : 42;
+          const eraseDelay =
+            Number.isFinite(Number(opts.eraseDelay)) && Number(opts.eraseDelay) > 0
+              ? Number(opts.eraseDelay)
+              : Math.max(20, Math.round(typeDelay * 0.7));
+          const holdDelay =
+            Number.isFinite(Number(opts.holdDelay)) && Number(opts.holdDelay) >= 0
+              ? Number(opts.holdDelay)
+              : 1200;
+          const gapDelay =
+            Number.isFinite(Number(opts.gapDelay)) && Number(opts.gapDelay) >= 0
+              ? Number(opts.gapDelay)
+              : 320;
           let idx = 0;
           let pos = 0;
           let deleting = false;
@@ -1657,6 +1669,13 @@
           const texts = Array.isArray(data?.quote_typing_texts)
             ? data.quote_typing_texts
             : [];
+          const quoteSize = Number(data?.quote_font_size);
+          if (Number.isFinite(quoteSize) && quoteSize > 0) {
+            const clamped = Math.min(40, Math.max(10, quoteSize));
+            quoteEl.style.fontSize = `${clamped}px`;
+          } else {
+            quoteEl.style.removeProperty("font-size");
+          }
           const cleaned = texts
             .map((t) => String(t || "").trim())
             .filter(Boolean)
@@ -1675,7 +1694,14 @@
             quoteEl.textContent = cleaned[0];
             return;
           }
-          startQuoteTyping(quoteEl, cleaned);
+          const rawSpeed = Number(data?.quote_typing_speed);
+          const speed = Number.isFinite(rawSpeed)
+            ? Math.min(200, Math.max(20, rawSpeed))
+            : 42;
+          startQuoteTyping(quoteEl, cleaned, {
+            typeDelay: speed,
+            eraseDelay: Math.max(20, Math.round(speed * 0.7)),
+          });
         }
 
         function applyAudioPlayerStyles(data) {

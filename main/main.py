@@ -1152,7 +1152,11 @@ class LinktreeCreateIn(BaseModel):
     quote: Optional[str] = None
     quote_typing_enabled: bool = False
     quote_typing_texts: Optional[List[str]] = None
+    quote_typing_speed: Optional[int] = Field(None, ge=20, le=200)
+    quote_font_size: Optional[int] = Field(None, ge=10, le=40)
     entry_text: Optional[str] = Field(None, max_length=120)
+    quote_typing_speed: Optional[int] = Field(None, ge=20, le=200)
+    quote_font_size: Optional[int] = Field(None, ge=10, le=40)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -1207,6 +1211,8 @@ class LinktreeUpdateIn(BaseModel):
     quote_typing_enabled: Optional[bool] = None
     quote_typing_texts: Optional[List[str]] = None
     entry_text: Optional[str] = Field(None, max_length=120)
+    quote_typing_speed: Optional[int] = Field(None, ge=20, le=200)
+    quote_font_size: Optional[int] = Field(None, ge=10, le=40)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -1273,6 +1279,8 @@ class LinktreeOut(BaseModel):
     quote_typing_enabled: bool = False
     quote_typing_texts: Optional[List[str]] = None
     entry_text: Optional[str] = None
+    quote_typing_speed: Optional[int] = None
+    quote_font_size: Optional[int] = None
     song_url: Optional[str] = None
     song_name: Optional[str] = None
     song_icon_url: Optional[str] = None
@@ -1982,6 +1990,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
             SELECT id, user_id, slug, location, quote, song_url, song_name, song_icon_url, background_url,
                    COALESCE(quote_typing_enabled, false) AS quote_typing_enabled,
                    quote_typing_texts,
+                   quote_typing_speed,
+                   quote_font_size,
                    entry_text,
                    COALESCE(show_audio_player, false) AS show_audio_player,
                    audio_player_bg_color,
@@ -2089,6 +2099,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
             max_items=3,
             max_len=180,
         ),
+        "quote_typing_speed": lt.get("quote_typing_speed"),
+        "quote_font_size": lt.get("quote_font_size"),
         "entry_text": lt.get("entry_text"),
         "song_url": lt.get("song_url"),
         "song_name": lt.get("song_name"),
@@ -3099,6 +3111,8 @@ def get_linktree(
         max_items=3,
         max_len=180,
     )
+    quote_typing_speed = lt.get("quote_typing_speed")
+    quote_font_size = lt.get("quote_font_size")
     discord_badge_codes = _json_to_list(
         lt.get("discord_badge_codes"),
         max_items=50,
@@ -3154,6 +3168,8 @@ def get_linktree(
         "quote": lt.get("quote"),
         "quote_typing_enabled": bool(lt.get("quote_typing_enabled", False)),
         "quote_typing_texts": quote_typing_texts,
+        "quote_typing_speed": quote_typing_speed,
+        "quote_font_size": quote_font_size,
         "entry_text": lt.get("entry_text"),
         "song_url": lt.get("song_url"),
         "song_name": lt.get("song_name"),
@@ -3250,6 +3266,12 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             allow_empty=True,
         )
         entry_text = payload.entry_text.strip() if isinstance(payload.entry_text, str) else None
+        quote_speed = int(payload.quote_typing_speed) if payload.quote_typing_speed is not None else None
+        if quote_speed is not None:
+            quote_speed = max(20, min(200, quote_speed))
+        quote_size = int(payload.quote_font_size) if payload.quote_font_size is not None else None
+        if quote_size is not None:
+            quote_size = max(10, min(40, quote_size))
         linktree_id = db.create_linktree(
             user_id=user["id"],
             slug=payload.slug,
@@ -3258,6 +3280,8 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             quote=payload.quote,
             quote_typing_enabled=payload.quote_typing_enabled,
             quote_typing_texts=quote_texts_json,
+            quote_typing_speed=quote_speed,
+            quote_font_size=quote_size,
             entry_text=entry_text,
             song_url=payload.song_url,
             song_name=song_name,
@@ -4003,6 +4027,22 @@ def update_linktree_ep(
         )
     if "entry_text" in fields and isinstance(fields["entry_text"], str):
         fields["entry_text"] = fields["entry_text"].strip() or None
+    if "quote_typing_speed" in fields:
+        try:
+            speed = int(fields.get("quote_typing_speed"))
+        except Exception:
+            speed = None
+        fields["quote_typing_speed"] = (
+            max(20, min(200, speed)) if speed is not None else None
+        )
+    if "quote_font_size" in fields:
+        try:
+            size = int(fields.get("quote_font_size"))
+        except Exception:
+            size = None
+        fields["quote_font_size"] = (
+            max(10, min(40, size)) if size is not None else None
+        )
 
     # Vorherige Medien-URLs zum Aufräumen merken + device_type
     old_song = None
@@ -4223,6 +4263,22 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
             max_len=180,
             dedupe=False,
         )
+    if "quote_typing_speed" in data:
+        try:
+            speed = int(data.get("quote_typing_speed"))
+        except Exception:
+            speed = None
+        data["quote_typing_speed"] = (
+            max(20, min(200, speed)) if speed is not None else None
+        )
+    if "quote_font_size" in data:
+        try:
+            size = int(data.get("quote_font_size"))
+        except Exception:
+            size = None
+        data["quote_font_size"] = (
+            max(10, min(40, size)) if size is not None else None
+        )
     if "discord_badge_codes" in data:
         data["discord_badge_codes"] = _normalize_text_list(
             data.get("discord_badge_codes"),
@@ -4359,6 +4415,8 @@ def _extract_linktree_fields(data: dict) -> dict:
         "quote_typing_enabled",
         "quote_typing_texts",
         "entry_text",
+        "quote_typing_speed",
+        "quote_font_size",
         "song_url",
         "song_name",
         "song_icon_url",
@@ -4404,6 +4462,22 @@ def _extract_linktree_fields(data: dict) -> dict:
             fields.get("quote_typing_texts"),
             max_items=3,
             max_len=180,
+        )
+    if "quote_typing_speed" in fields:
+        try:
+            speed = int(fields.get("quote_typing_speed"))
+        except Exception:
+            speed = None
+        fields["quote_typing_speed"] = (
+            max(20, min(200, speed)) if speed is not None else None
+        )
+    if "quote_font_size" in fields:
+        try:
+            size = int(fields.get("quote_font_size"))
+        except Exception:
+            size = None
+        fields["quote_font_size"] = (
+            max(10, min(40, size)) if size is not None else None
         )
     if "discord_badge_codes" in fields:
         fields["discord_badge_codes"] = _list_to_json(
