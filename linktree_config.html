@@ -1239,6 +1239,18 @@
               </div>
             </div>
             <div class="field">
+              <label for="inEntryText">Entry overlay text</label>
+              <input
+                id="inEntryText"
+                class="input"
+                placeholder="Click to enter"
+                maxlength="120"
+              />
+              <div class="help">
+                Shown on the entry gate before media plays.
+              </div>
+            </div>
+            <div class="field">
               <label for="inLocation">Location</label>
               <input id="inLocation" class="input" placeholder="Switzerland" />
               <details class="fold">
@@ -1264,6 +1276,35 @@
                 class="input"
                 placeholder="Write your bio/quote…"
               ></textarea>
+              <label
+                class="row"
+                style="gap: 0.4rem; align-items: center; margin-top: 0.35rem"
+              >
+                <input type="checkbox" id="inQuoteTyping" />
+                <span>Typewriter quote (cycle up to 3 texts)</span>
+              </label>
+              <div
+                class="grid cols-2"
+                id="quoteTypingFields"
+                style="margin-top: 0.5rem"
+              >
+                <div class="field">
+                  <label for="inQuoteAlt1">Quote text 2</label>
+                  <input
+                    id="inQuoteAlt1"
+                    class="input"
+                    placeholder="Second quote text"
+                  />
+                </div>
+                <div class="field">
+                  <label for="inQuoteAlt2">Quote text 3</label>
+                  <input
+                    id="inQuoteAlt2"
+                    class="input"
+                    placeholder="Third quote text"
+                  />
+                </div>
+              </div>
               <details class="fold">
                 <summary>Quote styling</summary>
                 <div class="fold-body">
@@ -1696,6 +1737,16 @@
 
           <h3>Badges (earned icons)</h3>
           <div id="badges" class="grid"></div>
+
+          <div class="hr"></div>
+
+          <h3>Discord badges</h3>
+          <div id="discordBadgesList" class="grid"></div>
+          <div
+            id="discordBadgesHint"
+            class="muted"
+            style="margin-top: 0.35rem"
+          ></div>
         </section>
 
         <!-- Right: Links -->
@@ -2055,6 +2106,7 @@
       let linktreeId = null;
       let currentDevice = "pc";
       let discordStatus = { linked: false };
+      let discordBadgeCodes = null;
       let savedTemplates = [];
       const HIDE_LINKS =
         new URLSearchParams(location.search).get("hideLinks") === "true";
@@ -2160,7 +2212,15 @@
         $("inDevice").value = lt.device_type || "pc";
         currentDevice = lt.device_type || "pc";
         $("inLocation").value = lt.location || "";
-        $("inQuote").value = lt.quote || "";
+        const qt = Array.isArray(lt.quote_typing_texts)
+          ? lt.quote_typing_texts
+          : [];
+        const q1 = qt[0] || lt.quote || "";
+        $("inQuote").value = q1 || "";
+        $("inQuoteAlt1").value = qt[1] || "";
+        $("inQuoteAlt2").value = qt[2] || "";
+        $("inQuoteTyping").checked = !!lt.quote_typing_enabled;
+        $("inEntryText").value = lt.entry_text || "";
         $("inSong").value = lt.song_url || "";
         $("inSongName").value = lt.song_name || "";
         $("inSongIcon").value = lt.song_icon_url || "";
@@ -2236,9 +2296,23 @@
             ? lt.visit_counter_bg_alpha
             : 20;
         toggleCustomNameField();
+        toggleQuoteTypingFields();
         const btnOpen = $("btnOpenPublic");
         btnOpen.href = `/tree/${encodeURIComponent(lt.slug)}`;
         btnOpen.textContent = `/tree/${lt.slug}`;
+        const availableBadges = Array.isArray(discordStatus?.badges)
+          ? discordStatus.badges
+          : [];
+        if (Array.isArray(lt.discord_badge_codes)) {
+          discordBadgeCodes = lt.discord_badge_codes;
+        } else if (availableBadges.length) {
+          discordBadgeCodes = availableBadges
+            .map((b) => b && b.code)
+            .filter(Boolean);
+        } else {
+          discordBadgeCodes = [];
+        }
+        renderDiscordBadges();
         updateDiscordUI();
       }
 
@@ -2249,6 +2323,23 @@
         if (input.parentElement) {
           input.parentElement.classList.toggle("muted", !isCustom);
         }
+      }
+
+      function toggleQuoteTypingFields() {
+        const enabled = $("inQuoteTyping").checked;
+        const wrap = $("quoteTypingFields");
+        if (wrap) {
+          wrap.style.display = enabled ? "grid" : "none";
+        }
+      }
+
+      function collectQuoteTexts() {
+        const list = [
+          $("inQuote").value.trim(),
+          $("inQuoteAlt1").value.trim(),
+          $("inQuoteAlt2").value.trim(),
+        ].filter(Boolean);
+        return list.slice(0, 3);
       }
 
       function resolveTemplateDevice(tpl) {
@@ -2270,6 +2361,11 @@
           device_type: lt.device_type || "pc",
           location: lt.location || "",
           quote: lt.quote || "",
+          quote_typing_enabled: !!lt.quote_typing_enabled,
+          quote_typing_texts: Array.isArray(lt.quote_typing_texts)
+            ? lt.quote_typing_texts
+            : [],
+          entry_text: lt.entry_text || "",
           song_url: lt.song_url || "",
           song_name: lt.song_name || "",
           song_icon_url: lt.song_icon_url || "",
@@ -2309,6 +2405,9 @@
           discord_presence_enabled: !!lt.discord_presence_enabled,
           discord_status_enabled: !!lt.discord_status_enabled,
           discord_badges_enabled: !!lt.discord_badges_enabled,
+          discord_badge_codes: Array.isArray(lt.discord_badge_codes)
+            ? lt.discord_badge_codes
+            : [],
           show_visit_counter: !!lt.show_visit_counter,
           visit_counter_color: hexOrNull(lt.visit_counter_color),
           visit_counter_bg_color: hexOrNull(lt.visit_counter_bg_color),
@@ -2350,10 +2449,14 @@
           $("inCounterBgAlpha").value ?? 20,
           20
         );
+        const quoteTexts = collectQuoteTexts();
         return {
           device_type: dev,
           location: $("inLocation").value.trim() || "",
-          quote: $("inQuote").value.trim() || "",
+          quote: quoteTexts[0] || "",
+          quote_typing_enabled: $("inQuoteTyping").checked,
+          quote_typing_texts: quoteTexts,
+          entry_text: $("inEntryText").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
           song_name: $("inSongName").value.trim() || "",
           song_icon_url: $("inSongIcon").value.trim() || null,
@@ -2390,6 +2493,9 @@
           discord_presence_enabled: $("inDiscordPresence").checked,
           discord_status_enabled: $("inDiscordStatus").checked,
           discord_badges_enabled: $("inDiscordBadges").checked,
+          discord_badge_codes: Array.isArray(discordBadgeCodes)
+            ? discordBadgeCodes
+            : [],
           show_visit_counter: $("inShowCounter").checked,
           visit_counter_color: hexOrNull($("inCounterColor").value),
           visit_counter_bg_color: hexOrNull($("inCounterBgColor").value),
@@ -2822,6 +2928,86 @@
         });
       }
 
+      async function apiUpdateDiscordBadgeCodes(codes) {
+        if (!linktreeId) {
+          showMsg(msgMeta, "Create the Linktree first", false);
+          return;
+        }
+        const r = await fetch(`/api/linktrees/${linktreeId}`, {
+          method: "PATCH",
+          headers: headers(),
+          credentials: "include",
+          body: JSON.stringify({ discord_badge_codes: codes }),
+        });
+        if (!r.ok) {
+          showMsg(msgMeta, "Discord badges update failed", false);
+          return;
+        }
+        showMsg(msgMeta, "Discord badges updated", true);
+        await refreshData();
+      }
+
+      function renderDiscordBadges() {
+        const box = $("discordBadgesList");
+        const hint = $("discordBadgesHint");
+        if (!box) return;
+        box.innerHTML = "";
+        if (hint) hint.textContent = "";
+
+        const linked = !!(discordStatus && discordStatus.linked);
+        if (!linked) {
+          if (hint)
+            hint.textContent = "Link Discord to manage your Discord badges.";
+          return;
+        }
+        const list = Array.isArray(discordStatus?.badges)
+          ? discordStatus.badges
+          : [];
+        if (!list.length) {
+          if (hint) hint.textContent = "No Discord badges found on your account.";
+          return;
+        }
+
+        if (!Array.isArray(discordBadgeCodes)) {
+          discordBadgeCodes = list.map((b) => b && b.code).filter(Boolean);
+        }
+
+        list.forEach((badge) => {
+          if (!badge) return;
+          const item = document.createElement("div");
+          item.className = "badge-item";
+          const label = badge.label || badge.code || "badge";
+          const icon = sanitizeUrl(badge.icon_url ? String(badge.icon_url) : "");
+          const checked =
+            Array.isArray(discordBadgeCodes) &&
+            discordBadgeCodes.includes(badge.code);
+          item.innerHTML = `
+        <img src="${icon}" alt="${badge.code || ""}" class="icon-16">
+        <strong>${escapeHtml(badge.code || "badge")}</strong>
+        <span class="muted">${escapeHtml(label)}</span>
+        <span class="kbd"></span>
+        <label class="row" style="margin-left:auto;gap:.35rem">
+          <span class="muted">Displayed</span>
+          <input type="checkbox" data-code="${escapeHtml(
+            badge.code || ""
+          )}" ${checked ? "checked" : ""} aria-label="Displayed">
+        </label>
+      `;
+          const chk = item.querySelector('input[type="checkbox"]');
+          chk.addEventListener("change", async () => {
+            const codes = Array.from(
+              box.querySelectorAll('input[type="checkbox"][data-code]')
+            )
+              .filter((input) => input.checked)
+              .map((input) => input.getAttribute("data-code"))
+              .filter(Boolean);
+            discordBadgeCodes = codes;
+            await apiUpdateDiscordBadgeCodes(codes);
+          });
+          box.appendChild(item);
+        });
+      }
+
       function updateDiscordUI() {
         const statusEl = $("discordStatusText");
         const previewEl = $("discordPreview");
@@ -2878,6 +3064,7 @@
               : "Link Discord to use your Discord profile frame.";
           }
         }
+        renderDiscordBadges();
       }
 
       async function loadDiscordStatus() {
@@ -2886,8 +3073,10 @@
             credentials: "include",
           });
           discordStatus = r.ok ? await r.json() : { linked: false };
+          discordBadgeCodes = null;
         } catch (_) {
           discordStatus = { linked: false };
+          discordBadgeCodes = null;
         }
         updateDiscordUI();
       }
@@ -2984,11 +3173,15 @@
           $("inCursorFxAlpha").value ?? DEFAULT_CURSOR_FX_ALPHA,
           DEFAULT_CURSOR_FX_ALPHA
         );
+        const quoteTexts = collectQuoteTexts();
         const body = {
           slug: $("inSlug").value.trim(),
           device_type: currentDevice,
           location: $("inLocation").value.trim() || null,
-          quote: $("inQuote").value.trim() || null,
+          quote: quoteTexts[0] || null,
+          quote_typing_enabled: $("inQuoteTyping").checked,
+          quote_typing_texts: quoteTexts,
+          entry_text: $("inEntryText").value.trim() || null,
           song_url: $("inSong").value.trim() || null,
           song_name: $("inSongName").value.trim() || null,
           song_icon_url: $("inSongIcon").value.trim() || null,
@@ -3024,6 +3217,9 @@
           discord_presence_enabled: $("inDiscordPresence").checked,
           discord_status_enabled: $("inDiscordStatus").checked,
           discord_badges_enabled: $("inDiscordBadges").checked,
+          discord_badge_codes: Array.isArray(discordBadgeCodes)
+            ? discordBadgeCodes
+            : null,
           show_visit_counter: $("inShowCounter").checked,
           visit_counter_color: $("inCounterColor").value || null,
           visit_counter_bg_color: $("inCounterBgColor").value || null,
@@ -3185,7 +3381,9 @@
         updateCreateTemplateLink();
       });
       $("inDisplayName").addEventListener("change", toggleCustomNameField);
+      $("inQuoteTyping").addEventListener("change", toggleQuoteTypingFields);
       toggleCustomNameField();
+      toggleQuoteTypingFields();
 
       $("inDevice").addEventListener("change", async (e) => {
         const nextDevice = e.target.value || "pc";

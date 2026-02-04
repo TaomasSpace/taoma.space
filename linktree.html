@@ -354,6 +354,37 @@
         color: var(--name-color);
       }
 
+      .name.has-id {
+        position: relative;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .name.has-id::after {
+        content: attr(data-id);
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translate(-50%, 6px);
+        background: rgba(0, 0, 0, 0.35);
+        color: var(--ink);
+        font-size: 0.75rem;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid #ffffff26;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        pointer-events: none;
+        white-space: nowrap;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+      }
+
+      .name.has-id:hover::after {
+        opacity: 1;
+        transform: translate(-50%, 10px);
+      }
+
       .location {
         display: flex;
         align-items: center;
@@ -1186,7 +1217,7 @@
       aria-label="Enter site to enable media"
     >
       <div class="enter-box">
-        <p>Click to enter</p>
+        <p id="enterText">Click to enter</p>
         <span class="muted">Enable video & sound</span>
       </div>
     </div>
@@ -1384,6 +1415,7 @@
         let gateActive = false;
         let audioSeekActive = false;
         let audioCleanup = null;
+        let quoteTypingToken = 0;
 
         function safeUrl(
           raw,
@@ -1570,6 +1602,80 @@
           rootStyle.setProperty("--name-color", name);
           rootStyle.setProperty("--location-color", location);
           rootStyle.setProperty("--quote-color", quote);
+        }
+
+        function stopQuoteTyping() {
+          quoteTypingToken += 1;
+        }
+
+        function startQuoteTyping(el, texts) {
+          if (!el) return;
+          const list = (texts || []).filter((t) => typeof t === "string");
+          if (!list.length) {
+            el.textContent = "";
+            return;
+          }
+          const token = ++quoteTypingToken;
+          const typeDelay = 42;
+          const eraseDelay = 28;
+          const holdDelay = 1200;
+          const gapDelay = 320;
+          let idx = 0;
+          let pos = 0;
+          let deleting = false;
+
+          const tick = () => {
+            if (token !== quoteTypingToken) return;
+            const full = list[idx] || "";
+            if (!deleting) {
+              pos = Math.min(full.length, pos + 1);
+              el.textContent = full.slice(0, pos);
+              if (pos >= full.length) {
+                deleting = true;
+                setTimeout(tick, holdDelay);
+                return;
+              }
+              setTimeout(tick, typeDelay);
+            } else {
+              pos = Math.max(0, pos - 1);
+              el.textContent = full.slice(0, pos);
+              if (pos <= 0) {
+                deleting = false;
+                idx = (idx + 1) % list.length;
+                setTimeout(tick, gapDelay);
+                return;
+              }
+              setTimeout(tick, eraseDelay);
+            }
+          };
+          tick();
+        }
+
+        function updateQuoteDisplay(data) {
+          const quoteEl = document.getElementById("quote");
+          if (!quoteEl) return;
+          const texts = Array.isArray(data?.quote_typing_texts)
+            ? data.quote_typing_texts
+            : [];
+          const cleaned = texts
+            .map((t) => String(t || "").trim())
+            .filter(Boolean)
+            .slice(0, 3);
+          if (!cleaned.length && data?.quote) {
+            cleaned.push(String(data.quote).trim());
+          }
+          if (!cleaned.length) {
+            stopQuoteTyping();
+            quoteEl.textContent = "";
+            return;
+          }
+          const wantsTyping = !!data?.quote_typing_enabled;
+          if (!wantsTyping || prefersReducedMotion()) {
+            stopQuoteTyping();
+            quoteEl.textContent = cleaned[0];
+            return;
+          }
+          startQuoteTyping(quoteEl, cleaned);
         }
 
         function applyAudioPlayerStyles(data) {
@@ -2905,6 +3011,11 @@
               statusTextEl.textContent = "";
             }
           }
+          const enterTextEl = document.getElementById("enterText");
+          if (enterTextEl) {
+            const entryText = (data.entry_text || "").trim();
+            enterTextEl.textContent = entryText || "Click to enter";
+          }
           const nameEl = document.getElementById("name");
           if (nameEl) {
             const mode = data.display_name_mode || "slug";
@@ -2921,9 +3032,17 @@
             if (data.name_effect && data.name_effect !== "none") {
               nameEl.classList.add(data.name_effect);
             }
+            if (data.user_id) {
+              nameEl.dataset.id = `ID: ${data.user_id}`;
+              nameEl.classList.add("has-id");
+              nameEl.title = `ID: ${data.user_id}`;
+            } else {
+              nameEl.classList.remove("has-id");
+              nameEl.removeAttribute("data-id");
+              nameEl.removeAttribute("title");
+            }
           }
-          const quoteEl = document.getElementById("quote");
-          if (quoteEl) quoteEl.textContent = data.quote || "";
+          updateQuoteDisplay(data);
           const locEl = document.getElementById("loc");
           if (locEl) {
             locEl.textContent = "";
@@ -2936,39 +3055,6 @@
               text.textContent = ` ${locText}`;
               locEl.appendChild(icon);
               locEl.appendChild(text);
-            }
-          }
-
-          const discordBadgesEl = document.getElementById("discordBadges");
-          if (discordBadgesEl) {
-            discordBadgesEl.innerHTML = "";
-            const list = Array.isArray(data.discord_badges)
-              ? data.discord_badges
-              : [];
-            const showBadges =
-              discordLinked && data.discord_badges_enabled && list.length > 0;
-            discordBadgesEl.classList.toggle("hidden", !showBadges);
-            if (showBadges) {
-              const frag = document.createDocumentFragment();
-              list.forEach((badge) => {
-                if (!badge) return;
-                const item = document.createElement("span");
-                item.className = "discord-badge";
-                const label = badge.label || badge.code || "badge";
-                item.title = label;
-                item.setAttribute("aria-label", label);
-                const iconUrl = safeMediaUrl(badge.icon_url);
-                if (iconUrl) {
-                  const img = document.createElement("img");
-                  img.src = iconUrl;
-                  img.alt = "";
-                  img.loading = "lazy";
-                  img.decoding = "async";
-                  item.appendChild(img);
-                }
-                frag.appendChild(item);
-              });
-              discordBadgesEl.appendChild(frag);
             }
           }
 
@@ -2999,6 +3085,41 @@
               wrap.appendChild(img);
               frag.appendChild(wrap);
             });
+
+            if (discordLinked && data.discord_badges_enabled) {
+              let discordList = Array.isArray(data.discord_badges)
+                ? data.discord_badges
+                : [];
+              const filterCodes = Array.isArray(data.discord_badge_codes)
+                ? data.discord_badge_codes
+                : null;
+              if (filterCodes) {
+                discordList = discordList.filter((b) =>
+                  filterCodes.includes(b && b.code)
+                );
+              }
+              discordList.forEach((badge) => {
+                if (!badge) return;
+                const desc = badge.label || badge.code || "badge";
+                const wrap = document.createElement("span");
+                wrap.className = "badge";
+                wrap.title = desc;
+                wrap.setAttribute("aria-label", desc);
+
+                const img = document.createElement("img");
+                const iconUrl = safeMediaUrl(badge.icon_url);
+                if (!iconUrl) return;
+                img.src = iconUrl;
+                img.alt = desc;
+                img.width = 20;
+                img.height = 20;
+                img.loading = "lazy";
+                img.decoding = "async";
+
+                wrap.appendChild(img);
+                frag.appendChild(wrap);
+              });
+            }
             badgesEl.appendChild(frag);
           }
           const linksEl = document.getElementById("links");

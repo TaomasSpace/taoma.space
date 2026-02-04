@@ -281,6 +281,78 @@ def _clean_upload_filename(name: str | None) -> str | None:
     return cleaned
 
 
+def _normalize_text_list(
+    value: Any,
+    *,
+    max_items: int | None = None,
+    max_len: int | None = None,
+    dedupe: bool = True,
+) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple, set)):
+        items = list(value)
+    else:
+        items = [value]
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        if item is None:
+            continue
+        text = str(item).strip()
+        if not text:
+            continue
+        if max_len is not None and len(text) > max_len:
+            text = text[:max_len]
+        if dedupe:
+            if text in seen:
+                continue
+            seen.add(text)
+        out.append(text)
+        if max_items is not None and len(out) >= max_items:
+            break
+    return out
+
+
+def _list_to_json(
+    value: Any,
+    *,
+    max_items: int | None = None,
+    max_len: int | None = None,
+    allow_empty: bool = False,
+) -> str | None:
+    if value is None:
+        return None
+    items = _normalize_text_list(value, max_items=max_items, max_len=max_len)
+    if not items and not allow_empty:
+        return None
+    return json.dumps(items)
+
+
+def _json_to_list(
+    raw: Any,
+    *,
+    max_items: int | None = None,
+    max_len: int | None = None,
+    none_if_missing: bool = False,
+) -> list[str] | None:
+    if raw is None:
+        return None if none_if_missing else []
+    if isinstance(raw, str):
+        if not raw.strip():
+            return None if none_if_missing else []
+        try:
+            data = json.loads(raw)
+        except Exception:
+            data = [raw]
+    else:
+        data = raw
+    items = _normalize_text_list(data, max_items=max_items, max_len=max_len)
+    if none_if_missing and raw is None:
+        return None
+    return items
+
+
 def _add_local_media_url(url: str | None, bucket: set[str]) -> None:
     if not url:
         return
@@ -1078,6 +1150,9 @@ class LinktreeCreateIn(BaseModel):
     device_type: DeviceType = "pc"
     location: Optional[str] = None
     quote: Optional[str] = None
+    quote_typing_enabled: bool = False
+    quote_typing_texts: Optional[List[str]] = None
+    entry_text: Optional[str] = Field(None, max_length=120)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -1111,6 +1186,7 @@ class LinktreeCreateIn(BaseModel):
     discord_status_enabled: bool = False
     discord_status_text: Optional[str] = Field(None, max_length=140)
     discord_badges_enabled: bool = False
+    discord_badge_codes: Optional[List[str]] = None
     show_visit_counter: bool = False
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -1128,6 +1204,9 @@ class LinktreeUpdateIn(BaseModel):
     device_type: Optional[DeviceType] = None
     location: Optional[str] = None
     quote: Optional[str] = None
+    quote_typing_enabled: Optional[bool] = None
+    quote_typing_texts: Optional[List[str]] = None
+    entry_text: Optional[str] = Field(None, max_length=120)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -1161,6 +1240,7 @@ class LinktreeUpdateIn(BaseModel):
     discord_status_enabled: Optional[bool] = None
     discord_status_text: Optional[str] = Field(None, max_length=140)
     discord_badges_enabled: Optional[bool] = None
+    discord_badge_codes: Optional[List[str]] = None
     show_visit_counter: Optional[bool] = None
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -1190,6 +1270,9 @@ class LinktreeOut(BaseModel):
     device_type: DeviceType
     location: Optional[str] = None
     quote: Optional[str] = None
+    quote_typing_enabled: bool = False
+    quote_typing_texts: Optional[List[str]] = None
+    entry_text: Optional[str] = None
     song_url: Optional[str] = None
     song_name: Optional[str] = None
     song_icon_url: Optional[str] = None
@@ -1225,6 +1308,7 @@ class LinktreeOut(BaseModel):
     discord_status_text: Optional[str] = None
     discord_badges_enabled: bool = False
     discord_badges: Optional[List[DiscordBadgeOut]] = None
+    discord_badge_codes: Optional[List[str]] = None
     discord_linked: bool = False
     profile_picture: Optional[str] = None  # NEU - fuer Avatar
     user_username: Optional[str] = None  # NEU - fuer "username"-Modus
@@ -1896,6 +1980,9 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         cur.execute(
             """
             SELECT id, user_id, slug, location, quote, song_url, song_name, song_icon_url, background_url,
+                   COALESCE(quote_typing_enabled, false) AS quote_typing_enabled,
+                   quote_typing_texts,
+                   entry_text,
                    COALESCE(show_audio_player, false) AS show_audio_player,
                    audio_player_bg_color,
                    COALESCE(audio_player_bg_alpha, 60) AS audio_player_bg_alpha,
@@ -1926,6 +2013,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                     COALESCE(discord_status_enabled, false) AS discord_status_enabled,
                     discord_status_text,
                     COALESCE(discord_badges_enabled, false) AS discord_badges_enabled,
+                    discord_badge_codes,
                     COALESCE(show_visit_counter, false) AS show_visit_counter,
                     visit_counter_color,
                     visit_counter_bg_color,
@@ -1995,6 +2083,13 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "device_type": lt.get("device_type", "pc"),
         "location": lt.get("location"),
         "quote": lt.get("quote"),
+        "quote_typing_enabled": bool(lt.get("quote_typing_enabled", False)),
+        "quote_typing_texts": _json_to_list(
+            lt.get("quote_typing_texts"),
+            max_items=3,
+            max_len=180,
+        ),
+        "entry_text": lt.get("entry_text"),
         "song_url": lt.get("song_url"),
         "song_name": lt.get("song_name"),
         "song_icon_url": lt.get("song_icon_url"),
@@ -2030,6 +2125,12 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "discord_status_text": status_text,
         "discord_badges_enabled": bool(lt.get("discord_badges_enabled", False)),
         "discord_badges": discord_badges if lt.get("discord_badges_enabled") else [],
+        "discord_badge_codes": _json_to_list(
+            lt.get("discord_badge_codes"),
+            max_items=50,
+            max_len=64,
+            none_if_missing=True,
+        ),
         "discord_linked": discord_linked,
         "profile_picture": user_pfp,
         "user_username": user_username,
@@ -2993,6 +3094,17 @@ def get_linktree(
     except Exception:
         decoration_url = None
     presence_value, status_text = _resolve_discord_presence(lt, acct if discord_linked else None)
+    quote_typing_texts = _json_to_list(
+        lt.get("quote_typing_texts"),
+        max_items=3,
+        max_len=180,
+    )
+    discord_badge_codes = _json_to_list(
+        lt.get("discord_badge_codes"),
+        max_items=50,
+        max_len=64,
+        none_if_missing=True,
+    )
 
     icons = [
         {
@@ -3040,6 +3152,9 @@ def get_linktree(
         "device_type": lt.get("device_type", "pc"),
         "location": lt.get("location"),
         "quote": lt.get("quote"),
+        "quote_typing_enabled": bool(lt.get("quote_typing_enabled", False)),
+        "quote_typing_texts": quote_typing_texts,
+        "entry_text": lt.get("entry_text"),
         "song_url": lt.get("song_url"),
         "song_name": lt.get("song_name"),
         "song_icon_url": lt.get("song_icon_url"),
@@ -3075,6 +3190,7 @@ def get_linktree(
         "discord_status_text": status_text,
         "discord_badges_enabled": bool(lt.get("discord_badges_enabled", False)),
         "discord_badges": discord_badges if lt.get("discord_badges_enabled") else [],
+        "discord_badge_codes": discord_badge_codes,
         "discord_linked": discord_linked,
         "profile_picture": user_pfp,  # <= jetzt dabei
         "user_username": user_username,  # <= jetzt dabei
@@ -3118,12 +3234,31 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             else payload.background_is_video
         )
         song_name = _clean_upload_filename(payload.song_name)
+        quote_texts = _normalize_text_list(
+            payload.quote_typing_texts,
+            max_items=3,
+            max_len=180,
+            dedupe=False,
+        )
+        if payload.quote and not quote_texts:
+            quote_texts = [payload.quote]
+        quote_texts_json = json.dumps(quote_texts) if quote_texts else None
+        badge_codes_json = _list_to_json(
+            payload.discord_badge_codes,
+            max_items=50,
+            max_len=64,
+            allow_empty=True,
+        )
+        entry_text = payload.entry_text.strip() if isinstance(payload.entry_text, str) else None
         linktree_id = db.create_linktree(
             user_id=user["id"],
             slug=payload.slug,
             device_type=payload.device_type,
             location=payload.location,
             quote=payload.quote,
+            quote_typing_enabled=payload.quote_typing_enabled,
+            quote_typing_texts=quote_texts_json,
+            entry_text=entry_text,
             song_url=payload.song_url,
             song_name=song_name,
             song_icon_url=payload.song_icon_url,
@@ -3157,6 +3292,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             discord_status_enabled=payload.discord_status_enabled,
             discord_status_text=payload.discord_status_text,
             discord_badges_enabled=payload.discord_badges_enabled,
+            discord_badge_codes=badge_codes_json,
             show_visit_counter=payload.show_visit_counter,
             visit_counter_color=payload.visit_counter_color,
             visit_counter_bg_color=payload.visit_counter_bg_color,
@@ -3848,6 +3984,25 @@ def update_linktree_ep(
     _require_tree_owner_or_admin(linktree_id, user)
 
     fields = payload.model_dump(exclude_unset=True)
+    if "quote_typing_texts" in fields:
+        qt = _normalize_text_list(
+            fields.get("quote_typing_texts"),
+            max_items=3,
+            max_len=180,
+            dedupe=False,
+        )
+        if fields.get("quote") and not qt:
+            qt = [str(fields.get("quote")).strip()]
+        fields["quote_typing_texts"] = json.dumps(qt) if qt else None
+    if "discord_badge_codes" in fields:
+        fields["discord_badge_codes"] = _list_to_json(
+            fields.get("discord_badge_codes"),
+            max_items=50,
+            max_len=64,
+            allow_empty=True,
+        )
+    if "entry_text" in fields and isinstance(fields["entry_text"], str):
+        fields["entry_text"] = fields["entry_text"].strip() or None
 
     # Vorherige Medien-URLs zum Aufräumen merken + device_type
     old_song = None
@@ -3972,6 +4127,9 @@ class TemplateVariantIn(BaseModel):
     device_type: DeviceType
     location: Optional[str] = None
     quote: Optional[str] = None
+    quote_typing_enabled: bool = False
+    quote_typing_texts: Optional[List[str]] = None
+    entry_text: Optional[str] = Field(None, max_length=120)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -4005,6 +4163,7 @@ class TemplateVariantIn(BaseModel):
     discord_status_enabled: bool = False
     discord_status_text: Optional[str] = Field(None, max_length=140)
     discord_badges_enabled: bool = False
+    discord_badge_codes: Optional[List[str]] = None
     show_visit_counter: bool = False
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -4057,6 +4216,19 @@ def _doc_time_iso(value: Any) -> Optional[str]:
 
 def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data = payload.model_dump(exclude_none=True)
+    if "quote_typing_texts" in data:
+        data["quote_typing_texts"] = _normalize_text_list(
+            data.get("quote_typing_texts"),
+            max_items=3,
+            max_len=180,
+            dedupe=False,
+        )
+    if "discord_badge_codes" in data:
+        data["discord_badge_codes"] = _normalize_text_list(
+            data.get("discord_badge_codes"),
+            max_items=50,
+            max_len=64,
+        )
     data.setdefault("background_is_video", False)
     data.setdefault("transparency", 0)
     data.setdefault("name_effect", "none")
@@ -4074,6 +4246,7 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("discord_presence", "online")
     data.setdefault("discord_status_enabled", False)
     data.setdefault("discord_badges_enabled", False)
+    data.setdefault("quote_typing_enabled", False)
     data.setdefault("demo_show_links", False)
     for key in ("demo_link_label", "demo_link_url", "demo_link_icon_url"):
         if key in data and isinstance(data[key], str):
@@ -4183,6 +4356,9 @@ def _extract_linktree_fields(data: dict) -> dict:
         "device_type",
         "location",
         "quote",
+        "quote_typing_enabled",
+        "quote_typing_texts",
+        "entry_text",
         "song_url",
         "song_name",
         "song_icon_url",
@@ -4216,12 +4392,29 @@ def _extract_linktree_fields(data: dict) -> dict:
         "discord_status_enabled",
         "discord_status_text",
         "discord_badges_enabled",
+        "discord_badge_codes",
         "show_visit_counter",
         "visit_counter_color",
         "visit_counter_bg_color",
         "visit_counter_bg_alpha",
     }
-    return {k: v for k, v in data.items() if k in allowed}
+    fields = {k: v for k, v in data.items() if k in allowed}
+    if "quote_typing_texts" in fields:
+        fields["quote_typing_texts"] = _list_to_json(
+            fields.get("quote_typing_texts"),
+            max_items=3,
+            max_len=180,
+        )
+    if "discord_badge_codes" in fields:
+        fields["discord_badge_codes"] = _list_to_json(
+            fields.get("discord_badge_codes"),
+            max_items=50,
+            max_len=64,
+            allow_empty=True,
+        )
+    if "entry_text" in fields and isinstance(fields["entry_text"], str):
+        fields["entry_text"] = fields["entry_text"].strip() or None
+    return fields
 
 
 @app.get("/marketplace", include_in_schema=False)
