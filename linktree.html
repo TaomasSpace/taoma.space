@@ -2262,44 +2262,272 @@
           return discordStatusPromise;
         }
 
-        function updateProfileFromUser(data) {
-          if (!data || !data.is_template_demo) return;
-          if (!currentUser || !currentUser.profile_picture) return;
-          const pfp = document.getElementById("pfp");
-          const url = safeMediaUrl(currentUser.profile_picture);
-          if (!pfp || !url) return;
-          try {
-            const absolute = new URL(url, window.location.origin).href;
-            if (pfp.src === absolute) return;
-          } catch (_) {
-            // ignore comparison errors
+        const MOCK_DISCORD_BADGES = [
+          {
+            code: "nitro",
+            label: "Discord Nitro",
+            icon_url: "/static/discord-badges/discordnitro.svg",
+          },
+          {
+            code: "hypesquad",
+            label: "HypeSquad Brilliance",
+            icon_url: "/static/discord-badges/hypesquadbrilliance.svg",
+          },
+          {
+            code: "early_supporter",
+            label: "Early Supporter",
+            icon_url: "/static/discord-badges/discordearlysupporter.svg",
+          },
+          {
+            code: "bug_hunter",
+            label: "Bug Hunter",
+            icon_url: "/static/discord-badges/discordbughunter1.svg",
+          },
+        ];
+        const MOCK_STATUS_TEXTS = [
+          "Building something new",
+          "Open for collabs",
+          "On the grind",
+          "Ideas in motion",
+          "Be right back",
+        ];
+        const MOCK_USERNAMES = ["DemoUser", "TemplateUser", "LinktreeFan"];
+
+        function seededInt(seed, max) {
+          const mod = Number(max) || 0;
+          if (mod <= 0) return 0;
+          const raw = parseInt(hashString(seed), 16);
+          if (!Number.isFinite(raw)) return 0;
+          return Math.abs(raw) % mod;
+        }
+
+        function seededRange(seed, min, max) {
+          const lo = Number(min) || 0;
+          const hi = Number(max) || 0;
+          if (hi <= lo) return lo;
+          return lo + seededInt(seed, hi - lo + 1);
+        }
+
+        function getDemoSeed(data, user) {
+          const base = (data && (data.template_id || data.slug)) || "template";
+          const userPart = user && user.id ? `u${user.id}` : "anon";
+          return `${base}|${userPart}`;
+        }
+
+        function pickMockBadges(seed, count) {
+          const list = MOCK_DISCORD_BADGES.slice();
+          if (!list.length) return [];
+          const take = Math.min(Math.max(1, count || 1), list.length);
+          const start = seededInt(seed, list.length);
+          const out = [];
+          for (let i = 0; i < take; i += 1) {
+            out.push(list[(start + i) % list.length]);
           }
-          pfp.src = url;
+          return out;
         }
 
-        async function applyUserDiscordFrame(data) {
-          if (!data || !data.is_template_demo || !data.discord_frame_enabled)
-            return;
-          const status = await fetchDiscordStatus();
-          if (!status || !status.linked || !status.decoration_url) return;
-          const frame = document.getElementById("pfpFrame");
-          const url = safeMediaUrl(status.decoration_url);
-          if (!frame || !url) return;
-          frame.src = url;
-          frame.style.display = "block";
+        function buildMockDiscordData(seed) {
+          const presenceOptions = ["online", "idle", "dnd"];
+          const presence =
+            presenceOptions[seededInt(`${seed}:presence`, presenceOptions.length)];
+          const statusText =
+            MOCK_STATUS_TEXTS[
+              seededInt(`${seed}:status`, MOCK_STATUS_TEXTS.length)
+            ];
+          const badgeCount = seededRange(`${seed}:badgeCount`, 2, 3);
+          const badges = pickMockBadges(`${seed}:badges`, badgeCount);
+          const decoration =
+            badges[0] && badges[0].icon_url
+              ? badges[0].icon_url
+              : "/static/discord-badges/discordnitro.svg";
+          return {
+            linked: true,
+            presence,
+            status_text: statusText,
+            badges,
+            decoration_url: decoration,
+          };
         }
 
-        async function hydrateUserEnhancements(data, device, userPromise) {
+        function buildMockVisitCount(seed) {
+          return seededRange(`${seed}:visits`, 1200, 58900);
+        }
+
+        function buildMockUsername(seed) {
+          return (
+            MOCK_USERNAMES[seededInt(`${seed}:user`, MOCK_USERNAMES.length)] ||
+            "DemoUser"
+          );
+        }
+
+        function buildMockProfilePicture() {
+          return "/static/icon.png";
+        }
+
+        async function fetchUserLinktreeForDemo(user, device) {
+          if (!user) return null;
+          const slug = String(user.linktree_slug || "").trim();
+          if (slug) {
+            try {
+              const r = await fetch(
+                `/api/linktrees/by-slug/${encodeURIComponent(
+                  slug
+                )}/manage?device=${encodeURIComponent(device || "pc")}`,
+                { credentials: "include" }
+              );
+              if (r.ok) return await r.json();
+            } catch (_) {}
+          }
+          if (user.linktree_id) {
+            try {
+              const r = await fetch(
+                `/api/linktrees/${encodeURIComponent(
+                  user.linktree_id
+                )}/manage`,
+                { credentials: "include" }
+              );
+              if (r.ok) return await r.json();
+            } catch (_) {}
+          }
+          return null;
+        }
+
+        async function hydrateTemplateDemoData(baseData, device, userPromise) {
+          if (!baseData || !baseData.is_template_demo)
+            return { data: baseData, changed: false };
+          const data = { ...baseData };
+          let changed = false;
+          let user = null;
           try {
-            const user = await userPromise.catch(() => null);
-            currentUser = currentUser || user;
-            if (!data) return;
-            if (data.is_template_demo) {
-              updateProfileFromUser(data);
-              await applyUserDiscordFrame(data);
-            }
+            user = await userPromise.catch(() => null);
           } catch (_) {
-            // ignore hydration errors to avoid blocking initial render
+            user = null;
+          }
+          if (user) currentUser = currentUser || user;
+
+          const seed = getDemoSeed(data, user);
+          const userName = user && user.username ? user.username : null;
+          const userPfp = user && user.profile_picture ? user.profile_picture : null;
+
+          if (userName) {
+            if (data.user_username !== userName) {
+              data.user_username = userName;
+              changed = true;
+            }
+          } else {
+            const mockName = buildMockUsername(seed);
+            if (data.user_username !== mockName) {
+              data.user_username = mockName;
+              changed = true;
+            }
+          }
+
+          const resolvedPfp = userPfp || buildMockProfilePicture();
+          if (data.profile_picture !== resolvedPfp) {
+            data.profile_picture = resolvedPfp;
+            changed = true;
+          }
+
+          const needsDiscord =
+            data.discord_frame_enabled ||
+            data.discord_presence_enabled ||
+            data.discord_status_enabled ||
+            data.discord_badges_enabled;
+          const needsVisit = !!data.show_visit_counter;
+
+          let userLinktree = null;
+          if ((needsDiscord || needsVisit) && user) {
+            userLinktree = await fetchUserLinktreeForDemo(user, device);
+          }
+
+          if (needsVisit) {
+            let visitCount = null;
+            if (userLinktree && Number.isFinite(Number(userLinktree.visit_count))) {
+              visitCount = Number(userLinktree.visit_count);
+            }
+            if (
+              visitCount === null &&
+              Number.isFinite(Number(data.visit_count)) &&
+              Number(data.visit_count) > 0
+            ) {
+              visitCount = Number(data.visit_count);
+            }
+            if (visitCount === null) {
+              visitCount = buildMockVisitCount(seed);
+            }
+            if (data.visit_count !== visitCount) {
+              data.visit_count = visitCount;
+              changed = true;
+            }
+          }
+
+          if (needsDiscord) {
+            let discordSource = null;
+            if (userLinktree && userLinktree.discord_linked) {
+              discordSource = {
+                linked: true,
+                presence: userLinktree.discord_presence,
+                status_text: userLinktree.discord_status_text,
+                badges: userLinktree.discord_badges,
+                decoration_url: userLinktree.discord_decoration_url,
+              };
+            } else if (!userLinktree) {
+              const status = await fetchDiscordStatus();
+              if (status && status.linked) {
+                discordSource = status;
+              }
+            }
+
+            if (discordSource && discordSource.linked) {
+              data.discord_linked = true;
+              if (discordSource.presence) data.discord_presence = discordSource.presence;
+              if (discordSource.status_text)
+                data.discord_status_text = discordSource.status_text;
+              if (Array.isArray(discordSource.badges))
+                data.discord_badges = discordSource.badges;
+              if (discordSource.decoration_url)
+                data.discord_decoration_url = discordSource.decoration_url;
+              changed = true;
+            } else {
+              const mock = buildMockDiscordData(seed);
+              data.discord_linked = true;
+              if (data.discord_presence_enabled && !data.discord_presence) {
+                data.discord_presence = mock.presence;
+              } else if (data.discord_presence_enabled) {
+                data.discord_presence = data.discord_presence || mock.presence;
+              }
+              if (data.discord_status_enabled && !data.discord_status_text) {
+                data.discord_status_text = mock.status_text;
+              }
+              if (data.discord_badges_enabled) {
+                data.discord_badges = mock.badges;
+              }
+              if (data.discord_frame_enabled && !data.discord_decoration_url) {
+                data.discord_decoration_url = mock.decoration_url;
+              }
+              changed = true;
+            }
+          }
+
+          return { data, changed };
+        }
+
+        async function hydrateTemplateDemo(
+          data,
+          device,
+          userPromise,
+          preferLite
+        ) {
+          if (!data || !data.is_template_demo) return data;
+          try {
+            const res = await hydrateTemplateDemoData(data, device, userPromise);
+            if (!res || !res.changed) return data;
+            const next = res.data || data;
+            lastData = next;
+            renderTree(next, { preferLite, fromCache: true, device });
+            return next;
+          } catch (_) {
+            return data;
           }
         }
 
@@ -2352,6 +2580,7 @@
               data.user_username || tpl.owner_username || "Template";
             data.profile_picture =
               data.profile_picture || tpl.preview_image_url || null;
+            data.template_id = tpl.id || templateId || null;
             data.is_template_demo = true;
             return data;
           }
@@ -2873,9 +3102,6 @@
             if (cached && !initialRenderDone) {
               renderTree(cached, { preferLite, fromCache: true, device });
               initialRenderDone = true;
-              hydrateUserEnhancements(cached, device, userPromise).catch(
-                () => {}
-              );
             }
 
             const dataPromise = fetchTreeData({ templateId, slug, device });
@@ -2889,7 +3115,12 @@
             } else {
               lastData = data;
             }
-            hydrateUserEnhancements(data, device, userPromise).catch(() => {});
+            await hydrateTemplateDemo(
+              data,
+              device,
+              userPromise,
+              preferLite
+            );
           } catch (e) {
             console.error("loadTree failed:", e);
           }

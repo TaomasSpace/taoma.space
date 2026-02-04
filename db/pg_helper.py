@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS linktrees (
     quote_color         TEXT,
     cursor_url          TEXT,
     cursor_effect       TEXT NOT NULL DEFAULT 'none'
-                        CHECK (cursor_effect IN ('none','glow','particles','trail','aura','magnet','morph','snap','velocity','ripple','blend','sticky','rotate')),
+                        CHECK (cursor_effect IN ('none','glow','particles')),
     cursor_effect_color TEXT,
     cursor_effect_alpha SMALLINT NOT NULL DEFAULT 70
                         CHECK (cursor_effect_alpha BETWEEN 0 AND 100),
