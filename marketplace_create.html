@@ -1010,17 +1010,30 @@
                 value="16"
               />
             </div>
-            <div class="field">
-              <label for="tplEntryBgAlpha">Entry box alpha (0-100)</label>
-              <input
-                id="tplEntryBgAlpha"
-                class="input"
-                type="number"
-                min="0"
-                max="100"
-                value="85"
-              />
-            </div>
+              <div class="field">
+                <label for="tplEntryBgAlpha">Entry box alpha (0-100)</label>
+                <input
+                  id="tplEntryBgAlpha"
+                  class="input"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value="85"
+                />
+              </div>
+              <div class="field">
+                <label for="tplEntryOverlayAlpha"
+                  >Entry overlay alpha (0-100)</label
+                >
+                <input
+                  id="tplEntryOverlayAlpha"
+                  class="input"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value="35"
+                />
+              </div>
             <div class="field" style="grid-column: 1 / -1">
               <label for="tplQuote">Quote (optional)</label>
               <input id="tplQuote" class="input" type="text" maxlength="240" />
@@ -1553,6 +1566,7 @@
       const DEFAULT_ENTRY_TEXT_COLOR = "#e9ebff";
       const DEFAULT_ENTRY_FONT_SIZE = 16;
       const DEFAULT_ENTRY_BG_ALPHA = 85;
+      const DEFAULT_ENTRY_OVERLAY_ALPHA = 35;
 
       let discordStatus = null;
       let discordBadgeCodes = [];
@@ -1798,6 +1812,16 @@
             parseInt(v.entry_bg_alpha ?? DEFAULT_ENTRY_BG_ALPHA, 10)
           )
         );
+        v.entry_overlay_alpha = Math.min(
+          100,
+          Math.max(
+            0,
+            parseInt(
+              v.entry_overlay_alpha ?? DEFAULT_ENTRY_OVERLAY_ALPHA,
+              10
+            )
+          )
+        );
         v.entry_font_size = Math.min(
           40,
           Math.max(
@@ -1982,6 +2006,7 @@
           quote_font_family: "default",
           quote_effect: "none",
           entry_bg_alpha: DEFAULT_ENTRY_BG_ALPHA,
+          entry_overlay_alpha: DEFAULT_ENTRY_OVERLAY_ALPHA,
           entry_text_color: DEFAULT_ENTRY_TEXT_COLOR,
           entry_font_size: DEFAULT_ENTRY_FONT_SIZE,
           entry_font_family: "default",
@@ -2046,6 +2071,10 @@
           v.entry_bg_alpha !== undefined && v.entry_bg_alpha !== null
             ? v.entry_bg_alpha
             : DEFAULT_ENTRY_BG_ALPHA;
+        $("tplEntryOverlayAlpha").value =
+          v.entry_overlay_alpha !== undefined && v.entry_overlay_alpha !== null
+            ? v.entry_overlay_alpha
+            : DEFAULT_ENTRY_OVERLAY_ALPHA;
         const qt = Array.isArray(v.quote_typing_texts) ? v.quote_typing_texts : [];
         const mainQuote = qt[0] || v.quote || "";
         $("tplQuote").value = mainQuote;
@@ -2145,6 +2174,10 @@
         const quoteSize = parseInt($("tplQuoteSize").value || "", 10);
         const entryFontSize = parseInt($("tplEntryFontSize").value || "", 10);
         const entryBgAlpha = parseInt($("tplEntryBgAlpha").value || "", 10);
+        const entryOverlayAlpha = parseInt(
+          $("tplEntryOverlayAlpha").value || "",
+          10
+        );
         if (displayMode === "custom" && !customName && !silent) {
           showMsg(
             formMsg,
@@ -2162,6 +2195,9 @@
           entry_bg_alpha: Number.isFinite(entryBgAlpha)
             ? entryBgAlpha
             : DEFAULT_ENTRY_BG_ALPHA,
+          entry_overlay_alpha: Number.isFinite(entryOverlayAlpha)
+            ? entryOverlayAlpha
+            : DEFAULT_ENTRY_OVERLAY_ALPHA,
           entry_text_color: hexOrNull($("tplEntryTextColor").value),
           entry_font_size: Number.isFinite(entryFontSize)
             ? entryFontSize
@@ -2304,6 +2340,11 @@
               lt.entry_bg_alpha !== undefined && lt.entry_bg_alpha !== null
                 ? lt.entry_bg_alpha
                 : DEFAULT_ENTRY_BG_ALPHA,
+            entry_overlay_alpha:
+              lt.entry_overlay_alpha !== undefined &&
+              lt.entry_overlay_alpha !== null
+                ? lt.entry_overlay_alpha
+                : DEFAULT_ENTRY_OVERLAY_ALPHA,
             entry_text_color: lt.entry_text_color || "",
             entry_font_size:
               lt.entry_font_size !== undefined && lt.entry_font_size !== null

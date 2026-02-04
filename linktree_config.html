@@ -1311,6 +1311,19 @@
                       value="85"
                     />
                   </div>
+                  <div class="field">
+                    <label for="inEntryOverlayAlpha"
+                      >Entry overlay alpha (0-100)</label
+                    >
+                    <input
+                      id="inEntryOverlayAlpha"
+                      class="input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value="35"
+                    />
+                  </div>
                 </div>
               </details>
             </div>
@@ -2279,6 +2292,7 @@
       const DEFAULT_ENTRY_TEXT_COLOR = "#e9ebff";
       const DEFAULT_ENTRY_FONT_SIZE = 16;
       const DEFAULT_ENTRY_BG_ALPHA = 85;
+      const DEFAULT_ENTRY_OVERLAY_ALPHA = 35;
       const DEFAULT_QUOTE_SPEED = 42;
       const DEFAULT_QUOTE_PAUSE = 1200;
       const DEFAULT_QUOTE_SIZE = 15;
@@ -2375,6 +2389,11 @@
           lt.entry_bg_alpha !== undefined && lt.entry_bg_alpha !== null
             ? lt.entry_bg_alpha
             : DEFAULT_ENTRY_BG_ALPHA;
+        $("inEntryOverlayAlpha").value =
+          lt.entry_overlay_alpha !== undefined &&
+          lt.entry_overlay_alpha !== null
+            ? lt.entry_overlay_alpha
+            : DEFAULT_ENTRY_OVERLAY_ALPHA;
         $("inSong").value = lt.song_url || "";
         $("inSongName").value = lt.song_name || "";
         $("inSongIcon").value = lt.song_icon_url || "";
@@ -2555,6 +2574,10 @@
               : DEFAULT_ENTRY_FONT_SIZE,
           entry_font_family: lt.entry_font_family || "default",
           entry_effect: lt.entry_effect || "none",
+          entry_overlay_alpha:
+            lt.entry_overlay_alpha !== undefined && lt.entry_overlay_alpha !== null
+              ? lt.entry_overlay_alpha
+              : DEFAULT_ENTRY_OVERLAY_ALPHA,
           song_url: lt.song_url || "",
           song_name: lt.song_name || "",
           song_icon_url: lt.song_icon_url || "",
@@ -2665,6 +2688,10 @@
           $("inEntryBgAlpha").value ?? DEFAULT_ENTRY_BG_ALPHA,
           DEFAULT_ENTRY_BG_ALPHA
         );
+        const entryOverlayAlpha = clampPercent(
+          $("inEntryOverlayAlpha").value ?? DEFAULT_ENTRY_OVERLAY_ALPHA,
+          DEFAULT_ENTRY_OVERLAY_ALPHA
+        );
         return {
           device_type: dev,
           location: $("inLocation").value.trim() || "",
@@ -2689,6 +2716,9 @@
             : DEFAULT_ENTRY_FONT_SIZE,
           entry_font_family: $("inEntryFont").value || "default",
           entry_effect: $("inEntryEffect").value || "none",
+          entry_overlay_alpha: Number.isFinite(entryOverlayAlpha)
+            ? entryOverlayAlpha
+            : DEFAULT_ENTRY_OVERLAY_ALPHA,
           entry_text: $("inEntryText").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
           song_name: $("inSongName").value.trim() || "",

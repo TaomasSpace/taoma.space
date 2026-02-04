@@ -1164,6 +1164,7 @@ class LinktreeCreateIn(BaseModel):
     entry_font_size: int = Field(16, ge=10, le=40)
     entry_font_family: QuoteFontFamily = "default"
     entry_effect: EffectName = "none"
+    entry_overlay_alpha: int = Field(35, ge=0, le=100)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -1228,6 +1229,7 @@ class LinktreeUpdateIn(BaseModel):
     entry_font_size: Optional[int] = Field(None, ge=10, le=40)
     entry_font_family: Optional[QuoteFontFamily] = None
     entry_effect: Optional[EffectName] = None
+    entry_overlay_alpha: Optional[int] = Field(None, ge=0, le=100)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -1304,6 +1306,7 @@ class LinktreeOut(BaseModel):
     entry_font_size: Optional[int] = None
     entry_font_family: Optional[QuoteFontFamily] = None
     entry_effect: Optional[EffectName] = None
+    entry_overlay_alpha: Optional[int] = None
     song_url: Optional[str] = None
     song_name: Optional[str] = None
     song_icon_url: Optional[str] = None
@@ -2024,6 +2027,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    COALESCE(entry_font_size, 16) AS entry_font_size,
                    COALESCE(entry_font_family, 'default') AS entry_font_family,
                    COALESCE(entry_effect, 'none') AS entry_effect,
+                   COALESCE(entry_overlay_alpha, 35) AS entry_overlay_alpha,
                    COALESCE(show_audio_player, false) AS show_audio_player,
                    audio_player_bg_color,
                    COALESCE(audio_player_bg_alpha, 60) AS audio_player_bg_alpha,
@@ -2141,6 +2145,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "entry_font_size": int(lt.get("entry_font_size", 16) or 16),
         "entry_font_family": lt.get("entry_font_family") or "default",
         "entry_effect": lt.get("entry_effect") or "none",
+        "entry_overlay_alpha": int(lt.get("entry_overlay_alpha", 35) or 35),
         "song_url": lt.get("song_url"),
         "song_name": lt.get("song_name"),
         "song_icon_url": lt.get("song_icon_url"),
@@ -3160,6 +3165,7 @@ def get_linktree(
     entry_font_size = lt.get("entry_font_size", 16)
     entry_font_family = lt.get("entry_font_family") or "default"
     entry_effect = lt.get("entry_effect") or "none"
+    entry_overlay_alpha = lt.get("entry_overlay_alpha", 35)
     discord_badge_codes = _json_to_list(
         lt.get("discord_badge_codes"),
         max_items=50,
@@ -3226,6 +3232,7 @@ def get_linktree(
         "entry_font_size": int(entry_font_size or 16),
         "entry_font_family": entry_font_family,
         "entry_effect": entry_effect,
+        "entry_overlay_alpha": int(entry_overlay_alpha or 35),
         "song_url": lt.get("song_url"),
         "song_name": lt.get("song_name"),
         "song_icon_url": lt.get("song_icon_url"),
@@ -3327,6 +3334,12 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             else 85
         )
         entry_bg_alpha = max(0, min(100, entry_bg_alpha))
+        entry_overlay_alpha = (
+            int(payload.entry_overlay_alpha)
+            if payload.entry_overlay_alpha is not None
+            else 35
+        )
+        entry_overlay_alpha = max(0, min(100, entry_overlay_alpha))
         entry_font_size = (
             int(payload.entry_font_size)
             if payload.entry_font_size is not None
@@ -3380,6 +3393,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             entry_font_size=entry_font_size,
             entry_font_family=entry_font_family,
             entry_effect=entry_effect,
+            entry_overlay_alpha=entry_overlay_alpha,
             song_url=payload.song_url,
             song_name=song_name,
             song_icon_url=payload.song_icon_url,
@@ -4174,6 +4188,14 @@ def update_linktree_ep(
         fields["entry_effect"] = (
             fx if fx in {"none", "glow", "neon", "rainbow"} else "none"
         )
+    if "entry_overlay_alpha" in fields:
+        try:
+            alpha = int(fields.get("entry_overlay_alpha"))
+        except Exception:
+            alpha = None
+        fields["entry_overlay_alpha"] = (
+            max(0, min(100, alpha)) if alpha is not None else None
+        )
     if "entry_text_color" in fields and isinstance(fields.get("entry_text_color"), str):
         val = fields.get("entry_text_color").strip()
         fields["entry_text_color"] = val if re.match(HEX_COLOR_RE, val) else None
@@ -4324,6 +4346,7 @@ class TemplateVariantIn(BaseModel):
     entry_font_size: Optional[int] = Field(None, ge=10, le=40)
     entry_font_family: Optional[QuoteFontFamily] = None
     entry_effect: Optional[EffectName] = None
+    entry_overlay_alpha: Optional[int] = Field(None, ge=0, le=100)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -4477,6 +4500,14 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
             data["entry_effect"] = fx
         else:
             data["entry_effect"] = "none"
+    if "entry_overlay_alpha" in data:
+        try:
+            alpha = int(data.get("entry_overlay_alpha"))
+        except Exception:
+            alpha = None
+        data["entry_overlay_alpha"] = (
+            max(0, min(100, alpha)) if alpha is not None else 35
+        )
     if "entry_text_color" in data and isinstance(data.get("entry_text_color"), str):
         val = data.get("entry_text_color").strip()
         data["entry_text_color"] = val if re.match(HEX_COLOR_RE, val) else None
@@ -4510,6 +4541,7 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("entry_font_size", 16)
     data.setdefault("entry_font_family", "default")
     data.setdefault("entry_effect", "none")
+    data.setdefault("entry_overlay_alpha", 35)
     data.setdefault("demo_show_links", False)
     for key in ("demo_link_label", "demo_link_url", "demo_link_icon_url"):
         if key in data and isinstance(data[key], str):
@@ -4655,6 +4687,7 @@ def _extract_linktree_fields(data: dict) -> dict:
         "entry_font_size",
         "entry_font_family",
         "entry_effect",
+        "entry_overlay_alpha",
         "cursor_url",
         "cursor_effect",
         "cursor_effect_color",

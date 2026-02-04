@@ -1778,6 +1778,7 @@
         const DEFAULT_QUOTE_COLOR = "#e9ebff";
         const DEFAULT_ENTRY_BG_COLOR = "#0f1223";
         const DEFAULT_ENTRY_BG_ALPHA = 85;
+        const DEFAULT_ENTRY_OVERLAY_ALPHA = 35;
         const DEFAULT_ENTRY_TEXT_COLOR = "#e9ebff";
         const DEFAULT_ENTRY_FONT_SIZE = 16;
         const DEFAULT_AUDIO_BG_COLOR = "#171b3b";
@@ -3322,9 +3323,9 @@
             }
           }
           const enterTextEl = document.getElementById("enterText");
-          if (enterTextEl) {
-            const entryText = (data.entry_text || "").trim();
-            enterTextEl.textContent = entryText || "Click to enter";
+            if (enterTextEl) {
+              const entryText = (data.entry_text || "").trim();
+              enterTextEl.textContent = entryText || "Click to enter";
             enterTextEl.classList.remove(
               "glow",
               "neon",
@@ -3353,13 +3354,23 @@
             }
             const entryColor =
               sanitizeHexColor(data.entry_text_color) || DEFAULT_ENTRY_TEXT_COLOR;
-            if (entryColor) {
-              enterTextEl.style.color = entryColor;
-            } else {
-              enterTextEl.style.removeProperty("color");
+              if (entryColor) {
+                enterTextEl.style.color = entryColor;
+              } else {
+                enterTextEl.style.removeProperty("color");
+              }
             }
-          }
-          const enterBox = document.querySelector(".enter-box");
+            const enterGate = document.getElementById("enterOverlay");
+            if (enterGate) {
+              const rawOverlayAlpha = Number(data.entry_overlay_alpha);
+              const overlayAlpha = Number.isFinite(rawOverlayAlpha)
+                ? Math.min(100, Math.max(0, rawOverlayAlpha))
+                : DEFAULT_ENTRY_OVERLAY_ALPHA;
+              enterGate.style.background = `rgba(0, 0, 0, ${
+                overlayAlpha / 100
+              })`;
+            }
+            const enterBox = document.querySelector(".enter-box");
           if (enterBox) {
             const rawAlpha = Number(data.entry_bg_alpha);
             const alpha = Number.isFinite(rawAlpha)
