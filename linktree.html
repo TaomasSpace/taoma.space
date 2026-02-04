@@ -1605,6 +1605,117 @@
           return { url: chosen, isVideo: useVideo };
         }
 
+        function cleanMetaText(value, maxLen = 180) {
+          if (value === undefined || value === null) return "";
+          const text = String(value).replace(/\s+/g, " ").trim();
+          if (!text) return "";
+          return text.length > maxLen ? `${text.slice(0, maxLen - 1)}…` : text;
+        }
+
+        function resolveDisplayName(data) {
+          const mode = (data && data.display_name_mode) || "slug";
+          if (mode === "username") {
+            return (data.user_username || data.slug || "").trim();
+          }
+          if (mode === "custom" && data.custom_display_name) {
+            return String(data.custom_display_name).trim();
+          }
+          return (data.slug || data.user_username || "").trim();
+        }
+
+        function resolveQuoteText(data) {
+          const list = Array.isArray(data?.quote_typing_texts)
+            ? data.quote_typing_texts
+            : [];
+          for (const entry of list) {
+            const text = String(entry || "").trim();
+            if (text) return text;
+          }
+          const fallback = String(data?.quote || "").trim();
+          return fallback;
+        }
+
+        function toAbsoluteUrl(raw) {
+          if (!raw) return "";
+          try {
+            return new URL(raw, window.location.origin).href;
+          } catch (_) {
+            return raw;
+          }
+        }
+
+        function setMetaProperty(prop, content) {
+          if (!prop || !content) return;
+          let el = document.querySelector(`meta[property="${prop}"]`);
+          if (!el) {
+            el = document.createElement("meta");
+            el.setAttribute("property", prop);
+            document.head.appendChild(el);
+          }
+          el.setAttribute("content", content);
+        }
+
+        function setMetaName(name, content) {
+          if (!name || !content) return;
+          let el = document.querySelector(`meta[name="${name}"]`);
+          if (!el) {
+            el = document.createElement("meta");
+            el.setAttribute("name", name);
+            document.head.appendChild(el);
+          }
+          el.setAttribute("content", content);
+        }
+
+        function setCanonical(url) {
+          if (!url) return;
+          let el = document.querySelector('link[rel="canonical"]');
+          if (!el) {
+            el = document.createElement("link");
+            el.setAttribute("rel", "canonical");
+            document.head.appendChild(el);
+          }
+          el.setAttribute("href", url);
+        }
+
+        function applyMeta(data, { bgUrl, bgIsVideo } = {}) {
+          if (!data) return;
+          const name = cleanMetaText(resolveDisplayName(data)) || "Custom Linktree";
+          const title = `TAOMA™ – ${name}`;
+          const quote = cleanMetaText(resolveQuoteText(data));
+          const loc = cleanMetaText(data?.location);
+          const description =
+            quote || (loc ? `Location: ${loc}` : "Build your own powerful, customizable linktree");
+
+          const url =
+            data.is_template_demo || !data.slug
+              ? window.location.href
+              : new URL(
+                  `/tree/${encodeURIComponent(data.slug)}`,
+                  window.location.origin,
+                ).href;
+
+          let image = "";
+          if (bgUrl && !bgIsVideo) image = bgUrl;
+          if (!image) {
+            image =
+              safeMediaUrl(data.profile_picture) ||
+              safeMediaUrl(currentUser && currentUser.profile_picture) ||
+              "/static/icon.png";
+          }
+          const ogImage = toAbsoluteUrl(image);
+
+          document.title = title;
+          setCanonical(url);
+          setMetaProperty("og:title", title);
+          setMetaProperty("og:description", description);
+          setMetaProperty("og:image", ogImage);
+          setMetaProperty("og:url", url);
+          setMetaName("twitter:card", "summary_large_image");
+          setMetaName("twitter:title", title);
+          setMetaName("twitter:description", description);
+          setMetaName("twitter:image", ogImage);
+        }
+
         const DEFAULT_LINK_COLOR = "#e9ebff";
         const DEFAULT_LINK_BG = "#171b3b";
         const DEFAULT_CARD_COLOR = "#171b3b";
@@ -2856,6 +2967,7 @@
           const bgSource = pickBackgroundSource(data, preferLite);
           const bgUrlNext = bgSource.url || "";
           const bgIsVideoNext = bgSource.isVideo;
+          applyMeta(data, { bgUrl: bgUrlNext, bgIsVideo: bgIsVideoNext });
           const songUrlNext = safeMediaUrl(data.song_url);
           const songIconUrlNext = safeMediaUrl(data.song_icon_url);
           const showAudioPlayer = !!data.show_audio_player && !!songUrlNext;
