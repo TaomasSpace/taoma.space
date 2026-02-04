@@ -4015,6 +4015,7 @@ class TemplateCreateIn(BaseModel):
     name: str = Field(..., min_length=2, max_length=64)
     description: Optional[str] = Field(None, max_length=500)
     creator: Optional[str] = Field(None, max_length=100)
+    preview_image_url: Optional[str] = Field(None, max_length=500)
     is_public: bool = True
     variants: List[TemplateVariantIn] = Field(..., min_length=1, max_length=2)
 
@@ -4023,6 +4024,7 @@ class TemplateUpdateIn(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=64)
     description: Optional[str] = Field(None, max_length=500)
     creator: Optional[str] = Field(None, max_length=100)
+    preview_image_url: Optional[str] = Field(None, max_length=500)
     is_public: Optional[bool] = None
     variants: Optional[List[TemplateVariantIn]] = None
 
