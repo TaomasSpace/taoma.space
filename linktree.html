@@ -630,14 +630,18 @@
         position: fixed;
         left: 0;
         top: 0;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
+        width: var(--cursor-fx-size, 28px);
+        height: var(--cursor-fx-size, 28px);
         transform: translate(-50%, -50%);
         pointer-events: none;
         z-index: 8;
         opacity: 0;
         transition: opacity 0.2s ease;
+        mix-blend-mode: screen;
+      }
+
+      .cursor-glow.circle {
+        border-radius: 50%;
         background: radial-gradient(
           circle,
           color-mix(in oklab, var(--cursor-fx-color, #85a3ff) 65%, transparent),
@@ -655,7 +659,39 @@
               var(--cursor-fx-color, #85a3ff) 35%,
               transparent
             );
-        mix-blend-mode: screen;
+      }
+
+      .cursor-glow.shape {
+        border-radius: 0;
+        background: color-mix(
+          in oklab,
+          var(--cursor-fx-color, #85a3ff) 32%,
+          transparent
+        );
+        -webkit-mask-image: var(--cursor-fx-image);
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-size: contain;
+        -webkit-mask-position: center;
+        mask-image: var(--cursor-fx-image);
+        mask-repeat: no-repeat;
+        mask-size: contain;
+        mask-position: center;
+        filter: drop-shadow(
+            0 0 12px
+              color-mix(
+                in oklab,
+                var(--cursor-fx-color, #85a3ff) 55%,
+                transparent
+              )
+          )
+          drop-shadow(
+            0 0 30px
+              color-mix(
+                in oklab,
+                var(--cursor-fx-color, #85a3ff) 35%,
+                transparent
+              )
+          );
       }
 
       .cursor-fx-canvas {
@@ -1596,6 +1632,9 @@
         let cursorFxMoveHandler = null;
         let cursorFxLeaveHandler = null;
         let cursorFxResizeHandler = null;
+        let cursorFxImage = "";
+        let cursorFxImageSrc = "";
+        let cursorFxHasImage = false;
 
         function setCursorFxSettings({ color, alpha } = {}) {
           const clean = sanitizeHexColor(color) || DEFAULT_AUDIO_ACCENT_COLOR;
@@ -1614,6 +1653,23 @@
           cursorFxOffsetY = offset;
         }
 
+        function setCursorGlowImage(imageUrl, size = CURSOR_IMAGE_SIZE) {
+          const root = document.documentElement;
+          const hasImage = !!imageUrl;
+          cursorFxHasImage = hasImage;
+          if (hasImage) {
+            root.style.setProperty("--cursor-fx-image", `url("${imageUrl}")`);
+            root.style.setProperty("--cursor-fx-size", `${size}px`);
+          } else {
+            root.style.removeProperty("--cursor-fx-image");
+            root.style.removeProperty("--cursor-fx-size");
+          }
+          if (cursorGlowEl) {
+            cursorGlowEl.classList.toggle("shape", hasImage);
+            cursorGlowEl.classList.toggle("circle", !hasImage);
+          }
+        }
+
         function prefersReducedMotion() {
           return (
             typeof window.matchMedia === "function" &&
@@ -1624,7 +1680,9 @@
         function ensureCursorGlow() {
           if (cursorGlowEl) return cursorGlowEl;
           const el = document.createElement("div");
-          el.className = "cursor-glow";
+          el.className = cursorFxHasImage
+            ? "cursor-glow shape"
+            : "cursor-glow circle";
           el.setAttribute("aria-hidden", "true");
           document.body.appendChild(el);
           cursorGlowEl = el;
@@ -2345,7 +2403,6 @@
           const mediaSig = hashString(`${bgSig}|${audioSig}|${cursorSig}`);
           const bgChanged = bgSig !== lastBgSig;
           const audioChanged = audioSig !== lastAudioSig;
-          const cursorChanged = cursorSig !== lastCursorSig;
           gateCacheKey = `taoma:linktree:gate:${mediaSig}`;
           const gateDismissed = (() => {
             try {
@@ -2535,7 +2592,9 @@
           applyCursorEffect(data.cursor_effect || "none", { isMobile });
 
           if (cursorUrl && !isMobile) {
-            if (cursorChanged) {
+            const shouldResize =
+              !cursorFxImage || cursorFxImageSrc !== cursorUrl;
+            if (shouldResize) {
               resizeCursorImage(cursorUrl, CURSOR_IMAGE_SIZE)
                 .then((resized) => {
                   const cursorDecl = `url("${resized}") 0 0, auto`;
@@ -2543,13 +2602,25 @@
                     "--cursor",
                     cursorDecl
                   );
+                  cursorFxImage = resized;
+                  cursorFxImageSrc = cursorUrl;
+                  setCursorGlowImage(resized, CURSOR_IMAGE_SIZE);
                 })
                 .catch(() => {
                   document.documentElement.style.setProperty("--cursor", "auto");
+                  setCursorGlowImage("");
                 });
+            } else {
+              const cursorDecl = `url("${cursorFxImage}") 0 0, auto`;
+              document.documentElement.style.setProperty(
+                "--cursor",
+                cursorDecl
+              );
+              setCursorGlowImage(cursorFxImage, CURSOR_IMAGE_SIZE);
             }
           } else {
             document.documentElement.style.setProperty("--cursor", "auto");
+            setCursorGlowImage("");
           }
 
           // Profil/Badges/Links wie gehabt
