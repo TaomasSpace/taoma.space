@@ -1034,6 +1034,29 @@
                   value="35"
                 />
               </div>
+              <div class="field">
+                <label for="tplEntryBoxEnabled">Show entry box</label>
+                <select id="tplEntryBoxEnabled" class="select">
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplEntryBorderEnabled">Show entry border</label>
+                <select id="tplEntryBorderEnabled" class="select">
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplEntryBorderColor">Entry border color</label>
+                <input
+                  id="tplEntryBorderColor"
+                  class="input"
+                  type="text"
+                  placeholder="#RRGGBB"
+                />
+              </div>
             <div class="field" style="grid-column: 1 / -1">
               <label for="tplQuote">Quote (optional)</label>
               <input id="tplQuote" class="input" type="text" maxlength="240" />
@@ -1840,6 +1863,11 @@
           entryFx && ["none", "glow", "neon", "rainbow"].includes(entryFx)
             ? entryFx
             : "none";
+        v.entry_box_enabled =
+          v.entry_box_enabled === undefined ? true : !!v.entry_box_enabled;
+        v.entry_border_enabled =
+          v.entry_border_enabled === undefined ? true : !!v.entry_border_enabled;
+        v.entry_border_color = hexOrNull(v.entry_border_color);
         const rawQuoteTexts = Array.isArray(v.quote_typing_texts)
           ? v.quote_typing_texts
           : [];
@@ -2011,6 +2039,9 @@
           entry_font_size: DEFAULT_ENTRY_FONT_SIZE,
           entry_font_family: "default",
           entry_effect: "none",
+          entry_box_enabled: true,
+          entry_border_enabled: true,
+          entry_border_color: "",
           song_url: "",
           song_name: "",
           song_icon_url: "",
@@ -2075,6 +2106,11 @@
           v.entry_overlay_alpha !== undefined && v.entry_overlay_alpha !== null
             ? v.entry_overlay_alpha
             : DEFAULT_ENTRY_OVERLAY_ALPHA;
+        $("tplEntryBoxEnabled").value =
+          v.entry_box_enabled === undefined ? "true" : v.entry_box_enabled ? "true" : "false";
+        $("tplEntryBorderEnabled").value =
+          v.entry_border_enabled === undefined ? "true" : v.entry_border_enabled ? "true" : "false";
+        $("tplEntryBorderColor").value = v.entry_border_color || "";
         const qt = Array.isArray(v.quote_typing_texts) ? v.quote_typing_texts : [];
         const mainQuote = qt[0] || v.quote || "";
         $("tplQuote").value = mainQuote;
@@ -2178,6 +2214,8 @@
           $("tplEntryOverlayAlpha").value || "",
           10
         );
+        const entryBoxEnabled = $("tplEntryBoxEnabled").value === "true";
+        const entryBorderEnabled = $("tplEntryBorderEnabled").value === "true";
         if (displayMode === "custom" && !customName && !silent) {
           showMsg(
             formMsg,
@@ -2198,6 +2236,9 @@
           entry_overlay_alpha: Number.isFinite(entryOverlayAlpha)
             ? entryOverlayAlpha
             : DEFAULT_ENTRY_OVERLAY_ALPHA,
+          entry_box_enabled: entryBoxEnabled,
+          entry_border_enabled: entryBorderEnabled,
+          entry_border_color: hexOrNull($("tplEntryBorderColor").value),
           entry_text_color: hexOrNull($("tplEntryTextColor").value),
           entry_font_size: Number.isFinite(entryFontSize)
             ? entryFontSize
@@ -2345,6 +2386,16 @@
               lt.entry_overlay_alpha !== null
                 ? lt.entry_overlay_alpha
                 : DEFAULT_ENTRY_OVERLAY_ALPHA,
+            entry_box_enabled:
+              lt.entry_box_enabled !== undefined && lt.entry_box_enabled !== null
+                ? !!lt.entry_box_enabled
+                : true,
+            entry_border_enabled:
+              lt.entry_border_enabled !== undefined &&
+              lt.entry_border_enabled !== null
+                ? !!lt.entry_border_enabled
+                : true,
+            entry_border_color: lt.entry_border_color || "",
             entry_text_color: lt.entry_text_color || "",
             entry_font_size:
               lt.entry_font_size !== undefined && lt.entry_font_size !== null
@@ -3144,6 +3195,7 @@
             "tplAudioTextColor",
             "tplAudioAccentColor",
             "tplEntryTextColor",
+            "tplEntryBorderColor",
             "tplLinkColor",
             "tplLinkBgColor",
             "tplCardColor",

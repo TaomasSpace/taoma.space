@@ -1165,6 +1165,9 @@ class LinktreeCreateIn(BaseModel):
     entry_font_family: QuoteFontFamily = "default"
     entry_effect: EffectName = "none"
     entry_overlay_alpha: int = Field(35, ge=0, le=100)
+    entry_box_enabled: bool = True
+    entry_border_enabled: bool = True
+    entry_border_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -1230,6 +1233,9 @@ class LinktreeUpdateIn(BaseModel):
     entry_font_family: Optional[QuoteFontFamily] = None
     entry_effect: Optional[EffectName] = None
     entry_overlay_alpha: Optional[int] = Field(None, ge=0, le=100)
+    entry_box_enabled: Optional[bool] = None
+    entry_border_enabled: Optional[bool] = None
+    entry_border_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -1307,6 +1313,9 @@ class LinktreeOut(BaseModel):
     entry_font_family: Optional[QuoteFontFamily] = None
     entry_effect: Optional[EffectName] = None
     entry_overlay_alpha: Optional[int] = None
+    entry_box_enabled: Optional[bool] = None
+    entry_border_enabled: Optional[bool] = None
+    entry_border_color: Optional[str] = None
     song_url: Optional[str] = None
     song_name: Optional[str] = None
     song_icon_url: Optional[str] = None
@@ -2028,6 +2037,9 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    COALESCE(entry_font_family, 'default') AS entry_font_family,
                    COALESCE(entry_effect, 'none') AS entry_effect,
                    COALESCE(entry_overlay_alpha, 35) AS entry_overlay_alpha,
+                   COALESCE(entry_box_enabled, true) AS entry_box_enabled,
+                   COALESCE(entry_border_enabled, true) AS entry_border_enabled,
+                   entry_border_color,
                    COALESCE(show_audio_player, false) AS show_audio_player,
                    audio_player_bg_color,
                    COALESCE(audio_player_bg_alpha, 60) AS audio_player_bg_alpha,
@@ -2146,6 +2158,9 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "entry_font_family": lt.get("entry_font_family") or "default",
         "entry_effect": lt.get("entry_effect") or "none",
         "entry_overlay_alpha": int(lt.get("entry_overlay_alpha", 35) or 35),
+        "entry_box_enabled": bool(lt.get("entry_box_enabled", True)),
+        "entry_border_enabled": bool(lt.get("entry_border_enabled", True)),
+        "entry_border_color": lt.get("entry_border_color"),
         "song_url": lt.get("song_url"),
         "song_name": lt.get("song_name"),
         "song_icon_url": lt.get("song_icon_url"),
@@ -3233,6 +3248,9 @@ def get_linktree(
         "entry_font_family": entry_font_family,
         "entry_effect": entry_effect,
         "entry_overlay_alpha": int(entry_overlay_alpha or 35),
+        "entry_box_enabled": bool(lt.get("entry_box_enabled", True)),
+        "entry_border_enabled": bool(lt.get("entry_border_enabled", True)),
+        "entry_border_color": lt.get("entry_border_color"),
         "song_url": lt.get("song_url"),
         "song_name": lt.get("song_name"),
         "song_icon_url": lt.get("song_icon_url"),
@@ -3340,6 +3358,23 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             else 35
         )
         entry_overlay_alpha = max(0, min(100, entry_overlay_alpha))
+        entry_box_enabled = (
+            bool(payload.entry_box_enabled)
+            if payload.entry_box_enabled is not None
+            else True
+        )
+        entry_border_enabled = (
+            bool(payload.entry_border_enabled)
+            if payload.entry_border_enabled is not None
+            else True
+        )
+        entry_border_color = (
+            payload.entry_border_color.strip()
+            if isinstance(payload.entry_border_color, str)
+            else None
+        )
+        if entry_border_color and not re.match(HEX_COLOR_RE, entry_border_color):
+            entry_border_color = None
         entry_font_size = (
             int(payload.entry_font_size)
             if payload.entry_font_size is not None
@@ -3394,6 +3429,9 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             entry_font_family=entry_font_family,
             entry_effect=entry_effect,
             entry_overlay_alpha=entry_overlay_alpha,
+            entry_box_enabled=entry_box_enabled,
+            entry_border_enabled=entry_border_enabled,
+            entry_border_color=entry_border_color,
             song_url=payload.song_url,
             song_name=song_name,
             song_icon_url=payload.song_icon_url,
@@ -4196,6 +4234,13 @@ def update_linktree_ep(
         fields["entry_overlay_alpha"] = (
             max(0, min(100, alpha)) if alpha is not None else None
         )
+    if "entry_box_enabled" in fields:
+        fields["entry_box_enabled"] = bool(fields.get("entry_box_enabled"))
+    if "entry_border_enabled" in fields:
+        fields["entry_border_enabled"] = bool(fields.get("entry_border_enabled"))
+    if "entry_border_color" in fields and isinstance(fields.get("entry_border_color"), str):
+        val = fields.get("entry_border_color").strip()
+        fields["entry_border_color"] = val if re.match(HEX_COLOR_RE, val) else None
     if "entry_text_color" in fields and isinstance(fields.get("entry_text_color"), str):
         val = fields.get("entry_text_color").strip()
         fields["entry_text_color"] = val if re.match(HEX_COLOR_RE, val) else None
@@ -4347,6 +4392,9 @@ class TemplateVariantIn(BaseModel):
     entry_font_family: Optional[QuoteFontFamily] = None
     entry_effect: Optional[EffectName] = None
     entry_overlay_alpha: Optional[int] = Field(None, ge=0, le=100)
+    entry_box_enabled: Optional[bool] = None
+    entry_border_enabled: Optional[bool] = None
+    entry_border_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -4508,6 +4556,13 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
         data["entry_overlay_alpha"] = (
             max(0, min(100, alpha)) if alpha is not None else 35
         )
+    if "entry_box_enabled" in data:
+        data["entry_box_enabled"] = bool(data.get("entry_box_enabled"))
+    if "entry_border_enabled" in data:
+        data["entry_border_enabled"] = bool(data.get("entry_border_enabled"))
+    if "entry_border_color" in data and isinstance(data.get("entry_border_color"), str):
+        val = data.get("entry_border_color").strip()
+        data["entry_border_color"] = val if re.match(HEX_COLOR_RE, val) else None
     if "entry_text_color" in data and isinstance(data.get("entry_text_color"), str):
         val = data.get("entry_text_color").strip()
         data["entry_text_color"] = val if re.match(HEX_COLOR_RE, val) else None
@@ -4542,6 +4597,8 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("entry_font_family", "default")
     data.setdefault("entry_effect", "none")
     data.setdefault("entry_overlay_alpha", 35)
+    data.setdefault("entry_box_enabled", True)
+    data.setdefault("entry_border_enabled", True)
     data.setdefault("demo_show_links", False)
     for key in ("demo_link_label", "demo_link_url", "demo_link_icon_url"):
         if key in data and isinstance(data[key], str):
@@ -4688,6 +4745,9 @@ def _extract_linktree_fields(data: dict) -> dict:
         "entry_font_family",
         "entry_effect",
         "entry_overlay_alpha",
+        "entry_box_enabled",
+        "entry_border_enabled",
+        "entry_border_color",
         "cursor_url",
         "cursor_effect",
         "cursor_effect_color",

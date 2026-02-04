@@ -1324,6 +1324,28 @@
                       value="35"
                     />
                   </div>
+                  <div class="field">
+                    <label class="row" style="gap: 0.5rem">
+                      <input type="checkbox" id="inEntryBoxEnabled" checked />
+                      <span>Show entry box</span>
+                    </label>
+                  </div>
+                  <div class="field">
+                    <label class="row" style="gap: 0.5rem">
+                      <input type="checkbox" id="inEntryBorderEnabled" checked />
+                      <span>Show entry border</span>
+                    </label>
+                  </div>
+                  <div class="field">
+                    <label for="inEntryBorderColor">Entry border color</label>
+                    <input
+                      id="inEntryBorderColor"
+                      class="input"
+                      type="text"
+                      maxlength="7"
+                      placeholder="#RRGGBB"
+                    />
+                  </div>
                 </div>
               </details>
             </div>
@@ -2389,11 +2411,20 @@
           lt.entry_bg_alpha !== undefined && lt.entry_bg_alpha !== null
             ? lt.entry_bg_alpha
             : DEFAULT_ENTRY_BG_ALPHA;
-        $("inEntryOverlayAlpha").value =
-          lt.entry_overlay_alpha !== undefined &&
-          lt.entry_overlay_alpha !== null
-            ? lt.entry_overlay_alpha
-            : DEFAULT_ENTRY_OVERLAY_ALPHA;
+      $("inEntryOverlayAlpha").value =
+        lt.entry_overlay_alpha !== undefined &&
+        lt.entry_overlay_alpha !== null
+          ? lt.entry_overlay_alpha
+          : DEFAULT_ENTRY_OVERLAY_ALPHA;
+      $("inEntryBoxEnabled").checked =
+        lt.entry_box_enabled !== undefined && lt.entry_box_enabled !== null
+          ? !!lt.entry_box_enabled
+          : true;
+      $("inEntryBorderEnabled").checked =
+        lt.entry_border_enabled !== undefined && lt.entry_border_enabled !== null
+          ? !!lt.entry_border_enabled
+          : true;
+      $("inEntryBorderColor").value = lt.entry_border_color || "";
         $("inSong").value = lt.song_url || "";
         $("inSongName").value = lt.song_name || "";
         $("inSongIcon").value = lt.song_icon_url || "";
@@ -2578,6 +2609,15 @@
             lt.entry_overlay_alpha !== undefined && lt.entry_overlay_alpha !== null
               ? lt.entry_overlay_alpha
               : DEFAULT_ENTRY_OVERLAY_ALPHA,
+          entry_box_enabled:
+            lt.entry_box_enabled !== undefined && lt.entry_box_enabled !== null
+              ? !!lt.entry_box_enabled
+              : true,
+          entry_border_enabled:
+            lt.entry_border_enabled !== undefined && lt.entry_border_enabled !== null
+              ? !!lt.entry_border_enabled
+              : true,
+          entry_border_color: hexOrNull(lt.entry_border_color),
           song_url: lt.song_url || "",
           song_name: lt.song_name || "",
           song_icon_url: lt.song_icon_url || "",
@@ -2692,6 +2732,9 @@
           $("inEntryOverlayAlpha").value ?? DEFAULT_ENTRY_OVERLAY_ALPHA,
           DEFAULT_ENTRY_OVERLAY_ALPHA
         );
+        const entryBoxEnabled = $("inEntryBoxEnabled").checked;
+        const entryBorderEnabled = $("inEntryBorderEnabled").checked;
+        const entryBorderColor = hexOrNull($("inEntryBorderColor").value);
         return {
           device_type: dev,
           location: $("inLocation").value.trim() || "",
@@ -2719,6 +2762,9 @@
           entry_overlay_alpha: Number.isFinite(entryOverlayAlpha)
             ? entryOverlayAlpha
             : DEFAULT_ENTRY_OVERLAY_ALPHA,
+          entry_box_enabled: !!entryBoxEnabled,
+          entry_border_enabled: !!entryBorderEnabled,
+          entry_border_color: entryBorderColor,
           entry_text: $("inEntryText").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
           song_name: $("inSongName").value.trim() || "",
@@ -3476,6 +3522,9 @@
             )
           )
         );
+        const entryBoxEnabled = $("inEntryBoxEnabled").checked;
+        const entryBorderEnabled = $("inEntryBorderEnabled").checked;
+        const entryBorderColor = hexOrNull($("inEntryBorderColor").value);
         const body = {
           slug: $("inSlug").value.trim(),
           device_type: currentDevice,
@@ -3498,6 +3547,9 @@
           entry_overlay_alpha: Number.isFinite(entryOverlayAlpha)
             ? entryOverlayAlpha
             : DEFAULT_ENTRY_OVERLAY_ALPHA,
+          entry_box_enabled: !!entryBoxEnabled,
+          entry_border_enabled: !!entryBorderEnabled,
+          entry_border_color: entryBorderColor,
           entry_text_color: hexOrNull($("inEntryTextColor").value),
           entry_font_size: Number.isFinite(entryFontSize)
             ? entryFontSize

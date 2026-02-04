@@ -114,6 +114,9 @@ CREATE TABLE IF NOT EXISTS linktrees (
                         CHECK (entry_effect IN ('none','glow','neon','rainbow')),
     entry_overlay_alpha SMALLINT NOT NULL DEFAULT 35
                         CHECK (entry_overlay_alpha BETWEEN 0 AND 100),
+    entry_box_enabled   BOOLEAN NOT NULL DEFAULT TRUE,
+    entry_border_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    entry_border_color  TEXT,
     song_url            TEXT,                     -- Audio-URL
     song_name           TEXT,                     -- Original filename
     song_icon_url       TEXT,
@@ -625,6 +628,18 @@ class PgGifDB:
   ADD COLUMN IF NOT EXISTS entry_overlay_alpha SMALLINT;
                 """)
                 cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_box_enabled BOOLEAN;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_border_enabled BOOLEAN;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_border_color TEXT;
+                """)
+                cur.execute("""
   UPDATE linktrees
      SET quote_effect = 'none'
    WHERE quote_effect IS NULL;
@@ -658,6 +673,16 @@ class PgGifDB:
   UPDATE linktrees
      SET entry_overlay_alpha = 35
    WHERE entry_overlay_alpha IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_box_enabled = TRUE
+   WHERE entry_box_enabled IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_border_enabled = TRUE
+   WHERE entry_border_enabled IS NULL;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -710,6 +735,22 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ALTER COLUMN entry_overlay_alpha SET DEFAULT 35;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_box_enabled SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_box_enabled SET DEFAULT TRUE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_border_enabled SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_border_enabled SET DEFAULT TRUE;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1844,6 +1885,9 @@ class PgGifDB:
         entry_font_family: str = "default",
         entry_effect: str = "none",
         entry_overlay_alpha: int = 35,
+        entry_box_enabled: bool = True,
+        entry_border_enabled: bool = True,
+        entry_border_color: str | None = None,
         song_url: str | None = None,
         song_name: str | None = None,
         song_icon_url: str | None = None,
@@ -1888,7 +1932,7 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, entry_box_enabled, entry_border_enabled, entry_border_color, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
@@ -1924,12 +1968,12 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
                 (
-                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, entry_box_enabled, entry_border_enabled, entry_border_color, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
@@ -1990,6 +2034,9 @@ class PgGifDB:
             "entry_font_family",
             "entry_effect",
             "entry_overlay_alpha",
+            "entry_box_enabled",
+            "entry_border_enabled",
+            "entry_border_color",
             "song_url",
             "song_name",
             "song_icon_url",
@@ -2066,7 +2113,7 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, entry_box_enabled, entry_border_enabled, entry_border_color, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
@@ -2082,7 +2129,7 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
@@ -2106,6 +2153,9 @@ class PgGifDB:
                     src.get("entry_font_family", "default"),
                     src.get("entry_effect", "none"),
                     src.get("entry_overlay_alpha", 35),
+                    src.get("entry_box_enabled", True),
+                    src.get("entry_border_enabled", True),
+                    src.get("entry_border_color"),
                     src.get("song_url"),
                     src.get("song_name"),
                     src.get("song_icon_url"),

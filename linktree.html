@@ -3371,20 +3371,51 @@
               })`;
             }
             const enterBox = document.querySelector(".enter-box");
-          if (enterBox) {
-            const rawAlpha = Number(data.entry_bg_alpha);
-            const alpha = Number.isFinite(rawAlpha)
-              ? Math.min(100, Math.max(0, rawAlpha))
-              : DEFAULT_ENTRY_BG_ALPHA;
-            const bg =
-              hexToRgba(DEFAULT_ENTRY_BG_COLOR, alpha / 100) ||
-              hexToRgba(DEFAULT_ENTRY_BG_COLOR, DEFAULT_ENTRY_BG_ALPHA / 100);
-            if (bg) {
-              enterBox.style.background = bg;
-            } else {
-              enterBox.style.removeProperty("background");
+            if (enterBox) {
+              const boxEnabled =
+                data.entry_box_enabled !== undefined && data.entry_box_enabled !== null
+                  ? !!data.entry_box_enabled
+                  : true;
+              const borderEnabled =
+                data.entry_border_enabled !== undefined &&
+                data.entry_border_enabled !== null
+                  ? !!data.entry_border_enabled
+                  : true;
+              const rawAlpha = Number(data.entry_bg_alpha);
+              const alpha = Number.isFinite(rawAlpha)
+                ? Math.min(100, Math.max(0, rawAlpha))
+                : DEFAULT_ENTRY_BG_ALPHA;
+              if (!boxEnabled) {
+                enterBox.style.background = "transparent";
+                enterBox.style.border = "none";
+                enterBox.style.boxShadow = "none";
+                enterBox.style.padding = "0";
+                enterBox.style.minWidth = "auto";
+              } else {
+                const bg =
+                  hexToRgba(DEFAULT_ENTRY_BG_COLOR, alpha / 100) ||
+                  hexToRgba(DEFAULT_ENTRY_BG_COLOR, DEFAULT_ENTRY_BG_ALPHA / 100);
+                if (bg) {
+                  enterBox.style.background = bg;
+                } else {
+                  enterBox.style.removeProperty("background");
+                }
+                enterBox.style.removeProperty("box-shadow");
+                enterBox.style.removeProperty("padding");
+                enterBox.style.removeProperty("min-width");
+                if (!borderEnabled) {
+                  enterBox.style.border = "none";
+                } else {
+                  const borderColor = sanitizeHexColor(data.entry_border_color);
+                  if (borderColor) {
+                    enterBox.style.border = `1px solid ${borderColor}`;
+                  } else {
+                    enterBox.style.removeProperty("border");
+                    enterBox.style.removeProperty("border-color");
+                  }
+                }
+              }
             }
-          }
           const nameEl = document.getElementById("name");
           if (nameEl) {
             const mode = data.display_name_mode || "slug";
