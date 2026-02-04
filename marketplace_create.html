@@ -971,6 +971,56 @@
               />
               <div class="help">Shown on the entry gate before media plays.</div>
             </div>
+            <div class="field">
+              <label for="tplEntryTextColor">Entry text color</label>
+              <input
+                id="tplEntryTextColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
+            </div>
+            <div class="field">
+              <label for="tplEntryFont">Entry font style</label>
+              <select id="tplEntryFont" class="select">
+                <option value="default">Default</option>
+                <option value="serif">Serif</option>
+                <option value="mono">Mono</option>
+                <option value="script">Script</option>
+                <option value="display">Display</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplEntryEffect">Entry effect</label>
+              <select id="tplEntryEffect" class="select">
+                <option value="none">None</option>
+                <option value="glow">Glow</option>
+                <option value="neon">Neon</option>
+                <option value="rainbow">Rainbow</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplEntryFontSize">Entry font size (px)</label>
+              <input
+                id="tplEntryFontSize"
+                class="input"
+                type="number"
+                min="10"
+                max="40"
+                value="16"
+              />
+            </div>
+            <div class="field">
+              <label for="tplEntryBgAlpha">Entry box alpha (0-100)</label>
+              <input
+                id="tplEntryBgAlpha"
+                class="input"
+                type="number"
+                min="0"
+                max="100"
+                value="85"
+              />
+            </div>
             <div class="field" style="grid-column: 1 / -1">
               <label for="tplQuote">Quote (optional)</label>
               <input id="tplQuote" class="input" type="text" maxlength="240" />
@@ -1500,6 +1550,9 @@
       const DEFAULT_QUOTE_SPEED = 42;
       const DEFAULT_QUOTE_PAUSE = 1200;
       const DEFAULT_QUOTE_SIZE = 15;
+      const DEFAULT_ENTRY_TEXT_COLOR = "#e9ebff";
+      const DEFAULT_ENTRY_FONT_SIZE = 16;
+      const DEFAULT_ENTRY_BG_ALPHA = 85;
 
       let discordStatus = null;
       let discordBadgeCodes = [];
@@ -1737,6 +1790,32 @@
           v.custom_display_name = null;
         }
         v.entry_text = v.entry_text ? String(v.entry_text).trim() : null;
+        v.entry_text_color = hexOrNull(v.entry_text_color);
+        v.entry_bg_alpha = Math.min(
+          100,
+          Math.max(
+            0,
+            parseInt(v.entry_bg_alpha ?? DEFAULT_ENTRY_BG_ALPHA, 10)
+          )
+        );
+        v.entry_font_size = Math.min(
+          40,
+          Math.max(
+            10,
+            parseInt(v.entry_font_size ?? DEFAULT_ENTRY_FONT_SIZE, 10)
+          )
+        );
+        const entryFam = (v.entry_font_family || "default").toString().toLowerCase();
+        v.entry_font_family =
+          entryFam &&
+          ["default", "serif", "mono", "script", "display"].includes(entryFam)
+            ? entryFam
+            : "default";
+        const entryFx = (v.entry_effect || "none").toString().toLowerCase();
+        v.entry_effect =
+          entryFx && ["none", "glow", "neon", "rainbow"].includes(entryFx)
+            ? entryFx
+            : "none";
         const rawQuoteTexts = Array.isArray(v.quote_typing_texts)
           ? v.quote_typing_texts
           : [];
@@ -1902,6 +1981,11 @@
           quote_font_size: DEFAULT_QUOTE_SIZE,
           quote_font_family: "default",
           quote_effect: "none",
+          entry_bg_alpha: DEFAULT_ENTRY_BG_ALPHA,
+          entry_text_color: DEFAULT_ENTRY_TEXT_COLOR,
+          entry_font_size: DEFAULT_ENTRY_FONT_SIZE,
+          entry_font_family: "default",
+          entry_effect: "none",
           song_url: "",
           song_name: "",
           song_icon_url: "",
@@ -1951,6 +2035,17 @@
       function applyVariantToForm(v) {
         $("tplLocation").value = v.location || "";
         $("tplEntryText").value = v.entry_text || "";
+        $("tplEntryTextColor").value = v.entry_text_color || "";
+        $("tplEntryFont").value = v.entry_font_family || "default";
+        $("tplEntryEffect").value = v.entry_effect || "none";
+        $("tplEntryFontSize").value =
+          v.entry_font_size !== undefined && v.entry_font_size !== null
+            ? v.entry_font_size
+            : DEFAULT_ENTRY_FONT_SIZE;
+        $("tplEntryBgAlpha").value =
+          v.entry_bg_alpha !== undefined && v.entry_bg_alpha !== null
+            ? v.entry_bg_alpha
+            : DEFAULT_ENTRY_BG_ALPHA;
         const qt = Array.isArray(v.quote_typing_texts) ? v.quote_typing_texts : [];
         const mainQuote = qt[0] || v.quote || "";
         $("tplQuote").value = mainQuote;
@@ -2048,6 +2143,8 @@
         const quoteSpeed = parseInt($("tplQuoteSpeed").value || "", 10);
         const quotePause = parseInt($("tplQuotePause").value || "", 10);
         const quoteSize = parseInt($("tplQuoteSize").value || "", 10);
+        const entryFontSize = parseInt($("tplEntryFontSize").value || "", 10);
+        const entryBgAlpha = parseInt($("tplEntryBgAlpha").value || "", 10);
         if (displayMode === "custom" && !customName && !silent) {
           showMsg(
             formMsg,
@@ -2062,6 +2159,15 @@
           device_type: d,
           location: $("tplLocation").value.trim() || "",
           entry_text: $("tplEntryText").value.trim() || null,
+          entry_bg_alpha: Number.isFinite(entryBgAlpha)
+            ? entryBgAlpha
+            : DEFAULT_ENTRY_BG_ALPHA,
+          entry_text_color: hexOrNull($("tplEntryTextColor").value),
+          entry_font_size: Number.isFinite(entryFontSize)
+            ? entryFontSize
+            : DEFAULT_ENTRY_FONT_SIZE,
+          entry_font_family: $("tplEntryFont").value || "default",
+          entry_effect: $("tplEntryEffect").value || "none",
           quote: quoteTexts[0] || "",
           quote_typing_enabled: $("tplQuoteTyping").checked,
           quote_typing_texts: quoteTexts,
@@ -2194,6 +2300,17 @@
             location: lt.location || "",
             quote: lt.quote || "",
             entry_text: lt.entry_text || "",
+            entry_bg_alpha:
+              lt.entry_bg_alpha !== undefined && lt.entry_bg_alpha !== null
+                ? lt.entry_bg_alpha
+                : DEFAULT_ENTRY_BG_ALPHA,
+            entry_text_color: lt.entry_text_color || "",
+            entry_font_size:
+              lt.entry_font_size !== undefined && lt.entry_font_size !== null
+                ? lt.entry_font_size
+                : DEFAULT_ENTRY_FONT_SIZE,
+            entry_font_family: lt.entry_font_family || "default",
+            entry_effect: lt.entry_effect || "none",
             quote_typing_enabled: !!lt.quote_typing_enabled,
             quote_typing_texts: Array.isArray(lt.quote_typing_texts)
               ? lt.quote_typing_texts
@@ -2985,6 +3102,7 @@
             "tplAudioBgColor",
             "tplAudioTextColor",
             "tplAudioAccentColor",
+            "tplEntryTextColor",
             "tplLinkColor",
             "tplLinkBgColor",
             "tplCardColor",

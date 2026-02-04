@@ -1258,6 +1258,61 @@
               <div class="help">
                 Shown on the entry gate before media plays.
               </div>
+              <details class="fold">
+                <summary>Entry styling</summary>
+                <div class="fold-body">
+                  <div class="field">
+                    <label for="inEntryTextColor">Entry text color</label>
+                    <input
+                      id="inEntryTextColor"
+                      class="input"
+                      type="color"
+                      value="#e9ebff"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="inEntryFont">Entry font style</label>
+                    <select id="inEntryFont" class="select">
+                      <option value="default">Default</option>
+                      <option value="serif">Serif</option>
+                      <option value="mono">Mono</option>
+                      <option value="script">Script</option>
+                      <option value="display">Display</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="inEntryEffect">Entry effect</label>
+                    <select id="inEntryEffect" class="select">
+                      <option value="none">None</option>
+                      <option value="glow">Glow</option>
+                      <option value="neon">Neon</option>
+                      <option value="rainbow">Rainbow</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="inEntryFontSize">Entry font size (px)</label>
+                    <input
+                      id="inEntryFontSize"
+                      class="input"
+                      type="number"
+                      min="10"
+                      max="40"
+                      value="16"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="inEntryBgAlpha">Entry box alpha (0-100)</label>
+                    <input
+                      id="inEntryBgAlpha"
+                      class="input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value="85"
+                    />
+                  </div>
+                </div>
+              </details>
             </div>
             <div class="field">
               <label for="inLocation">Location</label>
@@ -2221,6 +2276,9 @@
       const DEFAULT_NAME_COLOR = "#e9ebff";
       const DEFAULT_LOCATION_COLOR = "#a2a9c8";
       const DEFAULT_QUOTE_COLOR = "#e9ebff";
+      const DEFAULT_ENTRY_TEXT_COLOR = "#e9ebff";
+      const DEFAULT_ENTRY_FONT_SIZE = 16;
+      const DEFAULT_ENTRY_BG_ALPHA = 85;
       const DEFAULT_QUOTE_SPEED = 42;
       const DEFAULT_QUOTE_PAUSE = 1200;
       const DEFAULT_QUOTE_SIZE = 15;
@@ -2305,6 +2363,18 @@
             ? lt.quote_font_size
             : DEFAULT_QUOTE_SIZE;
         $("inEntryText").value = lt.entry_text || "";
+        $("inEntryTextColor").value =
+          lt.entry_text_color || DEFAULT_ENTRY_TEXT_COLOR;
+        $("inEntryFont").value = lt.entry_font_family || "default";
+        $("inEntryEffect").value = lt.entry_effect || "none";
+        $("inEntryFontSize").value =
+          lt.entry_font_size !== undefined && lt.entry_font_size !== null
+            ? lt.entry_font_size
+            : DEFAULT_ENTRY_FONT_SIZE;
+        $("inEntryBgAlpha").value =
+          lt.entry_bg_alpha !== undefined && lt.entry_bg_alpha !== null
+            ? lt.entry_bg_alpha
+            : DEFAULT_ENTRY_BG_ALPHA;
         $("inSong").value = lt.song_url || "";
         $("inSongName").value = lt.song_name || "";
         $("inSongIcon").value = lt.song_icon_url || "";
@@ -2474,6 +2544,17 @@
           quote_font_family: lt.quote_font_family || "default",
           quote_effect: lt.quote_effect || "none",
           entry_text: lt.entry_text || "",
+          entry_bg_alpha:
+            lt.entry_bg_alpha !== undefined && lt.entry_bg_alpha !== null
+              ? lt.entry_bg_alpha
+              : DEFAULT_ENTRY_BG_ALPHA,
+          entry_text_color: hexOrNull(lt.entry_text_color),
+          entry_font_size:
+            lt.entry_font_size !== undefined && lt.entry_font_size !== null
+              ? lt.entry_font_size
+              : DEFAULT_ENTRY_FONT_SIZE,
+          entry_font_family: lt.entry_font_family || "default",
+          entry_effect: lt.entry_effect || "none",
           song_url: lt.song_url || "",
           song_name: lt.song_name || "",
           song_icon_url: lt.song_icon_url || "",
@@ -2573,6 +2654,17 @@
           40,
           Math.max(10, parseInt($("inQuoteSize").value || DEFAULT_QUOTE_SIZE, 10))
         );
+        const entryFontSize = Math.min(
+          40,
+          Math.max(
+            10,
+            parseInt($("inEntryFontSize").value || DEFAULT_ENTRY_FONT_SIZE, 10)
+          )
+        );
+        const entryBgAlpha = clampPercent(
+          $("inEntryBgAlpha").value ?? DEFAULT_ENTRY_BG_ALPHA,
+          DEFAULT_ENTRY_BG_ALPHA
+        );
         return {
           device_type: dev,
           location: $("inLocation").value.trim() || "",
@@ -2588,6 +2680,15 @@
           quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
           quote_font_family: $("inQuoteFont").value || "default",
           quote_effect: $("inQuoteEffect").value || "none",
+          entry_bg_alpha: Number.isFinite(entryBgAlpha)
+            ? entryBgAlpha
+            : DEFAULT_ENTRY_BG_ALPHA,
+          entry_text_color: hexOrNull($("inEntryTextColor").value),
+          entry_font_size: Number.isFinite(entryFontSize)
+            ? entryFontSize
+            : DEFAULT_ENTRY_FONT_SIZE,
+          entry_font_family: $("inEntryFont").value || "default",
+          entry_effect: $("inEntryEffect").value || "none",
           entry_text: $("inEntryText").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
           song_name: $("inSongName").value.trim() || "",
@@ -3321,6 +3422,20 @@
           40,
           Math.max(10, parseInt($("inQuoteSize").value || DEFAULT_QUOTE_SIZE, 10))
         );
+        const entryFontSize = Math.min(
+          40,
+          Math.max(
+            10,
+            parseInt($("inEntryFontSize").value || DEFAULT_ENTRY_FONT_SIZE, 10)
+          )
+        );
+        const entryBgAlpha = Math.min(
+          100,
+          Math.max(
+            0,
+            parseInt($("inEntryBgAlpha").value || DEFAULT_ENTRY_BG_ALPHA, 10)
+          )
+        );
         const body = {
           slug: $("inSlug").value.trim(),
           device_type: currentDevice,
@@ -3337,6 +3452,15 @@
           quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
           quote_font_family: $("inQuoteFont").value || "default",
           quote_effect: $("inQuoteEffect").value || "none",
+          entry_bg_alpha: Number.isFinite(entryBgAlpha)
+            ? entryBgAlpha
+            : DEFAULT_ENTRY_BG_ALPHA,
+          entry_text_color: hexOrNull($("inEntryTextColor").value),
+          entry_font_size: Number.isFinite(entryFontSize)
+            ? entryFontSize
+            : DEFAULT_ENTRY_FONT_SIZE,
+          entry_font_family: $("inEntryFont").value || "default",
+          entry_effect: $("inEntryEffect").value || "none",
           entry_text: $("inEntryText").value.trim() || null,
           song_url: $("inSong").value.trim() || null,
           song_name: $("inSongName").value.trim() || null,

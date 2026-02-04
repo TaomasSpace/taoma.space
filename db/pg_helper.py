@@ -103,6 +103,15 @@ CREATE TABLE IF NOT EXISTS linktrees (
     quote_effect        TEXT NOT NULL DEFAULT 'none'
                         CHECK (quote_effect IN ('none','glow','neon','rainbow')),
     entry_text          TEXT,
+    entry_bg_alpha      SMALLINT NOT NULL DEFAULT 85
+                        CHECK (entry_bg_alpha BETWEEN 0 AND 100),
+    entry_text_color    TEXT,
+    entry_font_size     SMALLINT NOT NULL DEFAULT 16
+                        CHECK (entry_font_size BETWEEN 10 AND 40),
+    entry_font_family   TEXT NOT NULL DEFAULT 'default'
+                        CHECK (entry_font_family IN ('default','serif','mono','script','display')),
+    entry_effect        TEXT NOT NULL DEFAULT 'none'
+                        CHECK (entry_effect IN ('none','glow','neon','rainbow')),
     song_url            TEXT,                     -- Audio-URL
     song_name           TEXT,                     -- Original filename
     song_icon_url       TEXT,
@@ -590,6 +599,26 @@ class PgGifDB:
   ADD COLUMN IF NOT EXISTS entry_text TEXT;
                 """)
                 cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_bg_alpha SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_text_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_font_size SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_font_family TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_effect TEXT;
+                """)
+                cur.execute("""
   UPDATE linktrees
      SET quote_effect = 'none'
    WHERE quote_effect IS NULL;
@@ -598,6 +627,26 @@ class PgGifDB:
   UPDATE linktrees
      SET quote_font_family = 'default'
    WHERE quote_font_family IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_bg_alpha = 85
+   WHERE entry_bg_alpha IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_font_size = 16
+   WHERE entry_font_size IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_font_family = 'default'
+   WHERE entry_font_family IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_effect = 'none'
+   WHERE entry_effect IS NULL;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -610,6 +659,38 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ALTER COLUMN quote_font_family SET DEFAULT 'default';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_bg_alpha SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_bg_alpha SET DEFAULT 85;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_font_size SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_font_size SET DEFAULT 16;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_font_family SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_font_family SET DEFAULT 'default';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_effect SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_effect SET DEFAULT 'none';
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -628,6 +709,42 @@ class PgGifDB:
   ALTER TABLE linktrees
   ADD CONSTRAINT chk_linktrees_quote_font_family
   CHECK (quote_font_family IN ('default','serif','mono','script','display'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_entry_bg_alpha;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_entry_bg_alpha
+  CHECK (entry_bg_alpha BETWEEN 0 AND 100);
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_entry_font_size;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_entry_font_size
+  CHECK (entry_font_size BETWEEN 10 AND 40);
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_entry_font_family;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_entry_font_family
+  CHECK (entry_font_family IN ('default','serif','mono','script','display'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_entry_effect;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_entry_effect
+  CHECK (entry_effect IN ('none','glow','neon','rainbow'));
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1693,6 +1810,11 @@ class PgGifDB:
         quote_font_family: str | None = None,
         quote_effect: str = "none",
         entry_text: str | None = None,
+        entry_bg_alpha: int = 85,
+        entry_text_color: str | None = None,
+        entry_font_size: int = 16,
+        entry_font_family: str = "default",
+        entry_effect: str = "none",
         song_url: str | None = None,
         song_name: str | None = None,
         song_icon_url: str | None = None,
@@ -1737,7 +1859,7 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
@@ -1772,12 +1894,13 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
                 (
-                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
@@ -1832,6 +1955,11 @@ class PgGifDB:
             "quote_font_family",
             "quote_effect",
             "entry_text",
+            "entry_bg_alpha",
+            "entry_text_color",
+            "entry_font_size",
+            "entry_font_family",
+            "entry_effect",
             "song_url",
             "song_name",
             "song_icon_url",
@@ -1908,7 +2036,7 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
@@ -1923,7 +2051,8 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
@@ -1941,6 +2070,11 @@ class PgGifDB:
                     src.get("quote_font_family"),
                     src.get("quote_effect"),
                     src.get("entry_text"),
+                    src.get("entry_bg_alpha", 85),
+                    src.get("entry_text_color"),
+                    src.get("entry_font_size", 16),
+                    src.get("entry_font_family", "default"),
+                    src.get("entry_effect", "none"),
                     src.get("song_url"),
                     src.get("song_name"),
                     src.get("song_icon_url"),

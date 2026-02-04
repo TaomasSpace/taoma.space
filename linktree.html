@@ -635,6 +635,59 @@
         font-weight: 800;
         letter-spacing: 0.2px;
       }
+      .enter-text.font-serif {
+        font-family: Georgia, "Times New Roman", serif;
+      }
+      .enter-text.font-mono {
+        font-family:
+          ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Monaco,
+          Consolas,
+          "Liberation Mono",
+          "Courier New",
+          monospace;
+        font-style: normal;
+      }
+      .enter-text.font-script {
+        font-family: "Segoe Script", "Comic Sans MS", cursive;
+      }
+      .enter-text.font-display {
+        font-family: Impact, "Arial Black", "Franklin Gothic", sans-serif;
+        letter-spacing: 0.4px;
+      }
+      .enter-text.glow {
+        text-shadow:
+          0 0 8px color-mix(in oklab, currentColor 70%, transparent),
+          0 0 12px color-mix(in oklab, currentColor 55%, transparent),
+          0 0 18px color-mix(in oklab, currentColor 40%, transparent);
+      }
+      .enter-text.neon {
+        text-shadow:
+          0 0 6px color-mix(in oklab, currentColor 80%, transparent),
+          0 0 14px color-mix(in oklab, currentColor 60%, transparent),
+          0 0 24px color-mix(in oklab, currentColor 50%, transparent);
+        filter: drop-shadow(
+          0 0 10px color-mix(in oklab, currentColor 45%, transparent)
+        );
+      }
+      .enter-text.rainbow {
+        background: linear-gradient(
+          90deg,
+          red,
+          orange,
+          yellow,
+          green,
+          cyan,
+          blue,
+          violet
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: rainbow 3s linear infinite;
+      }
 
       /* Name Effects */
       .name.glow {
@@ -1307,7 +1360,7 @@
       aria-label="Enter site to enable media"
     >
       <div class="enter-box">
-        <p id="enterText">Click to enter</p>
+          <p id="enterText" class="enter-text">Click to enter</p>
       </div>
     </div>
     <button id="soundBtn" class="sound-toggle hidden" aria-label="Toggle sound">
@@ -1723,6 +1776,10 @@
         const DEFAULT_NAME_COLOR = "#e9ebff";
         const DEFAULT_LOCATION_COLOR = "#a2a9c8";
         const DEFAULT_QUOTE_COLOR = "#e9ebff";
+        const DEFAULT_ENTRY_BG_COLOR = "#0f1223";
+        const DEFAULT_ENTRY_BG_ALPHA = 85;
+        const DEFAULT_ENTRY_TEXT_COLOR = "#e9ebff";
+        const DEFAULT_ENTRY_FONT_SIZE = 16;
         const DEFAULT_AUDIO_BG_COLOR = "#171b3b";
         const DEFAULT_AUDIO_BG_ALPHA = 60;
         const DEFAULT_AUDIO_TEXT_COLOR = "#e9ebff";
@@ -3268,6 +3325,54 @@
           if (enterTextEl) {
             const entryText = (data.entry_text || "").trim();
             enterTextEl.textContent = entryText || "Click to enter";
+            enterTextEl.classList.remove(
+              "glow",
+              "neon",
+              "rainbow",
+              "font-serif",
+              "font-mono",
+              "font-script",
+              "font-display",
+            );
+            const entryFx = (data.entry_effect || "none").toString().toLowerCase();
+            if (entryFx && entryFx !== "none") {
+              enterTextEl.classList.add(entryFx);
+            }
+            const entryFont = (data.entry_font_family || "default")
+              .toString()
+              .toLowerCase();
+            if (entryFont && entryFont !== "default") {
+              enterTextEl.classList.add(`font-${entryFont}`);
+            }
+            const entrySize = Number(data.entry_font_size);
+            if (Number.isFinite(entrySize) && entrySize > 0) {
+              const clamped = Math.min(40, Math.max(10, entrySize));
+              enterTextEl.style.fontSize = `${clamped}px`;
+            } else {
+              enterTextEl.style.removeProperty("font-size");
+            }
+            const entryColor =
+              sanitizeHexColor(data.entry_text_color) || DEFAULT_ENTRY_TEXT_COLOR;
+            if (entryColor) {
+              enterTextEl.style.color = entryColor;
+            } else {
+              enterTextEl.style.removeProperty("color");
+            }
+          }
+          const enterBox = document.querySelector(".enter-box");
+          if (enterBox) {
+            const rawAlpha = Number(data.entry_bg_alpha);
+            const alpha = Number.isFinite(rawAlpha)
+              ? Math.min(100, Math.max(0, rawAlpha))
+              : DEFAULT_ENTRY_BG_ALPHA;
+            const bg =
+              hexToRgba(DEFAULT_ENTRY_BG_COLOR, alpha / 100) ||
+              hexToRgba(DEFAULT_ENTRY_BG_COLOR, DEFAULT_ENTRY_BG_ALPHA / 100);
+            if (bg) {
+              enterBox.style.background = bg;
+            } else {
+              enterBox.style.removeProperty("background");
+            }
           }
           const nameEl = document.getElementById("name");
           if (nameEl) {
