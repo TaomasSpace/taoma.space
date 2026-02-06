@@ -2774,9 +2774,9 @@
           if (!layout.enabled && !forceCanvas) return false;
           resetCanvasLayout(card);
           card.classList.add("canvas");
-          card.style.padding = "0";
           card.style.maxWidth = "none";
           const grid = layout.grid || 8;
+          if (!pfpSizeOffsets) capturePfpOffsets();
           card.style.setProperty("--canvas-grid", `${grid}px`);
           const groupEls = {};
           Object.entries(layout.groups || {}).forEach(([gid, g]) => {
@@ -4905,7 +4905,7 @@
               .toString()
               .toLowerCase();
             const wantsWide =
-              !isMobile && (layoutMode === "wide" || hasSideBySide || usedCanvas);
+              !isMobile && !usedCanvas && (layoutMode === "wide" || hasSideBySide);
             cardEl.classList.toggle("wide", wantsWide);
             const raw = Number(data.transparency);
             const clamped = Number.isFinite(raw)

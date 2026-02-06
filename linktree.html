@@ -2260,6 +2260,23 @@
         };
       }
 
+        let pfpSizeOffsets = null;
+
+        function capturePfpOffsets() {
+          const wrap = document.querySelector(".pfp-wrap");
+          const img = document.querySelector(".pfp");
+          if (!wrap || !img) {
+            pfpSizeOffsets = { imgW: 0, imgH: 0 };
+            return;
+          }
+          const wrapRect = wrap.getBoundingClientRect();
+          const imgRect = img.getBoundingClientRect();
+          pfpSizeOffsets = {
+            imgW: Math.round(imgRect.width - wrapRect.width),
+            imgH: Math.round(imgRect.height - wrapRect.height),
+          };
+        }
+
         function applyCanvasLayout(rawLayout, rawOrder, { isMobile } = {}) {
           const card = document.getElementById("card");
           if (!card || isMobile) return false;
@@ -2267,9 +2284,9 @@
           if (!layout || !layout.enabled) return false;
           resetCanvasLayout(card);
           card.classList.add("canvas");
-          card.style.padding = "0";
           card.style.maxWidth = "none";
           const grid = layout.grid || 8;
+          if (!pfpSizeOffsets) capturePfpOffsets();
           const groupEls = {};
           Object.entries(layout.groups || {}).forEach(([gid, g]) => {
             const groupEl = document.createElement("div");
@@ -2300,7 +2317,9 @@
               el.style.maxWidth = "none";
               if (key === "pfp") {
                 const img = el.querySelector(".pfp");
-                if (img) img.style.width = `${width}px`;
+                if (img && pfpSizeOffsets) {
+                  img.style.width = `${width + pfpSizeOffsets.imgW}px`;
+                }
               }
             }
             if (Number.isFinite(plate.h)) {
@@ -2309,7 +2328,9 @@
               el.style.maxHeight = "none";
               if (key === "pfp") {
                 const img = el.querySelector(".pfp");
-                if (img) img.style.height = `${height}px`;
+                if (img && pfpSizeOffsets) {
+                  img.style.height = `${height + pfpSizeOffsets.imgH}px`;
+                }
               }
             }
             parent.appendChild(el);
@@ -3838,7 +3859,7 @@
               .toString()
               .toLowerCase();
             const wantsWide =
-              !isMobile && (layoutMode === "wide" || hasSideBySide || usedCanvas);
+              !isMobile && !usedCanvas && (layoutMode === "wide" || hasSideBySide);
             cardEl.classList.toggle("wide", wantsWide);
             const raw = Number(data.transparency);
             const clamped = Number.isFinite(raw)
