@@ -2795,15 +2795,14 @@
         visit_counter: "Visit counter",
       };
       let sectionOrder = SECTION_ORDER_DEFAULT.slice();
-      const CANVAS_GRID_DEFAULT = 8;
-      const CANVAS_GRID_MIN = 4;
-      const CANVAS_GRID_MAX = 24;
-      const CANVAS_PLATE_MIN_W = 6;
-      const CANVAS_PLATE_MIN_H = 4;
-      const CANVAS_PLATE_MAX_W = 200;
-      const CANVAS_PLATE_MAX_H = 200;
-      const CANVAS_SIZE_MIN_W = 30;
-      const CANVAS_SIZE_MIN_H = 24;
+      const CANVAS_GRID_DEFAULT = 1;
+      const CANVAS_PLATE_MIN_W = 1;
+      const CANVAS_PLATE_MIN_H = 1;
+      const CANVAS_PLATE_MAX_W = 20000;
+      const CANVAS_PLATE_MAX_H = 20000;
+      const CANVAS_SIZE_MIN_W = 1;
+      const CANVAS_SIZE_MIN_H = 1;
+      const CANVAS_LEGACY_GRID_DEFAULT = 8;
       let canvasLayout = null;
       let canvasSelection = new Set();
       let canvasDragState = null;
@@ -2909,17 +2908,24 @@
         }
       }
 
+      function defaultPlatePixels(key) {
+        const units = defaultPlateUnits(key);
+        return {
+          w: units.w * CANVAS_LEGACY_GRID_DEFAULT,
+          h: units.h * CANVAS_LEGACY_GRID_DEFAULT,
+        };
+      }
+
       function computeCanvasContentBounds(layout, previewState) {
         const plates = layout?.plates || {};
         const groups = layout?.groups || {};
-        const grid = layout?.grid || CANVAS_GRID_DEFAULT;
         let maxX = 0;
         let maxY = 0;
         Object.entries(plates).forEach(([key, plate]) => {
           if (!plate) return;
           if (previewState && !isCanvasSectionVisible(key, previewState)) return;
-          const w = Number.isFinite(plate.w) ? plate.w : defaultPlateUnits(key).w;
-          const h = Number.isFinite(plate.h) ? plate.h : defaultPlateUnits(key).h;
+        const w = Number.isFinite(plate.w) ? plate.w : defaultPlatePixels(key).w;
+        const h = Number.isFinite(plate.h) ? plate.h : defaultPlatePixels(key).h;
           const group = plate.group && groups[plate.group] ? groups[plate.group] : null;
           const offsetX = group ? group.x : 0;
           const offsetY = group ? group.y : 0;
@@ -2931,26 +2937,22 @@
         return {
           w: Math.max(CANVAS_SIZE_MIN_W, maxX + 2),
           h: Math.max(CANVAS_SIZE_MIN_H, maxY + 2),
-          grid,
         };
       }
 
       function buildDefaultCanvasLayout(order) {
         const plates = {};
         const flat = flattenSectionOrder(order);
-        let y = 2;
+        let y = 24;
         flat.forEach((key) => {
-          const size = defaultPlateUnits(key);
-          plates[key] = { x: 2, y, w: size.w, h: size.h, group: null };
-          y += size.h + 2;
+          const size = defaultPlatePixels(key);
+          plates[key] = { x: 24, y, w: size.w, h: size.h, group: null };
+          y += size.h + 24;
         });
-        const bounds = computeCanvasContentBounds(
-          { plates, grid: CANVAS_GRID_DEFAULT },
-          null,
-        );
+        const bounds = computeCanvasContentBounds({ plates }, null);
         return {
-          enabled: false,
-          grid: CANVAS_GRID_DEFAULT,
+          enabled: true,
+          grid: 1,
           size: { w: bounds.w, h: bounds.h },
           plates,
           groups: {},
@@ -2967,11 +2969,20 @@
           }
         }
         const fallback = buildDefaultCanvasLayout(order);
-        if (!data || typeof data !== "object") return fallback;
-        const gridRaw = parseInt(data.grid ?? CANVAS_GRID_DEFAULT, 10);
-        const grid = Number.isFinite(gridRaw)
-          ? Math.min(CANVAS_GRID_MAX, Math.max(CANVAS_GRID_MIN, gridRaw))
-          : CANVAS_GRID_DEFAULT;
+        if (!data || typeof data !== "object") return null;
+        const hasRawPlates =
+          data.plates && typeof data.plates === "object"
+            ? Object.keys(data.plates).length > 0
+            : false;
+        const hasRawGroups =
+          data.groups && typeof data.groups === "object"
+            ? Object.keys(data.groups).length > 0
+            : false;
+        const hasRawSize = data.size && typeof data.size === "object";
+        if (!hasRawPlates && !hasRawGroups && !hasRawSize) return null;
+        const gridRaw = parseInt(data.grid ?? 1, 10);
+        const legacyGrid = Number.isFinite(gridRaw) && gridRaw > 1 ? gridRaw : 1;
+        const scale = legacyGrid;
         const plates = {};
         const groups = {};
         let size = null;
@@ -2980,8 +2991,14 @@
           const sh = parseInt(data.size.h ?? 0, 10);
           if (Number.isFinite(sw) && Number.isFinite(sh)) {
             size = {
-              w: Math.min(CANVAS_PLATE_MAX_W, Math.max(CANVAS_SIZE_MIN_W, sw)),
-              h: Math.min(CANVAS_PLATE_MAX_H, Math.max(CANVAS_SIZE_MIN_H, sh)),
+              w: Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_SIZE_MIN_W, sw * scale),
+              ),
+              h: Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_SIZE_MIN_H, sh * scale),
+              ),
             };
           }
         }
@@ -2991,7 +3008,7 @@
             const gx = parseInt(g.x ?? 0, 10);
             const gy = parseInt(g.y ?? 0, 10);
             if (!Number.isFinite(gx) || !Number.isFinite(gy)) return;
-            groups[String(gid)] = { x: gx, y: gy };
+            groups[String(gid)] = { x: gx * scale, y: gy * scale };
           });
         }
         if (data.plates && typeof data.plates === "object") {
@@ -3003,14 +3020,20 @@
             const px = parseInt(plate.x ?? 0, 10);
             const py = parseInt(plate.y ?? 0, 10);
             if (!Number.isFinite(px) || !Number.isFinite(py)) return;
-            const entry = { x: px, y: py };
+            const entry = { x: px * scale, y: py * scale };
             const pw = parseInt(plate.w ?? 0, 10);
             const ph = parseInt(plate.h ?? 0, 10);
             if (Number.isFinite(pw) && pw > 0) {
-              entry.w = Math.min(CANVAS_PLATE_MAX_W, Math.max(CANVAS_PLATE_MIN_W, pw));
+              entry.w = Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_PLATE_MIN_W, pw * scale),
+              );
             }
             if (Number.isFinite(ph) && ph > 0) {
-              entry.h = Math.min(CANVAS_PLATE_MAX_H, Math.max(CANVAS_PLATE_MIN_H, ph));
+              entry.h = Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_PLATE_MIN_H, ph * scale),
+              );
             }
             if (plate.group && groups[plate.group]) {
               entry.group = plate.group;
@@ -3022,12 +3045,12 @@
           if (!plates[key]) plates[key] = { ...fallback.plates[key] };
         });
         if (!size) {
-          const bounds = computeCanvasContentBounds({ plates, grid }, null);
+          const bounds = computeCanvasContentBounds({ plates }, null);
           size = { w: bounds.w, h: bounds.h };
         }
         return {
-          enabled: !!data.enabled,
-          grid,
+          enabled: true,
+          grid: 1,
           size,
           plates,
           groups,
@@ -3052,9 +3075,8 @@
       function updateCanvasEditorSize() {
         const editor = $("canvasEditor");
         if (!editor || !canvasLayout || !canvasLayout.size) return;
-        const grid = canvasLayout.grid;
-        const width = canvasLayout.size.w * grid;
-        const height = canvasLayout.size.h * grid;
+        const width = canvasLayout.size.w;
+        const height = canvasLayout.size.h;
         editor.style.width = `${width}px`;
         editor.style.height = `${height}px`;
         editor.style.minWidth = `${width}px`;
@@ -3069,13 +3091,13 @@
         Object.entries(canvasLayout.plates || {}).forEach(([key, plate]) => {
           if (!plate) return;
           const entry = { ...plate };
-          if (!Number.isFinite(entry.w)) entry.w = defaultPlateUnits(key).w;
-          if (!Number.isFinite(entry.h)) entry.h = defaultPlateUnits(key).h;
+          if (!Number.isFinite(entry.w)) entry.w = defaultPlatePixels(key).w;
+          if (!Number.isFinite(entry.h)) entry.h = defaultPlatePixels(key).h;
           plates[key] = entry;
         });
         return {
-          enabled: !!canvasLayout.enabled,
-          grid: canvasLayout.grid,
+          enabled: true,
+          grid: 1,
           size: canvasLayout.size,
           plates,
           groups: canvasLayout.groups,
@@ -3144,22 +3166,19 @@
           groupEl.style.height = "0px";
           return;
         }
-        const grid = canvasLayout.grid;
         let maxX = 0;
         let maxY = 0;
         plates.forEach(([key, plate]) => {
-          const px = plate.x * grid;
-          const py = plate.y * grid;
+          const px = plate.x;
+          const py = plate.y;
           const wUnits = Number.isFinite(plate.w)
             ? plate.w
-            : defaultPlateUnits(key).w;
+            : defaultPlatePixels(key).w;
           const hUnits = Number.isFinite(plate.h)
             ? plate.h
-            : defaultPlateUnits(key).h;
-          const width = grid * wUnits;
-          const height = grid * hUnits;
-          maxX = Math.max(maxX, px + width);
-          maxY = Math.max(maxY, py + height);
+            : defaultPlatePixels(key).h;
+          maxX = Math.max(maxX, px + wUnits);
+          maxY = Math.max(maxY, py + hUnits);
         });
         groupEl.style.width = `${maxX}px`;
         groupEl.style.height = `${maxY}px`;
@@ -3376,12 +3395,11 @@
         if (!editor || !canvasLayout) return;
         canvasSelection = new Set();
         editor.innerHTML = "";
-        editor.style.setProperty("--canvas-grid", `${canvasLayout.grid}px`);
+        editor.style.setProperty("--canvas-grid", "1px");
         const previewState = getCanvasPreviewState();
         canvasPreviewState = previewState;
         ensureCanvasLayoutSize(previewState);
         updateCanvasEditorSize();
-        const grid = canvasLayout.grid;
         const visibleGroups = new Set();
         SECTION_ORDER_DEFAULT.forEach((key) => {
           if (!isCanvasSectionVisible(key, previewState)) return;
@@ -3394,7 +3412,7 @@
           const groupEl = document.createElement("div");
           groupEl.className = "canvas-group";
           groupEl.dataset.groupId = gid;
-          groupEl.style.transform = `translate(${g.x * grid}px, ${g.y * grid}px)`;
+          groupEl.style.transform = `translate(${g.x}px, ${g.y}px)`;
           const handle = document.createElement("div");
           handle.className = "group-handle";
           handle.textContent = "Group";
@@ -3455,16 +3473,14 @@
             ? groupEls[plateData.group]
             : editor;
           if (!parent) return;
-          plateEl.style.transform = `translate(${plateData.x * grid}px, ${
-            plateData.y * grid
-          }px)`;
+          plateEl.style.transform = `translate(${plateData.x}px, ${plateData.y}px)`;
           let widthUnits = Number.isFinite(plateData.w) ? plateData.w : null;
           let heightUnits = Number.isFinite(plateData.h) ? plateData.h : null;
           if (Number.isFinite(widthUnits)) {
-            plateEl.style.width = `${widthUnits * grid}px`;
+            plateEl.style.width = `${widthUnits}px`;
           }
           if (Number.isFinite(heightUnits)) {
-            plateEl.style.height = `${heightUnits * grid}px`;
+            plateEl.style.height = `${heightUnits}px`;
           }
           plateEl.addEventListener("mousedown", (evt) =>
             startCanvasDrag(evt, { type: "plate", key, el: plateEl }),
@@ -3478,24 +3494,24 @@
           parent.appendChild(plateEl);
           if (!Number.isFinite(widthUnits) || !Number.isFinite(heightUnits)) {
             const rect = plateEl.getBoundingClientRect();
-            const fallback = defaultPlateUnits(key);
+            const fallback = defaultPlatePixels(key);
             if (!Number.isFinite(widthUnits)) {
-              const measuredW = Math.round(rect.width / grid);
+              const measuredW = Math.round(rect.width);
               widthUnits = Math.min(
                 CANVAS_PLATE_MAX_W,
                 Math.max(CANVAS_PLATE_MIN_W, measuredW || fallback.w),
               );
               plateData.w = widthUnits;
-              plateEl.style.width = `${widthUnits * grid}px`;
+              plateEl.style.width = `${widthUnits}px`;
             }
             if (!Number.isFinite(heightUnits)) {
-              const measuredH = Math.round(rect.height / grid);
+              const measuredH = Math.round(rect.height);
               heightUnits = Math.min(
                 CANVAS_PLATE_MAX_H,
                 Math.max(CANVAS_PLATE_MIN_H, measuredH || fallback.h),
               );
               plateData.h = heightUnits;
-              plateEl.style.height = `${heightUnits * grid}px`;
+              plateEl.style.height = `${heightUnits}px`;
             }
           }
         });
@@ -3533,7 +3549,7 @@
         } else if (target.type === "resize") {
           const plate = canvasLayout.plates[target.key];
           if (!plate) return;
-          const fallback = defaultPlateUnits(target.key);
+          const fallback = defaultPlatePixels(target.key);
           canvasDragState = {
             type: "resize",
             key: target.key,
@@ -3577,9 +3593,8 @@
 
       function onCanvasDrag(evt) {
         if (!canvasLayout || !canvasDragState) return;
-        const grid = canvasLayout.grid;
-        const dx = Math.round((evt.clientX - canvasDragState.startX) / grid);
-        const dy = Math.round((evt.clientY - canvasDragState.startY) / grid);
+        const dx = Math.round(evt.clientX - canvasDragState.startX);
+        const dy = Math.round(evt.clientY - canvasDragState.startY);
         if (canvasDragState.type === "plate") {
           const plate = canvasLayout.plates[canvasDragState.key];
           if (!plate) return;
@@ -3589,9 +3604,7 @@
             plate.x = Math.max(0, plate.x);
             plate.y = Math.max(0, plate.y);
           }
-          canvasDragState.el.style.transform = `translate(${plate.x * grid}px, ${
-            plate.y * grid
-          }px)`;
+          canvasDragState.el.style.transform = `translate(${plate.x}px, ${plate.y}px)`;
           if (plate.group) {
             const groupEl = document.querySelector(
               `.canvas-group[data-group-id="${plate.group}"]`,
@@ -3621,8 +3634,8 @@
           );
           plate.w = nextW;
           plate.h = nextH;
-          canvasDragState.el.style.width = `${nextW * grid}px`;
-          canvasDragState.el.style.height = `${nextH * grid}px`;
+          canvasDragState.el.style.width = `${nextW}px`;
+          canvasDragState.el.style.height = `${nextH}px`;
           if (plate.group) {
             const groupEl = document.querySelector(
               `.canvas-group[data-group-id="${plate.group}"]`,
@@ -3636,9 +3649,7 @@
           if (!group) return;
           group.x = canvasDragState.originX + dx;
           group.y = canvasDragState.originY + dy;
-          canvasDragState.el.style.transform = `translate(${group.x * grid}px, ${
-            group.y * grid
-          }px)`;
+          canvasDragState.el.style.transform = `translate(${group.x}px, ${group.y}px)`;
           ensureCanvasLayoutSize(canvasPreviewState);
           updateCanvasEditorSize();
         } else if (canvasDragState.type === "canvas-resize") {
@@ -3716,9 +3727,6 @@
 
       function resetCanvasLayout() {
         canvasLayout = buildDefaultCanvasLayout(sectionOrder);
-        const enabled =
-          $("inCanvasEnabled") && $("inCanvasEnabled").checked ? true : false;
-        canvasLayout.enabled = enabled;
         renderCanvasEditor();
         syncCanvasInputs();
       }
@@ -3728,9 +3736,9 @@
         const enabledInput = $("inCanvasEnabled");
         const gridInput = $("inCanvasGrid");
         const gridValue = $("canvasGridValue");
-        if (enabledInput) enabledInput.checked = !!canvasLayout.enabled;
-        if (gridInput) gridInput.value = String(canvasLayout.grid);
-        if (gridValue) gridValue.textContent = `${canvasLayout.grid}px`;
+        if (enabledInput) enabledInput.checked = true;
+        if (gridInput) gridInput.value = "1";
+        if (gridValue) gridValue.textContent = "1px";
       }
 
       function hasSideBySide(order) {
@@ -5366,16 +5374,13 @@
       });
       if ($("inCanvasEnabled")) {
         $("inCanvasEnabled").addEventListener("change", (e) => {
-          if (canvasLayout) canvasLayout.enabled = !!e.target.checked;
+          if (canvasLayout) canvasLayout.enabled = true;
         });
       }
       if ($("inCanvasGrid")) {
         $("inCanvasGrid").addEventListener("input", (e) => {
           if (!canvasLayout) return;
-          const raw = parseInt(e.target.value || CANVAS_GRID_DEFAULT, 10);
-          canvasLayout.grid = Number.isFinite(raw)
-            ? Math.min(CANVAS_GRID_MAX, Math.max(CANVAS_GRID_MIN, raw))
-            : CANVAS_GRID_DEFAULT;
+          canvasLayout.grid = 1;
           syncCanvasInputs();
           renderCanvasEditor();
         });

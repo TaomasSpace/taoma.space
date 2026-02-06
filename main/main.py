@@ -421,17 +421,19 @@ def _normalize_canvas_layout(value: Any) -> dict | None:
     if not isinstance(data, dict):
         return None
     enabled = bool(data.get("enabled", False))
-    plate_min_w = 6
-    plate_min_h = 4
-    plate_max_w = 200
-    plate_max_h = 200
-    size_min_w = 30
-    size_min_h = 24
+    plate_min_w = 1
+    plate_min_h = 1
+    plate_max_w = 20000
+    plate_max_h = 20000
+    size_min_w = 1
+    size_min_h = 1
+    size_max_w = 20000
+    size_max_h = 20000
     try:
-        grid = int(data.get("grid", 8))
+        grid = int(data.get("grid", 1))
     except Exception:
-        grid = 8
-    grid = max(1, min(24, grid))
+        grid = 1
+    grid = max(1, min(1000, grid))
     plates_raw = data.get("plates") or {}
     groups_raw = data.get("groups") or {}
     size_raw = data.get("size")
@@ -447,8 +449,8 @@ def _normalize_canvas_layout(value: Any) -> dict | None:
             sh = 0
         if sw > 0 and sh > 0:
             size = {
-                "w": max(size_min_w, min(plate_max_w, sw)),
-                "h": max(size_min_h, min(plate_max_h, sh)),
+                "w": max(size_min_w, min(size_max_w, sw)),
+                "h": max(size_min_h, min(size_max_h, sh)),
             }
     if isinstance(groups_raw, dict):
         for gid, raw in groups_raw.items():

@@ -1953,12 +1953,13 @@
           discord_badges: "badges",
         };
         const SECTION_ORDER_ALLOWED = new Set(SECTION_ORDER_DEFAULT);
-        const CANVAS_PLATE_MIN_W = 6;
-        const CANVAS_PLATE_MIN_H = 4;
-        const CANVAS_PLATE_MAX_W = 200;
-        const CANVAS_PLATE_MAX_H = 200;
-        const CANVAS_SIZE_MIN_W = 30;
-        const CANVAS_SIZE_MIN_H = 24;
+        const CANVAS_PLATE_MIN_W = 1;
+        const CANVAS_PLATE_MIN_H = 1;
+        const CANVAS_PLATE_MAX_W = 20000;
+        const CANVAS_PLATE_MAX_H = 20000;
+        const CANVAS_SIZE_MIN_W = 1;
+        const CANVAS_SIZE_MIN_H = 1;
+        const CANVAS_LEGACY_GRID_DEFAULT = 8;
 
         function defaultPlateUnits(key) {
           switch (key) {
@@ -1985,6 +1986,21 @@
           }
         }
 
+        function defaultPlatePixels(key) {
+          const el = getSectionElement(key);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              return { w: Math.round(rect.width), h: Math.round(rect.height) };
+            }
+          }
+          const units = defaultPlateUnits(key);
+          return {
+            w: units.w * CANVAS_LEGACY_GRID_DEFAULT,
+            h: units.h * CANVAS_LEGACY_GRID_DEFAULT,
+          };
+        }
+
         function computeCanvasContentBounds(layout) {
           const plates = layout?.plates || {};
           const groups = layout?.groups || {};
@@ -1994,10 +2010,10 @@
             if (!plate) return;
             const w = Number.isFinite(plate.w)
               ? plate.w
-              : defaultPlateUnits(key).w;
+              : defaultPlatePixels(key).w;
             const h = Number.isFinite(plate.h)
               ? plate.h
-              : defaultPlateUnits(key).h;
+              : defaultPlatePixels(key).h;
             const group =
               plate.group && groups[plate.group] ? groups[plate.group] : null;
             const offsetX = group ? group.x : 0;
@@ -2123,6 +2139,7 @@
             el.style.removeProperty("left");
             el.style.removeProperty("top");
             el.style.removeProperty("transform");
+            el.style.removeProperty("margin");
             el.style.removeProperty("width");
             el.style.removeProperty("height");
             el.style.removeProperty("max-width");
@@ -2149,21 +2166,21 @@
           return list;
         }
 
-        function buildDefaultCanvasLayout(order, grid) {
+        function buildDefaultCanvasLayout(order) {
           const plates = {};
-          let y = 2;
+          let y = 24;
           flattenSectionOrder(order).forEach((key) => {
-            const size = defaultPlateUnits(key);
-            plates[key] = { x: 2, y, w: size.w, h: size.h, group: null };
-            y += size.h + 2;
+            const size = defaultPlatePixels(key);
+            plates[key] = { x: 24, y, w: size.w, h: size.h, group: null };
+            y += size.h + 24;
           });
           const bounds = computeCanvasContentBounds({
             plates,
             groups: {},
           });
           return {
-            enabled: false,
-            grid: grid || 8,
+            enabled: true,
+            grid: 1,
             size: { w: bounds.w, h: bounds.h },
             plates,
             groups: {},
@@ -2181,11 +2198,10 @@
             }
           }
           if (!data || typeof data !== "object") return null;
-          const gridRaw = parseInt(data.grid ?? 8, 10);
-          const grid = Number.isFinite(gridRaw)
-            ? Math.min(24, Math.max(1, gridRaw))
-            : 8;
-          const fallback = buildDefaultCanvasLayout(order, grid);
+          const gridRaw = parseInt(data.grid ?? 1, 10);
+          const legacyGrid = Number.isFinite(gridRaw) && gridRaw > 1 ? gridRaw : 1;
+          const scale = legacyGrid;
+          const fallback = buildDefaultCanvasLayout(order);
           const plates = {};
           const groups = {};
           let size = null;
@@ -2196,11 +2212,11 @@
               size = {
                 w: Math.min(
                   CANVAS_PLATE_MAX_W,
-                  Math.max(CANVAS_SIZE_MIN_W, sw),
+                  Math.max(CANVAS_SIZE_MIN_W, sw * scale),
                 ),
                 h: Math.min(
                   CANVAS_PLATE_MAX_H,
-                  Math.max(CANVAS_SIZE_MIN_H, sh),
+                  Math.max(CANVAS_SIZE_MIN_H, sh * scale),
                 ),
               };
             }
@@ -2211,54 +2227,54 @@
               const gx = parseInt(g.x ?? 0, 10);
               const gy = parseInt(g.y ?? 0, 10);
               if (!Number.isFinite(gx) || !Number.isFinite(gy)) return;
-              groups[String(gid)] = { x: gx, y: gy };
+              groups[String(gid)] = { x: gx * scale, y: gy * scale };
             });
           }
           if (data.plates && typeof data.plates === "object") {
             Object.entries(data.plates).forEach(([key, plate]) => {
               const rawKey = String(key || "").trim().toLowerCase();
               const k = SECTION_KEY_ALIASES[rawKey] || rawKey;
-            if (!k || !SECTION_ORDER_ALLOWED.has(k)) return;
-            if (!plate || typeof plate !== "object") return;
-            const px = parseInt(plate.x ?? 0, 10);
-            const py = parseInt(plate.y ?? 0, 10);
-            if (!Number.isFinite(px) || !Number.isFinite(py)) return;
-            const entry = { x: px, y: py };
-            const pw = parseInt(plate.w ?? 0, 10);
-            const ph = parseInt(plate.h ?? 0, 10);
-            if (Number.isFinite(pw) && pw > 0) {
-              entry.w = Math.min(
-                CANVAS_PLATE_MAX_W,
-                Math.max(CANVAS_PLATE_MIN_W, pw),
-              );
-            }
-            if (Number.isFinite(ph) && ph > 0) {
-              entry.h = Math.min(
-                CANVAS_PLATE_MAX_H,
-                Math.max(CANVAS_PLATE_MIN_H, ph),
-              );
-            }
-            if (plate.group && groups[plate.group]) {
-              entry.group = plate.group;
-            }
-            plates[k] = entry;
+              if (!k || !SECTION_ORDER_ALLOWED.has(k)) return;
+              if (!plate || typeof plate !== "object") return;
+              const px = parseInt(plate.x ?? 0, 10);
+              const py = parseInt(plate.y ?? 0, 10);
+              if (!Number.isFinite(px) || !Number.isFinite(py)) return;
+              const entry = { x: px * scale, y: py * scale };
+              const pw = parseInt(plate.w ?? 0, 10);
+              const ph = parseInt(plate.h ?? 0, 10);
+              if (Number.isFinite(pw) && pw > 0) {
+                entry.w = Math.min(
+                  CANVAS_PLATE_MAX_W,
+                  Math.max(CANVAS_PLATE_MIN_W, pw * scale),
+                );
+              }
+              if (Number.isFinite(ph) && ph > 0) {
+                entry.h = Math.min(
+                  CANVAS_PLATE_MAX_H,
+                  Math.max(CANVAS_PLATE_MIN_H, ph * scale),
+                );
+              }
+              if (plate.group && groups[plate.group]) {
+                entry.group = plate.group;
+              }
+              plates[k] = entry;
+            });
+          }
+          Object.keys(fallback.plates).forEach((key) => {
+            if (!plates[key]) plates[key] = { ...fallback.plates[key] };
           });
+          if (!size) {
+            const bounds = computeCanvasContentBounds({ plates, groups });
+            size = { w: bounds.w, h: bounds.h };
+          }
+          return {
+            enabled: true,
+            grid: 1,
+            size,
+            plates,
+            groups,
+          };
         }
-        Object.keys(fallback.plates).forEach((key) => {
-          if (!plates[key]) plates[key] = { ...fallback.plates[key] };
-        });
-        if (!size) {
-          const bounds = computeCanvasContentBounds({ plates, groups });
-          size = { w: bounds.w, h: bounds.h };
-        }
-        return {
-          enabled: !!data.enabled,
-          grid,
-          size,
-          plates,
-          groups,
-        };
-      }
 
         let pfpSizeOffsets = null;
 
@@ -2279,20 +2295,19 @@
 
         function applyCanvasLayout(rawLayout, rawOrder, { isMobile } = {}) {
           const card = document.getElementById("card");
-          if (!card || isMobile) return false;
+          if (!card) return false;
           const layout = normalizeCanvasLayout(rawLayout, rawOrder);
-          if (!layout || !layout.enabled) return false;
+          if (!layout) return false;
           resetCanvasLayout(card);
           card.classList.add("canvas");
           card.style.maxWidth = "none";
-          const grid = layout.grid || 8;
           if (!pfpSizeOffsets) capturePfpOffsets();
           const groupEls = {};
           Object.entries(layout.groups || {}).forEach(([gid, g]) => {
             const groupEl = document.createElement("div");
             groupEl.className = "plate-group";
             groupEl.dataset.groupId = gid;
-            groupEl.style.transform = `translate(${g.x * grid}px, ${g.y * grid}px)`;
+            groupEl.style.transform = `translate(${g.x}px, ${g.y}px)`;
             card.appendChild(groupEl);
             groupEls[gid] = groupEl;
           });
@@ -2308,11 +2323,10 @@
             el.style.position = "absolute";
             el.style.left = "0";
             el.style.top = "0";
-            el.style.transform = `translate(${plate.x * grid}px, ${
-              plate.y * grid
-            }px)`;
+            el.style.transform = `translate(${plate.x}px, ${plate.y}px)`;
+            el.style.margin = "0";
             if (Number.isFinite(plate.w)) {
-              const width = plate.w * grid;
+              const width = plate.w;
               el.style.width = `${width}px`;
               el.style.maxWidth = "none";
               if (key === "pfp") {
@@ -2323,7 +2337,7 @@
               }
             }
             if (Number.isFinite(plate.h)) {
-              const height = plate.h * grid;
+              const height = plate.h;
               el.style.height = `${height}px`;
               el.style.maxHeight = "none";
               if (key === "pfp") {
@@ -2337,8 +2351,8 @@
           });
 
           if (layout.size && Number.isFinite(layout.size.w) && Number.isFinite(layout.size.h)) {
-            card.style.width = `${layout.size.w * grid}px`;
-            card.style.height = `${layout.size.h * grid}px`;
+            card.style.width = `${layout.size.w}px`;
+            card.style.height = `${layout.size.h}px`;
             card.style.minHeight = "";
           } else {
             const cardRect = card.getBoundingClientRect();
@@ -2352,7 +2366,7 @@
               maxRight = Math.max(maxRight, rect.right - cardRect.left);
             });
             if (maxBottom > 0) {
-              card.style.minHeight = `${Math.ceil(maxBottom + grid * 2)}px`;
+              card.style.minHeight = `${Math.ceil(maxBottom + 24)}px`;
             }
             if (maxRight > 0) {
               card.style.minWidth = "";

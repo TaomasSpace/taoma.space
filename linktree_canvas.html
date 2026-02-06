@@ -1848,28 +1848,15 @@
         </div>
         <div class="inspector-body">
           <div id="inspectorMsg" class="inspector-note"></div>
-          <div class="field">
-            <label for="inCanvasEnabled">Canvas enabled</label>
-            <select id="inCanvasEnabled" class="select">
-              <option value="true">Enabled</option>
-              <option value="false">Disabled</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="inCanvasGrid">Grid size</label>
-            <input id="inCanvasGrid" type="range" min="1" max="24" value="8" />
-            <div class="inspector-note" id="canvasGridValue">8px</div>
-          </div>
-
           <div>
             <h3>Canvas size</h3>
             <div class="row">
               <div class="field" style="flex: 1">
-                <label for="inCanvasW">Width</label>
+                <label for="inCanvasW">Width (px)</label>
                 <input id="inCanvasW" class="input" type="number" min="10" />
               </div>
               <div class="field" style="flex: 1">
-                <label for="inCanvasH">Height</label>
+                <label for="inCanvasH">Height (px)</label>
                 <input id="inCanvasH" class="input" type="number" min="10" />
               </div>
             </div>
@@ -1891,21 +1878,21 @@
             </div>
             <div class="row" style="margin-top: 0.6rem">
               <div class="field" style="flex: 1">
-                <label for="inSelX">X</label>
+                <label for="inSelX">X (px)</label>
                 <input id="inSelX" class="input" type="number" />
               </div>
               <div class="field" style="flex: 1">
-                <label for="inSelY">Y</label>
+                <label for="inSelY">Y (px)</label>
                 <input id="inSelY" class="input" type="number" />
               </div>
             </div>
             <div class="row">
               <div class="field" style="flex: 1">
-                <label for="inSelW">Width</label>
+                <label for="inSelW">Width (px)</label>
                 <input id="inSelW" class="input" type="number" />
               </div>
               <div class="field" style="flex: 1">
-                <label for="inSelH">Height</label>
+                <label for="inSelH">Height (px)</label>
                 <input id="inSelH" class="input" type="number" />
               </div>
             </div>
@@ -2236,14 +2223,13 @@
           visit_counter: "Visit counter",
         };
         const SECTION_ORDER_ALLOWED = new Set(SECTION_ORDER_DEFAULT);
-        const CANVAS_PLATE_MIN_W = 6;
-        const CANVAS_PLATE_MIN_H = 4;
-        const CANVAS_PLATE_MAX_W = 200;
-        const CANVAS_PLATE_MAX_H = 200;
-        const CANVAS_SIZE_MIN_W = 30;
-        const CANVAS_SIZE_MIN_H = 24;
-        const CANVAS_GRID_MIN = 1;
-        const CANVAS_GRID_MAX = 24;
+        const CANVAS_PLATE_MIN_W = 1;
+        const CANVAS_PLATE_MIN_H = 1;
+        const CANVAS_PLATE_MAX_W = 20000;
+        const CANVAS_PLATE_MAX_H = 20000;
+        const CANVAS_SIZE_MIN_W = 1;
+        const CANVAS_SIZE_MIN_H = 1;
+        const CANVAS_LEGACY_GRID_DEFAULT = 8;
         let canvasLayout = null;
         let canvasSelection = null;
         let canvasDragState = null;
@@ -2278,6 +2264,21 @@
           }
         }
 
+        function defaultPlatePixels(key) {
+          const el = getSectionElement(key);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              return { w: Math.round(rect.width), h: Math.round(rect.height) };
+            }
+          }
+          const units = defaultPlateUnits(key);
+          return {
+            w: units.w * CANVAS_LEGACY_GRID_DEFAULT,
+            h: units.h * CANVAS_LEGACY_GRID_DEFAULT,
+          };
+        }
+
         function computeCanvasContentBounds(layout) {
           const plates = layout?.plates || {};
           const groups = layout?.groups || {};
@@ -2287,10 +2288,10 @@
             if (!plate) return;
             const w = Number.isFinite(plate.w)
               ? plate.w
-              : defaultPlateUnits(key).w;
+              : defaultPlatePixels(key).w;
             const h = Number.isFinite(plate.h)
               ? plate.h
-              : defaultPlateUnits(key).h;
+              : defaultPlatePixels(key).h;
             const group =
               plate.group && groups[plate.group] ? groups[plate.group] : null;
             const offsetX = group ? group.x : 0;
@@ -2416,6 +2417,7 @@
             el.style.removeProperty("left");
             el.style.removeProperty("top");
             el.style.removeProperty("transform");
+            el.style.removeProperty("margin");
             el.style.removeProperty("width");
             el.style.removeProperty("height");
             el.style.removeProperty("max-width");
@@ -2446,30 +2448,30 @@
           return list;
         }
 
-        function buildDefaultCanvasLayout(order, grid) {
+        function buildDefaultCanvasLayout(order) {
           const plates = {};
-          let y = 2;
+          let y = 24;
           flattenSectionOrder(order).forEach((key) => {
-            const size = defaultPlateUnits(key);
-            plates[key] = { x: 2, y, w: size.w, h: size.h, group: null };
-            y += size.h + 2;
+            const size = defaultPlatePixels(key);
+            plates[key] = { x: 24, y, w: size.w, h: size.h, group: null };
+            y += size.h + 24;
           });
           const bounds = computeCanvasContentBounds({
             plates,
             groups: {},
           });
           return {
-            enabled: false,
-            grid: grid || 1,
+            enabled: true,
+            grid: 1,
             size: { w: bounds.w, h: bounds.h },
             plates,
             groups: {},
           };
         }
 
-        function buildCanvasLayoutFromDom(order, grid) {
+        function buildCanvasLayoutFromDom(order) {
           const card = document.getElementById("card");
-          const layout = buildDefaultCanvasLayout(order, grid || 1);
+          const layout = buildDefaultCanvasLayout(order);
           if (!card) return layout;
           const cardRect = card.getBoundingClientRect();
           const nextPlates = { ...layout.plates };
@@ -2478,26 +2480,26 @@
             if (!el) return;
             const rect = el.getBoundingClientRect();
             if (!rect.width && !rect.height) return;
-            const x = Math.round((rect.left - cardRect.left) / layout.grid);
-            const y = Math.round((rect.top - cardRect.top) / layout.grid);
-            const w = Math.round(rect.width / layout.grid);
-            const h = Math.round(rect.height / layout.grid);
+            const x = Math.round(rect.left - cardRect.left);
+            const y = Math.round(rect.top - cardRect.top);
+            const w = Math.round(rect.width);
+            const h = Math.round(rect.height);
             nextPlates[key] = {
               x: Math.max(0, x),
               y: Math.max(0, y),
               w: Math.min(
                 CANVAS_PLATE_MAX_W,
-                Math.max(CANVAS_PLATE_MIN_W, w || defaultPlateUnits(key).w),
+                Math.max(CANVAS_PLATE_MIN_W, w || defaultPlatePixels(key).w),
               ),
               h: Math.min(
                 CANVAS_PLATE_MAX_H,
-                Math.max(CANVAS_PLATE_MIN_H, h || defaultPlateUnits(key).h),
+                Math.max(CANVAS_PLATE_MIN_H, h || defaultPlatePixels(key).h),
               ),
               group: null,
             };
           });
-          const sizeW = Math.round(cardRect.width / layout.grid);
-          const sizeH = Math.round(cardRect.height / layout.grid);
+          const sizeW = Math.round(cardRect.width);
+          const sizeH = Math.round(cardRect.height);
           layout.plates = nextPlates;
           layout.size = {
             w: Math.max(CANVAS_SIZE_MIN_W, sizeW),
@@ -2517,11 +2519,10 @@
             }
           }
           if (!data || typeof data !== "object") return null;
-          const gridRaw = parseInt(data.grid ?? 8, 10);
-          const grid = Number.isFinite(gridRaw)
-            ? Math.min(CANVAS_GRID_MAX, Math.max(CANVAS_GRID_MIN, gridRaw))
-            : 8;
-          const fallback = buildDefaultCanvasLayout(order, grid);
+          const gridRaw = parseInt(data.grid ?? 1, 10);
+          const legacyGrid = Number.isFinite(gridRaw) && gridRaw > 1 ? gridRaw : 1;
+          const scale = legacyGrid;
+          const fallback = buildDefaultCanvasLayout(order);
           const plates = {};
           const groups = {};
           let size = null;
@@ -2532,11 +2533,11 @@
               size = {
                 w: Math.min(
                   CANVAS_PLATE_MAX_W,
-                  Math.max(CANVAS_SIZE_MIN_W, sw),
+                  Math.max(CANVAS_SIZE_MIN_W, sw * scale),
                 ),
                 h: Math.min(
                   CANVAS_PLATE_MAX_H,
-                  Math.max(CANVAS_SIZE_MIN_H, sh),
+                  Math.max(CANVAS_SIZE_MIN_H, sh * scale),
                 ),
               };
             }
@@ -2547,7 +2548,7 @@
               const gx = parseInt(g.x ?? 0, 10);
               const gy = parseInt(g.y ?? 0, 10);
               if (!Number.isFinite(gx) || !Number.isFinite(gy)) return;
-              groups[String(gid)] = { x: gx, y: gy };
+              groups[String(gid)] = { x: gx * scale, y: gy * scale };
             });
           }
           if (data.plates && typeof data.plates === "object") {
@@ -2559,19 +2560,19 @@
             const px = parseInt(plate.x ?? 0, 10);
             const py = parseInt(plate.y ?? 0, 10);
             if (!Number.isFinite(px) || !Number.isFinite(py)) return;
-            const entry = { x: px, y: py };
+            const entry = { x: px * scale, y: py * scale };
             const pw = parseInt(plate.w ?? 0, 10);
             const ph = parseInt(plate.h ?? 0, 10);
             if (Number.isFinite(pw) && pw > 0) {
               entry.w = Math.min(
                 CANVAS_PLATE_MAX_W,
-                Math.max(CANVAS_PLATE_MIN_W, pw),
+                Math.max(CANVAS_PLATE_MIN_W, pw * scale),
               );
             }
             if (Number.isFinite(ph) && ph > 0) {
               entry.h = Math.min(
                 CANVAS_PLATE_MAX_H,
-                Math.max(CANVAS_PLATE_MIN_H, ph),
+                Math.max(CANVAS_PLATE_MIN_H, ph * scale),
               );
             }
             if (plate.group && groups[plate.group]) {
@@ -2588,8 +2589,8 @@
           size = { w: bounds.w, h: bounds.h };
         }
         return {
-          enabled: !!data.enabled,
-          grid,
+          enabled: true,
+          grid: 1,
           size,
           plates,
           groups,
@@ -2612,15 +2613,14 @@
         function updateCanvasCardSize(layout) {
           const card = document.getElementById("card");
           if (!card || !layout || !layout.size) return;
-          const grid = layout.grid || 1;
-          card.style.width = `${layout.size.w * grid}px`;
-          card.style.height = `${layout.size.h * grid}px`;
+          card.style.width = `${layout.size.w}px`;
+          card.style.height = `${layout.size.h}px`;
         }
 
         function updateCanvasGridStyle(layout) {
           const card = document.getElementById("card");
-          if (!card || !layout) return;
-          card.style.setProperty("--canvas-grid", `${layout.grid || 1}px`);
+          if (!card) return;
+          card.style.setProperty("--canvas-grid", "1px");
         }
 
         function capturePfpOffsets() {
@@ -2642,12 +2642,13 @@
           return getSectionElement(key);
         }
 
-        function applyPlateStyles(key, plate, grid) {
+        function applyPlateStyles(key, plate) {
           const el = getPlateElement(key);
           if (!el || !plate) return;
-          el.style.transform = `translate(${plate.x * grid}px, ${plate.y * grid}px)`;
+          el.style.transform = `translate(${plate.x}px, ${plate.y}px)`;
+          el.style.margin = "0";
           if (Number.isFinite(plate.w)) {
-            const width = plate.w * grid;
+            const width = plate.w;
             el.style.width = `${width}px`;
             el.style.maxWidth = "none";
             if (key === "pfp") {
@@ -2658,7 +2659,7 @@
             }
           }
           if (Number.isFinite(plate.h)) {
-            const height = plate.h * grid;
+            const height = plate.h;
             el.style.height = `${height}px`;
             el.style.maxHeight = "none";
             if (key === "pfp") {
@@ -2672,7 +2673,6 @@
 
         function updateGroupBounds(groupEl, groupId, layout) {
           if (!groupEl || !layout) return;
-          const grid = layout.grid || 1;
           const plates = Object.entries(layout.plates || {}).filter(
             ([, plate]) => plate && plate.group === groupId,
           );
@@ -2686,14 +2686,14 @@
           plates.forEach(([key, plate]) => {
             const wUnits = Number.isFinite(plate.w)
               ? plate.w
-              : defaultPlateUnits(key).w;
+              : defaultPlatePixels(key).w;
             const hUnits = Number.isFinite(plate.h)
               ? plate.h
-              : defaultPlateUnits(key).h;
-            const px = plate.x * grid;
-            const py = plate.y * grid;
-            maxX = Math.max(maxX, px + wUnits * grid);
-            maxY = Math.max(maxY, py + hUnits * grid);
+              : defaultPlatePixels(key).h;
+            const px = plate.x;
+            const py = plate.y;
+            maxX = Math.max(maxX, px + wUnits);
+            maxY = Math.max(maxY, py + hUnits);
           });
           groupEl.style.width = `${maxX}px`;
           groupEl.style.height = `${maxY}px`;
@@ -2727,7 +2727,6 @@
 
         function ensurePlateSizesFromDom() {
           if (!canvasLayout) return;
-          const grid = canvasLayout.grid || 1;
           let changed = false;
           SECTION_ORDER_DEFAULT.forEach((key) => {
             const plate = canvasLayout.plates?.[key];
@@ -2736,22 +2735,22 @@
             if (Number.isFinite(plate.w) && Number.isFinite(plate.h)) return;
             const rect = el.getBoundingClientRect();
             if (!Number.isFinite(plate.w)) {
-              const wUnits = Math.round(rect.width / grid);
+              const wUnits = Math.round(rect.width);
               plate.w = Math.min(
                 CANVAS_PLATE_MAX_W,
-                Math.max(CANVAS_PLATE_MIN_W, wUnits || defaultPlateUnits(key).w),
+                Math.max(CANVAS_PLATE_MIN_W, wUnits || defaultPlatePixels(key).w),
               );
               changed = true;
             }
             if (!Number.isFinite(plate.h)) {
-              const hUnits = Math.round(rect.height / grid);
+              const hUnits = Math.round(rect.height);
               plate.h = Math.min(
                 CANVAS_PLATE_MAX_H,
-                Math.max(CANVAS_PLATE_MIN_H, hUnits || defaultPlateUnits(key).h),
+                Math.max(CANVAS_PLATE_MIN_H, hUnits || defaultPlatePixels(key).h),
               );
               changed = true;
             }
-            if (changed) applyPlateStyles(key, plate, grid);
+            if (changed) applyPlateStyles(key, plate);
           });
           if (changed) {
             ensureCanvasLayoutSize(canvasLayout);
@@ -2766,26 +2765,19 @@
           { isMobile, forceCanvas = false, forEditor = false, layoutOverride } = {},
         ) {
           const card = document.getElementById("card");
-          if (!card || (isMobile && !forEditor)) return false;
-          const layout =
-            layoutOverride ||
-            (rawLayout && rawLayout.plates
-              ? rawLayout
-              : normalizeCanvasLayout(rawLayout, rawOrder));
+          if (!card) return false;
+          const layout = layoutOverride || normalizeCanvasLayout(rawLayout, rawOrder);
           if (!layout) return false;
-          if (!layout.enabled && !forceCanvas) return false;
           resetCanvasLayout(card);
           card.classList.add("canvas");
           card.style.maxWidth = "none";
-          const grid = layout.grid || 1;
           if (!pfpSizeOffsets) capturePfpOffsets();
-          card.style.setProperty("--canvas-grid", `${grid}px`);
           const groupEls = {};
           Object.entries(layout.groups || {}).forEach(([gid, g]) => {
             const groupEl = document.createElement("div");
             groupEl.className = "plate-group";
             groupEl.dataset.groupId = gid;
-            groupEl.style.transform = `translate(${g.x * grid}px, ${g.y * grid}px)`;
+            groupEl.style.transform = `translate(${g.x}px, ${g.y}px)`;
             if (forEditor) {
               const handle = document.createElement("div");
               handle.className = "group-handle";
@@ -2813,31 +2805,30 @@
             el.style.position = "absolute";
             el.style.left = "0";
             el.style.top = "0";
-            el.style.transform = `translate(${plate.x * grid}px, ${
-              plate.y * grid
-            }px)`;
-          if (Number.isFinite(plate.w)) {
-            const width = plate.w * grid;
-            el.style.width = `${width}px`;
-            el.style.maxWidth = "none";
-            if (key === "pfp") {
-              const img = el.querySelector(".pfp");
-              if (img && pfpSizeOffsets) {
-                img.style.width = `${width + pfpSizeOffsets.imgW}px`;
+            el.style.transform = `translate(${plate.x}px, ${plate.y}px)`;
+            el.style.margin = "0";
+            if (Number.isFinite(plate.w)) {
+              const width = plate.w;
+              el.style.width = `${width}px`;
+              el.style.maxWidth = "none";
+              if (key === "pfp") {
+                const img = el.querySelector(".pfp");
+                if (img && pfpSizeOffsets) {
+                  img.style.width = `${width + pfpSizeOffsets.imgW}px`;
+                }
               }
             }
-          }
-          if (Number.isFinite(plate.h)) {
-            const height = plate.h * grid;
-            el.style.height = `${height}px`;
-            el.style.maxHeight = "none";
-            if (key === "pfp") {
-              const img = el.querySelector(".pfp");
-              if (img && pfpSizeOffsets) {
-                img.style.height = `${height + pfpSizeOffsets.imgH}px`;
+            if (Number.isFinite(plate.h)) {
+              const height = plate.h;
+              el.style.height = `${height}px`;
+              el.style.maxHeight = "none";
+              if (key === "pfp") {
+                const img = el.querySelector(".pfp");
+                if (img && pfpSizeOffsets) {
+                  img.style.height = `${height + pfpSizeOffsets.imgH}px`;
+                }
               }
             }
-          }
             if (forEditor) {
               el.dataset.key = key;
               el.onmousedown = (evt) =>
@@ -2852,8 +2843,8 @@
           });
 
           if (layout.size && Number.isFinite(layout.size.w) && Number.isFinite(layout.size.h)) {
-            card.style.width = `${layout.size.w * grid}px`;
-            card.style.height = `${layout.size.h * grid}px`;
+            card.style.width = `${layout.size.w}px`;
+            card.style.height = `${layout.size.h}px`;
             card.style.minHeight = "";
           } else {
             const cardRect = card.getBoundingClientRect();
@@ -2867,7 +2858,7 @@
               maxRight = Math.max(maxRight, rect.right - cardRect.left);
             });
             if (maxBottom > 0) {
-              card.style.minHeight = `${Math.ceil(maxBottom + grid * 2)}px`;
+              card.style.minHeight = `${Math.ceil(maxBottom + 24)}px`;
             }
             if (maxRight > 0) {
               card.style.minWidth = "";
@@ -2916,15 +2907,9 @@
         }
 
         function syncCanvasControls() {
-          const enabledInput = document.getElementById("inCanvasEnabled");
-          const gridInput = document.getElementById("inCanvasGrid");
-          const gridValue = document.getElementById("canvasGridValue");
           const canvasW = document.getElementById("inCanvasW");
           const canvasH = document.getElementById("inCanvasH");
           if (!canvasLayout) return;
-          if (enabledInput) enabledInput.value = canvasLayout.enabled ? "true" : "false";
-          if (gridInput) gridInput.value = String(canvasLayout.grid || 1);
-          if (gridValue) gridValue.textContent = `${canvasLayout.grid || 1}px`;
           ensureCanvasLayoutSize(canvasLayout);
           if (canvasW && canvasLayout.size) canvasW.value = canvasLayout.size.w;
           if (canvasH && canvasLayout.size) canvasH.value = canvasLayout.size.h;
@@ -2971,10 +2956,10 @@
           yInput.value = plate.y;
           wInput.value = Number.isFinite(plate.w)
             ? plate.w
-            : defaultPlateUnits(key).w;
+            : defaultPlatePixels(key).w;
           hInput.value = Number.isFinite(plate.h)
             ? plate.h
-            : defaultPlateUnits(key).h;
+            : defaultPlatePixels(key).h;
           xInput.disabled = false;
           yInput.disabled = false;
           wInput.disabled = false;
@@ -2995,7 +2980,6 @@
         function startCanvasDrag(evt, target) {
           if (!canvasLayout || evt.button !== 0) return;
           evt.preventDefault();
-          const grid = canvasLayout.grid || 1;
           if (target.type === "plate") {
             const plate = canvasLayout.plates[target.key];
             if (!plate) return;
@@ -3011,7 +2995,7 @@
           } else if (target.type === "resize") {
             const plate = canvasLayout.plates[target.key];
             if (!plate) return;
-            const fallback = defaultPlateUnits(target.key);
+            const fallback = defaultPlatePixels(target.key);
             canvasDragState = {
               type: "resize",
               key: target.key,
@@ -3055,9 +3039,8 @@
 
         function onCanvasDrag(evt) {
           if (!canvasLayout || !canvasDragState) return;
-          const grid = canvasLayout.grid || 1;
-          const dx = Math.round((evt.clientX - canvasDragState.startX) / grid);
-          const dy = Math.round((evt.clientY - canvasDragState.startY) / grid);
+          const dx = Math.round(evt.clientX - canvasDragState.startX);
+          const dy = Math.round(evt.clientY - canvasDragState.startY);
           if (canvasDragState.type === "plate") {
             const plate = canvasLayout.plates[canvasDragState.key];
             if (!plate) return;
@@ -3067,7 +3050,7 @@
               plate.x = Math.max(0, plate.x);
               plate.y = Math.max(0, plate.y);
             }
-            applyPlateStyles(canvasDragState.key, plate, grid);
+            applyPlateStyles(canvasDragState.key, plate);
             if (plate.group) {
               const groupEl = document.querySelector(
                 `.plate-group[data-group-id="${plate.group}"]`,
@@ -3095,7 +3078,7 @@
             );
             plate.w = nextW;
             plate.h = nextH;
-            applyPlateStyles(canvasDragState.key, plate, grid);
+            applyPlateStyles(canvasDragState.key, plate);
             if (plate.group) {
               const groupEl = document.querySelector(
                 `.plate-group[data-group-id="${plate.group}"]`,
@@ -3107,9 +3090,7 @@
             if (!group) return;
             group.x = canvasDragState.originX + dx;
             group.y = canvasDragState.originY + dy;
-            canvasDragState.el.style.transform = `translate(${group.x * grid}px, ${
-              group.y * grid
-            }px)`;
+            canvasDragState.el.style.transform = `translate(${group.x}px, ${group.y}px)`;
           } else if (canvasDragState.type === "canvas-resize") {
             const bounds = computeCanvasContentBounds(canvasLayout);
             let nextW = canvasDragState.originW + dx;
@@ -4469,8 +4450,8 @@
           ensureCanvasLayoutSize(canvasLayout);
           const payload = {
             canvas_layout: {
-              enabled: !!canvasLayout.enabled,
-              grid: canvasLayout.grid,
+              enabled: true,
+              grid: 1,
               size: canvasLayout.size,
               plates: canvasLayout.plates,
               groups: canvasLayout.groups,
@@ -4496,8 +4477,6 @@
 
         function bindInspectorEvents() {
           const deviceSelect = document.getElementById("inDevice");
-          const enabledSelect = document.getElementById("inCanvasEnabled");
-          const gridInput = document.getElementById("inCanvasGrid");
           const canvasW = document.getElementById("inCanvasW");
           const canvasH = document.getElementById("inCanvasH");
           const selX = document.getElementById("inSelX");
@@ -4511,46 +4490,6 @@
             deviceSelect.addEventListener("change", async (e) => {
               currentDevice = e.target.value === "mobile" ? "mobile" : "pc";
               await loadTree();
-            });
-          }
-          if (enabledSelect) {
-            enabledSelect.addEventListener("change", (e) => {
-              if (!canvasLayout) {
-              canvasLayout = buildCanvasLayoutFromDom(
-                lastData?.section_order || SECTION_ORDER_DEFAULT,
-                1,
-              );
-              }
-              const nextEnabled = e.target.value === "true";
-              canvasLayout.enabled = nextEnabled;
-              canvasDirty = true;
-              syncCanvasControls();
-              clearCanvasSelection();
-              applySectionLayout(
-                lastData?.section_order,
-                lastData?.canvas_layout,
-                { isMobile: currentDevice === "mobile" },
-              );
-            });
-          }
-          if (gridInput) {
-            gridInput.addEventListener("input", (e) => {
-              if (!canvasLayout) return;
-              const raw = parseInt(e.target.value || "8", 10);
-              canvasLayout.grid = Math.min(
-                CANVAS_GRID_MAX,
-                Math.max(CANVAS_GRID_MIN, raw || 8),
-              );
-              canvasDirty = true;
-              updateCanvasGridStyle(canvasLayout);
-              ensureCanvasLayoutSize(canvasLayout);
-              updateCanvasCardSize(canvasLayout);
-              syncCanvasControls();
-              applySectionLayout(
-                lastData?.section_order,
-                lastData?.canvas_layout,
-                { isMobile: currentDevice === "mobile" },
-              );
             });
           }
           if (canvasW) {
@@ -4588,7 +4527,6 @@
 
           const updateSelectionFromInputs = () => {
             if (!canvasLayout || !canvasSelection) return;
-            const grid = canvasLayout.grid || 1;
             if (canvasSelection.type === "group") {
               const group = canvasLayout.groups?.[canvasSelection.id];
               if (!group) return;
@@ -4601,9 +4539,7 @@
                 `.plate-group[data-group-id="${canvasSelection.id}"]`,
               );
               if (groupEl) {
-                groupEl.style.transform = `translate(${group.x * grid}px, ${
-                  group.y * grid
-                }px)`;
+                groupEl.style.transform = `translate(${group.x}px, ${group.y}px)`;
               }
               return;
             }
@@ -4629,7 +4565,7 @@
               );
             }
             canvasDirty = true;
-            applyPlateStyles(key, plate, grid);
+            applyPlateStyles(key, plate);
             if (plate.group) {
               const groupEl = document.querySelector(
                 `.plate-group[data-group-id="${plate.group}"]`,
@@ -4659,12 +4595,7 @@
                 card.classList.remove("wide");
               }
               capturePfpOffsets();
-              const keepEnabled = canvasLayout ? canvasLayout.enabled : false;
-              canvasLayout = buildCanvasLayoutFromDom(
-                lastData.section_order,
-                canvasLayout?.grid || 1,
-              );
-              canvasLayout.enabled = keepEnabled;
+              canvasLayout = buildCanvasLayoutFromDom(lastData.section_order);
               canvasDirty = true;
               clearCanvasSelection();
               applySectionLayout(lastData.section_order, lastData.canvas_layout, {
@@ -4707,11 +4638,19 @@
             { isMobile },
           );
           const hasSideBySide = layoutResult.hasSideBySide;
-          const usedCanvas = layoutResult.usedCanvas;
+          let usedCanvas = layoutResult.usedCanvas;
           if (EDITOR_MODE) {
             if (!hasSavedLayout && !canvasDirty && !usedCanvas) {
-              canvasLayout = buildCanvasLayoutFromDom(data.section_order, 1);
-              canvasLayout.enabled = false;
+              canvasLayout = buildCanvasLayoutFromDom(data.section_order);
+              canvasDirty = true;
+              const reapply = applySectionLayout(
+                data.section_order,
+                data.canvas_layout,
+                {
+                  isMobile,
+                },
+              );
+              usedCanvas = reapply.usedCanvas;
             }
             if (canvasLayout) {
               updateCanvasGridStyle(canvasLayout);
