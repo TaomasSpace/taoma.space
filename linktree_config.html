@@ -2984,10 +2984,6 @@
           $("inQuoteEffectStrength").value ?? DEFAULT_QUOTE_EFFECT_STRENGTH,
           DEFAULT_QUOTE_EFFECT_STRENGTH
         );
-        const quoteEffectStrength = clampPercent(
-          $("inQuoteEffectStrength").value ?? DEFAULT_QUOTE_EFFECT_STRENGTH,
-          DEFAULT_QUOTE_EFFECT_STRENGTH
-        );
         const entryFontSize = Math.min(
           40,
           Math.max(
@@ -3021,9 +3017,6 @@
           quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
           quote_font_family: $("inQuoteFont").value || "default",
           quote_effect: $("inQuoteEffect").value || "none",
-          quote_effect_strength: Number.isFinite(quoteEffectStrength)
-            ? quoteEffectStrength
-            : DEFAULT_QUOTE_EFFECT_STRENGTH,
           quote_effect_strength: Number.isFinite(quoteEffectStrength)
             ? quoteEffectStrength
             : DEFAULT_QUOTE_EFFECT_STRENGTH,
