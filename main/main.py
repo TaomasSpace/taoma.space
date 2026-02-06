@@ -375,6 +375,11 @@ def _count_db_references(url: str) -> int:
         total += int(cur.fetchone()[0])
         cur.execute("SELECT COUNT(*) FROM linktrees WHERE background_url = %s", (url,))
         total += int(cur.fetchone()[0])
+        cur.execute(
+            "SELECT COUNT(*) FROM linktrees WHERE linktree_profile_picture = %s",
+            (url,),
+        )
+        total += int(cur.fetchone()[0])
         cur.execute("SELECT COUNT(*) FROM linktrees WHERE cursor_url = %s", (url,))
         total += int(cur.fetchone()[0])
         cur.execute("SELECT COUNT(*) FROM linktree_links WHERE icon_url = %s", (url,))
@@ -435,7 +440,13 @@ def _template_doc_has_url(data: dict, url: str) -> bool:
             continue
         if any(
             variant.get(k) == url
-            for k in ("song_url", "song_icon_url", "background_url", "cursor_url")
+            for k in (
+                "song_url",
+                "song_icon_url",
+                "background_url",
+                "cursor_url",
+                "linktree_profile_picture",
+            )
         ):
             return True
         links = variant.get("links") or []
@@ -446,7 +457,13 @@ def _template_doc_has_url(data: dict, url: str) -> bool:
     if isinstance(legacy, dict):
         if any(
             legacy.get(k) == url
-            for k in ("song_url", "song_icon_url", "background_url", "cursor_url")
+            for k in (
+                "song_url",
+                "song_icon_url",
+                "background_url",
+                "cursor_url",
+                "linktree_profile_picture",
+            )
         ):
             return True
         links = legacy.get("links") or []
@@ -488,6 +505,7 @@ def _collect_template_media_urls() -> tuple[set[str], bool, list[str]]:
             _add_local_media_url(variant.get("song_icon_url"), urls)
             _add_local_media_url(variant.get("background_url"), urls)
             _add_local_media_url(variant.get("cursor_url"), urls)
+            _add_local_media_url(variant.get("linktree_profile_picture"), urls)
             links = variant.get("links") or []
             for link in links:
                 if isinstance(link, dict):
@@ -498,6 +516,7 @@ def _collect_template_media_urls() -> tuple[set[str], bool, list[str]]:
             _add_local_media_url(legacy.get("song_icon_url"), urls)
             _add_local_media_url(legacy.get("background_url"), urls)
             _add_local_media_url(legacy.get("cursor_url"), urls)
+            _add_local_media_url(legacy.get("linktree_profile_picture"), urls)
             links = legacy.get("links") or []
             for link in links:
                 if isinstance(link, dict):
@@ -515,6 +534,7 @@ def _collect_media_references() -> tuple[set[str], bool, list[str]]:
                 "SELECT song_url FROM linktrees WHERE song_url IS NOT NULL",
                 "SELECT song_icon_url FROM linktrees WHERE song_icon_url IS NOT NULL",
                 "SELECT background_url FROM linktrees WHERE background_url IS NOT NULL",
+                "SELECT linktree_profile_picture FROM linktrees WHERE linktree_profile_picture IS NOT NULL",
                 "SELECT cursor_url FROM linktrees WHERE cursor_url IS NOT NULL",
                 "SELECT icon_url FROM linktree_links WHERE icon_url IS NOT NULL",
                 "SELECT image_url FROM icons WHERE image_url IS NOT NULL",
@@ -1183,6 +1203,7 @@ class LinktreeCreateIn(BaseModel):
     background_effect: BgEffectName = "none"
     display_name_mode: DisplayNameMode = "slug"
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
+    linktree_profile_picture: Optional[str] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
@@ -1251,6 +1272,7 @@ class LinktreeUpdateIn(BaseModel):
     background_effect: Optional[BgEffectName] = None
     display_name_mode: Optional[DisplayNameMode] = None
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
+    linktree_profile_picture: Optional[str] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
@@ -1353,6 +1375,7 @@ class LinktreeOut(BaseModel):
     discord_badges: Optional[List[DiscordBadgeOut]] = None
     discord_badge_codes: Optional[List[str]] = None
     discord_linked: bool = False
+    linktree_profile_picture: Optional[str] = None
     profile_picture: Optional[str] = None  # NEU - fuer Avatar
     user_username: Optional[str] = None  # NEU - fuer "username"-Modus
     show_visit_counter: bool = False
@@ -2052,6 +2075,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    device_type,
                    COALESCE(display_name_mode,'slug')  AS display_name_mode,
                     custom_display_name,
+                    linktree_profile_picture,
                     link_color,
                     link_bg_color,
                     COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
@@ -2171,6 +2195,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "background_effect": lt.get("background_effect") or "none",
         "display_name_mode": lt.get("display_name_mode") or "slug",
         "custom_display_name": lt.get("custom_display_name"),
+        "linktree_profile_picture": lt.get("linktree_profile_picture"),
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
@@ -3102,6 +3127,60 @@ async def upload_avatar(
     return row
 
 
+@app.post("/api/users/me/linktree-pfp")
+async def upload_linktree_pfp(
+    file: UploadFile = File(...),
+    current: dict = Depends(require_user),
+    device: DeviceType | None = Query(None, description="pc or mobile"),
+):
+    _ensure_pg()
+    if file.content_type not in ALLOWED_IMAGE_CT:
+        raise HTTPException(415, "Unsupported image type")
+    data = await file.read()
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(413, "File too large (max 5MB)")
+    ext = _detect_image_ext(data)
+    if not ext:
+        raise HTTPException(400, "File is not a valid image")
+    target_device = device or "pc"
+
+    old_url = None
+    try:
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT lt.linktree_profile_picture
+                  FROM linktrees lt
+                 WHERE lt.user_id = %s AND lt.device_type = %s
+            """,
+                (current["id"], target_device),
+            )
+            row = cur.fetchone()
+            old_url = row[0] if row else None
+            if row is None:
+                raise HTTPException(404, "Linktree for device not found")
+    except HTTPException:
+        raise
+    except Exception:
+        old_url = None
+
+    fname = f"user{current['id']}_ltpfp_{uuid.uuid4().hex}.{ext}"
+    out_path = UPLOAD_DIR / fname
+    out_path.write_bytes(data)
+    url = f"/media/{UPLOAD_DIR.name}/{fname}"
+
+    updated = db.update_linktree_by_user_and_device(
+        current["id"], target_device, linktree_profile_picture=url
+    )
+    if not updated:
+        raise HTTPException(404, "Linktree for device not found")
+
+    if old_url and old_url != url:
+        _delete_if_unreferenced(old_url)
+
+    return {"url": url}
+
+
 @app.get("/api/avatars")
 def list_avatars():
     base = pathlib.Path("static/avatars")
@@ -3266,6 +3345,7 @@ def get_linktree(
         "background_effect": lt.get("background_effect", "none"),
         "display_name_mode": lt.get("display_name_mode", "slug"),
         "custom_display_name": lt.get("custom_display_name"),
+        "linktree_profile_picture": lt.get("linktree_profile_picture"),
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": lt.get("link_bg_alpha", 100),
@@ -3447,6 +3527,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             background_effect=payload.background_effect,
             display_name_mode=payload.display_name_mode,  # <-- NEU
             custom_display_name=payload.custom_display_name,
+            linktree_profile_picture=payload.linktree_profile_picture,
             link_color=payload.link_color,
             link_bg_color=payload.link_bg_color,
             link_bg_alpha=payload.link_bg_alpha,
@@ -3510,7 +3591,7 @@ def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
     # Sammle Owner und evtl. Medien-URLs (für Cleanup)
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
         cur.execute(
-            "SELECT user_id, song_url, background_url, cursor_url FROM linktrees WHERE id=%s",
+            "SELECT user_id, song_url, background_url, cursor_url, linktree_profile_picture FROM linktrees WHERE id=%s",
             (linktree_id,),
         )
         row = cur.fetchone()
@@ -3521,6 +3602,7 @@ def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
         song_url = row.get("song_url")
         bg_url = row.get("background_url")
         cursor_url = row.get("cursor_url")
+        pfp_url = row.get("linktree_profile_picture")
 
         # Icon-URLs der Links sammeln (können lokale Medien sein)
         cur.execute(
@@ -3541,7 +3623,7 @@ def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
         conn.commit()
 
     # Medien aufräumen (nur wenn nirgendwo mehr referenziert)
-    for url in [song_url, bg_url, cursor_url, *icon_urls]:
+    for url in [song_url, bg_url, cursor_url, pfp_url, *icon_urls]:
         if url:
             _delete_if_unreferenced(url)
 
@@ -4259,10 +4341,11 @@ def update_linktree_ep(
     old_song = None
     old_song_icon = None
     old_bg = None
+    old_pfp = None
     current_device_type = None
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
         cur.execute(
-            "SELECT song_url, song_icon_url, background_url, device_type FROM linktrees WHERE id=%s",
+            "SELECT song_url, song_icon_url, background_url, linktree_profile_picture, device_type FROM linktrees WHERE id=%s",
             (linktree_id,),
         )
         row = cur.fetchone()
@@ -4271,6 +4354,7 @@ def update_linktree_ep(
         old_song = row.get("song_url")
         old_song_icon = row.get("song_icon_url")
         old_bg = row.get("background_url")
+        old_pfp = row.get("linktree_profile_picture")
         current_device_type = row.get("device_type") or "pc"
 
     # Wenn slug geändert werden soll: einfache Kollision prüfen (gleicher device_type)
@@ -4308,12 +4392,15 @@ def update_linktree_ep(
     new_song = fields.get("song_url", old_song)
     new_song_icon = fields.get("song_icon_url", old_song_icon)
     new_bg = fields.get("background_url", old_bg)
+    new_pfp = fields.get("linktree_profile_picture", old_pfp)
     if old_song and old_song != new_song:
         _delete_if_unreferenced(old_song)
     if old_song_icon and old_song_icon != new_song_icon:
         _delete_if_unreferenced(old_song_icon)
     if old_bg and old_bg != new_bg:
         _delete_if_unreferenced(old_bg)
+    if old_pfp and old_pfp != new_pfp:
+        _delete_if_unreferenced(old_pfp)
 
     return {"ok": True}
 
@@ -4410,6 +4497,7 @@ class TemplateVariantIn(BaseModel):
     background_effect: BgEffectName = "none"
     display_name_mode: DisplayNameMode = "slug"
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
+    linktree_profile_picture: Optional[str] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
@@ -4566,6 +4654,11 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     if "entry_text_color" in data and isinstance(data.get("entry_text_color"), str):
         val = data.get("entry_text_color").strip()
         data["entry_text_color"] = val if re.match(HEX_COLOR_RE, val) else None
+    if "linktree_profile_picture" in data and isinstance(
+        data.get("linktree_profile_picture"), str
+    ):
+        val = data.get("linktree_profile_picture").strip()
+        data["linktree_profile_picture"] = val or None
     if "discord_badge_codes" in data:
         data["discord_badge_codes"] = _normalize_text_list(
             data.get("discord_badge_codes"),
@@ -4731,6 +4824,7 @@ def _extract_linktree_fields(data: dict) -> dict:
         "background_effect",
         "display_name_mode",
         "custom_display_name",
+        "linktree_profile_picture",
         "link_color",
         "link_bg_color",
         "link_bg_alpha",

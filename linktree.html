@@ -1751,6 +1751,7 @@
           if (bgUrl && !bgIsVideo) image = bgUrl;
           if (!image) {
             image =
+              safeMediaUrl(data.linktree_profile_picture) ||
               safeMediaUrl(data.profile_picture) ||
               safeMediaUrl(currentUser && currentUser.profile_picture) ||
               "/static/icon.png";
@@ -3277,11 +3278,13 @@
               data.is_template_demo &&
               currentUser &&
               currentUser.profile_picture;
+            const linktreePfp = safeMediaUrl(data.linktree_profile_picture);
+            const primaryPfp = prefersUserPfp
+              ? currentUser.profile_picture
+              : linktreePfp || data.profile_picture;
             const profileUrl =
               safeMediaUrl(
-                prefersUserPfp
-                  ? currentUser.profile_picture
-                  : data.profile_picture,
+                primaryPfp,
               ) ||
               safeMediaUrl(currentUser && currentUser.profile_picture) ||
               "/static/icon.png";

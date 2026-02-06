@@ -1369,6 +1369,23 @@
             </div>
 
             <div class="field" style="grid-column: 1 / -1">
+              <label for="filePfp">Upload Profile Picture (Linktree)</label>
+              <input type="file" id="filePfp" accept="image/*" />
+              <input type="hidden" id="inLinktreePfp" />
+              <div class="preview-note muted">
+                If empty, your account profile picture is used.
+              </div>
+              <div id="pfpStatus" class="preview-note muted">
+                Using your account profile picture.
+              </div>
+              <div class="row" style="margin-top: 0.4rem">
+                <button class="btn sm ghost" type="button" id="btnRemovePfp">
+                  Remove Picture
+                </button>
+              </div>
+            </div>
+
+            <div class="field" style="grid-column: 1 / -1">
               <label for="inQuote">Quote</label>
               <textarea
                 id="inQuote"
@@ -2473,6 +2490,7 @@
           lt.cursor_effect_alpha !== undefined && lt.cursor_effect_alpha !== null
             ? lt.cursor_effect_alpha
             : DEFAULT_CURSOR_FX_ALPHA;
+        $("inLinktreePfp").value = lt.linktree_profile_picture || "";
         setUploadStatus(
           "songStatus",
           lt.song_url,
@@ -2480,6 +2498,11 @@
           lt.song_name
         );
         setUploadStatus("songIconStatus", lt.song_icon_url, "No icon uploaded.");
+        setUploadStatus(
+          "pfpStatus",
+          lt.linktree_profile_picture,
+          "Using your account profile picture."
+        );
         setUploadStatus(
           "bgStatus",
           lt.background_url,
@@ -2638,6 +2661,7 @@
           display_name_mode: disp,
           custom_display_name:
             disp === "custom" ? lt.custom_display_name || "" : null,
+          linktree_profile_picture: lt.linktree_profile_picture || null,
           link_color: hexOrNull(lt.link_color),
           link_bg_color: hexOrNull(lt.link_bg_color),
           link_bg_alpha: clampPercent(lt.link_bg_alpha ?? 100, 100),
@@ -2784,6 +2808,7 @@
           background_effect: $("inBgFx").value || "none",
           display_name_mode: displayMode,
           custom_display_name: displayMode === "custom" ? customName : null,
+          linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
           link_color: hexOrNull($("inLinkColor").value),
           link_bg_color: hexOrNull($("inLinkBgColor").value),
           link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
@@ -3574,6 +3599,7 @@
           background_effect: $("inBgFx").value || "none",
           display_name_mode: $("inDisplayName").value,
           custom_display_name: $("inCustomName").value.trim() || null,
+          linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
           text_color: $("inTextColor").value || null,
           name_color: $("inNameColor").value || null,
           location_color: $("inLocationColor").value || null,
@@ -4107,6 +4133,37 @@
           statusId: "songIconStatus",
           emptyMsg: "No icon uploaded.",
           label: "Song icon",
+        });
+      });
+
+      $("filePfp").addEventListener("change", async () => {
+        try {
+          const res = await uploadFile(
+            "filePfp",
+            `/api/users/me/linktree-pfp?device=${encodeURIComponent(
+              currentDevice || "pc"
+            )}`
+          );
+          const url = res?.url || "";
+          $("inLinktreePfp").value = url;
+          setUploadStatus(
+            "pfpStatus",
+            url,
+            "Using your account profile picture."
+          );
+          showMsg(msgMeta, "Profile picture uploaded", true);
+        } catch (e) {
+          showMsg(msgMeta, "Profile picture upload failed", false);
+        }
+      });
+
+      $("btnRemovePfp")?.addEventListener("click", async () => {
+        await removeMetaUpload({
+          fieldId: "inLinktreePfp",
+          fileId: "filePfp",
+          statusId: "pfpStatus",
+          emptyMsg: "Using your account profile picture.",
+          label: "Profile picture",
         });
       });
 
