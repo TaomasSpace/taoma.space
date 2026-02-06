@@ -1874,6 +1874,15 @@
               </div>
             </div>
           </div>
+          <div class="field">
+            <label>Canvas reset</label>
+            <button id="btnCanvasReset" class="btn ghost" type="button">
+              Reset canvas to linktree
+            </button>
+            <div class="inspector-note">
+              Resets the canvas layout to match the current linktree.
+            </div>
+          </div>
 
           <div>
             <h3>Selection</h3>
@@ -2238,6 +2247,7 @@
         let canvasDragState = null;
         let canvasStageBound = false;
         let canvasDirty = false;
+        let pfpSizeOffsets = null;
         let currentDevice = "pc";
         let linktreeId = null;
 
@@ -2611,6 +2621,21 @@
           card.style.setProperty("--canvas-grid", `${layout.grid || 8}px`);
         }
 
+        function capturePfpOffsets() {
+          const wrap = document.querySelector(".pfp-wrap");
+          const img = document.querySelector(".pfp");
+          if (!wrap || !img) {
+            pfpSizeOffsets = { imgW: 0, imgH: 0 };
+            return;
+          }
+          const wrapRect = wrap.getBoundingClientRect();
+          const imgRect = img.getBoundingClientRect();
+          pfpSizeOffsets = {
+            imgW: Math.round(imgRect.width - wrapRect.width),
+            imgH: Math.round(imgRect.height - wrapRect.height),
+          };
+        }
+
         function getPlateElement(key) {
           return getSectionElement(key);
         }
@@ -2625,7 +2650,9 @@
             el.style.maxWidth = "none";
             if (key === "pfp") {
               const img = el.querySelector(".pfp");
-              if (img) img.style.width = `${width}px`;
+              if (img && pfpSizeOffsets) {
+                img.style.width = `${width + pfpSizeOffsets.imgW}px`;
+              }
             }
           }
           if (Number.isFinite(plate.h)) {
@@ -2634,7 +2661,9 @@
             el.style.maxHeight = "none";
             if (key === "pfp") {
               const img = el.querySelector(".pfp");
-              if (img) img.style.height = `${height}px`;
+              if (img && pfpSizeOffsets) {
+                img.style.height = `${height + pfpSizeOffsets.imgH}px`;
+              }
             }
           }
         }
@@ -2785,24 +2814,28 @@
             el.style.transform = `translate(${plate.x * grid}px, ${
               plate.y * grid
             }px)`;
-            if (Number.isFinite(plate.w)) {
-              const width = plate.w * grid;
-              el.style.width = `${width}px`;
-              el.style.maxWidth = "none";
-              if (key === "pfp") {
-                const img = el.querySelector(".pfp");
-                if (img) img.style.width = `${width}px`;
+          if (Number.isFinite(plate.w)) {
+            const width = plate.w * grid;
+            el.style.width = `${width}px`;
+            el.style.maxWidth = "none";
+            if (key === "pfp") {
+              const img = el.querySelector(".pfp");
+              if (img && pfpSizeOffsets) {
+                img.style.width = `${width + pfpSizeOffsets.imgW}px`;
               }
             }
-            if (Number.isFinite(plate.h)) {
-              const height = plate.h * grid;
-              el.style.height = `${height}px`;
-              el.style.maxHeight = "none";
-              if (key === "pfp") {
-                const img = el.querySelector(".pfp");
-                if (img) img.style.height = `${height}px`;
+          }
+          if (Number.isFinite(plate.h)) {
+            const height = plate.h * grid;
+            el.style.height = `${height}px`;
+            el.style.maxHeight = "none";
+            if (key === "pfp") {
+              const img = el.querySelector(".pfp");
+              if (img && pfpSizeOffsets) {
+                img.style.height = `${height + pfpSizeOffsets.imgH}px`;
               }
             }
+          }
             if (forEditor) {
               el.dataset.key = key;
               el.onmousedown = (evt) =>
@@ -4470,6 +4503,7 @@
           const selW = document.getElementById("inSelW");
           const selH = document.getElementById("inSelH");
           const saveBtn = document.getElementById("btnSaveCanvas");
+          const resetBtn = document.getElementById("btnCanvasReset");
 
           if (deviceSelect) {
             deviceSelect.addEventListener("change", async (e) => {
@@ -4607,6 +4641,34 @@
           if (selW) selW.addEventListener("change", updateSelectionFromInputs);
           if (selH) selH.addEventListener("change", updateSelectionFromInputs);
           if (saveBtn) saveBtn.addEventListener("click", saveCanvasLayout);
+          if (resetBtn) {
+            resetBtn.addEventListener("click", () => {
+              if (!lastData) return;
+              const card = document.getElementById("card");
+              if (!card) return;
+              resetCanvasLayout(card);
+              const hasSideBySide = applySectionOrder(lastData.section_order);
+              if (hasSideBySide) {
+                card.classList.add("wide");
+              } else {
+                card.classList.remove("wide");
+              }
+              capturePfpOffsets();
+              const keepEnabled = canvasLayout ? canvasLayout.enabled : false;
+              canvasLayout = buildCanvasLayoutFromDom(
+                lastData.section_order,
+                canvasLayout?.grid || 8,
+              );
+              canvasLayout.enabled = keepEnabled;
+              canvasDirty = true;
+              clearCanvasSelection();
+              applySectionLayout(lastData.section_order, lastData.canvas_layout, {
+                isMobile: currentDevice === "mobile",
+              });
+              syncCanvasControls();
+              showEditorMessage("Canvas reset to linktree layout.", true);
+            });
+          }
         }
 
         function renderTree(
@@ -4655,6 +4717,10 @@
               requestAnimationFrame(() => {
                 ensurePlateSizesFromDom();
                 syncSelectionPanel();
+              });
+            } else {
+              requestAnimationFrame(() => {
+                capturePfpOffsets();
               });
             }
             bindCanvasStageEvents();
