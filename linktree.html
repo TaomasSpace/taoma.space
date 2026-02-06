@@ -988,19 +988,30 @@
 
       .card.canvas {
         position: relative;
-        min-height: 480px;
+        min-height: 0;
+        padding: 0;
+        max-width: none;
+        width: auto;
       }
 
       .card.canvas .links {
         margin: 0;
+        max-width: none;
       }
 
       .card.canvas .visit-counter {
         margin: 0;
+        max-width: none;
       }
 
       .card.canvas .badges {
         margin-bottom: 0;
+        max-width: none;
+      }
+
+      .card.canvas .audio-player {
+        margin: 0;
+        max-width: none;
       }
 
       .plate-group {
@@ -1912,6 +1923,65 @@
           discord_badges: "badges",
         };
         const SECTION_ORDER_ALLOWED = new Set(SECTION_ORDER_DEFAULT);
+        const CANVAS_PLATE_MIN_W = 6;
+        const CANVAS_PLATE_MIN_H = 4;
+        const CANVAS_PLATE_MAX_W = 200;
+        const CANVAS_PLATE_MAX_H = 200;
+        const CANVAS_SIZE_MIN_W = 30;
+        const CANVAS_SIZE_MIN_H = 24;
+
+        function defaultPlateUnits(key) {
+          switch (key) {
+            case "pfp":
+              return { w: 14, h: 14 };
+            case "name":
+              return { w: 24, h: 6 };
+            case "discord_status":
+              return { w: 24, h: 6 };
+            case "quote":
+              return { w: 32, h: 10 };
+            case "location":
+              return { w: 20, h: 5 };
+            case "badges":
+              return { w: 24, h: 8 };
+            case "audio":
+              return { w: 28, h: 8 };
+            case "links":
+              return { w: 32, h: 26 };
+            case "visit_counter":
+              return { w: 20, h: 6 };
+            default:
+              return { w: 18, h: 6 };
+          }
+        }
+
+        function computeCanvasContentBounds(layout) {
+          const plates = layout?.plates || {};
+          const groups = layout?.groups || {};
+          let maxX = 0;
+          let maxY = 0;
+          Object.entries(plates).forEach(([key, plate]) => {
+            if (!plate) return;
+            const w = Number.isFinite(plate.w)
+              ? plate.w
+              : defaultPlateUnits(key).w;
+            const h = Number.isFinite(plate.h)
+              ? plate.h
+              : defaultPlateUnits(key).h;
+            const group =
+              plate.group && groups[plate.group] ? groups[plate.group] : null;
+            const offsetX = group ? group.x : 0;
+            const offsetY = group ? group.y : 0;
+            const x = (Number.isFinite(plate.x) ? plate.x : 0) + offsetX;
+            const y = (Number.isFinite(plate.y) ? plate.y : 0) + offsetY;
+            maxX = Math.max(maxX, x + w);
+            maxY = Math.max(maxY, y + h);
+          });
+          return {
+            w: Math.max(CANVAS_SIZE_MIN_W, maxX + 2),
+            h: Math.max(CANVAS_SIZE_MIN_H, maxY + 2),
+          };
+        }
 
         function normalizeSectionOrder(raw) {
           let items = [];
@@ -2004,6 +2074,10 @@
           clearSectionRows(card);
           card.classList.remove("canvas");
           card.style.removeProperty("min-height");
+          card.style.removeProperty("width");
+          card.style.removeProperty("height");
+          card.style.removeProperty("max-width");
+          card.style.removeProperty("padding");
           const groups = card.querySelectorAll(".plate-group");
           groups.forEach((group) => {
             while (group.firstChild) {
@@ -2019,6 +2093,17 @@
             el.style.removeProperty("left");
             el.style.removeProperty("top");
             el.style.removeProperty("transform");
+            el.style.removeProperty("width");
+            el.style.removeProperty("height");
+            el.style.removeProperty("max-width");
+            el.style.removeProperty("max-height");
+            if (key === "pfp") {
+              const img = el.querySelector(".pfp");
+              if (img) {
+                img.style.removeProperty("width");
+                img.style.removeProperty("height");
+              }
+            }
           });
         }
 
@@ -2038,12 +2123,18 @@
           const plates = {};
           let y = 2;
           flattenSectionOrder(order).forEach((key) => {
-            plates[key] = { x: 2, y, group: null };
-            y += 8;
+            const size = defaultPlateUnits(key);
+            plates[key] = { x: 2, y, w: size.w, h: size.h, group: null };
+            y += size.h + 2;
+          });
+          const bounds = computeCanvasContentBounds({
+            plates,
+            groups: {},
           });
           return {
             enabled: false,
             grid: grid || 8,
+            size: { w: bounds.w, h: bounds.h },
             plates,
             groups: {},
           };
@@ -2067,6 +2158,23 @@
           const fallback = buildDefaultCanvasLayout(order, grid);
           const plates = {};
           const groups = {};
+          let size = null;
+          if (data.size && typeof data.size === "object") {
+            const sw = parseInt(data.size.w ?? 0, 10);
+            const sh = parseInt(data.size.h ?? 0, 10);
+            if (Number.isFinite(sw) && Number.isFinite(sh)) {
+              size = {
+                w: Math.min(
+                  CANVAS_PLATE_MAX_W,
+                  Math.max(CANVAS_SIZE_MIN_W, sw),
+                ),
+                h: Math.min(
+                  CANVAS_PLATE_MAX_H,
+                  Math.max(CANVAS_SIZE_MIN_H, sh),
+                ),
+              };
+            }
+          }
           if (data.groups && typeof data.groups === "object") {
             Object.entries(data.groups).forEach(([gid, g]) => {
               if (!g || typeof g !== "object") return;
@@ -2080,28 +2188,47 @@
             Object.entries(data.plates).forEach(([key, plate]) => {
               const rawKey = String(key || "").trim().toLowerCase();
               const k = SECTION_KEY_ALIASES[rawKey] || rawKey;
-              if (!k || !SECTION_ORDER_ALLOWED.has(k)) return;
-              if (!plate || typeof plate !== "object") return;
-              const px = parseInt(plate.x ?? 0, 10);
-              const py = parseInt(plate.y ?? 0, 10);
-              if (!Number.isFinite(px) || !Number.isFinite(py)) return;
-              const entry = { x: px, y: py };
-              if (plate.group && groups[plate.group]) {
-                entry.group = plate.group;
-              }
-              plates[k] = entry;
-            });
-          }
-          Object.keys(fallback.plates).forEach((key) => {
-            if (!plates[key]) plates[key] = { ...fallback.plates[key] };
+            if (!k || !SECTION_ORDER_ALLOWED.has(k)) return;
+            if (!plate || typeof plate !== "object") return;
+            const px = parseInt(plate.x ?? 0, 10);
+            const py = parseInt(plate.y ?? 0, 10);
+            if (!Number.isFinite(px) || !Number.isFinite(py)) return;
+            const entry = { x: px, y: py };
+            const pw = parseInt(plate.w ?? 0, 10);
+            const ph = parseInt(plate.h ?? 0, 10);
+            if (Number.isFinite(pw) && pw > 0) {
+              entry.w = Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_PLATE_MIN_W, pw),
+              );
+            }
+            if (Number.isFinite(ph) && ph > 0) {
+              entry.h = Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_PLATE_MIN_H, ph),
+              );
+            }
+            if (plate.group && groups[plate.group]) {
+              entry.group = plate.group;
+            }
+            plates[k] = entry;
           });
-          return {
-            enabled: !!data.enabled,
-            grid,
-            plates,
-            groups,
-          };
         }
+        Object.keys(fallback.plates).forEach((key) => {
+          if (!plates[key]) plates[key] = { ...fallback.plates[key] };
+        });
+        if (!size) {
+          const bounds = computeCanvasContentBounds({ plates, groups });
+          size = { w: bounds.w, h: bounds.h };
+        }
+        return {
+          enabled: !!data.enabled,
+          grid,
+          size,
+          plates,
+          groups,
+        };
+      }
 
         function applyCanvasLayout(rawLayout, rawOrder, { isMobile } = {}) {
           const card = document.getElementById("card");
@@ -2110,6 +2237,8 @@
           if (!layout || !layout.enabled) return false;
           resetCanvasLayout(card);
           card.classList.add("canvas");
+          card.style.padding = "0";
+          card.style.maxWidth = "none";
           const grid = layout.grid || 8;
           const groupEls = {};
           Object.entries(layout.groups || {}).forEach(([gid, g]) => {
@@ -2135,24 +2264,48 @@
             el.style.transform = `translate(${plate.x * grid}px, ${
               plate.y * grid
             }px)`;
+            if (Number.isFinite(plate.w)) {
+              const width = plate.w * grid;
+              el.style.width = `${width}px`;
+              el.style.maxWidth = "none";
+              if (key === "pfp") {
+                const img = el.querySelector(".pfp");
+                if (img) img.style.width = `${width}px`;
+              }
+            }
+            if (Number.isFinite(plate.h)) {
+              const height = plate.h * grid;
+              el.style.height = `${height}px`;
+              el.style.maxHeight = "none";
+              if (key === "pfp") {
+                const img = el.querySelector(".pfp");
+                if (img) img.style.height = `${height}px`;
+              }
+            }
             parent.appendChild(el);
           });
 
-          const cardRect = card.getBoundingClientRect();
-          let maxBottom = 0;
-          let maxRight = 0;
-          SECTION_ORDER_DEFAULT.forEach((key) => {
-            const el = getSectionElement(key);
-            if (!el) return;
-            const rect = el.getBoundingClientRect();
-            maxBottom = Math.max(maxBottom, rect.bottom - cardRect.top);
-            maxRight = Math.max(maxRight, rect.right - cardRect.left);
-          });
-          if (maxBottom > 0) {
-            card.style.minHeight = `${Math.ceil(maxBottom + grid * 2)}px`;
-          }
-          if (maxRight > 0) {
-            card.style.minWidth = "";
+          if (layout.size && Number.isFinite(layout.size.w) && Number.isFinite(layout.size.h)) {
+            card.style.width = `${layout.size.w * grid}px`;
+            card.style.height = `${layout.size.h * grid}px`;
+            card.style.minHeight = "";
+          } else {
+            const cardRect = card.getBoundingClientRect();
+            let maxBottom = 0;
+            let maxRight = 0;
+            SECTION_ORDER_DEFAULT.forEach((key) => {
+              const el = getSectionElement(key);
+              if (!el) return;
+              const rect = el.getBoundingClientRect();
+              maxBottom = Math.max(maxBottom, rect.bottom - cardRect.top);
+              maxRight = Math.max(maxRight, rect.right - cardRect.left);
+            });
+            if (maxBottom > 0) {
+              card.style.minHeight = `${Math.ceil(maxBottom + grid * 2)}px`;
+            }
+            if (maxRight > 0) {
+              card.style.minWidth = "";
+            }
           }
           return true;
         }

@@ -804,6 +804,55 @@
         box-sizing: border-box;
       }
 
+      .canvas-plate .resize-handle {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(93, 214, 194, 0.92);
+        border: 2px solid rgba(14, 18, 32, 0.85);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        pointer-events: auto;
+        touch-action: none;
+        z-index: 4;
+      }
+
+      .canvas-plate .resize-e {
+        right: -6px;
+        top: 50%;
+        transform: translate(50%, -50%);
+        cursor: ew-resize;
+      }
+
+      .canvas-plate .resize-s {
+        left: 50%;
+        bottom: -6px;
+        transform: translate(-50%, 50%);
+        cursor: ns-resize;
+      }
+
+      .canvas-plate .resize-se {
+        right: -6px;
+        bottom: -6px;
+        transform: translate(50%, 50%);
+        cursor: nwse-resize;
+      }
+
+      .canvas-resize-handle {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        background: rgba(122, 162, 255, 0.85);
+        border: 2px solid rgba(14, 18, 32, 0.85);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+        cursor: nwse-resize;
+        touch-action: none;
+        z-index: 6;
+      }
+
       .canvas-plate.selected {
         outline: 2px solid rgba(93, 214, 194, 0.75);
         outline-offset: 2px;
@@ -811,6 +860,10 @@
 
       .canvas-plate * {
         pointer-events: none;
+      }
+
+      .canvas-plate .resize-handle {
+        pointer-events: auto;
       }
 
       .canvas-group {
@@ -2805,8 +2858,12 @@
       const CANVAS_GRID_DEFAULT = 8;
       const CANVAS_GRID_MIN = 4;
       const CANVAS_GRID_MAX = 24;
-      const CANVAS_PLATE_W = 16;
-      const CANVAS_PLATE_H = 6;
+      const CANVAS_PLATE_MIN_W = 6;
+      const CANVAS_PLATE_MIN_H = 4;
+      const CANVAS_PLATE_MAX_W = 200;
+      const CANVAS_PLATE_MAX_H = 200;
+      const CANVAS_SIZE_MIN_W = 30;
+      const CANVAS_SIZE_MIN_H = 24;
       let canvasLayout = null;
       let canvasSelection = new Set();
       let canvasDragState = null;
@@ -2887,17 +2944,74 @@
         return list;
       }
 
+      function defaultPlateUnits(key) {
+        switch (key) {
+          case "pfp":
+            return { w: 14, h: 14 };
+          case "name":
+            return { w: 24, h: 6 };
+          case "discord_status":
+            return { w: 24, h: 6 };
+          case "quote":
+            return { w: 32, h: 10 };
+          case "location":
+            return { w: 20, h: 5 };
+          case "badges":
+            return { w: 24, h: 8 };
+          case "audio":
+            return { w: 28, h: 8 };
+          case "links":
+            return { w: 32, h: 26 };
+          case "visit_counter":
+            return { w: 20, h: 6 };
+          default:
+            return { w: 18, h: 6 };
+        }
+      }
+
+      function computeCanvasContentBounds(layout, previewState) {
+        const plates = layout?.plates || {};
+        const groups = layout?.groups || {};
+        const grid = layout?.grid || CANVAS_GRID_DEFAULT;
+        let maxX = 0;
+        let maxY = 0;
+        Object.entries(plates).forEach(([key, plate]) => {
+          if (!plate) return;
+          if (previewState && !isCanvasSectionVisible(key, previewState)) return;
+          const w = Number.isFinite(plate.w) ? plate.w : defaultPlateUnits(key).w;
+          const h = Number.isFinite(plate.h) ? plate.h : defaultPlateUnits(key).h;
+          const group = plate.group && groups[plate.group] ? groups[plate.group] : null;
+          const offsetX = group ? group.x : 0;
+          const offsetY = group ? group.y : 0;
+          const x = (Number.isFinite(plate.x) ? plate.x : 0) + offsetX;
+          const y = (Number.isFinite(plate.y) ? plate.y : 0) + offsetY;
+          maxX = Math.max(maxX, x + w);
+          maxY = Math.max(maxY, y + h);
+        });
+        return {
+          w: Math.max(CANVAS_SIZE_MIN_W, maxX + 2),
+          h: Math.max(CANVAS_SIZE_MIN_H, maxY + 2),
+          grid,
+        };
+      }
+
       function buildDefaultCanvasLayout(order) {
         const plates = {};
         const flat = flattenSectionOrder(order);
         let y = 2;
         flat.forEach((key) => {
-          plates[key] = { x: 2, y, group: null };
-          y += CANVAS_PLATE_H + 2;
+          const size = defaultPlateUnits(key);
+          plates[key] = { x: 2, y, w: size.w, h: size.h, group: null };
+          y += size.h + 2;
         });
+        const bounds = computeCanvasContentBounds(
+          { plates, grid: CANVAS_GRID_DEFAULT },
+          null,
+        );
         return {
           enabled: false,
           grid: CANVAS_GRID_DEFAULT,
+          size: { w: bounds.w, h: bounds.h },
           plates,
           groups: {},
         };
@@ -2920,6 +3034,17 @@
           : CANVAS_GRID_DEFAULT;
         const plates = {};
         const groups = {};
+        let size = null;
+        if (data.size && typeof data.size === "object") {
+          const sw = parseInt(data.size.w ?? 0, 10);
+          const sh = parseInt(data.size.h ?? 0, 10);
+          if (Number.isFinite(sw) && Number.isFinite(sh)) {
+            size = {
+              w: Math.min(CANVAS_PLATE_MAX_W, Math.max(CANVAS_SIZE_MIN_W, sw)),
+              h: Math.min(CANVAS_PLATE_MAX_H, Math.max(CANVAS_SIZE_MIN_H, sh)),
+            };
+          }
+        }
         if (data.groups && typeof data.groups === "object") {
           Object.entries(data.groups).forEach(([gid, g]) => {
             if (!g || typeof g !== "object") return;
@@ -2939,6 +3064,14 @@
             const py = parseInt(plate.y ?? 0, 10);
             if (!Number.isFinite(px) || !Number.isFinite(py)) return;
             const entry = { x: px, y: py };
+            const pw = parseInt(plate.w ?? 0, 10);
+            const ph = parseInt(plate.h ?? 0, 10);
+            if (Number.isFinite(pw) && pw > 0) {
+              entry.w = Math.min(CANVAS_PLATE_MAX_W, Math.max(CANVAS_PLATE_MIN_W, pw));
+            }
+            if (Number.isFinite(ph) && ph > 0) {
+              entry.h = Math.min(CANVAS_PLATE_MAX_H, Math.max(CANVAS_PLATE_MIN_H, ph));
+            }
             if (plate.group && groups[plate.group]) {
               entry.group = plate.group;
             }
@@ -2948,20 +3081,63 @@
         Object.keys(fallback.plates).forEach((key) => {
           if (!plates[key]) plates[key] = { ...fallback.plates[key] };
         });
+        if (!size) {
+          const bounds = computeCanvasContentBounds({ plates, grid }, null);
+          size = { w: bounds.w, h: bounds.h };
+        }
         return {
           enabled: !!data.enabled,
           grid,
+          size,
           plates,
           groups,
         };
       }
 
+      function ensureCanvasLayoutSize(previewState) {
+        if (!canvasLayout) return;
+        const bounds = computeCanvasContentBounds(canvasLayout, previewState || null);
+        if (
+          !canvasLayout.size ||
+          !Number.isFinite(canvasLayout.size.w) ||
+          !Number.isFinite(canvasLayout.size.h)
+        ) {
+          canvasLayout.size = { w: bounds.w, h: bounds.h };
+          return;
+        }
+        if (canvasLayout.size.w < bounds.w) canvasLayout.size.w = bounds.w;
+        if (canvasLayout.size.h < bounds.h) canvasLayout.size.h = bounds.h;
+      }
+
+      function updateCanvasEditorSize() {
+        const editor = $("canvasEditor");
+        if (!editor || !canvasLayout || !canvasLayout.size) return;
+        const grid = canvasLayout.grid;
+        const width = canvasLayout.size.w * grid;
+        const height = canvasLayout.size.h * grid;
+        editor.style.width = `${width}px`;
+        editor.style.height = `${height}px`;
+        editor.style.minWidth = `${width}px`;
+        editor.style.minHeight = `${height}px`;
+      }
+
       function serializeCanvasLayout() {
         if (!canvasLayout) return null;
+        const previewState = canvasPreviewState || getCanvasPreviewState();
+        ensureCanvasLayoutSize(previewState);
+        const plates = {};
+        Object.entries(canvasLayout.plates || {}).forEach(([key, plate]) => {
+          if (!plate) return;
+          const entry = { ...plate };
+          if (!Number.isFinite(entry.w)) entry.w = defaultPlateUnits(key).w;
+          if (!Number.isFinite(entry.h)) entry.h = defaultPlateUnits(key).h;
+          plates[key] = entry;
+        });
         return {
           enabled: !!canvasLayout.enabled,
           grid: canvasLayout.grid,
-          plates: canvasLayout.plates,
+          size: canvasLayout.size,
+          plates,
           groups: canvasLayout.groups,
         };
       }
@@ -3034,8 +3210,14 @@
         plates.forEach(([key, plate]) => {
           const px = plate.x * grid;
           const py = plate.y * grid;
-          const width = grid * CANVAS_PLATE_W;
-          const height = grid * CANVAS_PLATE_H;
+          const wUnits = Number.isFinite(plate.w)
+            ? plate.w
+            : defaultPlateUnits(key).w;
+          const hUnits = Number.isFinite(plate.h)
+            ? plate.h
+            : defaultPlateUnits(key).h;
+          const width = grid * wUnits;
+          const height = grid * hUnits;
           maxX = Math.max(maxX, px + width);
           maxY = Math.max(maxY, py + height);
         });
@@ -3257,6 +3439,9 @@
         editor.style.setProperty("--canvas-grid", `${canvasLayout.grid}px`);
         const previewState = getCanvasPreviewState();
         canvasPreviewState = previewState;
+        ensureCanvasLayoutSize(previewState);
+        updateCanvasEditorSize();
+        const grid = canvasLayout.grid;
         const visibleGroups = new Set();
         SECTION_ORDER_DEFAULT.forEach((key) => {
           if (!isCanvasSectionVisible(key, previewState)) return;
@@ -3269,9 +3454,7 @@
           const groupEl = document.createElement("div");
           groupEl.className = "canvas-group";
           groupEl.dataset.groupId = gid;
-          groupEl.style.transform = `translate(${g.x * canvasLayout.grid}px, ${
-            g.y * canvasLayout.grid
-          }px)`;
+          groupEl.style.transform = `translate(${g.x * grid}px, ${g.y * grid}px)`;
           const handle = document.createElement("div");
           handle.className = "group-handle";
           handle.textContent = "Group";
@@ -3292,13 +3475,57 @@
           plateEl.dataset.key = key;
           const preview = buildCanvasPlateContent(key, previewState);
           if (preview) plateEl.appendChild(preview);
+          const handleE = document.createElement("div");
+          handleE.className = "resize-handle resize-e";
+          handleE.addEventListener("mousedown", (evt) => {
+            evt.stopPropagation();
+            startCanvasDrag(evt, {
+              type: "resize",
+              key,
+              dir: "e",
+              el: plateEl,
+            });
+          });
+          const handleS = document.createElement("div");
+          handleS.className = "resize-handle resize-s";
+          handleS.addEventListener("mousedown", (evt) => {
+            evt.stopPropagation();
+            startCanvasDrag(evt, {
+              type: "resize",
+              key,
+              dir: "s",
+              el: plateEl,
+            });
+          });
+          const handleSE = document.createElement("div");
+          handleSE.className = "resize-handle resize-se";
+          handleSE.addEventListener("mousedown", (evt) => {
+            evt.stopPropagation();
+            startCanvasDrag(evt, {
+              type: "resize",
+              key,
+              dir: "se",
+              el: plateEl,
+            });
+          });
+          plateEl.appendChild(handleE);
+          plateEl.appendChild(handleS);
+          plateEl.appendChild(handleSE);
           const parent = plateData.group
             ? groupEls[plateData.group]
             : editor;
           if (!parent) return;
-          plateEl.style.transform = `translate(${plateData.x * canvasLayout.grid}px, ${
-            plateData.y * canvasLayout.grid
+          plateEl.style.transform = `translate(${plateData.x * grid}px, ${
+            plateData.y * grid
           }px)`;
+          let widthUnits = Number.isFinite(plateData.w) ? plateData.w : null;
+          let heightUnits = Number.isFinite(plateData.h) ? plateData.h : null;
+          if (Number.isFinite(widthUnits)) {
+            plateEl.style.width = `${widthUnits * grid}px`;
+          }
+          if (Number.isFinite(heightUnits)) {
+            plateEl.style.height = `${heightUnits * grid}px`;
+          }
           plateEl.addEventListener("mousedown", (evt) =>
             startCanvasDrag(evt, { type: "plate", key, el: plateEl }),
           );
@@ -3309,18 +3536,48 @@
             setPlateSelected(key, !wasSelected);
           });
           parent.appendChild(plateEl);
+          if (!Number.isFinite(widthUnits) || !Number.isFinite(heightUnits)) {
+            const rect = plateEl.getBoundingClientRect();
+            const fallback = defaultPlateUnits(key);
+            if (!Number.isFinite(widthUnits)) {
+              const measuredW = Math.round(rect.width / grid);
+              widthUnits = Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_PLATE_MIN_W, measuredW || fallback.w),
+              );
+              plateData.w = widthUnits;
+              plateEl.style.width = `${widthUnits * grid}px`;
+            }
+            if (!Number.isFinite(heightUnits)) {
+              const measuredH = Math.round(rect.height / grid);
+              heightUnits = Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_PLATE_MIN_H, measuredH || fallback.h),
+              );
+              plateData.h = heightUnits;
+              plateEl.style.height = `${heightUnits * grid}px`;
+            }
+          }
         });
 
         Object.entries(groupEls).forEach(([gid, groupEl]) => {
           updateGroupBounds(groupEl, gid);
         });
+        ensureCanvasLayoutSize(previewState);
+        updateCanvasEditorSize();
+        const canvasHandle = document.createElement("div");
+        canvasHandle.className = "canvas-resize-handle";
+        canvasHandle.addEventListener("mousedown", (evt) => {
+          evt.stopPropagation();
+          startCanvasDrag(evt, { type: "canvas-resize", el: editor });
+        });
+        editor.appendChild(canvasHandle);
         updateCanvasToolbar();
       }
 
       function startCanvasDrag(evt, target) {
         if (!canvasLayout || evt.button !== 0) return;
         evt.preventDefault();
-        const grid = canvasLayout.grid;
         if (target.type === "plate") {
           const plate = canvasLayout.plates[target.key];
           if (!plate) return;
@@ -3333,6 +3590,20 @@
             originX: plate.x,
             originY: plate.y,
           };
+        } else if (target.type === "resize") {
+          const plate = canvasLayout.plates[target.key];
+          if (!plate) return;
+          const fallback = defaultPlateUnits(target.key);
+          canvasDragState = {
+            type: "resize",
+            key: target.key,
+            dir: target.dir,
+            el: target.el,
+            startX: evt.clientX,
+            startY: evt.clientY,
+            originW: Number.isFinite(plate.w) ? plate.w : fallback.w,
+            originH: Number.isFinite(plate.h) ? plate.h : fallback.h,
+          };
         } else if (target.type === "group") {
           const group = canvasLayout.groups[target.id];
           if (!group) return;
@@ -3344,6 +3615,20 @@
             startY: evt.clientY,
             originX: group.x,
             originY: group.y,
+          };
+        } else if (target.type === "canvas-resize") {
+          ensureCanvasLayoutSize(canvasPreviewState || getCanvasPreviewState());
+          const size = canvasLayout.size || {
+            w: CANVAS_SIZE_MIN_W,
+            h: CANVAS_SIZE_MIN_H,
+          };
+          canvasDragState = {
+            type: "canvas-resize",
+            el: target.el,
+            startX: evt.clientX,
+            startY: evt.clientY,
+            originW: size.w,
+            originH: size.h,
           };
         }
         document.addEventListener("mousemove", onCanvasDrag);
@@ -3373,6 +3658,39 @@
             );
             updateGroupBounds(groupEl, plate.group);
           }
+          ensureCanvasLayoutSize(canvasPreviewState);
+          updateCanvasEditorSize();
+        } else if (canvasDragState.type === "resize") {
+          const plate = canvasLayout.plates[canvasDragState.key];
+          if (!plate) return;
+          let nextW = canvasDragState.originW;
+          let nextH = canvasDragState.originH;
+          if (canvasDragState.dir.includes("e")) {
+            nextW = canvasDragState.originW + dx;
+          }
+          if (canvasDragState.dir.includes("s")) {
+            nextH = canvasDragState.originH + dy;
+          }
+          nextW = Math.min(
+            CANVAS_PLATE_MAX_W,
+            Math.max(CANVAS_PLATE_MIN_W, nextW),
+          );
+          nextH = Math.min(
+            CANVAS_PLATE_MAX_H,
+            Math.max(CANVAS_PLATE_MIN_H, nextH),
+          );
+          plate.w = nextW;
+          plate.h = nextH;
+          canvasDragState.el.style.width = `${nextW * grid}px`;
+          canvasDragState.el.style.height = `${nextH * grid}px`;
+          if (plate.group) {
+            const groupEl = document.querySelector(
+              `.canvas-group[data-group-id="${plate.group}"]`,
+            );
+            updateGroupBounds(groupEl, plate.group);
+          }
+          ensureCanvasLayoutSize(canvasPreviewState);
+          updateCanvasEditorSize();
         } else if (canvasDragState.type === "group") {
           const group = canvasLayout.groups[canvasDragState.id];
           if (!group) return;
@@ -3381,6 +3699,22 @@
           canvasDragState.el.style.transform = `translate(${group.x * grid}px, ${
             group.y * grid
           }px)`;
+          ensureCanvasLayoutSize(canvasPreviewState);
+          updateCanvasEditorSize();
+        } else if (canvasDragState.type === "canvas-resize") {
+          const bounds = computeCanvasContentBounds(
+            canvasLayout,
+            canvasPreviewState,
+          );
+          let nextW = canvasDragState.originW + dx;
+          let nextH = canvasDragState.originH + dy;
+          nextW = Math.max(CANVAS_SIZE_MIN_W, Math.max(bounds.w, nextW));
+          nextH = Math.max(CANVAS_SIZE_MIN_H, Math.max(bounds.h, nextH));
+          canvasLayout.size = {
+            w: Math.min(CANVAS_PLATE_MAX_W, nextW),
+            h: Math.min(CANVAS_PLATE_MAX_H, nextH),
+          };
+          updateCanvasEditorSize();
         }
       }
 

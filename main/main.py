@@ -421,6 +421,12 @@ def _normalize_canvas_layout(value: Any) -> dict | None:
     if not isinstance(data, dict):
         return None
     enabled = bool(data.get("enabled", False))
+    plate_min_w = 6
+    plate_min_h = 4
+    plate_max_w = 200
+    plate_max_h = 200
+    size_min_w = 30
+    size_min_h = 24
     try:
         grid = int(data.get("grid", 8))
     except Exception:
@@ -428,8 +434,22 @@ def _normalize_canvas_layout(value: Any) -> dict | None:
     grid = max(4, min(24, grid))
     plates_raw = data.get("plates") or {}
     groups_raw = data.get("groups") or {}
+    size_raw = data.get("size")
     plates: dict[str, dict] = {}
     groups: dict[str, dict] = {}
+    size: dict[str, int] | None = None
+    if isinstance(size_raw, dict):
+        try:
+            sw = int(size_raw.get("w", 0))
+            sh = int(size_raw.get("h", 0))
+        except Exception:
+            sw = 0
+            sh = 0
+        if sw > 0 and sh > 0:
+            size = {
+                "w": max(size_min_w, min(plate_max_w, sw)),
+                "h": max(size_min_h, min(plate_max_h, sh)),
+            }
     if isinstance(groups_raw, dict):
         for gid, raw in groups_raw.items():
             if not isinstance(raw, dict):
@@ -454,20 +474,35 @@ def _normalize_canvas_layout(value: Any) -> dict | None:
             except Exception:
                 continue
             plate = {"x": x, "y": y}
+            try:
+                w = int(raw.get("w", 0))
+            except Exception:
+                w = 0
+            try:
+                h = int(raw.get("h", 0))
+            except Exception:
+                h = 0
+            if w > 0:
+                plate["w"] = max(plate_min_w, min(plate_max_w, w))
+            if h > 0:
+                plate["h"] = max(plate_min_h, min(plate_max_h, h))
             group = raw.get("group")
             if group is not None:
                 gid = str(group)
                 if gid in groups:
                     plate["group"] = gid
             plates[k] = plate
-    if not plates and not groups and not enabled:
+    if not plates and not groups and not enabled and not size:
         return None
-    return {
+    result = {
         "enabled": enabled,
         "grid": grid,
         "plates": plates,
         "groups": groups,
     }
+    if size is not None:
+        result["size"] = size
+    return result
 
 
 def _add_local_media_url(url: str | None, bucket: set[str]) -> None:
