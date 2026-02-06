@@ -4425,6 +4425,9 @@ def update_linktree_ep(
     if "section_order" in fields:
         order = _normalize_section_order(fields.get("section_order"))
         fields["section_order"] = json.dumps(order) if order else None
+    if "canvas_layout" in fields:
+        layout = _normalize_canvas_layout(fields.get("canvas_layout"))
+        fields["canvas_layout"] = json.dumps(layout) if layout is not None else None
     if "entry_text" in fields and isinstance(fields["entry_text"], str):
         fields["entry_text"] = fields["entry_text"].strip() or None
     if "quote_typing_speed" in fields:
