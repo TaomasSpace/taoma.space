@@ -3388,6 +3388,11 @@ def linktree_config_page():
     return FileResponse("linktree_config.html")
 
 
+@app.get("/linktree_canvas.html", include_in_schema=False)
+def linktree_canvas_page():
+    return FileResponse("linktree_canvas.html")
+
+
 # ---------- Linktree: public read ----------
 
 
