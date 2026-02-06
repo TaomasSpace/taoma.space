@@ -1556,66 +1556,6 @@
             </details>
 
             <details class="fold" open>
-              <summary>Canvas layout (beta)</summary>
-              <div class="fold-body">
-                <div class="canvas-toolbar">
-                  <label class="row" style="gap: 0.5rem">
-                    <input type="checkbox" id="inCanvasEnabled" />
-                    <span>Enable canvas layout</span>
-                  </label>
-                  <div class="field" style="min-width: 220px">
-                    <label for="inCanvasGrid">Grid size</label>
-                    <div class="row" style="align-items: center; gap: 0.6rem">
-                      <input
-                        type="range"
-                        id="inCanvasGrid"
-                        min="4"
-                        max="24"
-                        step="1"
-                        value="8"
-                      />
-                      <span id="canvasGridValue" class="kbd">8px</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="row" style="gap: 0.5rem; flex-wrap: wrap">
-                  <button
-                    class="btn sm ghost"
-                    type="button"
-                    id="btnCanvasGroup"
-                  >
-                    Group selected
-                  </button>
-                  <button
-                    class="btn sm ghost"
-                    type="button"
-                    id="btnCanvasUngroup"
-                  >
-                    Ungroup
-                  </button>
-                  <button
-                    class="btn sm ghost"
-                    type="button"
-                    id="btnCanvasReset"
-                  >
-                    Reset layout
-                  </button>
-                </div>
-                <div
-                  id="canvasEditor"
-                  class="canvas-editor"
-                  role="region"
-                  aria-label="Canvas layout editor"
-                ></div>
-                <div class="preview-note muted">
-                  Click to select, shift-click to multi-select, drag to move. Group
-                  items to move them together; you can still move items inside the
-                  group.
-                </div>
-              </div>
-            </details>
-
-            <details class="fold" open>
               <summary>General & layout</summary>
               <div class="fold-body grid cols-2">
                 <div class="field">
