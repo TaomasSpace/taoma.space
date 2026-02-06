@@ -138,6 +138,7 @@ CREATE TABLE IF NOT EXISTS linktrees (
                         CHECK (display_name_mode IN ('slug','username','custom')),
     custom_display_name TEXT,
     linktree_profile_picture TEXT,
+    section_order       TEXT,
     link_color          TEXT,
     link_bg_color       TEXT,
     link_bg_alpha       SMALLINT NOT NULL DEFAULT 100
@@ -376,6 +377,10 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS linktree_profile_picture TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS section_order TEXT;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1910,6 +1915,7 @@ class PgGifDB:
         device_type: str = "pc",
         custom_display_name: str | None = None,
         linktree_profile_picture: str | None = None,
+        section_order: str | None = None,
         link_color: str | None = None,
         link_bg_color: str | None = None,
         link_bg_alpha: int = 100,
@@ -1945,6 +1951,7 @@ class PgGifDB:
                     display_name_mode,          -- <-- NEU
                     custom_display_name,
                     linktree_profile_picture,
+                    section_order,
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
@@ -1975,7 +1982,7 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
@@ -1987,6 +1994,7 @@ class PgGifDB:
                     display_name_mode,
                     custom_display_name,
                     linktree_profile_picture,
+                    section_order,
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
@@ -2061,6 +2069,7 @@ class PgGifDB:
             "display_name_mode",
             "custom_display_name",
             "linktree_profile_picture",
+            "section_order",
             "link_color",
             "link_bg_color",
             "link_bg_alpha",
@@ -2126,7 +2135,7 @@ class PgGifDB:
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
-                    display_name_mode, custom_display_name, linktree_profile_picture,
+                    display_name_mode, custom_display_name, linktree_profile_picture, section_order,
                     link_color, link_bg_color, link_bg_alpha, card_color, text_color,
                     name_color, location_color, quote_color, cursor_url, cursor_effect, cursor_effect_color, cursor_effect_alpha, discord_frame_enabled,
                     discord_presence_enabled, discord_presence, discord_status_enabled, discord_status_text, discord_badges_enabled, discord_badge_codes,
@@ -2138,7 +2147,7 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
@@ -2181,6 +2190,7 @@ class PgGifDB:
                     src.get("display_name_mode"),
                     src.get("custom_display_name"),
                     src.get("linktree_profile_picture"),
+                    src.get("section_order"),
                     src.get("link_color"),
                     src.get("link_bg_color"),
                     src.get("link_bg_alpha", 100),

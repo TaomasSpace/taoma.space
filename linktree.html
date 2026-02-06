@@ -1788,6 +1788,81 @@
         const DEFAULT_AUDIO_ACCENT_COLOR = "#85a3ff";
         const DEFAULT_CURSOR_FX_ALPHA = 0.7;
         const CURSOR_IMAGE_SIZE = 32;
+        const SECTION_ORDER_DEFAULT = [
+          "pfp",
+          "name",
+          "discord_status",
+          "quote",
+          "location",
+          "discord_badges",
+          "badges",
+          "audio",
+          "links",
+          "visit_counter",
+        ];
+        const SECTION_ORDER_ALLOWED = new Set(SECTION_ORDER_DEFAULT);
+
+        function normalizeSectionOrder(raw) {
+          let items = [];
+          if (Array.isArray(raw)) {
+            items = raw;
+          } else if (typeof raw === "string") {
+            try {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) items = parsed;
+            } catch (_) {
+              items = [raw];
+            }
+          }
+          const out = [];
+          items.forEach((item) => {
+            const key = String(item || "").trim().toLowerCase();
+            if (!key || !SECTION_ORDER_ALLOWED.has(key)) return;
+            if (out.includes(key)) return;
+            out.push(key);
+          });
+          SECTION_ORDER_DEFAULT.forEach((key) => {
+            if (!out.includes(key)) out.push(key);
+          });
+          return out;
+        }
+
+        function getSectionElement(key) {
+          switch (key) {
+            case "pfp":
+              return document.querySelector(".pfp-wrap");
+            case "name":
+              return document.getElementById("name");
+            case "discord_status":
+              return document.getElementById("discordStatusLine");
+            case "quote":
+              return document.getElementById("quote");
+            case "location":
+              return document.getElementById("loc");
+            case "discord_badges":
+              return document.getElementById("discordBadges");
+            case "badges":
+              return document.getElementById("badges");
+            case "audio":
+              return document.getElementById("audioPlayer");
+            case "links":
+              return document.getElementById("links");
+            case "visit_counter":
+              return document.getElementById("visitCounter");
+            default:
+              return null;
+          }
+        }
+
+        function applySectionOrder(rawOrder) {
+          const card = document.getElementById("card");
+          if (!card) return;
+          const order = normalizeSectionOrder(rawOrder);
+          order.forEach((key) => {
+            const el = getSectionElement(key);
+            if (el) card.appendChild(el);
+          });
+        }
 
         function sanitizeHexColor(raw) {
           if (typeof raw !== "string") return "";
@@ -3021,6 +3096,7 @@
           lastMediaMode = preferLite ? "lite" : "full";
           lastDevice = device;
           const isMobile = device === "mobile";
+          applySectionOrder(data.section_order);
           let needsGate = false;
 
           const bgSource = pickBackgroundSource(data, preferLite);

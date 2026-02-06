@@ -353,6 +353,37 @@ def _json_to_list(
     return items
 
 
+def _normalize_section_order(value: Any) -> list[str] | None:
+    if value is None:
+        return None
+    data = value
+    if isinstance(value, str):
+        if not value.strip():
+            return None
+        try:
+            data = json.loads(value)
+        except Exception:
+            data = [value]
+    if not isinstance(data, (list, tuple, set)):
+        data = [data]
+    out: list[str] = []
+    for item in data:
+        if item is None:
+            continue
+        key = str(item).strip().lower()
+        if not key or key not in SECTION_ORDER_ALLOWED:
+            continue
+        if key in out:
+            continue
+        out.append(key)
+    if not out:
+        return None
+    for key in SECTION_ORDER_DEFAULT:
+        if key not in out:
+            out.append(key)
+    return out
+
+
 def _add_local_media_url(url: str | None, bucket: set[str]) -> None:
     if not url:
         return
@@ -1140,6 +1171,19 @@ CursorEffectName = Literal[
 ]
 DiscordPresence = Literal["online", "idle", "dnd", "offline"]
 HEX_COLOR_RE = r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+SECTION_ORDER_DEFAULT = [
+    "pfp",
+    "name",
+    "discord_status",
+    "quote",
+    "location",
+    "discord_badges",
+    "badges",
+    "audio",
+    "links",
+    "visit_counter",
+]
+SECTION_ORDER_ALLOWED = set(SECTION_ORDER_DEFAULT)
 
 
 class LinkOut(BaseModel):
@@ -1204,6 +1248,7 @@ class LinktreeCreateIn(BaseModel):
     display_name_mode: DisplayNameMode = "slug"
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
+    section_order: Optional[List[str]] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
@@ -1273,6 +1318,7 @@ class LinktreeUpdateIn(BaseModel):
     display_name_mode: Optional[DisplayNameMode] = None
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
+    section_order: Optional[List[str]] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
@@ -1376,6 +1422,7 @@ class LinktreeOut(BaseModel):
     discord_badge_codes: Optional[List[str]] = None
     discord_linked: bool = False
     linktree_profile_picture: Optional[str] = None
+    section_order: Optional[List[str]] = None
     profile_picture: Optional[str] = None  # NEU - fuer Avatar
     user_username: Optional[str] = None  # NEU - fuer "username"-Modus
     show_visit_counter: bool = False
@@ -2076,6 +2123,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    COALESCE(display_name_mode,'slug')  AS display_name_mode,
                     custom_display_name,
                     linktree_profile_picture,
+                    section_order,
                     link_color,
                     link_bg_color,
                     COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
@@ -2196,6 +2244,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "display_name_mode": lt.get("display_name_mode") or "slug",
         "custom_display_name": lt.get("custom_display_name"),
         "linktree_profile_picture": lt.get("linktree_profile_picture"),
+        "section_order": _normalize_section_order(lt.get("section_order")),
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
@@ -3346,6 +3395,7 @@ def get_linktree(
         "display_name_mode": lt.get("display_name_mode", "slug"),
         "custom_display_name": lt.get("custom_display_name"),
         "linktree_profile_picture": lt.get("linktree_profile_picture"),
+        "section_order": _normalize_section_order(lt.get("section_order")),
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": lt.get("link_bg_alpha", 100),
@@ -3425,6 +3475,8 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             max_len=64,
             allow_empty=True,
         )
+        section_order = _normalize_section_order(payload.section_order)
+        section_order_json = json.dumps(section_order) if section_order else None
         entry_text = payload.entry_text.strip() if isinstance(payload.entry_text, str) else None
         entry_bg_alpha = (
             int(payload.entry_bg_alpha)
@@ -3528,6 +3580,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             display_name_mode=payload.display_name_mode,  # <-- NEU
             custom_display_name=payload.custom_display_name,
             linktree_profile_picture=payload.linktree_profile_picture,
+            section_order=section_order_json,
             link_color=payload.link_color,
             link_bg_color=payload.link_bg_color,
             link_bg_alpha=payload.link_bg_alpha,
@@ -4256,6 +4309,9 @@ def update_linktree_ep(
             max_len=64,
             allow_empty=True,
         )
+    if "section_order" in fields:
+        order = _normalize_section_order(fields.get("section_order"))
+        fields["section_order"] = json.dumps(order) if order else None
     if "entry_text" in fields and isinstance(fields["entry_text"], str):
         fields["entry_text"] = fields["entry_text"].strip() or None
     if "quote_typing_speed" in fields:
@@ -4498,6 +4554,7 @@ class TemplateVariantIn(BaseModel):
     display_name_mode: DisplayNameMode = "slug"
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
+    section_order: Optional[List[str]] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
@@ -4659,6 +4716,8 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     ):
         val = data.get("linktree_profile_picture").strip()
         data["linktree_profile_picture"] = val or None
+    if "section_order" in data:
+        data["section_order"] = _normalize_section_order(data.get("section_order"))
     if "discord_badge_codes" in data:
         data["discord_badge_codes"] = _normalize_text_list(
             data.get("discord_badge_codes"),
@@ -4825,6 +4884,7 @@ def _extract_linktree_fields(data: dict) -> dict:
         "display_name_mode",
         "custom_display_name",
         "linktree_profile_picture",
+        "section_order",
         "link_color",
         "link_bg_color",
         "link_bg_alpha",
@@ -4865,6 +4925,9 @@ def _extract_linktree_fields(data: dict) -> dict:
             max_items=3,
             max_len=180,
         )
+    if "section_order" in fields:
+        order = _normalize_section_order(fields.get("section_order"))
+        fields["section_order"] = json.dumps(order) if order else None
     if "quote_typing_speed" in fields:
         try:
             speed = int(fields.get("quote_typing_speed"))
