@@ -1247,175 +1247,13 @@
           </div>
         </section>
 
-        <!-- Left: Meta / Badges -->
-        <section class="card panel">
-          <h2>Profile & Appearance</h2>
+        <!-- Linktree editor -->
+        <section class="card panel" style="grid-column: 1 / -1">
+          <h2>Linktree editor</h2>
           <div id="msgMeta" class="alert" style="display: none"></div>
 
-          <form id="formMeta" class="grid cols-2" autocomplete="off">
-            <div class="field">
-              <label for="inDevice">Editing for</label>
-              <select id="inDevice" class="select">
-                <option value="pc">Desktop</option>
-                <option value="mobile">Mobile</option>
-              </select>
-              <div class="preview-note muted">
-                Default is Desktop. Switching to Mobile can create a separate
-                copy.
-              </div>
-            </div>
-            <div class="field">
-              <label for="inSlug">Slug (URL)</label>
-              <input
-                id="inSlug"
-                class="input"
-                placeholder="your-handle"
-                required
-              />
-              <div class="preview-note muted">
-                Preview:
-                <code class="kbd">/tree/<span id="slugPreview">-</span></code>
-              </div>
-            </div>
-            <div class="field">
-              <label for="inEntryText">Entry overlay text</label>
-              <input
-                id="inEntryText"
-                class="input"
-                placeholder="Click to enter"
-                maxlength="120"
-              />
-              <div class="help">
-                Shown on the entry gate before media plays.
-              </div>
-              <details class="fold">
-                <summary>Entry styling</summary>
-                <div class="fold-body">
-                  <div class="field">
-                    <label for="inEntryTextColor">Entry text color</label>
-                    <input
-                      id="inEntryTextColor"
-                      class="input"
-                      type="color"
-                      value="#e9ebff"
-                    />
-                  </div>
-                  <div class="field">
-                    <label for="inEntryFont">Entry font style</label>
-                    <select id="inEntryFont" class="select">
-                      <option value="default">Default</option>
-                      <option value="serif">Serif</option>
-                      <option value="mono">Mono</option>
-                      <option value="script">Script</option>
-                      <option value="display">Display</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label for="inEntryEffect">Entry effect</label>
-                    <select id="inEntryEffect" class="select">
-                      <option value="none">None</option>
-                      <option value="glow">Glow</option>
-                      <option value="neon">Neon</option>
-                      <option value="rainbow">Rainbow</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label for="inEntryFontSize">Entry font size (px)</label>
-                    <input
-                      id="inEntryFontSize"
-                      class="input"
-                      type="number"
-                      min="10"
-                      max="40"
-                      value="16"
-                    />
-                  </div>
-                  <div class="field">
-                    <label for="inEntryBgAlpha">Entry box alpha (0-100)</label>
-                    <input
-                      id="inEntryBgAlpha"
-                      class="input"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value="85"
-                    />
-                  </div>
-                  <div class="field">
-                    <label for="inEntryOverlayAlpha"
-                      >Entry overlay alpha (0-100)</label
-                    >
-                    <input
-                      id="inEntryOverlayAlpha"
-                      class="input"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value="35"
-                    />
-                  </div>
-                  <div class="field">
-                    <label class="row" style="gap: 0.5rem">
-                      <input type="checkbox" id="inEntryBoxEnabled" checked />
-                      <span>Show entry box</span>
-                    </label>
-                  </div>
-                  <div class="field">
-                    <label class="row" style="gap: 0.5rem">
-                      <input type="checkbox" id="inEntryBorderEnabled" checked />
-                      <span>Show entry border</span>
-                    </label>
-                  </div>
-                  <div class="field">
-                    <label for="inEntryBorderColor">Entry border color</label>
-                    <input
-                      id="inEntryBorderColor"
-                      class="input"
-                      type="text"
-                      maxlength="7"
-                      placeholder="#RRGGBB"
-                    />
-                  </div>
-                </div>
-              </details>
-            </div>
-            <div class="field">
-              <label for="inLocation">Location</label>
-              <input id="inLocation" class="input" placeholder="Switzerland" />
-              <details class="fold">
-                <summary>Location styling</summary>
-                <div class="fold-body">
-                  <div class="field">
-                    <label for="inLocationColor">Location Color</label>
-                    <input
-                      id="inLocationColor"
-                      class="input"
-                      type="color"
-                      value="#a2a9c8"
-                    />
-                  </div>
-                </div>
-              </details>
-            </div>
-
-            <div class="field" style="grid-column: 1 / -1">
-              <label for="filePfp">Upload Profile Picture (Linktree)</label>
-              <input type="file" id="filePfp" accept="image/*" />
-              <input type="hidden" id="inLinktreePfp" />
-              <div class="preview-note muted">
-                If empty, your account profile picture is used.
-              </div>
-              <div id="pfpStatus" class="preview-note muted">
-                Using your account profile picture.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemovePfp">
-                  Remove Picture
-                </button>
-              </div>
-            </div>
-
-            <details class="fold" style="grid-column: 1 / -1">
+          <form id="formMeta" class="grid" autocomplete="off">
+            <details class="fold" open>
               <summary>Section order</summary>
               <div class="fold-body">
                 <div class="preview-note muted">
@@ -1435,516 +1273,805 @@
               </div>
             </details>
 
-            <div class="field" style="grid-column: 1 / -1">
-              <label for="inQuote">Quote</label>
-              <textarea
-                id="inQuote"
-                class="input"
-                placeholder="Write your bio/quote…"
-              ></textarea>
-              <label
-                class="row"
-                style="gap: 0.4rem; align-items: center; margin-top: 0.35rem"
-              >
-                <input type="checkbox" id="inQuoteTyping" />
-                <span>Typewriter quote (cycle up to 3 texts)</span>
-              </label>
-              <div
-                class="grid cols-2"
-                id="quoteTypingFields"
-                style="margin-top: 0.5rem"
-              >
-                <div class="field">
-                  <label for="inQuoteAlt1">Quote text 2</label>
-                  <input
-                    id="inQuoteAlt1"
-                    class="input"
-                    placeholder="Second quote text"
-                  />
-                </div>
-                <div class="field">
-                  <label for="inQuoteAlt2">Quote text 3</label>
-                  <input
-                    id="inQuoteAlt2"
-                    class="input"
-                    placeholder="Third quote text"
-                  />
-                </div>
-              </div>
-              <div
-                class="field"
-                id="quoteTypingSpeedWrap"
-                style="margin-top: 0.5rem"
-              >
-                <label for="inQuoteSpeed"
-                  >Typewriter speed (ms per char)</label
-                >
-                <input
-                  id="inQuoteSpeed"
-                  class="input"
-                  type="number"
-                  min="20"
-                  max="200"
-                  value="42"
-                />
-              </div>
-              <div class="field">
-                <label for="inQuotePause"
-                  >Pause before next quote (ms)</label
-                >
-                <input
-                  id="inQuotePause"
-                  class="input"
-                  type="number"
-                  min="200"
-                  max="10000"
-                  value="1200"
-                />
-              </div>
-              <details class="fold">
-                <summary>Quote styling</summary>
-                <div class="fold-body">
-                  <div class="field">
-                    <label for="inQuoteColor">Quote Color</label>
-                    <input
-                      id="inQuoteColor"
-                      class="input"
-                      type="color"
-                      value="#e9ebff"
-                    />
-                  </div>
-                  <div class="field">
-                    <label for="inQuoteFont">Quote font style</label>
-                    <select id="inQuoteFont" class="select">
-                      <option value="default">Default</option>
-                      <option value="serif">Serif</option>
-                      <option value="mono">Mono</option>
-                      <option value="script">Script</option>
-                      <option value="display">Display</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label for="inQuoteEffect">Quote effect</label>
-                    <select id="inQuoteEffect" class="select">
-                      <option value="none">None</option>
-                      <option value="glow">Glow</option>
-                      <option value="neon">Neon</option>
-                      <option value="rainbow">Rainbow</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label for="inQuoteSize">Quote font size (px)</label>
-                    <input
-                      id="inQuoteSize"
-                      class="input"
-                      type="number"
-                      min="10"
-                      max="40"
-                      value="15"
-                    />
-                  </div>
-                </div>
-              </details>
-            </div>
-            <div class="field">
-              <label for="fileSong">Upload Song</label>
-              <input type="file" id="fileSong" accept="audio/*" />
-              <input type="hidden" id="inSong" />
-              <input type="hidden" id="inSongName" />
-              <div id="songStatus" class="preview-note muted">
-                No song uploaded yet.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemoveSong">
-                  Remove Song
-                </button>
-              </div>
-            </div>
-            <div class="field">
-              <label for="fileSongIcon">Upload Song Icon</label>
-              <input type="file" id="fileSongIcon" accept="image/*" />
-              <input type="hidden" id="inSongIcon" />
-              <div id="songIconStatus" class="preview-note muted">
-                No icon uploaded.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemoveSongIcon">
-                  Remove Icon
-                </button>
-              </div>
-            </div>
-            <div class="field">
-              <label class="row" style="gap: 0.4rem; align-items: center">
-                <input type="checkbox" id="inAudioPlayer" />
-                <span>Show audio player controls</span>
-              </label>
-              <div class="help">
-                Shows the player when a song is uploaded.
-              </div>
-            </div>
-            <details class="fold" style="grid-column: 1 / -1">
-              <summary>Audio player styling</summary>
+            <details class="fold" open>
+              <summary>General & layout</summary>
               <div class="fold-body grid cols-2">
                 <div class="field">
-                  <label for="inAudioBgColor">Audio player background</label>
-                  <input
-                    id="inAudioBgColor"
-                    class="input"
-                    type="color"
-                    value="#171b3b"
-                  />
-                </div>
-                <div class="field">
-                  <label for="inAudioBgAlpha"
-                    >Audio player transparency (0-100)</label
-                  >
-                  <input
-                    id="inAudioBgAlpha"
-                    class="input"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value="60"
-                  />
-                </div>
-                <div class="field">
-                  <label for="inAudioTextColor">Audio player text color</label>
-                  <input
-                    id="inAudioTextColor"
-                    class="input"
-                    type="color"
-                    value="#e9ebff"
-                  />
-                </div>
-                <div class="field">
-                  <label for="inAudioAccentColor">Audio player accent color</label>
-                  <input
-                    id="inAudioAccentColor"
-                    class="input"
-                    type="color"
-                    value="#85a3ff"
-                  />
-                </div>
-              </div>
-            </details>
-            <div class="field">
-              <label for="fileBg">Upload Background</label>
-              <input type="file" id="fileBg" accept="image/*,video/*" />
-              <input type="hidden" id="inBg" />
-              <div id="bgStatus" class="preview-note muted">
-                No background uploaded yet.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemoveBg">
-                  Remove Background
-                </button>
-              </div>
-            </div>
-            <div class="field">
-              <label for="fileCursor">Upload Cursor (Desktop)</label>
-              <input type="file" id="fileCursor" accept="image/*" />
-              <input type="hidden" id="inCursor" />
-              <div class="preview-note muted">
-                Use a small PNG/WEBP for best results.
-              </div>
-              <div id="cursorStatus" class="preview-note muted">
-                No cursor uploaded.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemoveCursor">
-                  Remove Cursor
-                </button>
-              </div>
-            </div>
-            <details class="fold" style="grid-column: 1 / -1">
-              <summary>Cursor effects</summary>
-              <div class="fold-body grid cols-2">
-                <div class="field">
-                  <label for="inCursorFx">Cursor effect (Desktop)</label>
-                  <select id="inCursorFx" class="select">
-                    <option value="none">none</option>
-                    <option value="glow">glow</option>
-                    <option value="particles">particles</option>
+                  <label for="inDevice">Editing for</label>
+                  <select id="inDevice" class="select">
+                    <option value="pc">Desktop</option>
+                    <option value="mobile">Mobile</option>
                   </select>
                   <div class="preview-note muted">
-                    Runs only on desktop screens.
+                    Default is Desktop. Switching to Mobile can create a separate
+                    copy.
                   </div>
                 </div>
                 <div class="field">
-                  <label for="inCursorFxColor">Cursor effect color</label>
+                  <label for="inSlug">Slug (URL)</label>
                   <input
-                    id="inCursorFxColor"
+                    id="inSlug"
                     class="input"
-                    type="color"
-                    value="#85a3ff"
+                    placeholder="your-handle"
+                    required
                   />
+                  <div class="preview-note muted">
+                    Preview:
+                    <code class="kbd">/tree/<span id="slugPreview">-</span></code>
+                  </div>
                 </div>
                 <div class="field" style="grid-column: 1 / -1">
-                  <label for="inCursorFxAlpha"
-                    >Cursor effect intensity (0-100)</label
-                  >
+                  <label for="inEntryText">Entry overlay text</label>
                   <input
-                    id="inCursorFxAlpha"
+                    id="inEntryText"
                     class="input"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value="70"
+                    placeholder="Click to enter"
+                    maxlength="120"
                   />
-                  <div class="preview-note muted">
-                    Applies to glow and particles.
+                  <div class="help">
+                    Shown on the entry gate before media plays.
+                  </div>
+                  <details class="fold">
+                    <summary>Entry styling</summary>
+                    <div class="fold-body">
+                      <div class="field">
+                        <label for="inEntryTextColor">Entry text color</label>
+                        <input
+                          id="inEntryTextColor"
+                          class="input"
+                          type="color"
+                          value="#e9ebff"
+                        />
+                      </div>
+                      <div class="field">
+                        <label for="inEntryFont">Entry font style</label>
+                        <select id="inEntryFont" class="select">
+                          <option value="default">Default</option>
+                          <option value="serif">Serif</option>
+                          <option value="mono">Mono</option>
+                          <option value="script">Script</option>
+                          <option value="display">Display</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label for="inEntryEffect">Entry effect</label>
+                        <select id="inEntryEffect" class="select">
+                          <option value="none">None</option>
+                          <option value="glow">Glow</option>
+                          <option value="neon">Neon</option>
+                          <option value="rainbow">Rainbow</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label for="inEntryFontSize">Entry font size (px)</label>
+                        <input
+                          id="inEntryFontSize"
+                          class="input"
+                          type="number"
+                          min="10"
+                          max="40"
+                          value="16"
+                        />
+                      </div>
+                      <div class="field">
+                        <label for="inEntryBgAlpha">Entry box alpha (0-100)</label>
+                        <input
+                          id="inEntryBgAlpha"
+                          class="input"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value="85"
+                        />
+                      </div>
+                      <div class="field">
+                        <label for="inEntryOverlayAlpha"
+                          >Entry overlay alpha (0-100)</label
+                        >
+                        <input
+                          id="inEntryOverlayAlpha"
+                          class="input"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value="35"
+                        />
+                      </div>
+                      <div class="field">
+                        <label class="row" style="gap: 0.5rem">
+                          <input type="checkbox" id="inEntryBoxEnabled" checked />
+                          <span>Show entry box</span>
+                        </label>
+                      </div>
+                      <div class="field">
+                        <label class="row" style="gap: 0.5rem">
+                          <input type="checkbox" id="inEntryBorderEnabled" checked />
+                          <span>Show entry border</span>
+                        </label>
+                      </div>
+                      <div class="field">
+                        <label for="inEntryBorderColor">Entry border color</label>
+                        <input
+                          id="inEntryBorderColor"
+                          class="input"
+                          type="text"
+                          maxlength="7"
+                          placeholder="#RRGGBB"
+                        />
+                      </div>
+                    </div>
+                  </details>
+                </div>
+                <div class="field">
+                  <label for="fileBg">Upload Background</label>
+                  <input type="file" id="fileBg" accept="image/*,video/*" />
+                  <input type="hidden" id="inBg" />
+                  <div id="bgStatus" class="preview-note muted">
+                    No background uploaded yet.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn sm ghost" type="button" id="btnRemoveBg">
+                      Remove Background
+                    </button>
                   </div>
                 </div>
-              </div>
-            </details>
-            <details class="fold" style="grid-column: 1 / -1">
-              <summary>Card styling</summary>
-              <div class="fold-body grid cols-2">
                 <div class="field">
-                  <label for="inTrans">Card Transparency (0-100)</label>
-                  <input
-                    id="inTrans"
-                    class="input"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value="100"
-                  />
+                  <label for="fileCursor">Upload Cursor (Desktop)</label>
+                  <input type="file" id="fileCursor" accept="image/*" />
+                  <input type="hidden" id="inCursor" />
                   <div class="preview-note muted">
-                    0 = transparent, 100 = opaque (matches link background slider).
+                    Use a small PNG/WEBP for best results.
+                  </div>
+                  <div id="cursorStatus" class="preview-note muted">
+                    No cursor uploaded.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn sm ghost" type="button" id="btnRemoveCursor">
+                      Remove Cursor
+                    </button>
                   </div>
                 </div>
-                <div class="field">
-                  <label for="inCardColor">Card/Base Color</label>
-                  <input
-                    id="inCardColor"
-                    class="input"
-                    type="color"
-                    value="#171b3b"
-                  />
-                </div>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Background effects</summary>
+                  <div class="fold-body">
+                    <div class="field">
+                      <label for="inBgFx">Background Effect</label>
+                      <select id="inBgFx" class="select">
+                        <option value="none">none</option>
+                        <option value="night">night</option>
+                        <option value="rain">rain</option>
+                        <option value="snow">snow</option>
+                      </select>
+                    </div>
+                  </div>
+                </details>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Cursor effects</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inCursorFx">Cursor effect (Desktop)</label>
+                      <select id="inCursorFx" class="select">
+                        <option value="none">none</option>
+                        <option value="glow">glow</option>
+                        <option value="particles">particles</option>
+                      </select>
+                      <div class="preview-note muted">
+                        Runs only on desktop screens.
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label for="inCursorFxColor">Cursor effect color</label>
+                      <input
+                        id="inCursorFxColor"
+                        class="input"
+                        type="color"
+                        value="#85a3ff"
+                      />
+                    </div>
+                    <div class="field" style="grid-column: 1 / -1">
+                      <label for="inCursorFxAlpha"
+                        >Cursor effect intensity (0-100)</label
+                      >
+                      <input
+                        id="inCursorFxAlpha"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="70"
+                      />
+                      <div class="preview-note muted">
+                        Applies to glow and particles.
+                      </div>
+                    </div>
+                  </div>
+                </details>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Card styling</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inTrans">Card Transparency (0-100)</label>
+                      <input
+                        id="inTrans"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="100"
+                      />
+                      <div class="preview-note muted">
+                        0 = transparent, 100 = opaque (matches link background slider).
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label for="inCardColor">Card/Base Color</label>
+                      <input
+                        id="inCardColor"
+                        class="input"
+                        type="color"
+                        value="#171b3b"
+                      />
+                    </div>
+                  </div>
+                </details>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Text styling</summary>
+                  <div class="fold-body">
+                    <div class="field">
+                      <label for="inTextColor">Text Color</label>
+                      <input
+                        id="inTextColor"
+                        class="input"
+                        type="color"
+                        value="#e9ebff"
+                      />
+                    </div>
+                  </div>
+                </details>
               </div>
             </details>
-            <div class="field">
-              <label for="inDisplayName">Display Name</label>
-              <select id="inDisplayName" class="select">
-                <option value="slug">Slug</option>
-                <option value="username">Username</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="inCustomName">Custom Name</label>
-              <input
-                id="inCustomName"
-                class="input"
-                placeholder="Your name/nickname"
-                maxlength="64"
-              />
-              <div class="preview-note muted">
-                Used when Display Name is set to Custom.
-              </div>
-            </div>
-            <details class="fold" style="grid-column: 1 / -1">
-              <summary>Name styling</summary>
+
+            <details class="fold">
+              <summary>Profile picture</summary>
               <div class="fold-body grid cols-2">
-                <div class="field">
-                  <label for="inNameFx">Name Effect</label>
-                  <select id="inNameFx" class="select">
-                    <option value="none">none</option>
-                    <option value="glow">glow</option>
-                    <option value="neon">neon</option>
-                    <option value="rainbow">rainbow</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="inNameColor">Name Color</label>
-                  <input
-                    id="inNameColor"
-                    class="input"
-                    type="color"
-                    value="#e9ebff"
-                  />
-                </div>
-              </div>
-            </details>
-            <details class="fold" style="grid-column: 1 / -1">
-              <summary>Text styling</summary>
-              <div class="fold-body">
-                <div class="field">
-                  <label for="inTextColor">Text Color</label>
-                  <input
-                    id="inTextColor"
-                    class="input"
-                    type="color"
-                    value="#e9ebff"
-                  />
-                </div>
-              </div>
-            </details>
-            <details class="fold" style="grid-column: 1 / -1">
-              <summary>Link styling</summary>
-              <div class="fold-body grid cols-2">
-                <div class="field">
-                  <label for="inLinkColor">Link Text Color</label>
-                  <input
-                    id="inLinkColor"
-                    class="input"
-                    type="color"
-                    value="#e9ebff"
-                  />
-                </div>
-                <div class="field">
-                  <label for="inLinkBgColor">Link Background Color</label>
-                  <input
-                    id="inLinkBgColor"
-                    class="input"
-                    type="color"
-                    value="#171b3b"
-                  />
+                <div class="field" style="grid-column: 1 / -1">
+                  <label for="filePfp">Upload Profile Picture (Linktree)</label>
+                  <input type="file" id="filePfp" accept="image/*" />
+                  <input type="hidden" id="inLinktreePfp" />
+                  <div class="preview-note muted">
+                    If empty, your account profile picture is used.
+                  </div>
+                  <div id="pfpStatus" class="preview-note muted">
+                    Using your account profile picture.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn sm ghost" type="button" id="btnRemovePfp">
+                      Remove Picture
+                    </button>
+                  </div>
                 </div>
                 <div class="field" style="grid-column: 1 / -1">
-                  <label for="inLinkBgAlpha"
-                    >Link Background Transparency (0-100)</label
+                  <label>Discord (optional)</label>
+                  <div class="discord-box">
+                    <div>
+                      <div id="discordStatusText" class="muted">Not linked</div>
+                      <div id="discordPreview" class="discord-preview muted">
+                        Link Discord to use your profile frame.
+                      </div>
+                    </div>
+                    <div class="row" style="gap: 0.5rem; flex-wrap: wrap">
+                      <button type="button" class="btn sm" id="btnDiscordLink">
+                        Link Discord
+                      </button>
+                      <button
+                        type="button"
+                        class="btn sm ghost"
+                        id="btnDiscordUnlink"
+                        style="display: none"
+                      >
+                        Unlink
+                      </button>
+                    </div>
+                  </div>
+                  <label
+                    class="row"
+                    style="margin-top: 0.5rem; gap: 0.4rem; align-items: center"
                   >
-                  <input
-                    id="inLinkBgAlpha"
-                    class="input"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value="100"
-                  />
+                    <input type="checkbox" id="inDiscordFrame" />
+                    <span>Show my Discord profile frame around my avatar</span>
+                  </label>
+                  <div class="help">
+                    Optional. Uses your current Discord profile frame if available.
+                  </div>
+
+                  <label
+                    class="row"
+                    style="margin-top: 0.75rem; gap: 0.4rem; align-items: center"
+                  >
+                    <input type="checkbox" id="inDiscordPresence" />
+                    <span>Show my Discord activity status on my avatar</span>
+                  </label>
+                  <div class="help" style="margin-top: 0.35rem">
+                    Status is read automatically from Discord (last known).
+                  </div>
                 </div>
               </div>
             </details>
-            <details class="fold" style="grid-column: 1 / -1">
-              <summary>Background effects</summary>
-              <div class="fold-body">
+
+            <details class="fold">
+              <summary>Display name</summary>
+              <div class="fold-body grid cols-2">
                 <div class="field">
-                  <label for="inBgFx">Background Effect</label>
-                  <select id="inBgFx" class="select">
-                    <option value="none">none</option>
-                    <option value="night">night</option>
-                    <option value="rain">rain</option>
-                    <option value="snow">snow</option>
+                  <label for="inDisplayName">Display Name</label>
+                  <select id="inDisplayName" class="select">
+                    <option value="slug">Slug</option>
+                    <option value="username">Username</option>
+                    <option value="custom">Custom</option>
                   </select>
                 </div>
+                <div class="field">
+                  <label for="inCustomName">Custom Name</label>
+                  <input
+                    id="inCustomName"
+                    class="input"
+                    placeholder="Your name/nickname"
+                    maxlength="64"
+                  />
+                  <div class="preview-note muted">
+                    Used when Display Name is set to Custom.
+                  </div>
+                </div>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Name styling</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inNameFx">Name Effect</label>
+                      <select id="inNameFx" class="select">
+                        <option value="none">none</option>
+                        <option value="glow">glow</option>
+                        <option value="neon">neon</option>
+                        <option value="rainbow">rainbow</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="inNameColor">Name Color</label>
+                      <input
+                        id="inNameColor"
+                        class="input"
+                        type="color"
+                        value="#e9ebff"
+                      />
+                    </div>
+                  </div>
+                </details>
               </div>
             </details>
 
-            <div class="field" style="grid-column: 1 / -1">
-              <label>Discord (optional)</label>
-              <div class="discord-box">
-                <div>
-                  <div id="discordStatusText" class="muted">Not linked</div>
-                  <div id="discordPreview" class="discord-preview muted">
-                    Link Discord to use your profile frame.
-                  </div>
-                </div>
-                <div class="row" style="gap: 0.5rem; flex-wrap: wrap">
-                  <button type="button" class="btn sm" id="btnDiscordLink">
-                    Link Discord
-                  </button>
-                  <button
-                    type="button"
-                    class="btn sm ghost"
-                    id="btnDiscordUnlink"
-                    style="display: none"
+            <details class="fold">
+              <summary>Discord status line</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label
+                    class="row"
+                    style="gap: 0.4rem; align-items: center"
                   >
-                    Unlink
-                  </button>
+                    <input type="checkbox" id="inDiscordStatus" />
+                    <span>Show my Discord status line on the linktree</span>
+                  </label>
+                  <div class="help" style="margin-top: 0.35rem">
+                    Custom status text is pulled from Discord automatically.
+                  </div>
                 </div>
               </div>
-              <label
-                class="row"
-                style="margin-top: 0.5rem; gap: 0.4rem; align-items: center"
-              >
-                <input type="checkbox" id="inDiscordFrame" />
-                <span>Show my Discord profile frame around my avatar</span>
-              </label>
-              <div class="help">
-                Optional. Uses your current Discord profile frame if available.
-              </div>
+            </details>
 
-              <label
-                class="row"
-                style="margin-top: 0.75rem; gap: 0.4rem; align-items: center"
-              >
-                <input type="checkbox" id="inDiscordPresence" />
-                <span>Show my Discord activity status on my avatar</span>
-              </label>
-              <div class="help" style="margin-top: 0.35rem">
-                Status is read automatically from Discord (last known).
-              </div>
-              <label
-                class="row"
-                style="margin-top: 0.5rem; gap: 0.4rem; align-items: center"
-              >
-                <input type="checkbox" id="inDiscordStatus" />
-                <span>Show my Discord status line on the linktree</span>
-              </label>
-              <div class="help" style="margin-top: 0.35rem">
-                Custom status text is pulled from Discord automatically.
-              </div>
-              <label
-                class="row"
-                style="margin-top: 0.5rem; gap: 0.4rem; align-items: center"
-              >
-                <input type="checkbox" id="inDiscordBadges" />
-                <span>Show my Discord badges</span>
-              </label>
-
-              <label
-                class="row"
-                style="margin-top: 0.75rem; gap: 0.4rem; align-items: center"
-              >
-                <input type="checkbox" id="inShowCounter" />
-                <span>Show visitor counter on my profile</span>
-              </label>
-              <div class="help">
-                Counts unique visitors (shared desktop/mobile). Current:
-                <strong id="inVisitCount">0</strong>
-              </div>
-              <details class="fold" style="margin-top: 0.75rem">
-                <summary>Counter styling</summary>
-                <div class="fold-body grid cols-2">
-                  <div class="field">
-                    <label for="inCounterColor">Counter Text/Icon Color</label>
-                    <input
-                      id="inCounterColor"
-                      class="input"
-                      type="color"
-                      value="#e9ebff"
-                    />
+            <details class="fold">
+              <summary>Quote</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label for="inQuote">Quote</label>
+                  <textarea
+                    id="inQuote"
+                    class="input"
+                    placeholder="Write your bio/quote…"
+                  ></textarea>
+                  <label
+                    class="row"
+                    style="gap: 0.4rem; align-items: center; margin-top: 0.35rem"
+                  >
+                    <input type="checkbox" id="inQuoteTyping" />
+                    <span>Typewriter quote (cycle up to 3 texts)</span>
+                  </label>
+                  <div
+                    class="grid cols-2"
+                    id="quoteTypingFields"
+                    style="margin-top: 0.5rem"
+                  >
+                    <div class="field">
+                      <label for="inQuoteAlt1">Quote text 2</label>
+                      <input
+                        id="inQuoteAlt1"
+                        class="input"
+                        placeholder="Second quote text"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inQuoteAlt2">Quote text 3</label>
+                      <input
+                        id="inQuoteAlt2"
+                        class="input"
+                        placeholder="Third quote text"
+                      />
+                    </div>
                   </div>
-                  <div class="field">
-                    <label for="inCounterBgColor">Counter Background Color</label>
-                    <input
-                      id="inCounterBgColor"
-                      class="input"
-                      type="color"
-                      value="#ffffff"
-                    />
-                  </div>
-                  <div class="field" style="grid-column: 1 / -1">
-                    <label for="inCounterBgAlpha"
-                      >Counter Background Transparency (0-100)</label
+                  <div
+                    class="field"
+                    id="quoteTypingSpeedWrap"
+                    style="margin-top: 0.5rem"
+                  >
+                    <label for="inQuoteSpeed"
+                      >Typewriter speed (ms per char)</label
                     >
                     <input
-                      id="inCounterBgAlpha"
+                      id="inQuoteSpeed"
                       class="input"
                       type="number"
-                      min="0"
-                      max="100"
-                      value="20"
+                      min="20"
+                      max="200"
+                      value="42"
                     />
                   </div>
+                  <div class="field">
+                    <label for="inQuotePause"
+                      >Pause before next quote (ms)</label
+                    >
+                    <input
+                      id="inQuotePause"
+                      class="input"
+                      type="number"
+                      min="200"
+                      max="10000"
+                      value="1200"
+                    />
+                  </div>
+                  <details class="fold">
+                    <summary>Quote styling</summary>
+                    <div class="fold-body">
+                      <div class="field">
+                        <label for="inQuoteColor">Quote Color</label>
+                        <input
+                          id="inQuoteColor"
+                          class="input"
+                          type="color"
+                          value="#e9ebff"
+                        />
+                      </div>
+                      <div class="field">
+                        <label for="inQuoteFont">Quote font style</label>
+                        <select id="inQuoteFont" class="select">
+                          <option value="default">Default</option>
+                          <option value="serif">Serif</option>
+                          <option value="mono">Mono</option>
+                          <option value="script">Script</option>
+                          <option value="display">Display</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label for="inQuoteEffect">Quote effect</label>
+                        <select id="inQuoteEffect" class="select">
+                          <option value="none">None</option>
+                          <option value="glow">Glow</option>
+                          <option value="neon">Neon</option>
+                          <option value="rainbow">Rainbow</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label for="inQuoteSize">Quote font size (px)</label>
+                        <input
+                          id="inQuoteSize"
+                          class="input"
+                          type="number"
+                          min="10"
+                          max="40"
+                          value="15"
+                        />
+                      </div>
+                    </div>
+                  </details>
                 </div>
-              </details>
-            </div>
+              </div>
+            </details>
 
-            <div class="row" style="grid-column: 1 / -1; margin-top: 0.4rem">
+            <details class="fold">
+              <summary>Location</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label for="inLocation">Location</label>
+                  <input id="inLocation" class="input" placeholder="Switzerland" />
+                  <details class="fold">
+                    <summary>Location styling</summary>
+                    <div class="fold-body">
+                      <div class="field">
+                        <label for="inLocationColor">Location Color</label>
+                        <input
+                          id="inLocationColor"
+                          class="input"
+                          type="color"
+                          value="#a2a9c8"
+                        />
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Discord badges</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inDiscordBadges" />
+                    <span>Show my Discord badges</span>
+                  </label>
+                </div>
+                <div id="discordBadgesList" class="grid"></div>
+                <div
+                  id="discordBadgesHint"
+                  class="muted"
+                  style="margin-top: 0.35rem"
+                ></div>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Badges</summary>
+              <div class="fold-body">
+                <div id="badges" class="grid"></div>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Audio player</summary>
+              <div class="fold-body grid cols-2">
+                <div class="field">
+                  <label for="fileSong">Upload Song</label>
+                  <input type="file" id="fileSong" accept="audio/*" />
+                  <input type="hidden" id="inSong" />
+                  <input type="hidden" id="inSongName" />
+                  <div id="songStatus" class="preview-note muted">
+                    No song uploaded yet.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn sm ghost" type="button" id="btnRemoveSong">
+                      Remove Song
+                    </button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="fileSongIcon">Upload Song Icon</label>
+                  <input type="file" id="fileSongIcon" accept="image/*" />
+                  <input type="hidden" id="inSongIcon" />
+                  <div id="songIconStatus" class="preview-note muted">
+                    No icon uploaded.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn sm ghost" type="button" id="btnRemoveSongIcon">
+                      Remove Icon
+                    </button>
+                  </div>
+                </div>
+                <div class="field" style="grid-column: 1 / -1">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inAudioPlayer" />
+                    <span>Show audio player controls</span>
+                  </label>
+                  <div class="help">
+                    Shows the player when a song is uploaded.
+                  </div>
+                </div>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Audio player styling</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inAudioBgColor">Audio player background</label>
+                      <input
+                        id="inAudioBgColor"
+                        class="input"
+                        type="color"
+                        value="#171b3b"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inAudioBgAlpha"
+                        >Audio player transparency (0-100)</label
+                      >
+                      <input
+                        id="inAudioBgAlpha"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="60"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inAudioTextColor">Audio player text color</label>
+                      <input
+                        id="inAudioTextColor"
+                        class="input"
+                        type="color"
+                        value="#e9ebff"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inAudioAccentColor">Audio player accent color</label>
+                      <input
+                        id="inAudioAccentColor"
+                        class="input"
+                        type="color"
+                        value="#85a3ff"
+                      />
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Links</summary>
+              <div class="fold-body">
+                <div id="msgLinks" class="alert" style="display: none"></div>
+
+                <details class="fold">
+                  <summary>Link styling</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inLinkColor">Link Text Color</label>
+                      <input
+                        id="inLinkColor"
+                        class="input"
+                        type="color"
+                        value="#e9ebff"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inLinkBgColor">Link Background Color</label>
+                      <input
+                        id="inLinkBgColor"
+                        class="input"
+                        type="color"
+                        value="#171b3b"
+                      />
+                    </div>
+                    <div class="field" style="grid-column: 1 / -1">
+                      <label for="inLinkBgAlpha"
+                        >Link Background Transparency (0-100)</label
+                      >
+                      <input
+                        id="inLinkBgAlpha"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="100"
+                      />
+                    </div>
+                  </div>
+                </details>
+
+                <div class="hr"></div>
+
+                <div class="grid cols-2">
+                  <div class="field">
+                    <label for="inLinkUrl">URL</label>
+                    <input
+                      id="inLinkUrl"
+                      class="input"
+                      placeholder="https://…"
+                      form="formAddLink"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="inLinkLabel">Label</label>
+                    <input
+                      id="inLinkLabel"
+                      class="input"
+                      placeholder="My Link"
+                      form="formAddLink"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="fileIcon">Upload Link Icon</label>
+                    <input
+                      type="file"
+                      id="fileIcon"
+                      accept="image/*"
+                      form="formAddLink"
+                    />
+                    <input type="hidden" id="inLinkIcon" form="formAddLink" />
+                    <div id="linkIconStatus" class="preview-note muted">
+                      No icon uploaded.
+                    </div>
+                    <div class="row" style="margin-top: 0.4rem">
+                      <button class="btn sm ghost" type="button" id="btnRemoveLinkIcon">
+                        Remove Icon
+                      </button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="inLinkActive">Active</label>
+                    <select id="inLinkActive" class="select" form="formAddLink">
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+                  <div class="row" style="grid-column: 1 / -1">
+                    <button class="btn sm" type="submit" form="formAddLink">
+                      Add Link
+                    </button>
+                  </div>
+                </div>
+
+                <div class="hr"></div>
+
+                <div class="links-list" id="linksList" aria-live="polite"></div>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Visit counter</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inShowCounter" />
+                    <span>Show visitor counter on my profile</span>
+                  </label>
+                  <div class="help">
+                    Counts unique visitors (shared desktop/mobile). Current:
+                    <strong id="inVisitCount">0</strong>
+                  </div>
+                </div>
+                <details class="fold">
+                  <summary>Counter styling</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inCounterColor">Counter Text/Icon Color</label>
+                      <input
+                        id="inCounterColor"
+                        class="input"
+                        type="color"
+                        value="#e9ebff"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inCounterBgColor">Counter Background Color</label>
+                      <input
+                        id="inCounterBgColor"
+                        class="input"
+                        type="color"
+                        value="#ffffff"
+                      />
+                    </div>
+                    <div class="field" style="grid-column: 1 / -1">
+                      <label for="inCounterBgAlpha"
+                        >Counter Background Transparency (0-100)</label
+                      >
+                      <input
+                        id="inCounterBgAlpha"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="20"
+                      />
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <div class="row" style="margin-top: 0.4rem">
               <button type="submit" class="btn sm" id="btnSaveMeta">
                 Save
               </button>
@@ -1959,65 +2086,9 @@
             </div>
           </form>
 
-          <div class="hr"></div>
-
-          <h3>Badges (earned icons)</h3>
-          <div id="badges" class="grid"></div>
-
-          <div class="hr"></div>
-
-          <h3>Discord badges</h3>
-          <div id="discordBadgesList" class="grid"></div>
-          <div
-            id="discordBadgesHint"
-            class="muted"
-            style="margin-top: 0.35rem"
-          ></div>
+          <form id="formAddLink" autocomplete="off"></form>
         </section>
 
-        <!-- Right: Links -->
-        <section class="card panel">
-          <h2>Links</h2>
-          <div id="msgLinks" class="alert" style="display: none"></div>
-
-          <form id="formAddLink" class="grid cols-2" autocomplete="off">
-            <div class="field">
-              <label for="inLinkUrl">URL</label>
-              <input id="inLinkUrl" class="input" placeholder="https://…" />
-            </div>
-            <div class="field">
-              <label for="inLinkLabel">Label</label>
-              <input id="inLinkLabel" class="input" placeholder="My Link" />
-            </div>
-            <div class="field">
-              <label for="fileIcon">Upload Link Icon</label>
-              <input type="file" id="fileIcon" accept="image/*" />
-              <input type="hidden" id="inLinkIcon" />
-              <div id="linkIconStatus" class="preview-note muted">
-                No icon uploaded.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemoveLinkIcon">
-                  Remove Icon
-                </button>
-              </div>
-            </div>
-            <div class="field">
-              <label for="inLinkActive">Active</label>
-              <select id="inLinkActive" class="select">
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-            <div class="row" style="grid-column: 1 / -1">
-              <button class="btn sm" type="submit">Add Link</button>
-            </div>
-          </form>
-
-          <div class="hr"></div>
-
-          <div class="links-list" id="linksList" aria-live="polite"></div>
-        </section>
       </div>
     </main>
 
