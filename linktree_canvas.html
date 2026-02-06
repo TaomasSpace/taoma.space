@@ -2714,7 +2714,7 @@
               ? rawLayout
               : normalizeCanvasLayout(rawLayout, rawOrder));
           if (!layout) return false;
-          if (!layout.enabled && !forceCanvas && !forEditor) return false;
+          if (!layout.enabled && !forceCanvas) return false;
           resetCanvasLayout(card);
           card.classList.add("canvas");
           card.style.padding = "0";
@@ -3102,7 +3102,7 @@
         function applySectionLayout(rawOrder, rawCanvas, { isMobile } = {}) {
           const usedCanvas = applyCanvasLayout(rawCanvas, rawOrder, {
             isMobile,
-            forceCanvas: EDITOR_MODE,
+            forceCanvas: false,
             forEditor: EDITOR_MODE,
             layoutOverride: EDITOR_MODE ? canvasLayout : null,
           });
@@ -4455,6 +4455,12 @@
               canvasLayout.enabled = e.target.value === "true";
               canvasDirty = true;
               syncCanvasControls();
+              clearCanvasSelection();
+              applySectionLayout(
+                lastData?.section_order,
+                lastData?.canvas_layout,
+                { isMobile: currentDevice === "mobile" },
+              );
             });
           }
           if (gridInput) {
