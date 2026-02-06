@@ -761,6 +761,33 @@
         user-select: none;
       }
 
+      .section-order-item.is-row .label {
+        min-width: 220px;
+      }
+
+      .section-order-pair {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex: 1;
+        min-width: 220px;
+        flex-wrap: wrap;
+      }
+
+      .section-order-chip {
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid rgba(122, 162, 255, 0.35);
+        background: rgba(122, 162, 255, 0.12);
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+
+      .section-order-sep {
+        opacity: 0.6;
+        font-size: 0.85rem;
+      }
+
       .link-item input {
         flex: 1;
         min-width: 140px;
@@ -1258,6 +1285,8 @@
               <div class="fold-body">
                 <div class="preview-note muted">
                   Move sections up or down to change their order on your linktree.
+                  Use the side-by-side button to place two sections in one row.
+                  Layout switches to Wide automatically when a row is paired.
                 </div>
                 <div id="sectionOrderList" class="section-order-list"></div>
                 <input type="hidden" id="inSectionOrder" />
@@ -1307,7 +1336,8 @@
                     <option value="wide">Wide</option>
                   </select>
                   <div class="preview-note muted">
-                    Applies to desktop layout only.
+                    Applies to desktop layout only. Auto-switches to Wide when
+                    sections are paired side-by-side.
                   </div>
                 </div>
                 <div class="field" style="grid-column: 1 / -1">
@@ -2538,20 +2568,58 @@
           }
         }
         const out = [];
+        const seen = new Set();
         items.forEach((item) => {
+          if (item === null || item === undefined) return;
+          if (Array.isArray(item)) {
+            const row = [];
+            item.forEach((sub) => {
+              const key = String(sub || "").trim().toLowerCase();
+              if (!key || !SECTION_LABELS[key] || seen.has(key)) return;
+              seen.add(key);
+              row.push(key);
+            });
+            if (row.length === 1) {
+              out.push(row[0]);
+            } else if (row.length > 1) {
+              out.push(row.slice(0, 2));
+            }
+            return;
+          }
           const key = String(item || "").trim().toLowerCase();
-          if (!key || !SECTION_LABELS[key] || out.includes(key)) return;
+          if (!key || !SECTION_LABELS[key] || seen.has(key)) return;
+          seen.add(key);
           out.push(key);
         });
         SECTION_ORDER_DEFAULT.forEach((key) => {
-          if (!out.includes(key)) out.push(key);
+          if (!seen.has(key)) {
+            out.push(key);
+            seen.add(key);
+          }
         });
         return out;
+      }
+
+      function hasSideBySide(order) {
+        return (order || []).some(
+          (item) => Array.isArray(item) && item.length > 1
+        );
+      }
+
+      function layoutModeFromOrder(order) {
+        return hasSideBySide(order) ? "wide" : "center";
+      }
+
+      function syncLayoutModeFromOrder() {
+        const select = $("inLayoutMode");
+        if (!select) return;
+        select.value = layoutModeFromOrder(sectionOrder);
       }
 
       function updateSectionOrderInput() {
         const input = $("inSectionOrder");
         if (input) input.value = JSON.stringify(sectionOrder);
+        syncLayoutModeFromOrder();
       }
 
       function moveSectionOrder(index, direction) {
@@ -2565,16 +2633,82 @@
         renderSectionOrder();
       }
 
+      function pairSectionOrder(index) {
+        if (index < 0 || index >= sectionOrder.length - 1) return;
+        const current = sectionOrder[index];
+        const next = sectionOrder[index + 1];
+        if (Array.isArray(current) || Array.isArray(next)) return;
+        sectionOrder.splice(index, 2, [current, next]);
+        renderSectionOrder();
+      }
+
+      function splitSectionOrder(index) {
+        if (index < 0 || index >= sectionOrder.length) return;
+        const current = sectionOrder[index];
+        if (!Array.isArray(current)) return;
+        const left = current[0];
+        const right = current[1];
+        const nextItems = [];
+        if (left) nextItems.push(left);
+        if (right) nextItems.push(right);
+        if (!nextItems.length) return;
+        sectionOrder.splice(index, 1, ...nextItems);
+        renderSectionOrder();
+      }
+
+      function swapSectionOrder(index) {
+        if (index < 0 || index >= sectionOrder.length) return;
+        const current = sectionOrder[index];
+        if (!Array.isArray(current) || current.length < 2) return;
+        sectionOrder[index] = [current[1], current[0]];
+        renderSectionOrder();
+      }
+
       function renderSectionOrder() {
         const list = $("sectionOrderList");
         if (!list) return;
         list.innerHTML = "";
-        sectionOrder.forEach((key, idx) => {
+        sectionOrder.forEach((entry, idx) => {
+          const isRow = Array.isArray(entry);
           const row = document.createElement("div");
-          row.className = "section-order-item";
+          row.className = `section-order-item${isRow ? " is-row" : ""}`;
+          const keys = isRow ? entry : [entry];
+          const labels = keys.map((key) =>
+            escapeHtml(SECTION_LABELS[key] || key)
+          );
+          const canPair =
+            !isRow &&
+            idx < sectionOrder.length - 1 &&
+            !Array.isArray(sectionOrder[idx + 1]);
+          const labelHtml = isRow
+            ? `
+          <div class="section-order-pair">
+            <span class="section-order-chip">${labels[0] || ""}</span>
+            <span class="section-order-sep">+</span>
+            <span class="section-order-chip">${labels[1] || ""}</span>
+          </div>
+        `
+            : `<span class="label">${labels[0] || ""}</span>`;
           row.innerHTML = `
         <span class="handle" title="Move" aria-hidden="true">☰</span>
-        <span class="label">${escapeHtml(SECTION_LABELS[key] || key)}</span>
+        ${labelHtml}
+        ${
+          !isRow
+            ? `<button class="btn sm ghost" type="button" data-act="pair" ${
+                canPair ? "" : "disabled"
+              } title="Side-by-side with next">⇔</button>`
+            : ""
+        }
+        ${
+          isRow
+            ? `<button class="btn sm ghost" type="button" data-act="swap" title="Swap left/right">⇄</button>`
+            : ""
+        }
+        ${
+          isRow
+            ? `<button class="btn sm ghost" type="button" data-act="split" title="Unpair row">Unpair</button>`
+            : ""
+        }
         <button class="btn sm ghost" type="button" data-act="up" ${
           idx === 0 ? "disabled" : ""
         }>▲</button>
@@ -2582,12 +2716,36 @@
           idx === sectionOrder.length - 1 ? "disabled" : ""
         }>▼</button>
       `;
-          row.querySelector('[data-act="up"]').addEventListener("click", () => {
-            moveSectionOrder(idx, -1);
-          });
-          row.querySelector('[data-act="down"]').addEventListener("click", () => {
-            moveSectionOrder(idx, 1);
-          });
+          const upBtn = row.querySelector('[data-act="up"]');
+          const downBtn = row.querySelector('[data-act="down"]');
+          if (upBtn) {
+            upBtn.addEventListener("click", () => {
+              moveSectionOrder(idx, -1);
+            });
+          }
+          if (downBtn) {
+            downBtn.addEventListener("click", () => {
+              moveSectionOrder(idx, 1);
+            });
+          }
+          const pairBtn = row.querySelector('[data-act="pair"]');
+          if (pairBtn) {
+            pairBtn.addEventListener("click", () => {
+              pairSectionOrder(idx);
+            });
+          }
+          const splitBtn = row.querySelector('[data-act="split"]');
+          if (splitBtn) {
+            splitBtn.addEventListener("click", () => {
+              splitSectionOrder(idx);
+            });
+          }
+          const swapBtn = row.querySelector('[data-act="swap"]');
+          if (swapBtn) {
+            swapBtn.addEventListener("click", () => {
+              swapSectionOrder(idx);
+            });
+          }
           list.appendChild(row);
         });
         updateSectionOrderInput();
@@ -2840,6 +2998,7 @@
       function variantFromTreeData(lt) {
         if (!lt || !lt.background_url) return null;
         const disp = lt.display_name_mode || "slug";
+        const normalizedOrder = normalizeSectionOrder(lt.section_order);
         return {
           device_type: lt.device_type || "pc",
           location: lt.location || "",
@@ -2909,11 +3068,11 @@
           name_effect: lt.name_effect || "none",
           background_effect: lt.background_effect || "none",
           display_name_mode: disp,
-          layout_mode: lt.layout_mode || DEFAULT_LAYOUT_MODE,
+          layout_mode: layoutModeFromOrder(normalizedOrder),
           custom_display_name:
             disp === "custom" ? lt.custom_display_name || "" : null,
           linktree_profile_picture: lt.linktree_profile_picture || null,
-          section_order: normalizeSectionOrder(lt.section_order),
+          section_order: normalizedOrder,
           link_color: hexOrNull(lt.link_color),
           link_bg_color: hexOrNull(lt.link_bg_color),
           link_bg_alpha: clampPercent(lt.link_bg_alpha ?? 100, 100),
@@ -3066,7 +3225,7 @@
           name_effect: $("inNameFx").value || "none",
           background_effect: $("inBgFx").value || "none",
           display_name_mode: displayMode,
-          layout_mode: $("inLayoutMode").value || DEFAULT_LAYOUT_MODE,
+          layout_mode: layoutModeFromOrder(sectionOrder),
           custom_display_name: displayMode === "custom" ? customName : null,
           linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
           section_order: sectionOrder,
@@ -3859,7 +4018,7 @@
           name_effect: $("inNameFx").value || "none",
           background_effect: $("inBgFx").value || "none",
           display_name_mode: $("inDisplayName").value,
-          layout_mode: $("inLayoutMode").value || DEFAULT_LAYOUT_MODE,
+          layout_mode: layoutModeFromOrder(sectionOrder),
           custom_display_name: $("inCustomName").value.trim() || null,
           linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
           section_order: sectionOrder,
@@ -4046,6 +4205,9 @@
       });
       $("inDisplayName").addEventListener("change", toggleCustomNameField);
       $("inQuoteTyping").addEventListener("change", toggleQuoteTypingFields);
+      $("inLayoutMode").addEventListener("change", () => {
+        syncLayoutModeFromOrder();
+      });
       toggleCustomNameField();
       toggleQuoteTypingFields();
 

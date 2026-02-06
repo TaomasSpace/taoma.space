@@ -354,7 +354,7 @@ def _json_to_list(
     return items
 
 
-def _normalize_section_order(value: Any) -> list[str] | None:
+def _normalize_section_order(value: Any) -> list[Any] | None:
     if value is None:
         return None
     data = value
@@ -367,21 +367,41 @@ def _normalize_section_order(value: Any) -> list[str] | None:
             data = [value]
     if not isinstance(data, (list, tuple, set)):
         data = [data]
-    out: list[str] = []
+    out: list[Any] = []
+    seen: set[str] = set()
     for item in data:
         if item is None:
+            continue
+        if isinstance(item, (list, tuple, set)):
+            row: list[str] = []
+            for sub in item:
+                key = str(sub).strip().lower()
+                if not key or key not in SECTION_ORDER_ALLOWED:
+                    continue
+                if key in seen:
+                    continue
+                seen.add(key)
+                row.append(key)
+                if len(row) >= 2:
+                    break
+            if len(row) == 1:
+                out.append(row[0])
+            elif len(row) > 1:
+                out.append(row)
             continue
         key = str(item).strip().lower()
         if not key or key not in SECTION_ORDER_ALLOWED:
             continue
-        if key in out:
+        if key in seen:
             continue
+        seen.add(key)
         out.append(key)
     if not out:
         return None
     for key in SECTION_ORDER_DEFAULT:
-        if key not in out:
+        if key not in seen:
             out.append(key)
+            seen.add(key)
     return out
 
 
@@ -1251,7 +1271,7 @@ class LinktreeCreateIn(BaseModel):
     layout_mode: LayoutMode = "center"
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
-    section_order: Optional[List[str]] = None
+    section_order: Optional[List[Any]] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
@@ -1323,7 +1343,7 @@ class LinktreeUpdateIn(BaseModel):
     layout_mode: Optional[LayoutMode] = None
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
-    section_order: Optional[List[str]] = None
+    section_order: Optional[List[Any]] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
@@ -1429,7 +1449,7 @@ class LinktreeOut(BaseModel):
     discord_badge_codes: Optional[List[str]] = None
     discord_linked: bool = False
     linktree_profile_picture: Optional[str] = None
-    section_order: Optional[List[str]] = None
+    section_order: Optional[List[Any]] = None
     profile_picture: Optional[str] = None  # NEU - fuer Avatar
     user_username: Optional[str] = None  # NEU - fuer "username"-Modus
     show_visit_counter: bool = False
@@ -4588,7 +4608,7 @@ class TemplateVariantIn(BaseModel):
     layout_mode: Optional[LayoutMode] = None
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
-    section_order: Optional[List[str]] = None
+    section_order: Optional[List[Any]] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)

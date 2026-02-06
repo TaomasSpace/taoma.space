@@ -498,6 +498,18 @@
         /* <- zentriert die Liste innerhalb der Karte */
       }
 
+      .section-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
+        width: 100%;
+        align-items: start;
+      }
+
+      .section-row > * {
+        width: 100%;
+      }
+
       .visit-counter {
         display: inline-flex;
         align-items: center;
@@ -980,6 +992,10 @@
 
         .card.wide .visit-counter {
           margin: 1rem auto 0;
+        }
+
+        .section-row {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -1869,14 +1885,36 @@
             }
           }
           const out = [];
+          const seen = new Set();
           items.forEach((item) => {
+            if (item === null || item === undefined) return;
+            if (Array.isArray(item)) {
+              const row = [];
+              item.forEach((sub) => {
+                const key = String(sub || "").trim().toLowerCase();
+                if (!key || !SECTION_ORDER_ALLOWED.has(key)) return;
+                if (seen.has(key)) return;
+                seen.add(key);
+                row.push(key);
+              });
+              if (row.length === 1) {
+                out.push(row[0]);
+              } else if (row.length > 1) {
+                out.push(row.slice(0, 2));
+              }
+              return;
+            }
             const key = String(item || "").trim().toLowerCase();
             if (!key || !SECTION_ORDER_ALLOWED.has(key)) return;
-            if (out.includes(key)) return;
+            if (seen.has(key)) return;
+            seen.add(key);
             out.push(key);
           });
           SECTION_ORDER_DEFAULT.forEach((key) => {
-            if (!out.includes(key)) out.push(key);
+            if (!seen.has(key)) {
+              out.push(key);
+              seen.add(key);
+            }
           });
           return out;
         }
@@ -1910,12 +1948,36 @@
 
         function applySectionOrder(rawOrder) {
           const card = document.getElementById("card");
-          if (!card) return;
-          const order = normalizeSectionOrder(rawOrder);
-          order.forEach((key) => {
-            const el = getSectionElement(key);
-            if (el) card.appendChild(el);
+          if (!card) return false;
+          const existingRows = card.querySelectorAll(".section-row");
+          existingRows.forEach((row) => {
+            while (row.firstChild) {
+              card.insertBefore(row.firstChild, row);
+            }
+            row.remove();
           });
+          const order = normalizeSectionOrder(rawOrder);
+          let hasSideBySide = false;
+          order.forEach((entry) => {
+            if (Array.isArray(entry)) {
+              const row = document.createElement("div");
+              row.className = "section-row";
+              entry.forEach((key) => {
+                const el = getSectionElement(key);
+                if (el) row.appendChild(el);
+              });
+              if (row.children.length > 1) {
+                hasSideBySide = true;
+                card.appendChild(row);
+              } else if (row.children.length === 1) {
+                card.appendChild(row.firstElementChild);
+              }
+            } else {
+              const el = getSectionElement(entry);
+              if (el) card.appendChild(el);
+            }
+          });
+          return hasSideBySide;
         }
 
         function sanitizeHexColor(raw) {
@@ -3170,7 +3232,7 @@
           lastMediaMode = preferLite ? "lite" : "full";
           lastDevice = device;
           const isMobile = device === "mobile";
-          applySectionOrder(data.section_order);
+          const hasSideBySide = applySectionOrder(data.section_order);
           let needsGate = false;
 
           const bgSource = pickBackgroundSource(data, preferLite);
@@ -3350,7 +3412,7 @@
             const layoutMode = (data.layout_mode || "center")
               .toString()
               .toLowerCase();
-            const wantsWide = !isMobile && layoutMode === "wide";
+            const wantsWide = !isMobile && (layoutMode === "wide" || hasSideBySide);
             cardEl.classList.toggle("wide", wantsWide);
             const raw = Number(data.transparency);
             const clamped = Number.isFinite(raw)
