@@ -109,6 +109,7 @@ class DiscordAccount(Base):
     )
 
 DisplayNameMode = Literal["slug", "username", "custom"]
+LayoutMode = Literal["center", "wide"]
 DeviceType = Literal["pc", "mobile"]
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
@@ -1247,6 +1248,7 @@ class LinktreeCreateIn(BaseModel):
     name_effect: EffectName = "none"
     background_effect: BgEffectName = "none"
     display_name_mode: DisplayNameMode = "slug"
+    layout_mode: LayoutMode = "center"
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
     section_order: Optional[List[str]] = None
@@ -1318,6 +1320,7 @@ class LinktreeUpdateIn(BaseModel):
     name_effect: Optional[EffectName] = None
     background_effect: Optional[BgEffectName] = None
     display_name_mode: Optional[DisplayNameMode] = None
+    layout_mode: Optional[LayoutMode] = None
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
     section_order: Optional[List[str]] = None
@@ -1401,6 +1404,7 @@ class LinktreeOut(BaseModel):
     name_effect: EffectName
     background_effect: BgEffectName
     display_name_mode: DisplayNameMode  # NEU
+    layout_mode: Optional[LayoutMode] = None
     custom_display_name: Optional[str] = None
     link_color: Optional[str] = None
     link_bg_color: Optional[str] = None
@@ -2125,6 +2129,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    COALESCE(background_effect,'none')  AS background_effect,
                    device_type,
                    COALESCE(display_name_mode,'slug')  AS display_name_mode,
+                   COALESCE(layout_mode,'center')      AS layout_mode,
                     custom_display_name,
                     linktree_profile_picture,
                     section_order,
@@ -2247,6 +2252,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "name_effect": lt.get("name_effect") or "none",
         "background_effect": lt.get("background_effect") or "none",
         "display_name_mode": lt.get("display_name_mode") or "slug",
+        "layout_mode": lt.get("layout_mode") or "center",
         "custom_display_name": lt.get("custom_display_name"),
         "linktree_profile_picture": lt.get("linktree_profile_picture"),
         "section_order": _normalize_section_order(lt.get("section_order")),
@@ -3400,6 +3406,7 @@ def get_linktree(
         "name_effect": lt.get("name_effect", "none"),
         "background_effect": lt.get("background_effect", "none"),
         "display_name_mode": lt.get("display_name_mode", "slug"),
+        "layout_mode": lt.get("layout_mode") or "center",
         "custom_display_name": lt.get("custom_display_name"),
         "linktree_profile_picture": lt.get("linktree_profile_picture"),
         "section_order": _normalize_section_order(lt.get("section_order")),
@@ -3592,6 +3599,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             name_effect=payload.name_effect,
             background_effect=payload.background_effect,
             display_name_mode=payload.display_name_mode,  # <-- NEU
+            layout_mode=payload.layout_mode,
             custom_display_name=payload.custom_display_name,
             linktree_profile_picture=payload.linktree_profile_picture,
             section_order=section_order_json,
@@ -4406,6 +4414,9 @@ def update_linktree_ep(
         fields["quote_effect"] = (
             fx if fx in {"none", "glow", "neon", "rainbow"} else "none"
         )
+    if "layout_mode" in fields:
+        mode = str(fields.get("layout_mode") or "center").lower()
+        fields["layout_mode"] = mode if mode in {"center", "wide"} else "center"
     if "quote_effect_strength" in fields:
         try:
             strength = int(fields.get("quote_effect_strength"))
@@ -4574,6 +4585,7 @@ class TemplateVariantIn(BaseModel):
     name_effect: EffectName = "none"
     background_effect: BgEffectName = "none"
     display_name_mode: DisplayNameMode = "slug"
+    layout_mode: Optional[LayoutMode] = None
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
     section_order: Optional[List[str]] = None
@@ -4746,6 +4758,9 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     ):
         val = data.get("linktree_profile_picture").strip()
         data["linktree_profile_picture"] = val or None
+    if "layout_mode" in data:
+        mode = str(data.get("layout_mode") or "center").lower()
+        data["layout_mode"] = mode if mode in {"center", "wide"} else "center"
     if "section_order" in data:
         data["section_order"] = _normalize_section_order(data.get("section_order"))
     if "discord_badge_codes" in data:
@@ -4761,6 +4776,7 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("cursor_effect", "none")
     data.setdefault("cursor_effect_alpha", 70)
     data.setdefault("display_name_mode", "slug")
+    data.setdefault("layout_mode", "center")
     data.setdefault("link_bg_alpha", 100)
     data.setdefault("audio_player_bg_alpha", 60)
     data.setdefault("visit_counter_bg_alpha", 20)
@@ -4914,6 +4930,7 @@ def _extract_linktree_fields(data: dict) -> dict:
         "name_effect",
         "background_effect",
         "display_name_mode",
+        "layout_mode",
         "custom_display_name",
         "linktree_profile_picture",
         "section_order",

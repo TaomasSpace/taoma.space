@@ -138,6 +138,8 @@ CREATE TABLE IF NOT EXISTS linktrees (
                         CHECK (background_effect IN ('none','night','rain','snow','noise','gradient','parallax','particles','sweep','mesh','grid','vignette','scanlines','glitch')),
     display_name_mode   TEXT NOT NULL DEFAULT 'slug'
                         CHECK (display_name_mode IN ('slug','username','custom')),
+    layout_mode         TEXT NOT NULL DEFAULT 'center'
+                        CHECK (layout_mode IN ('center','wide')),
     custom_display_name TEXT,
     linktree_profile_picture TEXT,
     section_order       TEXT,
@@ -343,6 +345,18 @@ class PgGifDB:
   ALTER TABLE linktrees
   ADD CONSTRAINT linktrees_display_name_mode_check
   CHECK (display_name_mode IN ('slug','username','custom'));
+                """)
+                cur.execute("""ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS layout_mode TEXT NOT NULL DEFAULT 'center'
+    CHECK (layout_mode IN ('center','wide'));""")
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS linktrees_layout_mode_check;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT linktrees_layout_mode_check
+  CHECK (layout_mode IN ('center','wide'));
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1941,6 +1955,7 @@ class PgGifDB:
         name_effect: str = "none",
         background_effect: str = "none",
         display_name_mode: str = "slug",  # <-- NEU
+        layout_mode: str = "center",
         device_type: str = "pc",
         custom_display_name: str | None = None,
         linktree_profile_picture: str | None = None,
@@ -1978,6 +1993,7 @@ class PgGifDB:
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,          -- <-- NEU
+                    layout_mode,
                     custom_display_name,
                     linktree_profile_picture,
                     section_order,
@@ -2011,7 +2027,7 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
@@ -2021,6 +2037,7 @@ class PgGifDB:
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,
+                    layout_mode,
                     custom_display_name,
                     linktree_profile_picture,
                     section_order,
@@ -2097,6 +2114,7 @@ class PgGifDB:
             "name_effect",
             "background_effect",
             "display_name_mode",
+            "layout_mode",
             "custom_display_name",
             "linktree_profile_picture",
             "section_order",
@@ -2165,7 +2183,7 @@ class PgGifDB:
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
-                    display_name_mode, custom_display_name, linktree_profile_picture, section_order,
+                    display_name_mode, layout_mode, custom_display_name, linktree_profile_picture, section_order,
                     link_color, link_bg_color, link_bg_alpha, card_color, text_color,
                     name_color, location_color, quote_color, cursor_url, cursor_effect, cursor_effect_color, cursor_effect_alpha, discord_frame_enabled,
                     discord_presence_enabled, discord_presence, discord_status_enabled, discord_status_text, discord_badges_enabled, discord_badge_codes,
@@ -2177,7 +2195,7 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
@@ -2219,6 +2237,7 @@ class PgGifDB:
                     src.get("name_effect"),
                     src.get("background_effect"),
                     src.get("display_name_mode"),
+                    src.get("layout_mode", "center"),
                     src.get("custom_display_name"),
                     src.get("linktree_profile_picture"),
                     src.get("section_order"),

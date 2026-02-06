@@ -1300,6 +1300,16 @@
                     <code class="kbd">/tree/<span id="slugPreview">-</span></code>
                   </div>
                 </div>
+                <div class="field">
+                  <label for="inLayoutMode">Layout (Desktop)</label>
+                  <select id="inLayoutMode" class="select">
+                    <option value="center">Centered</option>
+                    <option value="wide">Wide</option>
+                  </select>
+                  <div class="preview-note muted">
+                    Applies to desktop layout only.
+                  </div>
+                </div>
                 <div class="field" style="grid-column: 1 / -1">
                   <label for="inEntryText">Entry overlay text</label>
                   <input
@@ -2470,6 +2480,7 @@
       const DEFAULT_QUOTE_PAUSE = 1200;
       const DEFAULT_QUOTE_SIZE = 15;
       const DEFAULT_QUOTE_EFFECT_STRENGTH = 70;
+      const DEFAULT_LAYOUT_MODE = "center";
       const DEFAULT_CURSOR_FX_COLOR = DEFAULT_AUDIO_ACCENT_COLOR;
       const DEFAULT_CURSOR_FX_ALPHA = 70;
       const PRIVATE_TEMPLATE_DESC =
@@ -2707,6 +2718,7 @@
           lt.quote_effect_strength !== undefined && lt.quote_effect_strength !== null
             ? lt.quote_effect_strength
             : DEFAULT_QUOTE_EFFECT_STRENGTH;
+        $("inLayoutMode").value = lt.layout_mode || DEFAULT_LAYOUT_MODE;
         $("inLinkColor").value = lt.link_color || DEFAULT_LINK_COLOR;
         $("inLinkBgColor").value = lt.link_bg_color || DEFAULT_LINK_BG_COLOR;
         $("inCardColor").value = lt.card_color || DEFAULT_CARD_COLOR;
@@ -2897,6 +2909,7 @@
           name_effect: lt.name_effect || "none",
           background_effect: lt.background_effect || "none",
           display_name_mode: disp,
+          layout_mode: lt.layout_mode || DEFAULT_LAYOUT_MODE,
           custom_display_name:
             disp === "custom" ? lt.custom_display_name || "" : null,
           linktree_profile_picture: lt.linktree_profile_picture || null,
@@ -3053,6 +3066,7 @@
           name_effect: $("inNameFx").value || "none",
           background_effect: $("inBgFx").value || "none",
           display_name_mode: displayMode,
+          layout_mode: $("inLayoutMode").value || DEFAULT_LAYOUT_MODE,
           custom_display_name: displayMode === "custom" ? customName : null,
           linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
           section_order: sectionOrder,
@@ -3845,6 +3859,7 @@
           name_effect: $("inNameFx").value || "none",
           background_effect: $("inBgFx").value || "none",
           display_name_mode: $("inDisplayName").value,
+          layout_mode: $("inLayoutMode").value || DEFAULT_LAYOUT_MODE,
           custom_display_name: $("inCustomName").value.trim() || null,
           linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
           section_order: sectionOrder,

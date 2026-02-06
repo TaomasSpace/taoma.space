@@ -1297,6 +1297,13 @@
               </select>
             </div>
             <div class="field">
+              <label for="tplLayoutMode">Layout (Desktop)</label>
+              <select id="tplLayoutMode" class="select">
+                <option value="center">Centered</option>
+                <option value="wide">Wide</option>
+              </select>
+            </div>
+            <div class="field">
               <label for="tplCustomName">Custom display name</label>
               <input
                 id="tplCustomName"
@@ -1600,6 +1607,7 @@
       const DEFAULT_QUOTE_PAUSE = 1200;
       const DEFAULT_QUOTE_SIZE = 15;
       const DEFAULT_QUOTE_EFFECT_STRENGTH = 70;
+      const DEFAULT_LAYOUT_MODE = "center";
       const DEFAULT_ENTRY_TEXT_COLOR = "#e9ebff";
       const DEFAULT_ENTRY_FONT_SIZE = 16;
       const DEFAULT_ENTRY_BG_ALPHA = 85;
@@ -1827,6 +1835,12 @@
         const v = { ...(raw || {}) };
         v.device_type = v.device_type || deviceFallback || "pc";
         v.display_name_mode = v.display_name_mode || "slug";
+        const layout = (v.layout_mode || DEFAULT_LAYOUT_MODE)
+          .toString()
+          .toLowerCase();
+        v.layout_mode = ["center", "wide"].includes(layout)
+          ? layout
+          : DEFAULT_LAYOUT_MODE;
         if (v.display_name_mode === "custom") {
           if (!v.custom_display_name || !v.custom_display_name.trim()) {
             showMsg(
@@ -2075,6 +2089,7 @@
           name_effect: "none",
           background_effect: "none",
           display_name_mode: "slug",
+          layout_mode: DEFAULT_LAYOUT_MODE,
           custom_display_name: "",
           link_color: "",
           link_bg_color: "",
@@ -2174,6 +2189,7 @@
         $("tplNameFx").value = v.name_effect || "none";
         $("tplBgFx").value = v.background_effect || "none";
         $("tplDisplayName").value = v.display_name_mode || "slug";
+        $("tplLayoutMode").value = v.layout_mode || DEFAULT_LAYOUT_MODE;
         $("tplCustomName").value = v.custom_display_name || "";
         $("tplLinkColor").value = v.link_color || "";
         $("tplLinkBgColor").value = v.link_bg_color || "";
@@ -2310,6 +2326,7 @@
           name_effect: $("tplNameFx").value || "none",
           background_effect: $("tplBgFx").value || "none",
           display_name_mode: displayMode,
+          layout_mode: $("tplLayoutMode").value || DEFAULT_LAYOUT_MODE,
           custom_display_name: customNameOut,
           link_color: hexOrNull($("tplLinkColor").value),
           link_bg_color: hexOrNull($("tplLinkBgColor").value),
@@ -2471,6 +2488,7 @@
             name_effect: lt.name_effect || "none",
             background_effect: lt.background_effect || "none",
             display_name_mode: lt.display_name_mode || "slug",
+            layout_mode: lt.layout_mode || DEFAULT_LAYOUT_MODE,
             custom_display_name: lt.custom_display_name || "",
             link_color: lt.link_color || "",
             link_bg_color: lt.link_bg_color || "",

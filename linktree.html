@@ -936,6 +936,53 @@
         margin: 0 auto;
       }
 
+      .card.wide {
+        max-width: 980px;
+        width: min(100%, 980px);
+        text-align: left;
+      }
+
+      .card.wide .pfp-wrap {
+        margin: 0 0 0.6rem;
+      }
+
+      .card.wide .links {
+        max-width: none;
+        margin: 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .card.wide .link {
+        justify-content: flex-start;
+        text-align: left;
+        padding-left: 3rem;
+      }
+
+      .card.wide .visit-counter {
+        margin: 1rem 0 0;
+      }
+
+      @media (max-width: 900px) {
+        .card.wide {
+          text-align: center;
+        }
+
+        .card.wide .links {
+          grid-template-columns: minmax(0, 1fr);
+          margin: 0 auto;
+        }
+
+        .card.wide .link {
+          justify-content: center;
+          text-align: center;
+          padding-left: 1.2rem;
+        }
+
+        .card.wide .visit-counter {
+          margin: 1rem auto 0;
+        }
+      }
+
       /* Profilbild */
       .pfp {
         width: 100px;
@@ -3300,6 +3347,11 @@
 
           const cardEl = document.getElementById("card");
           if (cardEl) {
+            const layoutMode = (data.layout_mode || "center")
+              .toString()
+              .toLowerCase();
+            const wantsWide = !isMobile && layoutMode === "wide";
+            cardEl.classList.toggle("wide", wantsWide);
             const raw = Number(data.transparency);
             const clamped = Number.isFinite(raw)
               ? Math.min(100, Math.max(0, raw))
