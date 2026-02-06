@@ -974,6 +974,33 @@
         margin: 1rem 0 0;
       }
 
+      .card.canvas {
+        position: relative;
+        min-height: 480px;
+      }
+
+      .card.canvas .links {
+        margin: 0;
+      }
+
+      .card.canvas .visit-counter {
+        margin: 0;
+      }
+
+      .card.canvas .badges {
+        margin-bottom: 0;
+      }
+
+      .plate-group {
+        position: absolute;
+        inset: 0 auto auto 0;
+      }
+
+      .canvas-plate {
+        position: absolute;
+        inset: 0 auto auto 0;
+      }
+
       @media (max-width: 900px) {
         .card.wide {
           text-align: center;
@@ -1946,9 +1973,7 @@
           }
         }
 
-        function applySectionOrder(rawOrder) {
-          const card = document.getElementById("card");
-          if (!card) return false;
+        function clearSectionRows(card) {
           const existingRows = card.querySelectorAll(".section-row");
           existingRows.forEach((row) => {
             while (row.firstChild) {
@@ -1956,6 +1981,169 @@
             }
             row.remove();
           });
+        }
+
+        function resetCanvasLayout(card) {
+          if (!card) return;
+          clearSectionRows(card);
+          card.classList.remove("canvas");
+          card.style.removeProperty("min-height");
+          const groups = card.querySelectorAll(".plate-group");
+          groups.forEach((group) => {
+            while (group.firstChild) {
+              card.insertBefore(group.firstChild, group);
+            }
+            group.remove();
+          });
+          SECTION_ORDER_DEFAULT.forEach((key) => {
+            const el = getSectionElement(key);
+            if (!el) return;
+            el.classList.remove("canvas-plate");
+            el.style.removeProperty("position");
+            el.style.removeProperty("left");
+            el.style.removeProperty("top");
+            el.style.removeProperty("transform");
+          });
+        }
+
+        function flattenSectionOrder(order) {
+          const list = [];
+          (order || SECTION_ORDER_DEFAULT).forEach((item) => {
+            if (Array.isArray(item)) {
+              item.forEach((key) => list.push(key));
+            } else {
+              list.push(item);
+            }
+          });
+          return list;
+        }
+
+        function buildDefaultCanvasLayout(order, grid) {
+          const plates = {};
+          let y = 2;
+          flattenSectionOrder(order).forEach((key) => {
+            plates[key] = { x: 2, y, group: null };
+            y += 8;
+          });
+          return {
+            enabled: false,
+            grid: grid || 8,
+            plates,
+            groups: {},
+          };
+        }
+
+        function normalizeCanvasLayout(raw, order) {
+          if (!raw) return null;
+          let data = raw;
+          if (typeof raw === "string") {
+            try {
+              data = JSON.parse(raw);
+            } catch (_) {
+              return null;
+            }
+          }
+          if (!data || typeof data !== "object") return null;
+          const gridRaw = parseInt(data.grid ?? 8, 10);
+          const grid = Number.isFinite(gridRaw)
+            ? Math.min(24, Math.max(4, gridRaw))
+            : 8;
+          const fallback = buildDefaultCanvasLayout(order, grid);
+          const plates = {};
+          const groups = {};
+          if (data.groups && typeof data.groups === "object") {
+            Object.entries(data.groups).forEach(([gid, g]) => {
+              if (!g || typeof g !== "object") return;
+              const gx = parseInt(g.x ?? 0, 10);
+              const gy = parseInt(g.y ?? 0, 10);
+              if (!Number.isFinite(gx) || !Number.isFinite(gy)) return;
+              groups[String(gid)] = { x: gx, y: gy };
+            });
+          }
+          if (data.plates && typeof data.plates === "object") {
+            Object.entries(data.plates).forEach(([key, plate]) => {
+              const k = String(key || "").trim().toLowerCase();
+              if (!k || !SECTION_ORDER_ALLOWED.has(k)) return;
+              if (!plate || typeof plate !== "object") return;
+              const px = parseInt(plate.x ?? 0, 10);
+              const py = parseInt(plate.y ?? 0, 10);
+              if (!Number.isFinite(px) || !Number.isFinite(py)) return;
+              const entry = { x: px, y: py };
+              if (plate.group && groups[plate.group]) {
+                entry.group = plate.group;
+              }
+              plates[k] = entry;
+            });
+          }
+          Object.keys(fallback.plates).forEach((key) => {
+            if (!plates[key]) plates[key] = { ...fallback.plates[key] };
+          });
+          return {
+            enabled: !!data.enabled,
+            grid,
+            plates,
+            groups,
+          };
+        }
+
+        function applyCanvasLayout(rawLayout, rawOrder, { isMobile } = {}) {
+          const card = document.getElementById("card");
+          if (!card || isMobile) return false;
+          const layout = normalizeCanvasLayout(rawLayout, rawOrder);
+          if (!layout || !layout.enabled) return false;
+          resetCanvasLayout(card);
+          card.classList.add("canvas");
+          const grid = layout.grid || 8;
+          const groupEls = {};
+          Object.entries(layout.groups || {}).forEach(([gid, g]) => {
+            const groupEl = document.createElement("div");
+            groupEl.className = "plate-group";
+            groupEl.dataset.groupId = gid;
+            groupEl.style.transform = `translate(${g.x * grid}px, ${g.y * grid}px)`;
+            card.appendChild(groupEl);
+            groupEls[gid] = groupEl;
+          });
+
+          SECTION_ORDER_DEFAULT.forEach((key) => {
+            const el = getSectionElement(key);
+            if (!el) return;
+            const plate = layout.plates[key];
+            if (!plate) return;
+            const parent = plate.group ? groupEls[plate.group] : card;
+            if (!parent) return;
+            el.classList.add("canvas-plate");
+            el.style.position = "absolute";
+            el.style.left = "0";
+            el.style.top = "0";
+            el.style.transform = `translate(${plate.x * grid}px, ${
+              plate.y * grid
+            }px)`;
+            parent.appendChild(el);
+          });
+
+          const cardRect = card.getBoundingClientRect();
+          let maxBottom = 0;
+          let maxRight = 0;
+          SECTION_ORDER_DEFAULT.forEach((key) => {
+            const el = getSectionElement(key);
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            maxBottom = Math.max(maxBottom, rect.bottom - cardRect.top);
+            maxRight = Math.max(maxRight, rect.right - cardRect.left);
+          });
+          if (maxBottom > 0) {
+            card.style.minHeight = `${Math.ceil(maxBottom + grid * 2)}px`;
+          }
+          if (maxRight > 0) {
+            card.style.minWidth = "";
+          }
+          return true;
+        }
+
+        function applySectionOrder(rawOrder) {
+          const card = document.getElementById("card");
+          if (!card) return false;
+          resetCanvasLayout(card);
           const order = normalizeSectionOrder(rawOrder);
           let hasSideBySide = false;
           order.forEach((entry) => {
@@ -1978,6 +2166,15 @@
             }
           });
           return hasSideBySide;
+        }
+
+        function applySectionLayout(rawOrder, rawCanvas, { isMobile } = {}) {
+          const usedCanvas = applyCanvasLayout(rawCanvas, rawOrder, { isMobile });
+          if (usedCanvas) {
+            return { usedCanvas: true, hasSideBySide: false };
+          }
+          const hasSideBySide = applySectionOrder(rawOrder);
+          return { usedCanvas: false, hasSideBySide };
         }
 
         function sanitizeHexColor(raw) {
@@ -3232,7 +3429,13 @@
           lastMediaMode = preferLite ? "lite" : "full";
           lastDevice = device;
           const isMobile = device === "mobile";
-          const hasSideBySide = applySectionOrder(data.section_order);
+          const layoutResult = applySectionLayout(
+            data.section_order,
+            data.canvas_layout,
+            { isMobile },
+          );
+          const hasSideBySide = layoutResult.hasSideBySide;
+          const usedCanvas = layoutResult.usedCanvas;
           let needsGate = false;
 
           const bgSource = pickBackgroundSource(data, preferLite);
@@ -3412,7 +3615,8 @@
             const layoutMode = (data.layout_mode || "center")
               .toString()
               .toLowerCase();
-            const wantsWide = !isMobile && (layoutMode === "wide" || hasSideBySide);
+            const wantsWide =
+              !isMobile && (layoutMode === "wide" || hasSideBySide || usedCanvas);
             cardEl.classList.toggle("wide", wantsWide);
             const raw = Number(data.transparency);
             const clamped = Number.isFinite(raw)

@@ -1841,6 +1841,13 @@
         v.layout_mode = ["center", "wide"].includes(layout)
           ? layout
           : DEFAULT_LAYOUT_MODE;
+        if (typeof v.canvas_layout === "string") {
+          try {
+            v.canvas_layout = JSON.parse(v.canvas_layout);
+          } catch (_) {
+            v.canvas_layout = null;
+          }
+        }
         if (v.display_name_mode === "custom") {
           if (!v.custom_display_name || !v.custom_display_name.trim()) {
             showMsg(
@@ -2090,6 +2097,7 @@
           background_effect: "none",
           display_name_mode: "slug",
           layout_mode: DEFAULT_LAYOUT_MODE,
+          canvas_layout: null,
           custom_display_name: "",
           link_color: "",
           link_bg_color: "",
@@ -2327,6 +2335,8 @@
           background_effect: $("tplBgFx").value || "none",
           display_name_mode: displayMode,
           layout_mode: $("tplLayoutMode").value || DEFAULT_LAYOUT_MODE,
+          canvas_layout:
+            (variantCache[d] && variantCache[d].canvas_layout) || null,
           custom_display_name: customNameOut,
           link_color: hexOrNull($("tplLinkColor").value),
           link_bg_color: hexOrNull($("tplLinkBgColor").value),
@@ -2489,6 +2499,7 @@
             background_effect: lt.background_effect || "none",
             display_name_mode: lt.display_name_mode || "slug",
             layout_mode: lt.layout_mode || DEFAULT_LAYOUT_MODE,
+            canvas_layout: lt.canvas_layout || null,
             custom_display_name: lt.custom_display_name || "",
             link_color: lt.link_color || "",
             link_bg_color: lt.link_bg_color || "",

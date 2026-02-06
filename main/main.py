@@ -405,6 +405,68 @@ def _normalize_section_order(value: Any) -> list[Any] | None:
     return out
 
 
+def _normalize_canvas_layout(value: Any) -> dict | None:
+    if value is None:
+        return None
+    data = value
+    if isinstance(value, str):
+        if not value.strip():
+            return None
+        try:
+            data = json.loads(value)
+        except Exception:
+            return None
+    if not isinstance(data, dict):
+        return None
+    enabled = bool(data.get("enabled", False))
+    try:
+        grid = int(data.get("grid", 8))
+    except Exception:
+        grid = 8
+    grid = max(4, min(24, grid))
+    plates_raw = data.get("plates") or {}
+    groups_raw = data.get("groups") or {}
+    plates: dict[str, dict] = {}
+    groups: dict[str, dict] = {}
+    if isinstance(groups_raw, dict):
+        for gid, raw in groups_raw.items():
+            if not isinstance(raw, dict):
+                continue
+            try:
+                gx = int(raw.get("x", 0))
+                gy = int(raw.get("y", 0))
+            except Exception:
+                continue
+            groups[str(gid)] = {"x": gx, "y": gy}
+    if isinstance(plates_raw, dict):
+        for key, raw in plates_raw.items():
+            k = str(key).strip().lower()
+            if not k or k not in SECTION_ORDER_ALLOWED:
+                continue
+            if not isinstance(raw, dict):
+                continue
+            try:
+                x = int(raw.get("x", 0))
+                y = int(raw.get("y", 0))
+            except Exception:
+                continue
+            plate = {"x": x, "y": y}
+            group = raw.get("group")
+            if group is not None:
+                gid = str(group)
+                if gid in groups:
+                    plate["group"] = gid
+            plates[k] = plate
+    if not plates and not groups and not enabled:
+        return None
+    return {
+        "enabled": enabled,
+        "grid": grid,
+        "plates": plates,
+        "groups": groups,
+    }
+
+
 def _add_local_media_url(url: str | None, bucket: set[str]) -> None:
     if not url:
         return
@@ -1272,6 +1334,7 @@ class LinktreeCreateIn(BaseModel):
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
     section_order: Optional[List[Any]] = None
+    canvas_layout: Optional[dict] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
@@ -1344,6 +1407,7 @@ class LinktreeUpdateIn(BaseModel):
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
     section_order: Optional[List[Any]] = None
+    canvas_layout: Optional[dict] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
@@ -1450,6 +1514,7 @@ class LinktreeOut(BaseModel):
     discord_linked: bool = False
     linktree_profile_picture: Optional[str] = None
     section_order: Optional[List[Any]] = None
+    canvas_layout: Optional[dict] = None
     profile_picture: Optional[str] = None  # NEU - fuer Avatar
     user_username: Optional[str] = None  # NEU - fuer "username"-Modus
     show_visit_counter: bool = False
@@ -2153,6 +2218,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                     custom_display_name,
                     linktree_profile_picture,
                     section_order,
+                    canvas_layout,
                     link_color,
                     link_bg_color,
                     COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
@@ -2276,6 +2342,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "custom_display_name": lt.get("custom_display_name"),
         "linktree_profile_picture": lt.get("linktree_profile_picture"),
         "section_order": _normalize_section_order(lt.get("section_order")),
+        "canvas_layout": _normalize_canvas_layout(lt.get("canvas_layout")),
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
@@ -3430,6 +3497,7 @@ def get_linktree(
         "custom_display_name": lt.get("custom_display_name"),
         "linktree_profile_picture": lt.get("linktree_profile_picture"),
         "section_order": _normalize_section_order(lt.get("section_order")),
+        "canvas_layout": _normalize_canvas_layout(lt.get("canvas_layout")),
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": lt.get("link_bg_alpha", 100),
@@ -3511,6 +3579,8 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
         )
         section_order = _normalize_section_order(payload.section_order)
         section_order_json = json.dumps(section_order) if section_order else None
+        canvas_layout = _normalize_canvas_layout(payload.canvas_layout)
+        canvas_layout_json = json.dumps(canvas_layout) if canvas_layout is not None else None
         entry_text = payload.entry_text.strip() if isinstance(payload.entry_text, str) else None
         entry_bg_alpha = (
             int(payload.entry_bg_alpha)
@@ -3623,6 +3693,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             custom_display_name=payload.custom_display_name,
             linktree_profile_picture=payload.linktree_profile_picture,
             section_order=section_order_json,
+            canvas_layout=canvas_layout_json,
             link_color=payload.link_color,
             link_bg_color=payload.link_bg_color,
             link_bg_alpha=payload.link_bg_alpha,
@@ -4609,6 +4680,7 @@ class TemplateVariantIn(BaseModel):
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
     linktree_profile_picture: Optional[str] = None
     section_order: Optional[List[Any]] = None
+    canvas_layout: Optional[dict] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
@@ -4783,6 +4855,8 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
         data["layout_mode"] = mode if mode in {"center", "wide"} else "center"
     if "section_order" in data:
         data["section_order"] = _normalize_section_order(data.get("section_order"))
+    if "canvas_layout" in data:
+        data["canvas_layout"] = _normalize_canvas_layout(data.get("canvas_layout"))
     if "discord_badge_codes" in data:
         data["discord_badge_codes"] = _normalize_text_list(
             data.get("discord_badge_codes"),
@@ -4954,6 +5028,7 @@ def _extract_linktree_fields(data: dict) -> dict:
         "custom_display_name",
         "linktree_profile_picture",
         "section_order",
+        "canvas_layout",
         "link_color",
         "link_bg_color",
         "link_bg_alpha",
@@ -4997,6 +5072,9 @@ def _extract_linktree_fields(data: dict) -> dict:
     if "section_order" in fields:
         order = _normalize_section_order(fields.get("section_order"))
         fields["section_order"] = json.dumps(order) if order else None
+    if "canvas_layout" in fields:
+        layout = _normalize_canvas_layout(fields.get("canvas_layout"))
+        fields["canvas_layout"] = json.dumps(layout) if layout is not None else None
     if "quote_typing_speed" in fields:
         try:
             speed = int(fields.get("quote_typing_speed"))

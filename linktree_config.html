@@ -765,6 +765,84 @@
         min-width: 220px;
       }
 
+      .canvas-editor {
+        position: relative;
+        min-height: 420px;
+        border: 1px dashed var(--border-2);
+        border-radius: 16px;
+        background-color: rgba(255, 255, 255, 0.02);
+        overflow: auto;
+        --canvas-grid: 8px;
+        background-image: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.08) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.08) 1px,
+            transparent 1px
+          );
+        background-size: var(--canvas-grid) var(--canvas-grid);
+        padding: 0;
+      }
+
+      .canvas-plate {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        padding: 0.5rem 0.75rem;
+        min-width: calc(var(--canvas-grid) * 16);
+        min-height: calc(var(--canvas-grid) * 6);
+        border-radius: 14px;
+        border: 1px solid rgba(122, 162, 255, 0.38);
+        background: rgba(122, 162, 255, 0.15);
+        font-weight: 700;
+        color: inherit;
+        cursor: grab;
+        user-select: none;
+        text-align: center;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+      }
+
+      .canvas-plate.selected {
+        outline: 2px solid rgba(93, 214, 194, 0.75);
+        outline-offset: 2px;
+      }
+
+      .canvas-group {
+        position: absolute;
+        border-radius: 16px;
+        border: 1px dashed rgba(93, 214, 194, 0.6);
+        background: rgba(93, 214, 194, 0.08);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .canvas-group .group-handle {
+        position: absolute;
+        top: -28px;
+        left: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid rgba(93, 214, 194, 0.65);
+        background: rgba(14, 18, 32, 0.85);
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: grab;
+        user-select: none;
+      }
+
+      .canvas-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: space-between;
+      }
+
       .section-order-pair {
         display: flex;
         align-items: center;
@@ -1298,6 +1376,66 @@
                   >
                     Reset to default
                   </button>
+                </div>
+              </div>
+            </details>
+
+            <details class="fold" open>
+              <summary>Canvas layout (beta)</summary>
+              <div class="fold-body">
+                <div class="canvas-toolbar">
+                  <label class="row" style="gap: 0.5rem">
+                    <input type="checkbox" id="inCanvasEnabled" />
+                    <span>Enable canvas layout</span>
+                  </label>
+                  <div class="field" style="min-width: 220px">
+                    <label for="inCanvasGrid">Grid size</label>
+                    <div class="row" style="align-items: center; gap: 0.6rem">
+                      <input
+                        type="range"
+                        id="inCanvasGrid"
+                        min="4"
+                        max="24"
+                        step="1"
+                        value="8"
+                      />
+                      <span id="canvasGridValue" class="kbd">8px</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row" style="gap: 0.5rem; flex-wrap: wrap">
+                  <button
+                    class="btn sm ghost"
+                    type="button"
+                    id="btnCanvasGroup"
+                  >
+                    Group selected
+                  </button>
+                  <button
+                    class="btn sm ghost"
+                    type="button"
+                    id="btnCanvasUngroup"
+                  >
+                    Ungroup
+                  </button>
+                  <button
+                    class="btn sm ghost"
+                    type="button"
+                    id="btnCanvasReset"
+                  >
+                    Reset layout
+                  </button>
+                </div>
+                <div
+                  id="canvasEditor"
+                  class="canvas-editor"
+                  role="region"
+                  aria-label="Canvas layout editor"
+                ></div>
+                <div class="preview-note muted">
+                  Click to select, shift-click to multi-select, drag to move. Group
+                  items to move them together; you can still move items inside the
+                  group.
                 </div>
               </div>
             </details>
@@ -2541,6 +2679,14 @@
         visit_counter: "Visit counter",
       };
       let sectionOrder = SECTION_ORDER_DEFAULT.slice();
+      const CANVAS_GRID_DEFAULT = 8;
+      const CANVAS_GRID_MIN = 4;
+      const CANVAS_GRID_MAX = 24;
+      const CANVAS_PLATE_W = 16;
+      const CANVAS_PLATE_H = 6;
+      let canvasLayout = null;
+      let canvasSelection = new Set();
+      let canvasDragState = null;
 
       function hexOrNull(val) {
         const t = (val || "").trim();
@@ -2598,6 +2744,361 @@
           }
         });
         return out;
+      }
+
+      function flattenSectionOrder(order) {
+        const list = [];
+        (order || SECTION_ORDER_DEFAULT).forEach((item) => {
+          if (Array.isArray(item)) {
+            item.forEach((key) => list.push(key));
+          } else {
+            list.push(item);
+          }
+        });
+        return list;
+      }
+
+      function buildDefaultCanvasLayout(order) {
+        const plates = {};
+        const flat = flattenSectionOrder(order);
+        let y = 2;
+        flat.forEach((key) => {
+          plates[key] = { x: 2, y, group: null };
+          y += CANVAS_PLATE_H + 2;
+        });
+        return {
+          enabled: false,
+          grid: CANVAS_GRID_DEFAULT,
+          plates,
+          groups: {},
+        };
+      }
+
+      function normalizeCanvasLayout(raw, order) {
+        let data = raw;
+        if (typeof raw === "string") {
+          try {
+            data = JSON.parse(raw);
+          } catch (_) {
+            data = null;
+          }
+        }
+        const fallback = buildDefaultCanvasLayout(order);
+        if (!data || typeof data !== "object") return fallback;
+        const gridRaw = parseInt(data.grid ?? CANVAS_GRID_DEFAULT, 10);
+        const grid = Number.isFinite(gridRaw)
+          ? Math.min(CANVAS_GRID_MAX, Math.max(CANVAS_GRID_MIN, gridRaw))
+          : CANVAS_GRID_DEFAULT;
+        const plates = {};
+        const groups = {};
+        if (data.groups && typeof data.groups === "object") {
+          Object.entries(data.groups).forEach(([gid, g]) => {
+            if (!g || typeof g !== "object") return;
+            const gx = parseInt(g.x ?? 0, 10);
+            const gy = parseInt(g.y ?? 0, 10);
+            if (!Number.isFinite(gx) || !Number.isFinite(gy)) return;
+            groups[String(gid)] = { x: gx, y: gy };
+          });
+        }
+        if (data.plates && typeof data.plates === "object") {
+          Object.entries(data.plates).forEach(([key, plate]) => {
+            const k = String(key || "").trim().toLowerCase();
+            if (!k || !SECTION_LABELS[k]) return;
+            if (!plate || typeof plate !== "object") return;
+            const px = parseInt(plate.x ?? 0, 10);
+            const py = parseInt(plate.y ?? 0, 10);
+            if (!Number.isFinite(px) || !Number.isFinite(py)) return;
+            const entry = { x: px, y: py };
+            if (plate.group && groups[plate.group]) {
+              entry.group = plate.group;
+            }
+            plates[k] = entry;
+          });
+        }
+        Object.keys(fallback.plates).forEach((key) => {
+          if (!plates[key]) plates[key] = { ...fallback.plates[key] };
+        });
+        return {
+          enabled: !!data.enabled,
+          grid,
+          plates,
+          groups,
+        };
+      }
+
+      function serializeCanvasLayout() {
+        if (!canvasLayout) return null;
+        return {
+          enabled: !!canvasLayout.enabled,
+          grid: canvasLayout.grid,
+          plates: canvasLayout.plates,
+          groups: canvasLayout.groups,
+        };
+      }
+
+      function clearCanvasSelection() {
+        canvasSelection = new Set();
+        document
+          .querySelectorAll(".canvas-plate.selected")
+          .forEach((el) => el.classList.remove("selected"));
+        updateCanvasToolbar();
+      }
+
+      function setPlateSelected(key, selected) {
+        const plateEl = document.querySelector(
+          `.canvas-plate[data-key="${key}"]`,
+        );
+        if (selected) {
+          canvasSelection.add(key);
+          if (plateEl) plateEl.classList.add("selected");
+        } else {
+          canvasSelection.delete(key);
+          if (plateEl) plateEl.classList.remove("selected");
+        }
+      }
+
+      function updateCanvasToolbar() {
+        const groupBtn = $("btnCanvasGroup");
+        const ungroupBtn = $("btnCanvasUngroup");
+        if (groupBtn) {
+          const canGroup =
+            Array.from(canvasSelection).filter((key) => {
+              const plate = canvasLayout && canvasLayout.plates[key];
+              return plate && !plate.group;
+            }).length >= 2;
+          groupBtn.disabled = !canGroup;
+        }
+        if (ungroupBtn) {
+          const canUngroup = Array.from(canvasSelection).some((key) => {
+            const plate = canvasLayout && canvasLayout.plates[key];
+            return plate && plate.group;
+          });
+          ungroupBtn.disabled = !canUngroup;
+        }
+      }
+
+      function updateGroupBounds(groupEl, groupId) {
+        if (!canvasLayout || !groupEl) return;
+        const plates = Object.entries(canvasLayout.plates).filter(
+          ([, plate]) => plate.group === groupId,
+        );
+        if (!plates.length) {
+          groupEl.style.width = "0px";
+          groupEl.style.height = "0px";
+          return;
+        }
+        const grid = canvasLayout.grid;
+        let maxX = 0;
+        let maxY = 0;
+        plates.forEach(([key, plate]) => {
+          const px = plate.x * grid;
+          const py = plate.y * grid;
+          const width = grid * CANVAS_PLATE_W;
+          const height = grid * CANVAS_PLATE_H;
+          maxX = Math.max(maxX, px + width);
+          maxY = Math.max(maxY, py + height);
+        });
+        groupEl.style.width = `${maxX}px`;
+        groupEl.style.height = `${maxY}px`;
+      }
+
+      function renderCanvasEditor() {
+        const editor = $("canvasEditor");
+        if (!editor || !canvasLayout) return;
+        canvasSelection = new Set();
+        editor.innerHTML = "";
+        editor.style.setProperty("--canvas-grid", `${canvasLayout.grid}px`);
+        const groupEls = {};
+        Object.entries(canvasLayout.groups || {}).forEach(([gid, g]) => {
+          const groupEl = document.createElement("div");
+          groupEl.className = "canvas-group";
+          groupEl.dataset.groupId = gid;
+          groupEl.style.transform = `translate(${g.x * canvasLayout.grid}px, ${
+            g.y * canvasLayout.grid
+          }px)`;
+          const handle = document.createElement("div");
+          handle.className = "group-handle";
+          handle.textContent = "Group";
+          handle.addEventListener("mousedown", (evt) =>
+            startCanvasDrag(evt, { type: "group", id: gid, el: groupEl }),
+          );
+          groupEl.appendChild(handle);
+          editor.appendChild(groupEl);
+          groupEls[gid] = groupEl;
+        });
+
+        SECTION_ORDER_DEFAULT.forEach((key) => {
+          const plateData = canvasLayout.plates[key];
+          if (!plateData) return;
+          const plateEl = document.createElement("div");
+          plateEl.className = "canvas-plate";
+          plateEl.dataset.key = key;
+          plateEl.textContent = SECTION_LABELS[key] || key;
+          const parent = plateData.group
+            ? groupEls[plateData.group]
+            : editor;
+          if (!parent) return;
+          plateEl.style.transform = `translate(${plateData.x * canvasLayout.grid}px, ${
+            plateData.y * canvasLayout.grid
+          }px)`;
+          plateEl.addEventListener("mousedown", (evt) =>
+            startCanvasDrag(evt, { type: "plate", key, el: plateEl }),
+          );
+          plateEl.addEventListener("click", (evt) => {
+            evt.stopPropagation();
+            const wasSelected = canvasSelection.has(key);
+            if (!evt.shiftKey) clearCanvasSelection();
+            setPlateSelected(key, !wasSelected);
+          });
+          parent.appendChild(plateEl);
+        });
+
+        Object.entries(groupEls).forEach(([gid, groupEl]) => {
+          updateGroupBounds(groupEl, gid);
+        });
+        updateCanvasToolbar();
+      }
+
+      function startCanvasDrag(evt, target) {
+        if (!canvasLayout || evt.button !== 0) return;
+        evt.preventDefault();
+        const grid = canvasLayout.grid;
+        if (target.type === "plate") {
+          const plate = canvasLayout.plates[target.key];
+          if (!plate) return;
+          canvasDragState = {
+            type: "plate",
+            key: target.key,
+            el: target.el,
+            startX: evt.clientX,
+            startY: evt.clientY,
+            originX: plate.x,
+            originY: plate.y,
+          };
+        } else if (target.type === "group") {
+          const group = canvasLayout.groups[target.id];
+          if (!group) return;
+          canvasDragState = {
+            type: "group",
+            id: target.id,
+            el: target.el,
+            startX: evt.clientX,
+            startY: evt.clientY,
+            originX: group.x,
+            originY: group.y,
+          };
+        }
+        document.addEventListener("mousemove", onCanvasDrag);
+        document.addEventListener("mouseup", stopCanvasDrag);
+      }
+
+      function onCanvasDrag(evt) {
+        if (!canvasLayout || !canvasDragState) return;
+        const grid = canvasLayout.grid;
+        const dx = Math.round((evt.clientX - canvasDragState.startX) / grid);
+        const dy = Math.round((evt.clientY - canvasDragState.startY) / grid);
+        if (canvasDragState.type === "plate") {
+          const plate = canvasLayout.plates[canvasDragState.key];
+          if (!plate) return;
+          plate.x = canvasDragState.originX + dx;
+          plate.y = canvasDragState.originY + dy;
+          if (plate.group) {
+            plate.x = Math.max(0, plate.x);
+            plate.y = Math.max(0, plate.y);
+          }
+          canvasDragState.el.style.transform = `translate(${plate.x * grid}px, ${
+            plate.y * grid
+          }px)`;
+          if (plate.group) {
+            const groupEl = document.querySelector(
+              `.canvas-group[data-group-id="${plate.group}"]`,
+            );
+            updateGroupBounds(groupEl, plate.group);
+          }
+        } else if (canvasDragState.type === "group") {
+          const group = canvasLayout.groups[canvasDragState.id];
+          if (!group) return;
+          group.x = canvasDragState.originX + dx;
+          group.y = canvasDragState.originY + dy;
+          canvasDragState.el.style.transform = `translate(${group.x * grid}px, ${
+            group.y * grid
+          }px)`;
+        }
+      }
+
+      function stopCanvasDrag() {
+        canvasDragState = null;
+        document.removeEventListener("mousemove", onCanvasDrag);
+        document.removeEventListener("mouseup", stopCanvasDrag);
+      }
+
+      function groupSelectedPlates() {
+        if (!canvasLayout) return;
+        const keys = Array.from(canvasSelection).filter((key) => {
+          const plate = canvasLayout.plates[key];
+          return plate && !plate.group;
+        });
+        if (keys.length < 2) return;
+        let minX = Infinity;
+        let minY = Infinity;
+        keys.forEach((key) => {
+          const plate = canvasLayout.plates[key];
+          minX = Math.min(minX, plate.x);
+          minY = Math.min(minY, plate.y);
+        });
+        const groupId = `g${Date.now().toString(36)}`;
+        canvasLayout.groups[groupId] = { x: minX, y: minY };
+        keys.forEach((key) => {
+          const plate = canvasLayout.plates[key];
+          plate.x = plate.x - minX;
+          plate.y = plate.y - minY;
+          plate.group = groupId;
+        });
+        renderCanvasEditor();
+        keys.forEach((key) => setPlateSelected(key, true));
+      }
+
+      function ungroupSelectedPlates() {
+        if (!canvasLayout) return;
+        const groupsToCheck = new Set();
+        Array.from(canvasSelection).forEach((key) => {
+          const plate = canvasLayout.plates[key];
+          if (!plate || !plate.group) return;
+          const groupId = plate.group;
+          const group = canvasLayout.groups[groupId];
+          if (!group) return;
+          plate.x = group.x + plate.x;
+          plate.y = group.y + plate.y;
+          delete plate.group;
+          groupsToCheck.add(groupId);
+        });
+        groupsToCheck.forEach((groupId) => {
+          const stillHas = Object.values(canvasLayout.plates).some(
+            (plate) => plate.group === groupId,
+          );
+          if (!stillHas) delete canvasLayout.groups[groupId];
+        });
+        renderCanvasEditor();
+        updateCanvasToolbar();
+      }
+
+      function resetCanvasLayout() {
+        canvasLayout = buildDefaultCanvasLayout(sectionOrder);
+        const enabled =
+          $("inCanvasEnabled") && $("inCanvasEnabled").checked ? true : false;
+        canvasLayout.enabled = enabled;
+        renderCanvasEditor();
+        syncCanvasInputs();
+      }
+
+      function syncCanvasInputs() {
+        if (!canvasLayout) return;
+        const enabledInput = $("inCanvasEnabled");
+        const gridInput = $("inCanvasGrid");
+        const gridValue = $("canvasGridValue");
+        if (enabledInput) enabledInput.checked = !!canvasLayout.enabled;
+        if (gridInput) gridInput.value = String(canvasLayout.grid);
+        if (gridValue) gridValue.textContent = `${canvasLayout.grid}px`;
       }
 
       function hasSideBySide(order) {
@@ -2895,6 +3396,9 @@
         $("inLinktreePfp").value = lt.linktree_profile_picture || "";
         sectionOrder = normalizeSectionOrder(lt.section_order);
         renderSectionOrder();
+        canvasLayout = normalizeCanvasLayout(lt.canvas_layout, sectionOrder);
+        syncCanvasInputs();
+        renderCanvasEditor();
         setUploadStatus(
           "songStatus",
           lt.song_url,
@@ -2999,6 +3503,10 @@
         if (!lt || !lt.background_url) return null;
         const disp = lt.display_name_mode || "slug";
         const normalizedOrder = normalizeSectionOrder(lt.section_order);
+        const normalizedCanvas = normalizeCanvasLayout(
+          lt.canvas_layout,
+          normalizedOrder,
+        );
         return {
           device_type: lt.device_type || "pc",
           location: lt.location || "",
@@ -3069,6 +3577,7 @@
           background_effect: lt.background_effect || "none",
           display_name_mode: disp,
           layout_mode: layoutModeFromOrder(normalizedOrder),
+          canvas_layout: normalizedCanvas,
           custom_display_name:
             disp === "custom" ? lt.custom_display_name || "" : null,
           linktree_profile_picture: lt.linktree_profile_picture || null,
@@ -3226,6 +3735,7 @@
           background_effect: $("inBgFx").value || "none",
           display_name_mode: displayMode,
           layout_mode: layoutModeFromOrder(sectionOrder),
+          canvas_layout: serializeCanvasLayout(),
           custom_display_name: displayMode === "custom" ? customName : null,
           linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
           section_order: sectionOrder,
@@ -4019,6 +4529,7 @@
           background_effect: $("inBgFx").value || "none",
           display_name_mode: $("inDisplayName").value,
           layout_mode: layoutModeFromOrder(sectionOrder),
+          canvas_layout: serializeCanvasLayout(),
           custom_display_name: $("inCustomName").value.trim() || null,
           linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
           section_order: sectionOrder,
@@ -4208,6 +4719,34 @@
       $("inLayoutMode").addEventListener("change", () => {
         syncLayoutModeFromOrder();
       });
+      if ($("inCanvasEnabled")) {
+        $("inCanvasEnabled").addEventListener("change", (e) => {
+          if (canvasLayout) canvasLayout.enabled = !!e.target.checked;
+        });
+      }
+      if ($("inCanvasGrid")) {
+        $("inCanvasGrid").addEventListener("input", (e) => {
+          if (!canvasLayout) return;
+          const raw = parseInt(e.target.value || CANVAS_GRID_DEFAULT, 10);
+          canvasLayout.grid = Number.isFinite(raw)
+            ? Math.min(CANVAS_GRID_MAX, Math.max(CANVAS_GRID_MIN, raw))
+            : CANVAS_GRID_DEFAULT;
+          syncCanvasInputs();
+          renderCanvasEditor();
+        });
+      }
+      if ($("btnCanvasGroup")) {
+        $("btnCanvasGroup").addEventListener("click", groupSelectedPlates);
+      }
+      if ($("btnCanvasUngroup")) {
+        $("btnCanvasUngroup").addEventListener("click", ungroupSelectedPlates);
+      }
+      if ($("btnCanvasReset")) {
+        $("btnCanvasReset").addEventListener("click", resetCanvasLayout);
+      }
+      if ($("canvasEditor")) {
+        $("canvasEditor").addEventListener("click", clearCanvasSelection);
+      }
       toggleCustomNameField();
       toggleQuoteTypingFields();
 
@@ -4280,6 +4819,11 @@
 
         if (!slugInput) {
           currentTree = null;
+          if (!canvasLayout) {
+            canvasLayout = buildDefaultCanvasLayout(sectionOrder);
+          }
+          syncCanvasInputs();
+          renderCanvasEditor();
           return;
         }
 
@@ -4299,6 +4843,11 @@
 
         if (!lt) {
           currentTree = null;
+          if (!canvasLayout) {
+            canvasLayout = buildDefaultCanvasLayout(sectionOrder);
+          }
+          syncCanvasInputs();
+          renderCanvasEditor();
           return;
         }
 
