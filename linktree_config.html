@@ -789,25 +789,28 @@
 
       .canvas-plate {
         position: absolute;
-        display: grid;
-        place-items: center;
-        padding: 0.5rem 0.75rem;
-        min-width: calc(var(--canvas-grid) * 16);
-        min-height: calc(var(--canvas-grid) * 6);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
         border-radius: 14px;
-        border: 1px solid rgba(122, 162, 255, 0.38);
-        background: rgba(122, 162, 255, 0.15);
-        font-weight: 700;
+        border: 1px solid rgba(122, 162, 255, 0.25);
+        background: rgba(122, 162, 255, 0.1);
         color: inherit;
         cursor: grab;
         user-select: none;
         text-align: center;
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
+        box-sizing: border-box;
       }
 
       .canvas-plate.selected {
         outline: 2px solid rgba(93, 214, 194, 0.75);
         outline-offset: 2px;
+      }
+
+      .canvas-plate * {
+        pointer-events: none;
       }
 
       .canvas-group {
@@ -841,6 +844,125 @@
         gap: 0.5rem;
         align-items: center;
         justify-content: space-between;
+      }
+
+      .canvas-preview {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.6rem;
+        border-radius: 12px;
+        background: rgba(15, 18, 35, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .canvas-preview.pfp {
+        padding: 0;
+        border-radius: 50%;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.pfp img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .canvas-preview.name {
+        font-weight: 800;
+        font-size: 1.2rem;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.status {
+        font-size: 0.95rem;
+        gap: 0.4rem;
+      }
+
+      .canvas-preview.status .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #23a559;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+      }
+
+      .canvas-preview.quote {
+        max-width: 280px;
+        font-style: italic;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.location {
+        font-size: 0.95rem;
+        gap: 0.35rem;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.badges {
+        gap: 0.35rem;
+        flex-wrap: wrap;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.badges img {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        object-fit: contain;
+        background: rgba(255, 255, 255, 0.12);
+        padding: 0.15rem;
+      }
+
+      .canvas-preview.audio {
+        gap: 0.5rem;
+      }
+
+      .canvas-preview.audio img {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+
+      .canvas-preview.links {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.links .canvas-preview-link {
+        padding: 0.75rem 1rem;
+        border-radius: 16px;
+        background: rgba(23, 27, 59, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .canvas-preview.counter {
+        gap: 0.35rem;
+        font-weight: 700;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.18);
       }
 
       .section-order-pair {
@@ -2660,19 +2782,20 @@
         "discord_status",
         "quote",
         "location",
-        "discord_badges",
         "badges",
         "audio",
         "links",
         "visit_counter",
       ];
+      const SECTION_KEY_ALIASES = {
+        discord_badges: "badges",
+      };
       const SECTION_LABELS = {
         pfp: "Profile picture",
         name: "Display name",
         discord_status: "Discord status line",
         quote: "Quote",
         location: "Location",
-        discord_badges: "Discord badges",
         badges: "Badges",
         audio: "Audio player",
         links: "Links",
@@ -2687,6 +2810,10 @@
       let canvasLayout = null;
       let canvasSelection = new Set();
       let canvasDragState = null;
+      let canvasRefreshTimer = null;
+      let canvasPreviewState = null;
+      let currentLinks = [];
+      let currentBadges = [];
 
       function hexOrNull(val) {
         const t = (val || "").trim();
@@ -2720,7 +2847,8 @@
           if (Array.isArray(item)) {
             const row = [];
             item.forEach((sub) => {
-              const key = String(sub || "").trim().toLowerCase();
+              const rawKey = String(sub || "").trim().toLowerCase();
+              const key = SECTION_KEY_ALIASES[rawKey] || rawKey;
               if (!key || !SECTION_LABELS[key] || seen.has(key)) return;
               seen.add(key);
               row.push(key);
@@ -2732,7 +2860,8 @@
             }
             return;
           }
-          const key = String(item || "").trim().toLowerCase();
+          const rawKey = String(item || "").trim().toLowerCase();
+          const key = SECTION_KEY_ALIASES[rawKey] || rawKey;
           if (!key || !SECTION_LABELS[key] || seen.has(key)) return;
           seen.add(key);
           out.push(key);
@@ -2802,7 +2931,8 @@
         }
         if (data.plates && typeof data.plates === "object") {
           Object.entries(data.plates).forEach(([key, plate]) => {
-            const k = String(key || "").trim().toLowerCase();
+            const rawKey = String(key || "").trim().toLowerCase();
+            const k = SECTION_KEY_ALIASES[rawKey] || rawKey;
             if (!k || !SECTION_LABELS[k]) return;
             if (!plate || typeof plate !== "object") return;
             const px = parseInt(plate.x ?? 0, 10);
@@ -2834,6 +2964,14 @@
           plates: canvasLayout.plates,
           groups: canvasLayout.groups,
         };
+      }
+
+      function scheduleCanvasRefresh() {
+        if (!canvasLayout) return;
+        if (canvasRefreshTimer) clearTimeout(canvasRefreshTimer);
+        canvasRefreshTimer = setTimeout(() => {
+          renderCanvasEditor();
+        }, 120);
       }
 
       function clearCanvasSelection() {
@@ -2880,7 +3018,10 @@
       function updateGroupBounds(groupEl, groupId) {
         if (!canvasLayout || !groupEl) return;
         const plates = Object.entries(canvasLayout.plates).filter(
-          ([, plate]) => plate.group === groupId,
+          ([key, plate]) =>
+            plate.group === groupId &&
+            (!canvasPreviewState ||
+              isCanvasSectionVisible(key, canvasPreviewState)),
         );
         if (!plates.length) {
           groupEl.style.width = "0px";
@@ -2902,14 +3043,229 @@
         groupEl.style.height = `${maxY}px`;
       }
 
+      function getDisplayNameForCanvas() {
+        const mode = $("inDisplayName")?.value || "slug";
+        const slug = $("inSlug")?.value.trim() || "user";
+        const custom = $("inCustomName")?.value.trim() || "";
+        if (mode === "username") {
+          return (currentUser && currentUser.username) || slug;
+        }
+        if (mode === "custom" && custom) return custom;
+        return slug;
+      }
+
+      function getActiveLinksForCanvas() {
+        return (currentLinks || []).filter((l) => l && l.is_active);
+      }
+
+      function getActiveBadgesForCanvas() {
+        const normal = (currentBadges || []).filter((ic) => ic && ic.displayed);
+        const discordEnabled = $("inDiscordBadges")?.checked && discordStatus?.linked;
+        let discord = [];
+        if (discordEnabled && Array.isArray(discordStatus?.badges)) {
+          const filterCodes = Array.isArray(discordBadgeCodes)
+            ? discordBadgeCodes
+            : null;
+          discord = filterCodes
+            ? discordStatus.badges.filter((b) => filterCodes.includes(b && b.code))
+            : discordStatus.badges.slice();
+        }
+        return { normal, discord };
+      }
+
+      function getCanvasPreviewState() {
+        const quoteTexts = collectQuoteTexts();
+        const quoteText = quoteTexts[0] || "";
+        const quoteSize = parseInt($("inQuoteSize")?.value || "", 10);
+        const locationText = $("inLocation")?.value.trim() || "";
+        const showStatus =
+          $("inDiscordStatus")?.checked && discordStatus && discordStatus.linked;
+        const statusText =
+          (discordStatus && discordStatus.status_text) ||
+          (discordStatus && discordStatus.presence) ||
+          "Online";
+        const songUrl = $("inSong")?.value.trim() || "";
+        const songName =
+          $("inSongName")?.value.trim() ||
+          fileNameFromUrl(songUrl) ||
+          "Audio";
+        const songIcon = $("inSongIcon")?.value.trim() || "";
+        const showAudio = $("inAudioPlayer")?.checked && !!songUrl;
+        const links = getActiveLinksForCanvas();
+        const badges = getActiveBadgesForCanvas();
+        const showBadges = badges.normal.length + badges.discord.length > 0;
+        const showLinks = links.length > 0;
+        const showCounter = $("inShowCounter")?.checked;
+        const showQuote = !!quoteText;
+        return {
+          name: getDisplayNameForCanvas(),
+          quoteText,
+          quoteSize: Number.isFinite(quoteSize)
+            ? Math.min(40, Math.max(10, quoteSize))
+            : null,
+          locationText,
+          showStatus,
+          statusText,
+          showAudio,
+          songName,
+          songIcon,
+          links,
+          badges,
+          showBadges,
+          showLinks,
+          showCounter,
+          showQuote,
+        };
+      }
+
+      function isCanvasSectionVisible(key, state) {
+        switch (key) {
+          case "pfp":
+          case "name":
+            return true;
+          case "discord_status":
+            return !!state.showStatus;
+          case "quote":
+            return !!state.showQuote;
+          case "location":
+            return !!state.locationText;
+          case "badges":
+            return !!state.showBadges;
+          case "audio":
+            return !!state.showAudio;
+          case "links":
+            return !!state.showLinks;
+          case "visit_counter":
+            return !!state.showCounter;
+          default:
+            return true;
+        }
+      }
+
+      function buildCanvasPlateContent(key, state) {
+        const wrap = document.createElement("div");
+        wrap.className = `canvas-preview ${key.replace("_", "-")}`;
+        if (key === "pfp") {
+          wrap.classList.add("pfp");
+          const img = document.createElement("img");
+          const linktreePfp = $("inLinktreePfp")?.value.trim();
+          img.src =
+            linktreePfp ||
+            (currentUser && currentUser.profile_picture) ||
+            "/static/icon.png";
+          img.alt = "Profile picture";
+          wrap.appendChild(img);
+          return wrap;
+        }
+        if (key === "name") {
+          wrap.classList.add("name");
+          wrap.textContent = state.name || "User";
+          const nameColor = $("inNameColor")?.value;
+          if (nameColor) wrap.style.color = nameColor;
+          return wrap;
+        }
+        if (key === "discord_status") {
+          wrap.classList.add("status");
+          const dot = document.createElement("span");
+          dot.className = "dot";
+          const label = document.createElement("span");
+          label.textContent = state.statusText || "Online";
+          wrap.appendChild(dot);
+          wrap.appendChild(label);
+          return wrap;
+        }
+        if (key === "quote") {
+          wrap.classList.add("quote");
+          wrap.textContent = state.quoteText || "Quote";
+          if (state.quoteSize) {
+            wrap.style.fontSize = `${state.quoteSize}px`;
+          }
+          const quoteColor = $("inQuoteColor")?.value;
+          if (quoteColor) wrap.style.color = quoteColor;
+          return wrap;
+        }
+        if (key === "location") {
+          wrap.classList.add("location");
+          wrap.textContent = `📍 ${state.locationText}`;
+          const locationColor = $("inLocationColor")?.value;
+          if (locationColor) wrap.style.color = locationColor;
+          return wrap;
+        }
+        if (key === "badges") {
+          wrap.classList.add("badges");
+          const list = [
+            ...(state.badges?.normal || []).map((ic) => ic.image_url),
+            ...(state.badges?.discord || []).map((b) => b.icon_url),
+          ].filter(Boolean);
+          if (!list.length) {
+            wrap.textContent = "Badges";
+            return wrap;
+          }
+          list.forEach((url) => {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = "";
+            wrap.appendChild(img);
+          });
+          return wrap;
+        }
+        if (key === "audio") {
+          wrap.classList.add("audio");
+          if (state.songIcon) {
+            const img = document.createElement("img");
+            img.src = state.songIcon;
+            img.alt = "";
+            wrap.appendChild(img);
+          }
+          const label = document.createElement("span");
+          label.textContent = state.songName || "Audio player";
+          wrap.appendChild(label);
+          return wrap;
+        }
+        if (key === "links") {
+          wrap.classList.add("links");
+          const linkColor = $("inLinkColor")?.value || "#e9ebff";
+          const linkBg = $("inLinkBgColor")?.value || "#171b3b";
+          (state.links || []).forEach((l) => {
+            const item = document.createElement("div");
+            item.className = "canvas-preview-link";
+            item.textContent = l.label || l.url || "Link";
+            item.style.color = linkColor;
+            item.style.background = linkBg;
+            wrap.appendChild(item);
+          });
+          return wrap;
+        }
+        if (key === "visit_counter") {
+          wrap.classList.add("counter");
+          wrap.textContent = `👀 ${Number(
+            (currentTree && currentTree.visit_count) || 0,
+          ).toLocaleString()}`;
+          const counterColor = $("inCounterColor")?.value;
+          if (counterColor) wrap.style.color = counterColor;
+          return wrap;
+        }
+        wrap.textContent = SECTION_LABELS[key] || key;
+        return wrap;
+      }
+
       function renderCanvasEditor() {
         const editor = $("canvasEditor");
         if (!editor || !canvasLayout) return;
         canvasSelection = new Set();
         editor.innerHTML = "";
         editor.style.setProperty("--canvas-grid", `${canvasLayout.grid}px`);
+        const previewState = getCanvasPreviewState();
+        canvasPreviewState = previewState;
+        const visibleGroups = new Set();
+        SECTION_ORDER_DEFAULT.forEach((key) => {
+          if (!isCanvasSectionVisible(key, previewState)) return;
+          const plateData = canvasLayout.plates[key];
+          if (plateData && plateData.group) visibleGroups.add(plateData.group);
+        });
         const groupEls = {};
         Object.entries(canvasLayout.groups || {}).forEach(([gid, g]) => {
+          if (!visibleGroups.has(gid)) return;
           const groupEl = document.createElement("div");
           groupEl.className = "canvas-group";
           groupEl.dataset.groupId = gid;
@@ -2930,10 +3286,12 @@
         SECTION_ORDER_DEFAULT.forEach((key) => {
           const plateData = canvasLayout.plates[key];
           if (!plateData) return;
+          if (!isCanvasSectionVisible(key, previewState)) return;
           const plateEl = document.createElement("div");
           plateEl.className = "canvas-plate";
           plateEl.dataset.key = key;
-          plateEl.textContent = SECTION_LABELS[key] || key;
+          const preview = buildCanvasPlateContent(key, previewState);
+          if (preview) plateEl.appendChild(preview);
           const parent = plateData.group
             ? groupEls[plateData.group]
             : editor;
@@ -4029,7 +4387,11 @@
 
       function renderLinks(links) {
         const wrap = $("linksList");
-        if (HIDE_LINKS || !wrap) return;
+        currentLinks = Array.isArray(links) ? links.slice() : [];
+        if (HIDE_LINKS || !wrap) {
+          scheduleCanvasRefresh();
+          return;
+        }
         wrap.innerHTML = "";
         ensureLinksDrag(wrap);
         (links || []).forEach((l, idx) => {
@@ -4161,11 +4523,16 @@
           });
           wrap.appendChild(row);
         });
+        scheduleCanvasRefresh();
       }
 
       function renderBadges(list) {
         const box = $("badges");
-        if (!box) return;
+        currentBadges = Array.isArray(list) ? list.slice() : [];
+        if (!box) {
+          scheduleCanvasRefresh();
+          return;
+        }
         box.innerHTML = "";
         (list || []).forEach((ic) => {
           const item = document.createElement("div");
@@ -4190,6 +4557,7 @@
           });
           box.appendChild(item);
         });
+        scheduleCanvasRefresh();
       }
 
       async function apiUpdateDiscordBadgeCodes(codes) {
@@ -4222,6 +4590,7 @@
         if (!linked) {
           if (hint)
             hint.textContent = "Link Discord to manage your Discord badges.";
+          scheduleCanvasRefresh();
           return;
         }
         const list = Array.isArray(discordStatus?.badges)
@@ -4229,6 +4598,7 @@
           : [];
         if (!list.length) {
           if (hint) hint.textContent = "No Discord badges found on your account.";
+          scheduleCanvasRefresh();
           return;
         }
 
@@ -4270,6 +4640,7 @@
           });
           box.appendChild(item);
         });
+        scheduleCanvasRefresh();
       }
 
       function updateDiscordUI() {
@@ -4746,6 +5117,10 @@
       }
       if ($("canvasEditor")) {
         $("canvasEditor").addEventListener("click", clearCanvasSelection);
+      }
+      if ($("formMeta")) {
+        $("formMeta").addEventListener("input", scheduleCanvasRefresh);
+        $("formMeta").addEventListener("change", scheduleCanvasRefresh);
       }
       toggleCustomNameField();
       toggleQuoteTypingFields();

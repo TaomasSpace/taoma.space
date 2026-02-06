@@ -375,7 +375,8 @@ def _normalize_section_order(value: Any) -> list[Any] | None:
         if isinstance(item, (list, tuple, set)):
             row: list[str] = []
             for sub in item:
-                key = str(sub).strip().lower()
+                raw = str(sub).strip().lower()
+                key = SECTION_KEY_ALIASES.get(raw, raw)
                 if not key or key not in SECTION_ORDER_ALLOWED:
                     continue
                 if key in seen:
@@ -389,7 +390,8 @@ def _normalize_section_order(value: Any) -> list[Any] | None:
             elif len(row) > 1:
                 out.append(row)
             continue
-        key = str(item).strip().lower()
+        raw = str(item).strip().lower()
+        key = SECTION_KEY_ALIASES.get(raw, raw)
         if not key or key not in SECTION_ORDER_ALLOWED:
             continue
         if key in seen:
@@ -440,7 +442,8 @@ def _normalize_canvas_layout(value: Any) -> dict | None:
             groups[str(gid)] = {"x": gx, "y": gy}
     if isinstance(plates_raw, dict):
         for key, raw in plates_raw.items():
-            k = str(key).strip().lower()
+            raw_key = str(key).strip().lower()
+            k = SECTION_KEY_ALIASES.get(raw_key, raw_key)
             if not k or k not in SECTION_ORDER_ALLOWED:
                 continue
             if not isinstance(raw, dict):
@@ -1260,13 +1263,13 @@ SECTION_ORDER_DEFAULT = [
     "discord_status",
     "quote",
     "location",
-    "discord_badges",
     "badges",
     "audio",
     "links",
     "visit_counter",
 ]
 SECTION_ORDER_ALLOWED = set(SECTION_ORDER_DEFAULT)
+SECTION_KEY_ALIASES = {"discord_badges": "badges"}
 
 
 class LinkOut(BaseModel):

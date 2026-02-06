@@ -412,6 +412,10 @@
         margin-bottom: 1.5rem;
         max-width: 600px;
       }
+
+      .quote.hidden {
+        display: none;
+      }
       .quote.font-serif {
         font-family: Georgia, "Times New Roman", serif;
       }
@@ -468,6 +472,10 @@
         margin-bottom: 2rem;
       }
 
+      .badges.hidden {
+        display: none;
+      }
+
       .badge {
         display: inline-flex;
         align-items: center;
@@ -496,6 +504,10 @@
         max-width: 420px;
         margin: 0 auto;
         /* <- zentriert die Liste innerhalb der Karte */
+      }
+
+      .links.hidden {
+        display: none;
       }
 
       .section-row {
@@ -1891,12 +1903,14 @@
           "discord_status",
           "quote",
           "location",
-          "discord_badges",
           "badges",
           "audio",
           "links",
           "visit_counter",
         ];
+        const SECTION_KEY_ALIASES = {
+          discord_badges: "badges",
+        };
         const SECTION_ORDER_ALLOWED = new Set(SECTION_ORDER_DEFAULT);
 
         function normalizeSectionOrder(raw) {
@@ -1918,7 +1932,8 @@
             if (Array.isArray(item)) {
               const row = [];
               item.forEach((sub) => {
-                const key = String(sub || "").trim().toLowerCase();
+                const rawKey = String(sub || "").trim().toLowerCase();
+                const key = SECTION_KEY_ALIASES[rawKey] || rawKey;
                 if (!key || !SECTION_ORDER_ALLOWED.has(key)) return;
                 if (seen.has(key)) return;
                 seen.add(key);
@@ -1931,7 +1946,8 @@
               }
               return;
             }
-            const key = String(item || "").trim().toLowerCase();
+            const rawKey = String(item || "").trim().toLowerCase();
+            const key = SECTION_KEY_ALIASES[rawKey] || rawKey;
             if (!key || !SECTION_ORDER_ALLOWED.has(key)) return;
             if (seen.has(key)) return;
             seen.add(key);
@@ -1958,9 +1974,9 @@
               return document.getElementById("quote");
             case "location":
               return document.getElementById("loc");
-            case "discord_badges":
-              return document.getElementById("discordBadges");
             case "badges":
+              return document.getElementById("badges");
+            case "discord_badges":
               return document.getElementById("badges");
             case "audio":
               return document.getElementById("audioPlayer");
@@ -2062,7 +2078,8 @@
           }
           if (data.plates && typeof data.plates === "object") {
             Object.entries(data.plates).forEach(([key, plate]) => {
-              const k = String(key || "").trim().toLowerCase();
+              const rawKey = String(key || "").trim().toLowerCase();
+              const k = SECTION_KEY_ALIASES[rawKey] || rawKey;
               if (!k || !SECTION_ORDER_ALLOWED.has(k)) return;
               if (!plate || typeof plate !== "object") return;
               const px = parseInt(plate.x ?? 0, 10);
@@ -2345,7 +2362,7 @@
 
         function updateQuoteDisplay(data) {
           const quoteEl = document.getElementById("quote");
-          if (!quoteEl) return;
+          if (!quoteEl) return false;
           const texts = Array.isArray(data?.quote_typing_texts)
             ? data.quote_typing_texts
             : [];
@@ -2367,14 +2384,14 @@
             stopQuoteTyping();
             setQuoteCursorState(quoteEl, { active: false, blink: false });
             quoteEl.textContent = "";
-            return;
+            return false;
           }
           const wantsTyping = !!data?.quote_typing_enabled;
           if (!wantsTyping || prefersReducedMotion()) {
             stopQuoteTyping();
             setQuoteCursorState(quoteEl, { active: false, blink: false });
             quoteEl.textContent = cleaned[0];
-            return;
+            return true;
           }
           setQuoteCursorState(quoteEl, { active: true, blink: false });
           const rawSpeed = Number(data?.quote_typing_speed);
@@ -2390,6 +2407,7 @@
             eraseDelay: Math.max(20, Math.round(speed * 0.7)),
             holdDelay: pause,
           });
+          return true;
         }
 
         function applyAudioPlayerStyles(data) {
@@ -3889,7 +3907,10 @@
               quoteEl.classList.add(`font-${fontFamily}`);
             }
           }
-          updateQuoteDisplay(data);
+          const hasQuote = updateQuoteDisplay(data);
+          if (quoteEl) {
+            quoteEl.classList.toggle("hidden", !hasQuote);
+          }
           const locEl = document.getElementById("loc");
           if (locEl) {
             locEl.textContent = "";
@@ -3909,6 +3930,7 @@
           if (badgesEl) {
             badgesEl.innerHTML = "";
             const frag = document.createDocumentFragment();
+            let badgeCount = 0;
             (data.icons || []).forEach((ic) => {
               if (!ic.displayed) return;
 
@@ -3931,6 +3953,7 @@
 
               wrap.appendChild(img);
               frag.appendChild(wrap);
+              badgeCount += 1;
             });
 
             if (discordLinked && data.discord_badges_enabled) {
@@ -3965,9 +3988,11 @@
 
                 wrap.appendChild(img);
                 frag.appendChild(wrap);
+                badgeCount += 1;
               });
             }
             badgesEl.appendChild(frag);
+            badgesEl.classList.toggle("hidden", badgeCount === 0);
           }
           const linksEl = document.getElementById("links");
           if (linksEl) {
@@ -3989,6 +4014,7 @@
               };
               linkItems = rawLinks.length ? rawLinks : [demoLink];
             }
+            let linkCount = 0;
             (linkItems || []).forEach((l) => {
               if (!l.is_active) return;
               const href = safeLinkUrl(l.url);
@@ -4011,8 +4037,10 @@
               span.textContent = l.label || l.url;
               a.appendChild(span);
               frag.appendChild(a);
+              linkCount += 1;
             });
             linksEl.appendChild(frag);
+            linksEl.classList.toggle("hidden", linkCount === 0);
           }
 
           const visitBox = document.getElementById("visitCounter");
