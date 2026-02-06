@@ -53,6 +53,13 @@
         --name-color: #e9ebff;
         --location-color: #a2a9c8;
         --quote-color: #e9ebff;
+        --quote-glow-1: 8px;
+        --quote-glow-2: 12px;
+        --quote-glow-3: 18px;
+        --quote-neon-1: 6px;
+        --quote-neon-2: 14px;
+        --quote-neon-3: 24px;
+        --quote-neon-drop: 10px;
         --cursor: auto;
         --cursor-fx-color: var(--acc);
       }
@@ -737,18 +744,18 @@
       /* Quote Effects */
       .quote.glow {
         text-shadow:
-          0 0 8px color-mix(in oklab, currentColor 70%, transparent),
-          0 0 12px color-mix(in oklab, currentColor 55%, transparent),
-          0 0 18px color-mix(in oklab, currentColor 40%, transparent);
+          0 0 var(--quote-glow-1) color-mix(in oklab, currentColor 70%, transparent),
+          0 0 var(--quote-glow-2) color-mix(in oklab, currentColor 55%, transparent),
+          0 0 var(--quote-glow-3) color-mix(in oklab, currentColor 40%, transparent);
       }
 
       .quote.neon {
         text-shadow:
-          0 0 6px color-mix(in oklab, currentColor 80%, transparent),
-          0 0 14px color-mix(in oklab, currentColor 60%, transparent),
-          0 0 24px color-mix(in oklab, currentColor 50%, transparent);
+          0 0 var(--quote-neon-1) color-mix(in oklab, currentColor 80%, transparent),
+          0 0 var(--quote-neon-2) color-mix(in oklab, currentColor 60%, transparent),
+          0 0 var(--quote-neon-3) color-mix(in oklab, currentColor 50%, transparent);
         filter: drop-shadow(
-          0 0 10px color-mix(in oklab, currentColor 45%, transparent)
+          0 0 var(--quote-neon-drop) color-mix(in oklab, currentColor 45%, transparent)
         );
       }
 
@@ -1936,6 +1943,26 @@
           rootStyle.setProperty("--name-color", name);
           rootStyle.setProperty("--location-color", location);
           rootStyle.setProperty("--quote-color", quote);
+        }
+
+        function applyQuoteEffectStrength(data) {
+          const rootStyle = document.documentElement.style;
+          const raw = Number(data?.quote_effect_strength);
+          const strength = Number.isFinite(raw)
+            ? Math.min(100, Math.max(0, raw))
+            : 70;
+          const scale = strength / 70;
+          const clampPx = (val) => Math.max(0, Math.round(val));
+          const glow = [8, 12, 18].map((v) => clampPx(v * scale));
+          const neon = [6, 14, 24].map((v) => clampPx(v * scale));
+          const drop = clampPx(10 * scale);
+          rootStyle.setProperty("--quote-glow-1", `${glow[0]}px`);
+          rootStyle.setProperty("--quote-glow-2", `${glow[1]}px`);
+          rootStyle.setProperty("--quote-glow-3", `${glow[2]}px`);
+          rootStyle.setProperty("--quote-neon-1", `${neon[0]}px`);
+          rootStyle.setProperty("--quote-neon-2", `${neon[1]}px`);
+          rootStyle.setProperty("--quote-neon-3", `${neon[2]}px`);
+          rootStyle.setProperty("--quote-neon-drop", `${drop}px`);
         }
 
         function stopQuoteTyping() {
@@ -3292,6 +3319,7 @@
             }
           }
           applyTextColors(data);
+          applyQuoteEffectStrength(data);
           applyLinkStyles(
             data.link_color,
             data.link_bg_color,

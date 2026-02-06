@@ -1223,6 +1223,7 @@ class LinktreeCreateIn(BaseModel):
     quote_font_size: Optional[int] = Field(None, ge=10, le=40)
     quote_font_family: QuoteFontFamily = "default"
     quote_effect: EffectName = "none"
+    quote_effect_strength: int = Field(70, ge=0, le=100)
     entry_bg_alpha: int = Field(85, ge=0, le=100)
     entry_text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     entry_font_size: int = Field(16, ge=10, le=40)
@@ -1293,6 +1294,7 @@ class LinktreeUpdateIn(BaseModel):
     quote_font_size: Optional[int] = Field(None, ge=10, le=40)
     quote_font_family: Optional[QuoteFontFamily] = None
     quote_effect: Optional[EffectName] = None
+    quote_effect_strength: Optional[int] = Field(None, ge=0, le=100)
     entry_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
     entry_text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     entry_font_size: Optional[int] = Field(None, ge=10, le=40)
@@ -1375,6 +1377,7 @@ class LinktreeOut(BaseModel):
     quote_font_size: Optional[int] = None
     quote_font_family: Optional[QuoteFontFamily] = None
     quote_effect: Optional[EffectName] = None
+    quote_effect_strength: Optional[int] = None
     entry_bg_alpha: Optional[int] = None
     entry_text_color: Optional[str] = None
     entry_font_size: Optional[int] = None
@@ -2100,6 +2103,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    quote_font_size,
                    quote_font_family,
                    COALESCE(quote_effect, 'none') AS quote_effect,
+                   COALESCE(quote_effect_strength, 70) AS quote_effect_strength,
                    entry_text,
                    COALESCE(entry_bg_alpha, 85) AS entry_bg_alpha,
                    entry_text_color,
@@ -2223,6 +2227,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "quote_font_size": lt.get("quote_font_size"),
         "quote_font_family": lt.get("quote_font_family") or "default",
         "quote_effect": lt.get("quote_effect") or "none",
+        "quote_effect_strength": int(lt.get("quote_effect_strength", 70) or 70),
         "entry_text": lt.get("entry_text"),
         "entry_bg_alpha": int(lt.get("entry_bg_alpha", 85) or 85),
         "entry_text_color": lt.get("entry_text_color"),
@@ -3303,6 +3308,7 @@ def get_linktree(
     quote_font_size = lt.get("quote_font_size")
     quote_font_family = lt.get("quote_font_family") or "default"
     quote_effect = lt.get("quote_effect") or "none"
+    quote_effect_strength = lt.get("quote_effect_strength", 70)
     entry_bg_alpha = lt.get("entry_bg_alpha", 85)
     entry_text_color = lt.get("entry_text_color")
     entry_font_size = lt.get("entry_font_size", 16)
@@ -3369,6 +3375,7 @@ def get_linktree(
         "quote_font_size": quote_font_size,
         "quote_font_family": quote_font_family,
         "quote_effect": quote_effect,
+        "quote_effect_strength": int(quote_effect_strength or 70),
         "entry_text": lt.get("entry_text"),
         "entry_bg_alpha": int(entry_bg_alpha or 85),
         "entry_text_color": entry_text_color,
@@ -3541,6 +3548,12 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             quote_size = max(10, min(40, quote_size))
         quote_font_family = payload.quote_font_family or "default"
         quote_effect = payload.quote_effect or "none"
+        quote_effect_strength = (
+            int(payload.quote_effect_strength)
+            if payload.quote_effect_strength is not None
+            else 70
+        )
+        quote_effect_strength = max(0, min(100, quote_effect_strength))
         linktree_id = db.create_linktree(
             user_id=user["id"],
             slug=payload.slug,
@@ -3554,6 +3567,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             quote_font_size=quote_size,
             quote_font_family=quote_font_family,
             quote_effect=quote_effect,
+            quote_effect_strength=quote_effect_strength,
             entry_text=entry_text,
             entry_bg_alpha=entry_bg_alpha,
             entry_text_color=entry_text_color,
@@ -4392,6 +4406,14 @@ def update_linktree_ep(
         fields["quote_effect"] = (
             fx if fx in {"none", "glow", "neon", "rainbow"} else "none"
         )
+    if "quote_effect_strength" in fields:
+        try:
+            strength = int(fields.get("quote_effect_strength"))
+        except Exception:
+            strength = None
+        fields["quote_effect_strength"] = (
+            max(0, min(100, strength)) if strength is not None else 70
+        )
 
     # Vorherige Medien-URLs zum Aufräumen merken + device_type
     old_song = None
@@ -4669,6 +4691,14 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
             data["quote_effect"] = fx
         else:
             data["quote_effect"] = "none"
+    if "quote_effect_strength" in data:
+        try:
+            strength = int(data.get("quote_effect_strength"))
+        except Exception:
+            strength = None
+        data["quote_effect_strength"] = (
+            max(0, min(100, strength)) if strength is not None else 70
+        )
     if "entry_bg_alpha" in data:
         try:
             alpha = int(data.get("entry_bg_alpha"))
@@ -4744,6 +4774,7 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("quote_typing_enabled", False)
     data.setdefault("quote_font_family", "default")
     data.setdefault("quote_effect", "none")
+    data.setdefault("quote_effect_strength", 70)
     data.setdefault("entry_bg_alpha", 85)
     data.setdefault("entry_font_size", 16)
     data.setdefault("entry_font_family", "default")
@@ -4868,6 +4899,7 @@ def _extract_linktree_fields(data: dict) -> dict:
         "quote_font_size",
         "quote_font_family",
         "quote_effect",
+        "quote_effect_strength",
         "song_url",
         "song_name",
         "song_icon_url",

@@ -1151,6 +1151,19 @@
                   <option value="rainbow">Rainbow</option>
                 </select>
               </div>
+              <div class="field">
+                <label for="tplQuoteEffectStrength"
+                  >Quote effect strength (0-100)</label
+                >
+                <input
+                  id="tplQuoteEffectStrength"
+                  class="input"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value="70"
+                />
+              </div>
             </div>
             <div class="field">
               <label for="tplSong">Song URL (optional)</label>
@@ -1586,6 +1599,7 @@
       const DEFAULT_QUOTE_SPEED = 42;
       const DEFAULT_QUOTE_PAUSE = 1200;
       const DEFAULT_QUOTE_SIZE = 15;
+      const DEFAULT_QUOTE_EFFECT_STRENGTH = 70;
       const DEFAULT_ENTRY_TEXT_COLOR = "#e9ebff";
       const DEFAULT_ENTRY_FONT_SIZE = 16;
       const DEFAULT_ENTRY_BG_ALPHA = 85;
@@ -1900,6 +1914,10 @@
         const fx = (v.quote_effect || "none").toString().toLowerCase();
         v.quote_effect =
           fx && ["none", "glow", "neon", "rainbow"].includes(fx) ? fx : "none";
+        const strengthRaw = Number(v.quote_effect_strength);
+        v.quote_effect_strength = Number.isFinite(strengthRaw)
+          ? Math.min(100, Math.max(0, Math.round(strengthRaw)))
+          : DEFAULT_QUOTE_EFFECT_STRENGTH;
         v.link_color = hexOrNull(v.link_color);
         v.link_bg_color = hexOrNull(v.link_bg_color);
         v.card_color = hexOrNull(v.card_color);
@@ -2033,6 +2051,7 @@
           quote_font_size: DEFAULT_QUOTE_SIZE,
           quote_font_family: "default",
           quote_effect: "none",
+          quote_effect_strength: DEFAULT_QUOTE_EFFECT_STRENGTH,
           entry_bg_alpha: DEFAULT_ENTRY_BG_ALPHA,
           entry_overlay_alpha: DEFAULT_ENTRY_OVERLAY_ALPHA,
           entry_text_color: DEFAULT_ENTRY_TEXT_COLOR,
@@ -2131,6 +2150,10 @@
             : DEFAULT_QUOTE_SIZE;
         $("tplQuoteFont").value = v.quote_font_family || "default";
         $("tplQuoteEffect").value = v.quote_effect || "none";
+        $("tplQuoteEffectStrength").value =
+          v.quote_effect_strength !== undefined && v.quote_effect_strength !== null
+            ? v.quote_effect_strength
+            : DEFAULT_QUOTE_EFFECT_STRENGTH;
         $("tplSong").value = v.song_url || "";
         $("tplSongName").value = v.song_name || "";
         $("tplSongIcon").value = v.song_icon_url || "";
@@ -2208,6 +2231,13 @@
         const quoteSpeed = parseInt($("tplQuoteSpeed").value || "", 10);
         const quotePause = parseInt($("tplQuotePause").value || "", 10);
         const quoteSize = parseInt($("tplQuoteSize").value || "", 10);
+        const quoteEffectStrengthRaw = parseInt(
+          $("tplQuoteEffectStrength").value || "",
+          10
+        );
+        const quoteEffectStrength = Number.isFinite(quoteEffectStrengthRaw)
+          ? Math.min(100, Math.max(0, quoteEffectStrengthRaw))
+          : DEFAULT_QUOTE_EFFECT_STRENGTH;
         const entryFontSize = parseInt($("tplEntryFontSize").value || "", 10);
         const entryBgAlpha = parseInt($("tplEntryBgAlpha").value || "", 10);
         const entryOverlayAlpha = parseInt(
@@ -2259,6 +2289,7 @@
             : DEFAULT_QUOTE_SIZE,
           quote_font_family: $("tplQuoteFont").value || "default",
           quote_effect: $("tplQuoteEffect").value || "none",
+          quote_effect_strength: quoteEffectStrength,
           song_url: $("tplSong").value.trim() || "",
           song_name: $("tplSongName").value.trim() || null,
           song_icon_url: $("tplSongIcon").value.trim() || null,
@@ -2421,6 +2452,11 @@
                 : DEFAULT_QUOTE_SIZE,
             quote_font_family: lt.quote_font_family || "default",
             quote_effect: lt.quote_effect || "none",
+            quote_effect_strength:
+              lt.quote_effect_strength !== undefined &&
+              lt.quote_effect_strength !== null
+                ? lt.quote_effect_strength
+                : DEFAULT_QUOTE_EFFECT_STRENGTH,
             song_url: lt.song_url || "",
             song_name: lt.song_name || "",
             song_icon_url: lt.song_icon_url || "",

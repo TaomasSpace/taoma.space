@@ -1765,19 +1765,32 @@
                           <option value="rainbow">Rainbow</option>
                         </select>
                       </div>
-                      <div class="field">
-                        <label for="inQuoteSize">Quote font size (px)</label>
-                        <input
-                          id="inQuoteSize"
-                          class="input"
-                          type="number"
-                          min="10"
-                          max="40"
-                          value="15"
-                        />
-                      </div>
-                    </div>
-                  </details>
+                  <div class="field">
+                    <label for="inQuoteSize">Quote font size (px)</label>
+                    <input
+                      id="inQuoteSize"
+                      class="input"
+                      type="number"
+                      min="10"
+                      max="40"
+                      value="15"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="inQuoteEffectStrength"
+                      >Quote effect strength (0-100)</label
+                    >
+                    <input
+                      id="inQuoteEffectStrength"
+                      class="input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value="70"
+                    />
+                  </div>
+                </div>
+              </details>
                 </div>
               </div>
             </details>
@@ -2456,6 +2469,7 @@
       const DEFAULT_QUOTE_SPEED = 42;
       const DEFAULT_QUOTE_PAUSE = 1200;
       const DEFAULT_QUOTE_SIZE = 15;
+      const DEFAULT_QUOTE_EFFECT_STRENGTH = 70;
       const DEFAULT_CURSOR_FX_COLOR = DEFAULT_AUDIO_ACCENT_COLOR;
       const DEFAULT_CURSOR_FX_ALPHA = 70;
       const PRIVATE_TEMPLATE_DESC =
@@ -2689,6 +2703,10 @@
           lt.quote_color || lt.text_color || DEFAULT_QUOTE_COLOR;
         $("inQuoteFont").value = lt.quote_font_family || "default";
         $("inQuoteEffect").value = lt.quote_effect || "none";
+        $("inQuoteEffectStrength").value =
+          lt.quote_effect_strength !== undefined && lt.quote_effect_strength !== null
+            ? lt.quote_effect_strength
+            : DEFAULT_QUOTE_EFFECT_STRENGTH;
         $("inLinkColor").value = lt.link_color || DEFAULT_LINK_COLOR;
         $("inLinkBgColor").value = lt.link_bg_color || DEFAULT_LINK_BG_COLOR;
         $("inCardColor").value = lt.card_color || DEFAULT_CARD_COLOR;
@@ -2832,6 +2850,10 @@
               : DEFAULT_QUOTE_SIZE,
           quote_font_family: lt.quote_font_family || "default",
           quote_effect: lt.quote_effect || "none",
+          quote_effect_strength:
+            lt.quote_effect_strength !== undefined && lt.quote_effect_strength !== null
+              ? lt.quote_effect_strength
+              : DEFAULT_QUOTE_EFFECT_STRENGTH,
           entry_text: lt.entry_text || "",
           entry_bg_alpha:
             lt.entry_bg_alpha !== undefined && lt.entry_bg_alpha !== null
@@ -2958,6 +2980,14 @@
           40,
           Math.max(10, parseInt($("inQuoteSize").value || DEFAULT_QUOTE_SIZE, 10))
         );
+        const quoteEffectStrength = clampPercent(
+          $("inQuoteEffectStrength").value ?? DEFAULT_QUOTE_EFFECT_STRENGTH,
+          DEFAULT_QUOTE_EFFECT_STRENGTH
+        );
+        const quoteEffectStrength = clampPercent(
+          $("inQuoteEffectStrength").value ?? DEFAULT_QUOTE_EFFECT_STRENGTH,
+          DEFAULT_QUOTE_EFFECT_STRENGTH
+        );
         const entryFontSize = Math.min(
           40,
           Math.max(
@@ -2991,6 +3021,12 @@
           quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
           quote_font_family: $("inQuoteFont").value || "default",
           quote_effect: $("inQuoteEffect").value || "none",
+          quote_effect_strength: Number.isFinite(quoteEffectStrength)
+            ? quoteEffectStrength
+            : DEFAULT_QUOTE_EFFECT_STRENGTH,
+          quote_effect_strength: Number.isFinite(quoteEffectStrength)
+            ? quoteEffectStrength
+            : DEFAULT_QUOTE_EFFECT_STRENGTH,
           entry_bg_alpha: Number.isFinite(entryBgAlpha)
             ? entryBgAlpha
             : DEFAULT_ENTRY_BG_ALPHA,
