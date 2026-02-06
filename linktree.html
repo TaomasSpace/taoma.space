@@ -2183,7 +2183,7 @@
           if (!data || typeof data !== "object") return null;
           const gridRaw = parseInt(data.grid ?? 8, 10);
           const grid = Number.isFinite(gridRaw)
-            ? Math.min(24, Math.max(4, gridRaw))
+            ? Math.min(24, Math.max(1, gridRaw))
             : 8;
           const fallback = buildDefaultCanvasLayout(order, grid);
           const plates = {};

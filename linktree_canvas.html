@@ -1857,7 +1857,7 @@
           </div>
           <div class="field">
             <label for="inCanvasGrid">Grid size</label>
-            <input id="inCanvasGrid" type="range" min="4" max="24" value="8" />
+            <input id="inCanvasGrid" type="range" min="1" max="24" value="8" />
             <div class="inspector-note" id="canvasGridValue">8px</div>
           </div>
 
@@ -2242,6 +2242,8 @@
         const CANVAS_PLATE_MAX_H = 200;
         const CANVAS_SIZE_MIN_W = 30;
         const CANVAS_SIZE_MIN_H = 24;
+        const CANVAS_GRID_MIN = 1;
+        const CANVAS_GRID_MAX = 24;
         let canvasLayout = null;
         let canvasSelection = null;
         let canvasDragState = null;
@@ -2458,7 +2460,7 @@
           });
           return {
             enabled: false,
-            grid: grid || 8,
+            grid: grid || 1,
             size: { w: bounds.w, h: bounds.h },
             plates,
             groups: {},
@@ -2467,7 +2469,7 @@
 
         function buildCanvasLayoutFromDom(order, grid) {
           const card = document.getElementById("card");
-          const layout = buildDefaultCanvasLayout(order, grid || 8);
+          const layout = buildDefaultCanvasLayout(order, grid || 1);
           if (!card) return layout;
           const cardRect = card.getBoundingClientRect();
           const nextPlates = { ...layout.plates };
@@ -2517,7 +2519,7 @@
           if (!data || typeof data !== "object") return null;
           const gridRaw = parseInt(data.grid ?? 8, 10);
           const grid = Number.isFinite(gridRaw)
-            ? Math.min(24, Math.max(4, gridRaw))
+            ? Math.min(CANVAS_GRID_MAX, Math.max(CANVAS_GRID_MIN, gridRaw))
             : 8;
           const fallback = buildDefaultCanvasLayout(order, grid);
           const plates = {};
@@ -2610,7 +2612,7 @@
         function updateCanvasCardSize(layout) {
           const card = document.getElementById("card");
           if (!card || !layout || !layout.size) return;
-          const grid = layout.grid || 8;
+          const grid = layout.grid || 1;
           card.style.width = `${layout.size.w * grid}px`;
           card.style.height = `${layout.size.h * grid}px`;
         }
@@ -2618,7 +2620,7 @@
         function updateCanvasGridStyle(layout) {
           const card = document.getElementById("card");
           if (!card || !layout) return;
-          card.style.setProperty("--canvas-grid", `${layout.grid || 8}px`);
+          card.style.setProperty("--canvas-grid", `${layout.grid || 1}px`);
         }
 
         function capturePfpOffsets() {
@@ -2670,7 +2672,7 @@
 
         function updateGroupBounds(groupEl, groupId, layout) {
           if (!groupEl || !layout) return;
-          const grid = layout.grid || 8;
+          const grid = layout.grid || 1;
           const plates = Object.entries(layout.plates || {}).filter(
             ([, plate]) => plate && plate.group === groupId,
           );
@@ -2725,7 +2727,7 @@
 
         function ensurePlateSizesFromDom() {
           if (!canvasLayout) return;
-          const grid = canvasLayout.grid || 8;
+          const grid = canvasLayout.grid || 1;
           let changed = false;
           SECTION_ORDER_DEFAULT.forEach((key) => {
             const plate = canvasLayout.plates?.[key];
@@ -2775,7 +2777,7 @@
           resetCanvasLayout(card);
           card.classList.add("canvas");
           card.style.maxWidth = "none";
-          const grid = layout.grid || 8;
+          const grid = layout.grid || 1;
           if (!pfpSizeOffsets) capturePfpOffsets();
           card.style.setProperty("--canvas-grid", `${grid}px`);
           const groupEls = {};
@@ -2921,8 +2923,8 @@
           const canvasH = document.getElementById("inCanvasH");
           if (!canvasLayout) return;
           if (enabledInput) enabledInput.value = canvasLayout.enabled ? "true" : "false";
-          if (gridInput) gridInput.value = String(canvasLayout.grid || 8);
-          if (gridValue) gridValue.textContent = `${canvasLayout.grid || 8}px`;
+          if (gridInput) gridInput.value = String(canvasLayout.grid || 1);
+          if (gridValue) gridValue.textContent = `${canvasLayout.grid || 1}px`;
           ensureCanvasLayoutSize(canvasLayout);
           if (canvasW && canvasLayout.size) canvasW.value = canvasLayout.size.w;
           if (canvasH && canvasLayout.size) canvasH.value = canvasLayout.size.h;
@@ -2993,7 +2995,7 @@
         function startCanvasDrag(evt, target) {
           if (!canvasLayout || evt.button !== 0) return;
           evt.preventDefault();
-          const grid = canvasLayout.grid || 8;
+          const grid = canvasLayout.grid || 1;
           if (target.type === "plate") {
             const plate = canvasLayout.plates[target.key];
             if (!plate) return;
@@ -3053,7 +3055,7 @@
 
         function onCanvasDrag(evt) {
           if (!canvasLayout || !canvasDragState) return;
-          const grid = canvasLayout.grid || 8;
+          const grid = canvasLayout.grid || 1;
           const dx = Math.round((evt.clientX - canvasDragState.startX) / grid);
           const dy = Math.round((evt.clientY - canvasDragState.startY) / grid);
           if (canvasDragState.type === "plate") {
@@ -4514,10 +4516,10 @@
           if (enabledSelect) {
             enabledSelect.addEventListener("change", (e) => {
               if (!canvasLayout) {
-                canvasLayout = buildCanvasLayoutFromDom(
-                  lastData?.section_order || SECTION_ORDER_DEFAULT,
-                  8,
-                );
+              canvasLayout = buildCanvasLayoutFromDom(
+                lastData?.section_order || SECTION_ORDER_DEFAULT,
+                1,
+              );
               }
               const nextEnabled = e.target.value === "true";
               canvasLayout.enabled = nextEnabled;
@@ -4535,7 +4537,10 @@
             gridInput.addEventListener("input", (e) => {
               if (!canvasLayout) return;
               const raw = parseInt(e.target.value || "8", 10);
-              canvasLayout.grid = Math.min(24, Math.max(4, raw || 8));
+              canvasLayout.grid = Math.min(
+                CANVAS_GRID_MAX,
+                Math.max(CANVAS_GRID_MIN, raw || 8),
+              );
               canvasDirty = true;
               updateCanvasGridStyle(canvasLayout);
               ensureCanvasLayoutSize(canvasLayout);
@@ -4583,7 +4588,7 @@
 
           const updateSelectionFromInputs = () => {
             if (!canvasLayout || !canvasSelection) return;
-            const grid = canvasLayout.grid || 8;
+            const grid = canvasLayout.grid || 1;
             if (canvasSelection.type === "group") {
               const group = canvasLayout.groups?.[canvasSelection.id];
               if (!group) return;
@@ -4657,7 +4662,7 @@
               const keepEnabled = canvasLayout ? canvasLayout.enabled : false;
               canvasLayout = buildCanvasLayoutFromDom(
                 lastData.section_order,
-                canvasLayout?.grid || 8,
+                canvasLayout?.grid || 1,
               );
               canvasLayout.enabled = keepEnabled;
               canvasDirty = true;
@@ -4705,7 +4710,7 @@
           const usedCanvas = layoutResult.usedCanvas;
           if (EDITOR_MODE) {
             if (!hasSavedLayout && !canvasDirty && !usedCanvas) {
-              canvasLayout = buildCanvasLayoutFromDom(data.section_order, 8);
+              canvasLayout = buildCanvasLayoutFromDom(data.section_order, 1);
               canvasLayout.enabled = false;
             }
             if (canvasLayout) {

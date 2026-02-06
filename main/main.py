@@ -431,7 +431,7 @@ def _normalize_canvas_layout(value: Any) -> dict | None:
         grid = int(data.get("grid", 8))
     except Exception:
         grid = 8
-    grid = max(4, min(24, grid))
+    grid = max(1, min(24, grid))
     plates_raw = data.get("plates") or {}
     groups_raw = data.get("groups") or {}
     size_raw = data.get("size")
