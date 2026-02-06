@@ -313,17 +313,6 @@
 
       .card.canvas {
         --canvas-grid: 8px;
-        background-image: linear-gradient(
-            to right,
-            rgba(255, 255, 255, 0.08) 1px,
-            transparent 1px
-          ),
-          linear-gradient(
-            to bottom,
-            rgba(255, 255, 255, 0.08) 1px,
-            transparent 1px
-          );
-        background-size: var(--canvas-grid) var(--canvas-grid);
       }
 
       @media (max-width: 1100px) {
@@ -2466,6 +2455,45 @@
           };
         }
 
+        function buildCanvasLayoutFromDom(order, grid) {
+          const card = document.getElementById("card");
+          const layout = buildDefaultCanvasLayout(order, grid || 8);
+          if (!card) return layout;
+          const cardRect = card.getBoundingClientRect();
+          const nextPlates = { ...layout.plates };
+          flattenSectionOrder(order).forEach((key) => {
+            const el = getSectionElement(key);
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            if (!rect.width && !rect.height) return;
+            const x = Math.round((rect.left - cardRect.left) / layout.grid);
+            const y = Math.round((rect.top - cardRect.top) / layout.grid);
+            const w = Math.round(rect.width / layout.grid);
+            const h = Math.round(rect.height / layout.grid);
+            nextPlates[key] = {
+              x: Math.max(0, x),
+              y: Math.max(0, y),
+              w: Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_PLATE_MIN_W, w || defaultPlateUnits(key).w),
+              ),
+              h: Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_PLATE_MIN_H, h || defaultPlateUnits(key).h),
+              ),
+              group: null,
+            };
+          });
+          const sizeW = Math.round(cardRect.width / layout.grid);
+          const sizeH = Math.round(cardRect.height / layout.grid);
+          layout.plates = nextPlates;
+          layout.size = {
+            w: Math.max(CANVAS_SIZE_MIN_W, sizeW),
+            h: Math.max(CANVAS_SIZE_MIN_H, sizeH),
+          };
+          return layout;
+        }
+
         function normalizeCanvasLayout(raw, order) {
           if (!raw) return null;
           let data = raw;
@@ -4451,8 +4479,14 @@
           }
           if (enabledSelect) {
             enabledSelect.addEventListener("change", (e) => {
-              if (!canvasLayout) return;
-              canvasLayout.enabled = e.target.value === "true";
+              if (!canvasLayout) {
+                canvasLayout = buildCanvasLayoutFromDom(
+                  lastData?.section_order || SECTION_ORDER_DEFAULT,
+                  8,
+                );
+              }
+              const nextEnabled = e.target.value === "true";
+              canvasLayout.enabled = nextEnabled;
               canvasDirty = true;
               syncCanvasControls();
               clearCanvasSelection();
@@ -4588,14 +4622,17 @@
           lastMediaMode = preferLite ? "lite" : "full";
           lastDevice = device;
           const isMobile = device === "mobile";
+          let normalizedLayout = normalizeCanvasLayout(
+            data.canvas_layout,
+            data.section_order,
+          );
+          const hasSavedLayout = !!normalizedLayout;
           if (EDITOR_MODE) {
             if (!canvasLayout || !canvasDirty) {
-              canvasLayout =
-                normalizeCanvasLayout(data.canvas_layout, data.section_order) ||
-                buildDefaultCanvasLayout(data.section_order, 8);
+              canvasLayout = normalizedLayout;
               canvasDirty = false;
             }
-            ensureCanvasLayoutSize(canvasLayout);
+            if (canvasLayout) ensureCanvasLayoutSize(canvasLayout);
           }
           const layoutResult = applySectionLayout(
             data.section_order,
@@ -4604,14 +4641,22 @@
           );
           const hasSideBySide = layoutResult.hasSideBySide;
           const usedCanvas = layoutResult.usedCanvas;
-          if (EDITOR_MODE && usedCanvas && canvasLayout) {
-            updateCanvasGridStyle(canvasLayout);
-            updateCanvasCardSize(canvasLayout);
-            syncCanvasControls();
-            requestAnimationFrame(() => {
-              ensurePlateSizesFromDom();
-              syncSelectionPanel();
-            });
+          if (EDITOR_MODE) {
+            if (!hasSavedLayout && !canvasDirty && !usedCanvas) {
+              canvasLayout = buildCanvasLayoutFromDom(data.section_order, 8);
+              canvasLayout.enabled = false;
+            }
+            if (canvasLayout) {
+              updateCanvasGridStyle(canvasLayout);
+              updateCanvasCardSize(canvasLayout);
+              syncCanvasControls();
+            }
+            if (usedCanvas && canvasLayout) {
+              requestAnimationFrame(() => {
+                ensurePlateSizesFromDom();
+                syncSelectionPanel();
+              });
+            }
             bindCanvasStageEvents();
           }
           let needsGate = false;
@@ -5270,7 +5315,10 @@
               return;
             }
             linktreeId = data.id;
-            renderTree(data, { preferLite: shouldUseLiteMedia(), device: currentDevice });
+            renderTree(data, {
+              preferLite: shouldUseLiteMedia(),
+              device: currentDevice,
+            });
             showEditorMessage("Canvas ready.", true);
           } catch (e) {
             console.error("loadTree failed:", e);
