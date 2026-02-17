@@ -396,6 +396,22 @@
         font-weight: 800;
         font-size: 0.92rem;
       }
+      .icon-16 {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+      .badge-item {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.55rem 0.7rem;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        width: 100%;
+        flex-wrap: wrap;
+        background: color-mix(in oklab, var(--card2) 86%, transparent);
+      }
 
       .grid {
         display: grid;
@@ -427,6 +443,15 @@
         outline: none;
         transition: border-color 0.15s ease, box-shadow 0.15s ease,
           transform 0.15s ease;
+      }
+      .select {
+        background: var(--card2);
+        color: var(--ink);
+      }
+      .select option,
+      .select optgroup {
+        background: var(--card2);
+        color: var(--ink);
       }
       textarea {
         min-height: 92px;
@@ -819,8 +844,16 @@
             <strong>Import my current Linktree</strong>
             <p class="muted">
               Pull your existing Linktree settings (backgrounds, colors,
-              effects) for desktop or mobile.
+              effects) for desktop, mobile, or both.
             </p>
+            <div class="row" style="gap: 0.5rem; align-items: center">
+              <label class="muted" for="tplImportScopeQuick">Import scope</label>
+              <select id="tplImportScopeQuick" class="select">
+                <option value="pc">Desktop</option>
+                <option value="mobile">Mobile</option>
+                <option value="both">Desktop + Mobile</option>
+              </select>
+            </div>
             <button class="btn sm" id="btnChoiceImport">
               Use current setup
             </button>
@@ -903,6 +936,11 @@
           >
             <div class="muted" id="slugHint"></div>
             <div class="row" style="gap: 0.4rem">
+              <select id="tplImportScope" class="select">
+                <option value="pc">Import desktop</option>
+                <option value="mobile">Import mobile</option>
+                <option value="both">Import both</option>
+              </select>
               <button class="btn ghost sm" id="btnResetVariant">
                 Start blank for this device
               </button>
@@ -923,8 +961,209 @@
               />
             </div>
             <div class="field">
+              <label for="tplEntryText">Entry overlay text</label>
+              <input
+                id="tplEntryText"
+                class="input"
+                type="text"
+                maxlength="120"
+                placeholder="Click to enter"
+              />
+              <div class="help">Shown on the entry gate before media plays.</div>
+            </div>
+            <div class="field">
+              <label for="tplEntryTextColor">Entry text color</label>
+              <input
+                id="tplEntryTextColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
+            </div>
+            <div class="field">
+              <label for="tplEntryFont">Entry font style</label>
+              <select id="tplEntryFont" class="select">
+                <option value="default">Default</option>
+                <option value="serif">Serif</option>
+                <option value="mono">Mono</option>
+                <option value="script">Script</option>
+                <option value="display">Display</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplEntryEffect">Entry effect</label>
+              <select id="tplEntryEffect" class="select">
+                <option value="none">None</option>
+                <option value="glow">Glow</option>
+                <option value="neon">Neon</option>
+                <option value="rainbow">Rainbow</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplEntryFontSize">Entry font size (px)</label>
+              <input
+                id="tplEntryFontSize"
+                class="input"
+                type="number"
+                min="10"
+                max="40"
+                value="16"
+              />
+            </div>
+              <div class="field">
+                <label for="tplEntryBgAlpha">Entry box alpha (0-100)</label>
+                <input
+                  id="tplEntryBgAlpha"
+                  class="input"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value="85"
+                />
+              </div>
+              <div class="field">
+                <label for="tplEntryOverlayAlpha"
+                  >Entry overlay alpha (0-100)</label
+                >
+                <input
+                  id="tplEntryOverlayAlpha"
+                  class="input"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value="35"
+                />
+              </div>
+              <div class="field">
+                <label for="tplEntryBoxEnabled">Show entry box</label>
+                <select id="tplEntryBoxEnabled" class="select">
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplEntryBorderEnabled">Show entry border</label>
+                <select id="tplEntryBorderEnabled" class="select">
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplEntryBorderColor">Entry border color</label>
+                <input
+                  id="tplEntryBorderColor"
+                  class="input"
+                  type="text"
+                  placeholder="#RRGGBB"
+                />
+              </div>
+            <div class="field" style="grid-column: 1 / -1">
               <label for="tplQuote">Quote (optional)</label>
               <input id="tplQuote" class="input" type="text" maxlength="240" />
+              <label
+                class="row"
+                style="gap: 0.4rem; align-items: center; margin-top: 0.35rem"
+              >
+                <input type="checkbox" id="tplQuoteTyping" />
+                <span>Typewriter quote (cycle up to 3 texts)</span>
+              </label>
+              <div
+                class="grid cols-2"
+                id="tplQuoteTypingFields"
+                style="margin-top: 0.5rem"
+              >
+                <div class="field">
+                  <label for="tplQuoteAlt1">Quote text 2</label>
+                  <input
+                    id="tplQuoteAlt1"
+                    class="input"
+                    type="text"
+                    maxlength="180"
+                    placeholder="Second quote text"
+                  />
+                </div>
+                <div class="field">
+                  <label for="tplQuoteAlt2">Quote text 3</label>
+                  <input
+                    id="tplQuoteAlt2"
+                    class="input"
+                    type="text"
+                    maxlength="180"
+                    placeholder="Third quote text"
+                  />
+                </div>
+              </div>
+              <div
+                class="field"
+                id="tplQuoteSpeedWrap"
+                style="margin-top: 0.5rem"
+              >
+                <label for="tplQuoteSpeed"
+                  >Typewriter speed (ms per char)</label
+                >
+                <input
+                  id="tplQuoteSpeed"
+                  class="input"
+                  type="number"
+                  min="20"
+                  max="200"
+                  value="42"
+                />
+              </div>
+              <div class="field" id="tplQuotePauseWrap">
+                <label for="tplQuotePause">Pause before next quote (ms)</label>
+                <input
+                  id="tplQuotePause"
+                  class="input"
+                  type="number"
+                  min="200"
+                  max="10000"
+                  value="1200"
+                />
+              </div>
+              <div class="field">
+                <label for="tplQuoteSize">Quote font size (px)</label>
+                <input
+                  id="tplQuoteSize"
+                  class="input"
+                  type="number"
+                  min="10"
+                  max="40"
+                  value="15"
+                />
+              </div>
+              <div class="field">
+                <label for="tplQuoteFont">Quote font style</label>
+                <select id="tplQuoteFont" class="select">
+                  <option value="default">Default</option>
+                  <option value="serif">Serif</option>
+                  <option value="mono">Mono</option>
+                  <option value="script">Script</option>
+                  <option value="display">Display</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplQuoteEffect">Quote effect</label>
+                <select id="tplQuoteEffect" class="select">
+                  <option value="none">None</option>
+                  <option value="glow">Glow</option>
+                  <option value="neon">Neon</option>
+                  <option value="rainbow">Rainbow</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tplQuoteEffectStrength"
+                  >Quote effect strength (0-100)</label
+                >
+                <input
+                  id="tplQuoteEffectStrength"
+                  class="input"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value="70"
+                />
+              </div>
             </div>
             <div class="field">
               <label for="tplSong">Song URL (optional)</label>
@@ -936,6 +1175,60 @@
                 <option value="false">No</option>
                 <option value="true">Yes</option>
               </select>
+            </div>
+            <div class="field">
+              <label for="tplAudioBgColor">Audio player background</label>
+              <input
+                id="tplAudioBgColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
+            </div>
+            <div class="field">
+              <label for="tplAudioBgAlpha"
+                >Audio player background alpha (0-100)</label
+              >
+              <input
+                id="tplAudioBgAlpha"
+                class="input"
+                type="number"
+                min="0"
+                max="100"
+                value="60"
+              />
+            </div>
+            <div class="field">
+              <label for="tplAudioTextColor">Audio player text color</label>
+              <input
+                id="tplAudioTextColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
+            </div>
+            <div class="field">
+              <label for="tplAudioAccentColor">Audio player accent color</label>
+              <input
+                id="tplAudioAccentColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
+            </div>
+            <div class="field">
+              <label for="tplSongName">Song name (optional)</label>
+              <input id="tplSongName" class="input" type="text" maxlength="120" />
+            </div>
+            <div class="field">
+              <label for="tplSongIcon">Song icon URL (optional)</label>
+              <input
+                id="tplSongIcon"
+                class="input"
+                type="text"
+                maxlength="500"
+                placeholder="/media/... or https://"
+              />
             </div>
             <div class="field">
               <label for="tplBackground">Background URL *</label>
@@ -983,6 +1276,16 @@
                 <option value="night">Night</option>
                 <option value="rain">Rain</option>
                 <option value="snow">Snow</option>
+                <option value="noise">Noise</option>
+                <option value="gradient">Gradient</option>
+                <option value="parallax">Parallax</option>
+                <option value="particles">Particles</option>
+                <option value="sweep">Sweep</option>
+                <option value="mesh">Mesh</option>
+                <option value="grid">Grid</option>
+                <option value="vignette">Vignette</option>
+                <option value="scanlines">Scanlines</option>
+                <option value="glitch">Glitch</option>
               </select>
             </div>
             <div class="field">
@@ -991,6 +1294,13 @@
                 <option value="slug">Slug</option>
                 <option value="username">Username</option>
                 <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplLayoutMode">Layout (Desktop)</label>
+              <select id="tplLayoutMode" class="select">
+                <option value="center">Centered</option>
+                <option value="wide">Wide</option>
               </select>
             </div>
             <div class="field">
@@ -1077,6 +1387,46 @@
               />
             </div>
             <div class="field">
+              <label for="tplCursorFx">Cursor effect (Desktop)</label>
+              <select id="tplCursorFx" class="select">
+                <option value="none">none</option>
+                <option value="glow">glow</option>
+                <option value="particles">particles</option>
+                <option value="trail">trail</option>
+                <option value="aura">aura</option>
+                <option value="magnet">magnet</option>
+                <option value="morph">morph</option>
+                <option value="snap">snap</option>
+                <option value="velocity">velocity</option>
+                <option value="ripple">ripple</option>
+                <option value="blend">blend</option>
+                <option value="sticky">sticky</option>
+                <option value="rotate">rotate</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplCursorFxColor">Cursor effect color</label>
+              <input
+                id="tplCursorFxColor"
+                class="input"
+                type="text"
+                placeholder="#RRGGBB"
+              />
+            </div>
+            <div class="field">
+              <label for="tplCursorFxAlpha"
+                >Cursor effect intensity (0-100)</label
+              >
+              <input
+                id="tplCursorFxAlpha"
+                class="input"
+                type="number"
+                min="0"
+                max="100"
+                placeholder="70"
+              />
+            </div>
+            <div class="field">
               <label for="tplDiscordFrame">Discord frame enabled</label>
               <select id="tplDiscordFrame" class="select">
                 <option value="false">No</option>
@@ -1123,6 +1473,11 @@
                 <option value="true">Yes</option>
               </select>
             </div>
+            <div class="field" style="grid-column: 1 / -1">
+              <label>Discord badge selection</label>
+              <div id="tplDiscordBadgesList" class="grid cols-2"></div>
+              <p id="tplDiscordBadgesHint" class="help"></p>
+            </div>
             <div class="field">
               <label for="tplShowCounter">Show visit counter</label>
               <select id="tplShowCounter" class="select">
@@ -1159,6 +1514,43 @@
                 min="0"
                 max="100"
                 value="20"
+              />
+            </div>
+            <div class="field">
+              <label for="tplDemoLinkShow">Show demo link (preview)</label>
+              <select id="tplDemoLinkShow" class="select">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tplDemoLinkLabel">Demo link label (optional)</label>
+              <input
+                id="tplDemoLinkLabel"
+                class="input"
+                type="text"
+                maxlength="80"
+                placeholder="e.g. My homepage"
+              />
+            </div>
+            <div class="field">
+              <label for="tplDemoLinkUrl">Demo link URL (optional)</label>
+              <input
+                id="tplDemoLinkUrl"
+                class="input"
+                type="text"
+                maxlength="500"
+                placeholder="https://example.com"
+              />
+            </div>
+            <div class="field">
+              <label for="tplDemoLinkIcon">Demo link icon URL (optional)</label>
+              <input
+                id="tplDemoLinkIcon"
+                class="input"
+                type="text"
+                maxlength="500"
+                placeholder="/media/... or https://"
               />
             </div>
           </div>
@@ -1211,6 +1603,18 @@
 
     <script>
       const $ = (id) => document.getElementById(id);
+      const DEFAULT_QUOTE_SPEED = 42;
+      const DEFAULT_QUOTE_PAUSE = 1200;
+      const DEFAULT_QUOTE_SIZE = 15;
+      const DEFAULT_QUOTE_EFFECT_STRENGTH = 70;
+      const DEFAULT_LAYOUT_MODE = "center";
+      const DEFAULT_ENTRY_TEXT_COLOR = "#e9ebff";
+      const DEFAULT_ENTRY_FONT_SIZE = 16;
+      const DEFAULT_ENTRY_BG_ALPHA = 85;
+      const DEFAULT_ENTRY_OVERLAY_ALPHA = 35;
+
+      let discordStatus = null;
+      let discordBadgeCodes = [];
 
       function showMsg(el, text, ok = false) {
         if (!el) return;
@@ -1227,6 +1631,18 @@
       async function fetchSession() {
         try {
           const r = await fetch("/api/auth/verify", { credentials: "include" });
+          if (!r.ok) return null;
+          return await r.json();
+        } catch (_) {
+          return null;
+        }
+      }
+
+      async function fetchDiscordStatus() {
+        try {
+          const r = await fetch("/api/discord/status", {
+            credentials: "include",
+          });
           if (!r.ok) return null;
           return await r.json();
         } catch (_) {
@@ -1282,6 +1698,28 @@
       let variantCache = { pc: null, mobile: null };
       let choiceMade = false;
       let editingId = null;
+      let dirtyVisibility = false;
+      let dirtyMeta = false;
+      let dirtyVariant = false;
+
+      function resetChangeFlags() {
+        dirtyVisibility = false;
+        dirtyMeta = false;
+        dirtyVariant = false;
+      }
+
+      function markDirtyByField(id) {
+        if (!id) return;
+        if (id === "tplPublic") {
+          dirtyVisibility = true;
+          return;
+        }
+        if (id === "tplCreator" || id === "tplName" || id === "tplDesc") {
+          dirtyMeta = true;
+          return;
+        }
+        if (id.startsWith("tpl")) dirtyVariant = true;
+      }
 
       function hexOrNull(val) {
         const t = (val || "").trim();
@@ -1299,10 +1737,117 @@
         return VIDEO_EXTENSIONS.some((ext) => lower.includes(ext));
       }
 
+      function toggleQuoteTypingFields() {
+        const enabled = $("tplQuoteTyping")?.checked;
+        const wrap = $("tplQuoteTypingFields");
+        const speedWrap = $("tplQuoteSpeedWrap");
+        const pauseWrap = $("tplQuotePauseWrap");
+        if (wrap) wrap.style.display = enabled ? "grid" : "none";
+        if (speedWrap) speedWrap.style.display = enabled ? "block" : "none";
+        if (pauseWrap) pauseWrap.style.display = enabled ? "block" : "none";
+      }
+
+      function collectQuoteTexts() {
+        const list = [
+          $("tplQuote")?.value.trim(),
+          $("tplQuoteAlt1")?.value.trim(),
+          $("tplQuoteAlt2")?.value.trim(),
+        ].filter(Boolean);
+        return list.slice(0, 3);
+      }
+
+      function collectDiscordBadgeCodes() {
+        const box = $("tplDiscordBadgesList");
+        if (!box) {
+          return Array.isArray(discordBadgeCodes) ? discordBadgeCodes : [];
+        }
+        const inputs = box.querySelectorAll(
+          'input[type="checkbox"][data-code]'
+        );
+        if (!inputs.length) {
+          return Array.isArray(discordBadgeCodes) ? discordBadgeCodes : [];
+        }
+        return Array.from(inputs)
+          .filter((input) => input.checked)
+          .map((input) => input.getAttribute("data-code"))
+          .filter(Boolean);
+      }
+
+      function renderTemplateDiscordBadges() {
+        const box = $("tplDiscordBadgesList");
+        const hint = $("tplDiscordBadgesHint");
+        if (!box) return;
+        box.innerHTML = "";
+        if (hint) hint.textContent = "";
+
+        if (!discordStatus) {
+          if (hint) hint.textContent = "Loading Discord badges...";
+          return;
+        }
+        const linked = !!discordStatus.linked;
+        if (!linked) {
+          if (hint) hint.textContent = "Link Discord to choose badges.";
+          return;
+        }
+        const list = Array.isArray(discordStatus.badges)
+          ? discordStatus.badges
+          : [];
+        if (!list.length) {
+          if (hint) hint.textContent = "No Discord badges found on your account.";
+          return;
+        }
+
+        const codes = Array.isArray(discordBadgeCodes) ? discordBadgeCodes : [];
+        list.forEach((badge) => {
+          if (!badge) return;
+          const item = document.createElement("div");
+          item.className = "badge-item";
+          const label = badge.label || badge.code || "badge";
+          const icon = sanitizeUrl(badge.icon_url ? String(badge.icon_url) : "");
+          const checked = codes.includes(badge.code);
+          item.innerHTML = `
+            <img src="${icon}" alt="${escapeHtml(badge.code || "")}" class="icon-16">
+            <strong>${escapeHtml(badge.code || "badge")}</strong>
+            <span class="muted">${escapeHtml(label)}</span>
+            <label class="row" style="margin-left:auto;gap:.35rem">
+              <span class="muted">Displayed</span>
+              <input type="checkbox" data-code="${escapeHtml(
+                badge.code || ""
+              )}" ${checked ? "checked" : ""} aria-label="Displayed">
+            </label>
+          `;
+          const chk = item.querySelector('input[type="checkbox"]');
+          chk.addEventListener("change", () => {
+            discordBadgeCodes = collectDiscordBadgeCodes();
+            const dev = $("tplDevice")?.value || currentDevice || "pc";
+            if (variantCache[dev]) {
+              variantCache[dev].discord_badge_codes = discordBadgeCodes;
+            }
+            markDirtyByField("tplDiscordBadges");
+            setDirty(true);
+            saveDraftDebounced();
+          });
+          box.appendChild(item);
+        });
+      }
+
       function normalizeVariant(raw, deviceFallback) {
         const v = { ...(raw || {}) };
         v.device_type = v.device_type || deviceFallback || "pc";
         v.display_name_mode = v.display_name_mode || "slug";
+        const layout = (v.layout_mode || DEFAULT_LAYOUT_MODE)
+          .toString()
+          .toLowerCase();
+        v.layout_mode = ["center", "wide"].includes(layout)
+          ? layout
+          : DEFAULT_LAYOUT_MODE;
+        if (typeof v.canvas_layout === "string") {
+          try {
+            v.canvas_layout = JSON.parse(v.canvas_layout);
+          } catch (_) {
+            v.canvas_layout = null;
+          }
+        }
         if (v.display_name_mode === "custom") {
           if (!v.custom_display_name || !v.custom_display_name.trim()) {
             showMsg(
@@ -1316,6 +1861,84 @@
         } else {
           v.custom_display_name = null;
         }
+        v.entry_text = v.entry_text ? String(v.entry_text).trim() : null;
+        v.entry_text_color = hexOrNull(v.entry_text_color);
+        v.entry_bg_alpha = Math.min(
+          100,
+          Math.max(
+            0,
+            parseInt(v.entry_bg_alpha ?? DEFAULT_ENTRY_BG_ALPHA, 10)
+          )
+        );
+        v.entry_overlay_alpha = Math.min(
+          100,
+          Math.max(
+            0,
+            parseInt(
+              v.entry_overlay_alpha ?? DEFAULT_ENTRY_OVERLAY_ALPHA,
+              10
+            )
+          )
+        );
+        v.entry_font_size = Math.min(
+          40,
+          Math.max(
+            10,
+            parseInt(v.entry_font_size ?? DEFAULT_ENTRY_FONT_SIZE, 10)
+          )
+        );
+        const entryFam = (v.entry_font_family || "default").toString().toLowerCase();
+        v.entry_font_family =
+          entryFam &&
+          ["default", "serif", "mono", "script", "display"].includes(entryFam)
+            ? entryFam
+            : "default";
+        const entryFx = (v.entry_effect || "none").toString().toLowerCase();
+        v.entry_effect =
+          entryFx && ["none", "glow", "neon", "rainbow"].includes(entryFx)
+            ? entryFx
+            : "none";
+        v.entry_box_enabled =
+          v.entry_box_enabled === undefined ? true : !!v.entry_box_enabled;
+        v.entry_border_enabled =
+          v.entry_border_enabled === undefined ? true : !!v.entry_border_enabled;
+        v.entry_border_color = hexOrNull(v.entry_border_color);
+        const rawQuoteTexts = Array.isArray(v.quote_typing_texts)
+          ? v.quote_typing_texts
+          : [];
+        const cleanedQuoteTexts = rawQuoteTexts
+          .map((t) => String(t || "").trim())
+          .filter(Boolean);
+        if (!cleanedQuoteTexts.length && v.quote) {
+          cleanedQuoteTexts.push(String(v.quote).trim());
+        }
+        v.quote_typing_texts = cleanedQuoteTexts.slice(0, 3);
+        v.quote = v.quote_typing_texts[0] || (v.quote ? String(v.quote).trim() : "");
+        v.quote_typing_enabled = !!v.quote_typing_enabled;
+        const speedRaw = Number(v.quote_typing_speed);
+        const pauseRaw = Number(v.quote_typing_pause);
+        const sizeRaw = Number(v.quote_font_size);
+        v.quote_typing_speed = Number.isFinite(speedRaw)
+          ? Math.min(200, Math.max(20, Math.round(speedRaw)))
+          : DEFAULT_QUOTE_SPEED;
+        v.quote_typing_pause = Number.isFinite(pauseRaw)
+          ? Math.min(10000, Math.max(200, Math.round(pauseRaw)))
+          : DEFAULT_QUOTE_PAUSE;
+        v.quote_font_size = Number.isFinite(sizeRaw)
+          ? Math.min(40, Math.max(10, Math.round(sizeRaw)))
+          : DEFAULT_QUOTE_SIZE;
+        const fam = (v.quote_font_family || "default").toString().toLowerCase();
+        v.quote_font_family =
+          fam && ["default", "serif", "mono", "script", "display"].includes(fam)
+            ? fam
+            : "default";
+        const fx = (v.quote_effect || "none").toString().toLowerCase();
+        v.quote_effect =
+          fx && ["none", "glow", "neon", "rainbow"].includes(fx) ? fx : "none";
+        const strengthRaw = Number(v.quote_effect_strength);
+        v.quote_effect_strength = Number.isFinite(strengthRaw)
+          ? Math.min(100, Math.max(0, Math.round(strengthRaw)))
+          : DEFAULT_QUOTE_EFFECT_STRENGTH;
         v.link_color = hexOrNull(v.link_color);
         v.link_bg_color = hexOrNull(v.link_bg_color);
         v.card_color = hexOrNull(v.card_color);
@@ -1323,8 +1946,16 @@
         v.name_color = hexOrNull(v.name_color);
         v.location_color = hexOrNull(v.location_color);
         v.quote_color = hexOrNull(v.quote_color);
+        v.cursor_effect_color = hexOrNull(v.cursor_effect_color);
         v.visit_counter_color = hexOrNull(v.visit_counter_color);
         v.visit_counter_bg_color = hexOrNull(v.visit_counter_bg_color);
+        v.audio_player_bg_color = hexOrNull(v.audio_player_bg_color);
+        v.audio_player_text_color = hexOrNull(v.audio_player_text_color);
+        v.audio_player_accent_color = hexOrNull(v.audio_player_accent_color);
+        v.song_name = v.song_name ? String(v.song_name).trim() : null;
+        v.song_icon_url = v.song_icon_url
+          ? String(v.song_icon_url).trim()
+          : null;
         v.show_audio_player = !!v.show_audio_player;
         v.discord_presence_enabled = !!v.discord_presence_enabled;
         v.discord_presence =
@@ -1334,6 +1965,21 @@
           ? String(v.discord_status_text).trim()
           : null;
         v.discord_badges_enabled = !!v.discord_badges_enabled;
+        const badgeCodes = Array.isArray(v.discord_badge_codes)
+          ? v.discord_badge_codes
+          : [];
+        v.discord_badge_codes = badgeCodes
+          .map((code) => String(code || "").trim())
+          .filter(Boolean)
+          .slice(0, 50);
+        v.demo_show_links = !!v.demo_show_links;
+        v.demo_link_label = v.demo_link_label
+          ? String(v.demo_link_label).trim()
+          : null;
+        v.demo_link_url = v.demo_link_url ? String(v.demo_link_url).trim() : null;
+        v.demo_link_icon_url = v.demo_link_icon_url
+          ? String(v.demo_link_icon_url).trim()
+          : null;
         v.link_bg_alpha = Math.min(
           100,
           Math.max(0, parseInt(v.link_bg_alpha ?? 100, 10))
@@ -1342,9 +1988,17 @@
           100,
           Math.max(0, parseInt(v.transparency ?? 0, 10))
         );
+        v.audio_player_bg_alpha = Math.min(
+          100,
+          Math.max(0, parseInt(v.audio_player_bg_alpha ?? 60, 10))
+        );
         v.visit_counter_bg_alpha = Math.min(
           100,
           Math.max(0, parseInt(v.visit_counter_bg_alpha ?? 20, 10))
+        );
+        v.cursor_effect_alpha = Math.min(
+          100,
+          Math.max(0, parseInt(v.cursor_effect_alpha ?? 70, 10))
         );
         v.background_url = (v.background_url || "").trim();
         if (!v.background_url) {
@@ -1369,6 +2023,7 @@
         } else {
           modeBadge.textContent = "Desktop";
         }
+        syncImportScope();
       }
 
       function updateSlugHint() {
@@ -1376,8 +2031,31 @@
           presetSlug ||
           (currentUser && currentUser.linktree_slug) ||
           "your-slug";
-        const device = $("tplDevice").value || currentDevice || "pc";
-        slugHint.textContent = `Import uses /linktrees/${slug} for ${device}.`;
+        const scope =
+          readImportScope("tplImportScope") ||
+          $("tplDevice").value ||
+          currentDevice ||
+          "pc";
+        if (scope === "both") {
+          slugHint.textContent = `Import uses /linktrees/${slug} for desktop + mobile.`;
+        } else {
+          slugHint.textContent = `Import uses /linktrees/${slug} for ${scope}.`;
+        }
+      }
+
+      function readImportScope(elId, fallback) {
+        const el = elId ? $(elId) : null;
+        const raw = (el && el.value) || fallback || "";
+        if (raw === "both" || raw === "mobile" || raw === "pc") return raw;
+        return null;
+      }
+
+      function syncImportScope() {
+        const mode = $("tplMode")?.value || "pc";
+        const scope =
+          mode === "both" ? "both" : $("tplDevice")?.value || "pc";
+        if ($("tplImportScope")) $("tplImportScope").value = scope;
+        if ($("tplImportScopeQuick")) $("tplImportScopeQuick").value = scope;
       }
 
       function resetVariant(device) {
@@ -1386,14 +2064,40 @@
           device_type: d,
           location: "",
           quote: "",
+          entry_text: "",
+          quote_typing_enabled: false,
+          quote_typing_texts: [],
+          quote_typing_speed: DEFAULT_QUOTE_SPEED,
+          quote_typing_pause: DEFAULT_QUOTE_PAUSE,
+          quote_font_size: DEFAULT_QUOTE_SIZE,
+          quote_font_family: "default",
+          quote_effect: "none",
+          quote_effect_strength: DEFAULT_QUOTE_EFFECT_STRENGTH,
+          entry_bg_alpha: DEFAULT_ENTRY_BG_ALPHA,
+          entry_overlay_alpha: DEFAULT_ENTRY_OVERLAY_ALPHA,
+          entry_text_color: DEFAULT_ENTRY_TEXT_COLOR,
+          entry_font_size: DEFAULT_ENTRY_FONT_SIZE,
+          entry_font_family: "default",
+          entry_effect: "none",
+          entry_box_enabled: true,
+          entry_border_enabled: true,
+          entry_border_color: "",
           song_url: "",
+          song_name: "",
+          song_icon_url: "",
           show_audio_player: false,
+          audio_player_bg_color: "",
+          audio_player_bg_alpha: 60,
+          audio_player_text_color: "",
+          audio_player_accent_color: "",
           background_url: "",
           background_is_video: false,
           transparency: 0,
           name_effect: "none",
           background_effect: "none",
           display_name_mode: "slug",
+          layout_mode: DEFAULT_LAYOUT_MODE,
+          canvas_layout: null,
           custom_display_name: "",
           link_color: "",
           link_bg_color: "",
@@ -1404,25 +2108,87 @@
           location_color: "",
           quote_color: "",
           cursor_url: "",
+          cursor_effect: "none",
+          cursor_effect_color: "",
+          cursor_effect_alpha: 70,
           discord_frame_enabled: false,
           discord_presence_enabled: false,
           discord_presence: "online",
           discord_status_enabled: false,
           discord_status_text: "",
           discord_badges_enabled: false,
+          discord_badge_codes: [],
           show_visit_counter: false,
           visit_counter_color: "",
           visit_counter_bg_color: "",
           visit_counter_bg_alpha: 20,
+          demo_show_links: false,
+          demo_link_label: "",
+          demo_link_url: "",
+          demo_link_icon_url: "",
         };
         applyVariantToForm(variantCache[d]);
       }
 
       function applyVariantToForm(v) {
         $("tplLocation").value = v.location || "";
-        $("tplQuote").value = v.quote || "";
+        $("tplEntryText").value = v.entry_text || "";
+        $("tplEntryTextColor").value = v.entry_text_color || "";
+        $("tplEntryFont").value = v.entry_font_family || "default";
+        $("tplEntryEffect").value = v.entry_effect || "none";
+        $("tplEntryFontSize").value =
+          v.entry_font_size !== undefined && v.entry_font_size !== null
+            ? v.entry_font_size
+            : DEFAULT_ENTRY_FONT_SIZE;
+        $("tplEntryBgAlpha").value =
+          v.entry_bg_alpha !== undefined && v.entry_bg_alpha !== null
+            ? v.entry_bg_alpha
+            : DEFAULT_ENTRY_BG_ALPHA;
+        $("tplEntryOverlayAlpha").value =
+          v.entry_overlay_alpha !== undefined && v.entry_overlay_alpha !== null
+            ? v.entry_overlay_alpha
+            : DEFAULT_ENTRY_OVERLAY_ALPHA;
+        $("tplEntryBoxEnabled").value =
+          v.entry_box_enabled === undefined ? "true" : v.entry_box_enabled ? "true" : "false";
+        $("tplEntryBorderEnabled").value =
+          v.entry_border_enabled === undefined ? "true" : v.entry_border_enabled ? "true" : "false";
+        $("tplEntryBorderColor").value = v.entry_border_color || "";
+        const qt = Array.isArray(v.quote_typing_texts) ? v.quote_typing_texts : [];
+        const mainQuote = qt[0] || v.quote || "";
+        $("tplQuote").value = mainQuote;
+        $("tplQuoteAlt1").value = qt[1] || "";
+        $("tplQuoteAlt2").value = qt[2] || "";
+        $("tplQuoteTyping").checked = !!v.quote_typing_enabled;
+        $("tplQuoteSpeed").value =
+          v.quote_typing_speed !== undefined && v.quote_typing_speed !== null
+            ? v.quote_typing_speed
+            : DEFAULT_QUOTE_SPEED;
+        $("tplQuotePause").value =
+          v.quote_typing_pause !== undefined && v.quote_typing_pause !== null
+            ? v.quote_typing_pause
+            : DEFAULT_QUOTE_PAUSE;
+        $("tplQuoteSize").value =
+          v.quote_font_size !== undefined && v.quote_font_size !== null
+            ? v.quote_font_size
+            : DEFAULT_QUOTE_SIZE;
+        $("tplQuoteFont").value = v.quote_font_family || "default";
+        $("tplQuoteEffect").value = v.quote_effect || "none";
+        $("tplQuoteEffectStrength").value =
+          v.quote_effect_strength !== undefined && v.quote_effect_strength !== null
+            ? v.quote_effect_strength
+            : DEFAULT_QUOTE_EFFECT_STRENGTH;
         $("tplSong").value = v.song_url || "";
+        $("tplSongName").value = v.song_name || "";
+        $("tplSongIcon").value = v.song_icon_url || "";
         $("tplAudioPlayer").value = v.show_audio_player ? "true" : "false";
+        $("tplAudioBgColor").value = v.audio_player_bg_color || "";
+        $("tplAudioBgAlpha").value =
+          v.audio_player_bg_alpha !== undefined &&
+          v.audio_player_bg_alpha !== null
+            ? v.audio_player_bg_alpha
+            : 60;
+        $("tplAudioTextColor").value = v.audio_player_text_color || "";
+        $("tplAudioAccentColor").value = v.audio_player_accent_color || "";
         $("tplBackground").value = v.background_url || "";
         $("tplTrans").value =
           v.transparency !== undefined && v.transparency !== null
@@ -1431,6 +2197,7 @@
         $("tplNameFx").value = v.name_effect || "none";
         $("tplBgFx").value = v.background_effect || "none";
         $("tplDisplayName").value = v.display_name_mode || "slug";
+        $("tplLayoutMode").value = v.layout_mode || DEFAULT_LAYOUT_MODE;
         $("tplCustomName").value = v.custom_display_name || "";
         $("tplLinkColor").value = v.link_color || "";
         $("tplLinkBgColor").value = v.link_bg_color || "";
@@ -1444,6 +2211,12 @@
         $("tplLocationColor").value = v.location_color || "";
         $("tplQuoteColor").value = v.quote_color || "";
         $("tplCursorUrl").value = v.cursor_url || "";
+        $("tplCursorFx").value = v.cursor_effect || "none";
+        $("tplCursorFxColor").value = v.cursor_effect_color || "";
+        $("tplCursorFxAlpha").value =
+          v.cursor_effect_alpha !== undefined && v.cursor_effect_alpha !== null
+            ? v.cursor_effect_alpha
+            : 70;
         $("tplDiscordFrame").value = v.discord_frame_enabled ? "true" : "false";
         $("tplDiscordPresence").value = v.discord_presence_enabled
           ? "true"
@@ -1454,6 +2227,10 @@
           : "false";
         $("tplDiscordStatusText").value = v.discord_status_text || "";
         $("tplDiscordBadges").value = v.discord_badges_enabled ? "true" : "false";
+        discordBadgeCodes = Array.isArray(v.discord_badge_codes)
+          ? v.discord_badge_codes
+          : [];
+        renderTemplateDiscordBadges();
         $("tplShowCounter").value = v.show_visit_counter ? "true" : "false";
         $("tplCounterColor").value = v.visit_counter_color || "";
         $("tplCounterBgColor").value = v.visit_counter_bg_color || "";
@@ -1462,13 +2239,38 @@
           v.visit_counter_bg_alpha !== null
             ? v.visit_counter_bg_alpha
             : 20;
+        $("tplDemoLinkShow").value = v.demo_show_links ? "true" : "false";
+        $("tplDemoLinkLabel").value = v.demo_link_label || "";
+        $("tplDemoLinkUrl").value = v.demo_link_url || "";
+        $("tplDemoLinkIcon").value = v.demo_link_icon_url || "";
+        toggleQuoteTypingFields();
       }
 
-      function buildVariantFromForm(device) {
+      function buildVariantFromForm(device, opts = {}) {
+        const { silent = false } = opts;
         const d = device || currentDevice || "pc";
         const displayMode = $("tplDisplayName").value || "slug";
         const customName = $("tplCustomName").value.trim();
-        if (displayMode === "custom" && !customName) {
+        const quoteTexts = collectQuoteTexts();
+        const quoteSpeed = parseInt($("tplQuoteSpeed").value || "", 10);
+        const quotePause = parseInt($("tplQuotePause").value || "", 10);
+        const quoteSize = parseInt($("tplQuoteSize").value || "", 10);
+        const quoteEffectStrengthRaw = parseInt(
+          $("tplQuoteEffectStrength").value || "",
+          10
+        );
+        const quoteEffectStrength = Number.isFinite(quoteEffectStrengthRaw)
+          ? Math.min(100, Math.max(0, quoteEffectStrengthRaw))
+          : DEFAULT_QUOTE_EFFECT_STRENGTH;
+        const entryFontSize = parseInt($("tplEntryFontSize").value || "", 10);
+        const entryBgAlpha = parseInt($("tplEntryBgAlpha").value || "", 10);
+        const entryOverlayAlpha = parseInt(
+          $("tplEntryOverlayAlpha").value || "",
+          10
+        );
+        const entryBoxEnabled = $("tplEntryBoxEnabled").value === "true";
+        const entryBorderEnabled = $("tplEntryBorderEnabled").value === "true";
+        if (displayMode === "custom" && !customName && !silent) {
           showMsg(
             formMsg,
             "Custom display name is required when mode is Custom",
@@ -1476,12 +2278,53 @@
           );
           return null;
         }
+        const customNameOut =
+          displayMode === "custom" ? customName : silent ? customName : null;
         return {
           device_type: d,
           location: $("tplLocation").value.trim() || "",
-          quote: $("tplQuote").value.trim() || "",
+          entry_text: $("tplEntryText").value.trim() || null,
+          entry_bg_alpha: Number.isFinite(entryBgAlpha)
+            ? entryBgAlpha
+            : DEFAULT_ENTRY_BG_ALPHA,
+          entry_overlay_alpha: Number.isFinite(entryOverlayAlpha)
+            ? entryOverlayAlpha
+            : DEFAULT_ENTRY_OVERLAY_ALPHA,
+          entry_box_enabled: entryBoxEnabled,
+          entry_border_enabled: entryBorderEnabled,
+          entry_border_color: hexOrNull($("tplEntryBorderColor").value),
+          entry_text_color: hexOrNull($("tplEntryTextColor").value),
+          entry_font_size: Number.isFinite(entryFontSize)
+            ? entryFontSize
+            : DEFAULT_ENTRY_FONT_SIZE,
+          entry_font_family: $("tplEntryFont").value || "default",
+          entry_effect: $("tplEntryEffect").value || "none",
+          quote: quoteTexts[0] || "",
+          quote_typing_enabled: $("tplQuoteTyping").checked,
+          quote_typing_texts: quoteTexts,
+          quote_typing_speed: Number.isFinite(quoteSpeed)
+            ? quoteSpeed
+            : DEFAULT_QUOTE_SPEED,
+          quote_typing_pause: Number.isFinite(quotePause)
+            ? quotePause
+            : DEFAULT_QUOTE_PAUSE,
+          quote_font_size: Number.isFinite(quoteSize)
+            ? quoteSize
+            : DEFAULT_QUOTE_SIZE,
+          quote_font_family: $("tplQuoteFont").value || "default",
+          quote_effect: $("tplQuoteEffect").value || "none",
+          quote_effect_strength: quoteEffectStrength,
           song_url: $("tplSong").value.trim() || "",
+          song_name: $("tplSongName").value.trim() || null,
+          song_icon_url: $("tplSongIcon").value.trim() || null,
           show_audio_player: $("tplAudioPlayer").value === "true",
+          audio_player_bg_color: hexOrNull($("tplAudioBgColor").value),
+          audio_player_bg_alpha: Math.min(
+            100,
+            Math.max(0, parseInt($("tplAudioBgAlpha").value || "60", 10))
+          ),
+          audio_player_text_color: hexOrNull($("tplAudioTextColor").value),
+          audio_player_accent_color: hexOrNull($("tplAudioAccentColor").value),
           background_url: $("tplBackground").value.trim(),
           background_is_video: looksLikeVideoUrl($("tplBackground").value.trim()),
           transparency: Math.min(
@@ -1491,7 +2334,10 @@
           name_effect: $("tplNameFx").value || "none",
           background_effect: $("tplBgFx").value || "none",
           display_name_mode: displayMode,
-          custom_display_name: displayMode === "custom" ? customName : null,
+          layout_mode: $("tplLayoutMode").value || DEFAULT_LAYOUT_MODE,
+          canvas_layout:
+            (variantCache[d] && variantCache[d].canvas_layout) || null,
+          custom_display_name: customNameOut,
           link_color: hexOrNull($("tplLinkColor").value),
           link_bg_color: hexOrNull($("tplLinkBgColor").value),
           link_bg_alpha: Math.min(
@@ -1504,12 +2350,19 @@
           location_color: hexOrNull($("tplLocationColor").value),
           quote_color: hexOrNull($("tplQuoteColor").value),
           cursor_url: $("tplCursorUrl").value.trim() || null,
+          cursor_effect: $("tplCursorFx").value || "none",
+          cursor_effect_color: hexOrNull($("tplCursorFxColor").value),
+          cursor_effect_alpha: Math.min(
+            100,
+            Math.max(0, parseInt($("tplCursorFxAlpha").value || "70", 10))
+          ),
           discord_frame_enabled: $("tplDiscordFrame").value === "true",
           discord_presence_enabled: $("tplDiscordPresence").value === "true",
           discord_presence: $("tplDiscordPresenceValue").value || "online",
           discord_status_enabled: $("tplDiscordStatusLine").value === "true",
           discord_status_text: $("tplDiscordStatusText").value.trim() || null,
           discord_badges_enabled: $("tplDiscordBadges").value === "true",
+          discord_badge_codes: collectDiscordBadgeCodes(),
           show_visit_counter: $("tplShowCounter").value === "true",
           visit_counter_color: hexOrNull($("tplCounterColor").value),
           visit_counter_bg_color: hexOrNull($("tplCounterBgColor").value),
@@ -1517,24 +2370,47 @@
             100,
             Math.max(0, parseInt($("tplCounterBgAlpha").value || "20", 10))
           ),
+          demo_show_links: $("tplDemoLinkShow").value === "true",
+          demo_link_label: $("tplDemoLinkLabel").value.trim() || null,
+          demo_link_url: $("tplDemoLinkUrl").value.trim() || null,
+          demo_link_icon_url: $("tplDemoLinkIcon").value.trim() || null,
         };
       }
 
       function ensureActiveVariant() {
-        const dev = $("tplDevice").value || currentDevice || "pc";
-        currentDevice = dev;
-        if (!variantCache[dev]) {
-          resetVariant(dev);
+        const next = $("tplDevice").value || currentDevice || "pc";
+        const prev = currentDevice || next || "pc";
+        const snap = buildVariantFromForm(prev, { silent: true });
+        if (snap) variantCache[prev] = snap;
+        currentDevice = next;
+        if (!variantCache[next]) {
+          resetVariant(next);
         } else {
-          applyVariantToForm(variantCache[dev]);
+          applyVariantToForm(variantCache[next]);
         }
         updateModeBadge();
         updateSlugHint();
       }
 
-      async function importFromLinktree(deviceOverride) {
-        const device =
+      async function importFromLinktree(deviceOverride, opts = {}) {
+        const { silent = false } = opts;
+        const requested =
           deviceOverride || $("tplDevice").value || currentDevice || "pc";
+        if (requested === "both") {
+          $("tplMode").value = "both";
+          updateModeBadge();
+          const devices = ["pc", "mobile"];
+          for (const dev of devices) {
+            await importFromLinktree(dev, { silent: true });
+          }
+          const active = $("tplDevice").value || currentDevice || "pc";
+          if (variantCache[active]) applyVariantToForm(variantCache[active]);
+          if (!silent) {
+            showMsg(formMsg, "Imported desktop + mobile settings", true);
+          }
+          return;
+        }
+        const device = requested === "mobile" ? "mobile" : "pc";
         const slug =
           presetSlug ||
           (currentUser && currentUser.linktree_slug) ||
@@ -1542,6 +2418,11 @@
         if (!slug) {
           showMsg(formMsg, "Set a Linktree slug first", false);
           return;
+        }
+        if (!silent) {
+          $("tplMode").value = device;
+          $("tplDevice").value = device;
+          updateModeBadge();
         }
         try {
           const lt = await apiGet(
@@ -1553,14 +2434,72 @@
             device_type: device,
             location: lt.location || "",
             quote: lt.quote || "",
+            entry_text: lt.entry_text || "",
+            entry_bg_alpha:
+              lt.entry_bg_alpha !== undefined && lt.entry_bg_alpha !== null
+                ? lt.entry_bg_alpha
+                : DEFAULT_ENTRY_BG_ALPHA,
+            entry_overlay_alpha:
+              lt.entry_overlay_alpha !== undefined &&
+              lt.entry_overlay_alpha !== null
+                ? lt.entry_overlay_alpha
+                : DEFAULT_ENTRY_OVERLAY_ALPHA,
+            entry_box_enabled:
+              lt.entry_box_enabled !== undefined && lt.entry_box_enabled !== null
+                ? !!lt.entry_box_enabled
+                : true,
+            entry_border_enabled:
+              lt.entry_border_enabled !== undefined &&
+              lt.entry_border_enabled !== null
+                ? !!lt.entry_border_enabled
+                : true,
+            entry_border_color: lt.entry_border_color || "",
+            entry_text_color: lt.entry_text_color || "",
+            entry_font_size:
+              lt.entry_font_size !== undefined && lt.entry_font_size !== null
+                ? lt.entry_font_size
+                : DEFAULT_ENTRY_FONT_SIZE,
+            entry_font_family: lt.entry_font_family || "default",
+            entry_effect: lt.entry_effect || "none",
+            quote_typing_enabled: !!lt.quote_typing_enabled,
+            quote_typing_texts: Array.isArray(lt.quote_typing_texts)
+              ? lt.quote_typing_texts
+              : [],
+            quote_typing_speed:
+              lt.quote_typing_speed !== undefined && lt.quote_typing_speed !== null
+                ? lt.quote_typing_speed
+                : DEFAULT_QUOTE_SPEED,
+            quote_typing_pause:
+              lt.quote_typing_pause !== undefined && lt.quote_typing_pause !== null
+                ? lt.quote_typing_pause
+                : DEFAULT_QUOTE_PAUSE,
+            quote_font_size:
+              lt.quote_font_size !== undefined && lt.quote_font_size !== null
+                ? lt.quote_font_size
+                : DEFAULT_QUOTE_SIZE,
+            quote_font_family: lt.quote_font_family || "default",
+            quote_effect: lt.quote_effect || "none",
+            quote_effect_strength:
+              lt.quote_effect_strength !== undefined &&
+              lt.quote_effect_strength !== null
+                ? lt.quote_effect_strength
+                : DEFAULT_QUOTE_EFFECT_STRENGTH,
             song_url: lt.song_url || "",
+            song_name: lt.song_name || "",
+            song_icon_url: lt.song_icon_url || "",
             show_audio_player: !!lt.show_audio_player,
+            audio_player_bg_color: lt.audio_player_bg_color || "",
+            audio_player_bg_alpha: lt.audio_player_bg_alpha ?? 60,
+            audio_player_text_color: lt.audio_player_text_color || "",
+            audio_player_accent_color: lt.audio_player_accent_color || "",
             background_url: lt.background_url || "",
             background_is_video: !!lt.background_is_video,
             transparency: lt.transparency ?? 0,
             name_effect: lt.name_effect || "none",
             background_effect: lt.background_effect || "none",
             display_name_mode: lt.display_name_mode || "slug",
+            layout_mode: lt.layout_mode || DEFAULT_LAYOUT_MODE,
+            canvas_layout: lt.canvas_layout || null,
             custom_display_name: lt.custom_display_name || "",
             link_color: lt.link_color || "",
             link_bg_color: lt.link_bg_color || "",
@@ -1571,20 +2510,30 @@
             location_color: lt.location_color || "",
             quote_color: lt.quote_color || "",
             cursor_url: lt.cursor_url || "",
+            cursor_effect: lt.cursor_effect || "none",
+            cursor_effect_color: lt.cursor_effect_color || "",
+            cursor_effect_alpha: lt.cursor_effect_alpha ?? 70,
             discord_frame_enabled: !!lt.discord_frame_enabled,
             discord_presence_enabled: !!lt.discord_presence_enabled,
             discord_presence: lt.discord_presence || "online",
             discord_status_enabled: !!lt.discord_status_enabled,
             discord_status_text: lt.discord_status_text || "",
             discord_badges_enabled: !!lt.discord_badges_enabled,
+            discord_badge_codes: Array.isArray(lt.discord_badge_codes)
+              ? lt.discord_badge_codes
+              : [],
             show_visit_counter: !!lt.show_visit_counter,
             visit_counter_color: lt.visit_counter_color || "",
             visit_counter_bg_color: lt.visit_counter_bg_color || "",
             visit_counter_bg_alpha: lt.visit_counter_bg_alpha ?? 20,
+            demo_show_links: false,
+            demo_link_label: "",
+            demo_link_url: "",
+            demo_link_icon_url: "",
           };
           variantCache[device] = data;
-          applyVariantToForm(data);
-          showMsg(formMsg, `Imported ${device} settings`, true);
+          if (!silent) applyVariantToForm(data);
+          if (!silent) showMsg(formMsg, `Imported ${device} settings`, true);
         } catch (e) {
           showMsg(formMsg, "Import failed", false);
         }
@@ -1592,6 +2541,7 @@
 
       function resetForm() {
         editingId = null;
+        resetChangeFlags();
         $("tplCreator").value = (currentUser && currentUser.username) || "";
         $("tplName").value = "";
         $("tplDesc").value = "";
@@ -1600,6 +2550,7 @@
           presetDevice === "both" ? "both" : presetDevice || "pc";
         $("tplDevice").value = currentDevice || "pc";
         $("btnSaveTemplate").textContent = "Create template";
+        syncImportScope();
         variantCache = { pc: null, mobile: null };
         resetVariant($("tplDevice").value);
         updateModeBadge();
@@ -1607,6 +2558,22 @@
       }
 
       async function saveTemplate() {
+        const isPublic = $("tplPublic").value === "true";
+        if (editingId && dirtyVisibility && !dirtyMeta && !dirtyVariant) {
+          try {
+            await apiPatch(`/api/marketplace/templates/${editingId}`, {
+              is_public: isPublic,
+            });
+            showMsg(formMsg, "Template visibility updated", true);
+            resetChangeFlags();
+            setTimeout(() => {
+              location.href = "/marketplace";
+            }, 600);
+          } catch (e) {
+            showMsg(formMsg, `Save failed: ${e.message || e}`, false);
+          }
+          return;
+        }
         const name = $("tplName").value.trim();
         if (!name) {
           showMsg(formMsg, "Name required", false);
@@ -1644,7 +2611,7 @@
           name,
           description: desc || null,
           creator,
-          is_public: $("tplPublic").value === "true",
+          is_public: isPublic,
           preview_image_url: null,
           variants,
         };
@@ -1653,12 +2620,14 @@
           if (editingId) {
             await apiPatch(`/api/marketplace/templates/${editingId}`, payload);
             showMsg(formMsg, "Template updated", true);
+            resetChangeFlags();
             setTimeout(() => {
               location.href = "/marketplace";
             }, 600);
           } else {
             await apiPost("/api/marketplace/templates", payload);
             showMsg(formMsg, "Template created", true);
+            resetChangeFlags();
             setTimeout(() => {
               location.href = "/marketplace";
             }, 800);
@@ -1720,6 +2689,7 @@
           $("tplPublic").value = detail.is_public ? "true" : "false";
           $("btnSaveTemplate").textContent = "Update template";
           applyTemplateToForm(detail);
+          resetChangeFlags();
           showMsg(formMsg, "Template loaded for editing", true);
         } catch (e) {
           showMsg(formMsg, "Could not load template", false);
@@ -1737,6 +2707,7 @@
           location.href = `/login?next=${encodeURIComponent(location.href)}`;
           return;
         }
+        const discordPromise = fetchDiscordStatus();
         if (userBadge) {
           userBadge.textContent = currentUser.username || "User";
         }
@@ -1746,6 +2717,8 @@
         if (tplId) {
           await loadTemplateForEdit(tplId);
         }
+        discordStatus = await discordPromise;
+        renderTemplateDiscordBadges();
       }
 
       $("tplDevice").addEventListener("change", ensureActiveVariant);
@@ -1753,9 +2726,17 @@
         updateModeBadge();
         ensureActiveVariant();
       });
+      $("tplImportScope")?.addEventListener("change", () => {
+        updateSlugHint();
+      });
+      $("tplImportScopeQuick")?.addEventListener("change", () => {
+        updateSlugHint();
+      });
+      $("tplQuoteTyping")?.addEventListener("change", toggleQuoteTypingFields);
       $("btnImportVariant").addEventListener("click", async () => {
         ensureChoice();
-        await importFromLinktree();
+        const scope = readImportScope("tplImportScope");
+        await importFromLinktree(scope);
       });
       $("btnResetVariant").addEventListener("click", () => {
         ensureChoice();
@@ -1772,7 +2753,11 @@
       });
       $("btnChoiceImport").addEventListener("click", async () => {
         ensureChoice();
-        await importFromLinktree(currentDevice);
+        const scope =
+          readImportScope("tplImportScopeQuick") ||
+          readImportScope("tplImportScope") ||
+          currentDevice;
+        await importFromLinktree(scope);
       });
       $("btnChoiceFresh").addEventListener("click", () => {
         ensureChoice();
@@ -2163,7 +3148,14 @@
         }
 
         function isProbablyUrlField(id) {
-          return ["tplBackground", "tplSong", "tplCursorUrl"].includes(id);
+          return [
+            "tplBackground",
+            "tplSong",
+            "tplSongIcon",
+            "tplCursorUrl",
+            "tplDemoLinkUrl",
+            "tplDemoLinkIcon",
+          ].includes(id);
         }
 
         function normalizeUrlField(el) {
@@ -2257,10 +3249,18 @@
 
           // Optional URL-like fields
           ok = validateUrlLike($("tplSong"), false) && ok;
+          ok = validateUrlLike($("tplSongIcon"), false) && ok;
           ok = validateUrlLike($("tplCursorUrl"), false) && ok;
+          ok = validateUrlLike($("tplDemoLinkUrl"), false) && ok;
+          ok = validateUrlLike($("tplDemoLinkIcon"), false) && ok;
 
           // Hex fields
           [
+            "tplAudioBgColor",
+            "tplAudioTextColor",
+            "tplAudioAccentColor",
+            "tplEntryTextColor",
+            "tplEntryBorderColor",
             "tplLinkColor",
             "tplLinkBgColor",
             "tplCardColor",
@@ -2268,6 +3268,7 @@
             "tplNameColor",
             "tplLocationColor",
             "tplQuoteColor",
+            "tplCursorFxColor",
             "tplCounterColor",
             "tplCounterBgColor",
           ].forEach((id) => {
@@ -2283,6 +3284,7 @@
           );
           all.forEach((el) => {
             el.addEventListener("input", () => {
+              if (el.id) markDirtyByField(el.id);
               setDirty(true);
               saveDraftDebounced();
               // live validate only for some fields
@@ -2291,6 +3293,7 @@
               }
             });
             el.addEventListener("change", () => {
+              if (el.id) markDirtyByField(el.id);
               setDirty(true);
               saveDraftDebounced();
             });
@@ -2412,7 +3415,7 @@
           startDirtyWatcher();
         }
 
-        return { onAfterBoot };
+        return { onAfterBoot, validateFormFriendly, snapshot };
       })();
 
       // Call after boot completes (boot() is async)
@@ -2442,7 +3445,7 @@
       // Before saving in main button, run friendly validation too
       const _saveTemplate = saveTemplate;
       saveTemplate = async function () {
-        if (!validateFormFriendly()) {
+        if (UX.validateFormFriendly && !UX.validateFormFriendly()) {
           // formMsg already used; add a toast too
           try {
             const tw = document.getElementById("toastWrap");
@@ -2453,10 +3456,10 @@
           showMsg(formMsg, "Please fix the highlighted fields", false);
           return;
         }
-        const before = snapshot();
+        const before = UX.snapshot ? UX.snapshot() : null;
         await _saveTemplate();
         // After successful saveTemplate() it navigates; but if not, we can clear dirty.
-        const after = snapshot();
+        const after = UX.snapshot ? UX.snapshot() : null;
         if (before && after && before !== after) {
           // keep dirty (save failed). If save succeeded but stayed, clear.
         }

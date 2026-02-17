@@ -3,24 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TAOMA™ — Linktree</title>
+    <title>TAOMA™ — Linktree Canvas</title>
     <meta
       name="description"
-      content="TAOMA™ Linktree: zentrale Anlaufstelle für alle TAOMA Links, Socials und Projekte."
+      content="TAOMA™ Linktree Canvas Editor"
     />
-    <meta property="og:title" content="TAOMA™ — Linktree" />
+    <meta property="og:title" content="TAOMA™ — Linktree Canvas" />
     <meta
       property="og:description"
-      content="Alle TAOMA Links, Socials und Projekte auf einen Blick."
+      content="Edit your Linktree layout in the canvas editor."
     />
     <meta property="og:type" content="profile" />
     <meta property="og:url" content="https://taoma.space/linktree" />
     <meta property="og:image" content="https://taoma.space/static/icon.png" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="TAOMA™ — Linktree" />
+    <meta name="twitter:title" content="TAOMA™ — Linktree Canvas" />
     <meta
       name="twitter:description"
-      content="Alle TAOMA Links, Socials und Projekte auf einen Blick."
+      content="Edit your Linktree layout in the canvas editor."
     />
     <meta name="twitter:image" content="https://taoma.space/static/icon.png" />
     <link rel="canonical" href="https://taoma.space/linktree" />
@@ -109,6 +109,223 @@
         align-items: center;
         text-align: center;
         padding: 3rem 1rem;
+      }
+
+      body.canvas-editor {
+        overflow: hidden;
+      }
+
+      .canvas-shell {
+        flex: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        min-height: 100vh;
+      }
+
+      .canvas-stage {
+        padding: 2.5rem 1.5rem 2rem;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        overflow: auto;
+      }
+
+      .canvas-stage .card {
+        margin: 0;
+      }
+
+      .inspector {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: rgba(13, 17, 35, 0.94);
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(14px);
+        z-index: 5;
+      }
+
+      .inspector-header,
+      .inspector-footer {
+        padding: 1rem 1.1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .inspector-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: none;
+      }
+
+      .inspector-body {
+        flex: 1;
+        overflow: auto;
+        padding: 1rem 1.1rem 1.4rem;
+        display: grid;
+        gap: 1rem;
+      }
+
+      .inspector h3 {
+        margin: 0 0 0.6rem;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .field {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .field label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .input,
+      .select {
+        width: 100%;
+        padding: 0.55rem 0.7rem;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--ink);
+        font: inherit;
+      }
+
+      .row {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 0.65rem 0.8rem;
+        border-radius: 12px;
+        border: 0;
+        background: linear-gradient(135deg, #6c8cff, #71e5d2);
+        color: #0e1020;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .btn.ghost {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--ink);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+      }
+
+      .inspector-note {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .canvas-plate {
+        position: absolute;
+        inset: 0 auto auto 0;
+        cursor: grab;
+        user-select: none;
+      }
+
+      .canvas-plate.selected {
+        outline: 2px solid rgba(113, 229, 210, 0.9);
+        outline-offset: 3px;
+      }
+
+      .canvas-plate * {
+        pointer-events: none;
+      }
+
+      .canvas-plate .resize-handle {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(113, 229, 210, 0.95);
+        border: 2px solid rgba(14, 18, 35, 0.9);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        pointer-events: auto;
+        z-index: 5;
+      }
+
+      .canvas-plate .resize-e {
+        right: -6px;
+        top: 50%;
+        transform: translate(50%, -50%);
+        cursor: ew-resize;
+      }
+
+      .canvas-plate .resize-s {
+        left: 50%;
+        bottom: -6px;
+        transform: translate(-50%, 50%);
+        cursor: ns-resize;
+      }
+
+      .canvas-plate .resize-se {
+        right: -6px;
+        bottom: -6px;
+        transform: translate(50%, 50%);
+        cursor: nwse-resize;
+      }
+
+      .plate-group {
+        position: absolute;
+        inset: 0 auto auto 0;
+      }
+
+      .plate-group.selected {
+        outline: 2px dashed rgba(113, 229, 210, 0.9);
+        outline-offset: 4px;
+      }
+
+      .plate-group .group-handle {
+        position: absolute;
+        top: -24px;
+        left: 0;
+        padding: 0.2rem 0.5rem;
+        border-radius: 999px;
+        background: rgba(14, 18, 35, 0.85);
+        border: 1px solid rgba(113, 229, 210, 0.6);
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--ink);
+        cursor: grab;
+        user-select: none;
+      }
+
+      .canvas-resize-handle {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        background: rgba(122, 162, 255, 0.9);
+        border: 2px solid rgba(14, 18, 35, 0.9);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+        cursor: nwse-resize;
+        z-index: 6;
+      }
+
+      .card.canvas {
+        --canvas-grid: 8px;
+      }
+
+      @media (max-width: 1100px) {
+        .canvas-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .inspector {
+          position: relative;
+          height: auto;
+          border-left: none;
+          border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
       }
 
       .pfp-wrap {
@@ -960,33 +1177,6 @@
         margin: 0 auto;
       }
 
-      .editor-actions {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 0.6rem;
-      }
-
-      .editor-actions.hidden {
-        display: none;
-      }
-
-      .edit-canvas-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.4rem 0.8rem;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--ink);
-        font-weight: 700;
-        font-size: 0.85rem;
-      }
-
-      .edit-canvas-btn:hover {
-        background: rgba(255, 255, 255, 0.18);
-      }
-
       .card.wide {
         max-width: 980px;
         width: min(100%, 980px);
@@ -1497,7 +1687,7 @@
     </style>
   </head>
 
-  <body>
+  <body class="canvas-editor">
     <div class="bg" id="bg"></div>
     <div
       id="enterOverlay"
@@ -1514,139 +1704,207 @@
       <span class="dot" aria-hidden="true"></span>
       <span id="soundLabel">Sound off</span>
     </button>
-    <main>
-      <div class="card" id="card">
-        <div id="editorActions" class="editor-actions hidden">
-          <a id="editCanvasBtn" class="edit-canvas-btn" href="#">Edit in canvas</a>
-        </div>
-        <div class="pfp-wrap">
-          <img
-            id="pfp"
-            class="pfp"
-            src="/static/icon.png"
-            loading="lazy"
-            decoding="async"
-            alt="Profile picture"
-          />
-          <img
-            id="pfpFrame"
-            class="pfp-frame"
-            src=""
-            alt=""
-            loading="lazy"
-            decoding="async"
-            style="display: none"
-          />
-          <span
-            id="discordPresence"
-            class="discord-presence hidden"
-            role="img"
-            aria-label="Discord status"
-          ></span>
-        </div>
-        <div id="name" class="name">User</div>
-        <div id="discordStatusLine" class="discord-status hidden">
-          <span class="dot" aria-hidden="true"></span>
-          <span id="discordStatusText" class="text"></span>
-        </div>
-        <div id="quote" class="quote">-</div>
-        <div class="location" id="loc"></div>
-        <div class="discord-badges hidden" id="discordBadges"></div>
-        <div class="badges" id="badges"></div>
+    <div class="canvas-shell">
+      <main class="canvas-stage">
+        <div class="card" id="card">
+          <div class="pfp-wrap">
+            <img
+              id="pfp"
+              class="pfp"
+              src="/static/icon.png"
+              loading="lazy"
+              decoding="async"
+              alt="Profile picture"
+            />
+            <img
+              id="pfpFrame"
+              class="pfp-frame"
+              src=""
+              alt=""
+              loading="lazy"
+              decoding="async"
+              style="display: none"
+            />
+            <span
+              id="discordPresence"
+              class="discord-presence hidden"
+              role="img"
+              aria-label="Discord status"
+            ></span>
+          </div>
+          <div id="name" class="name">User</div>
+          <div id="discordStatusLine" class="discord-status hidden">
+            <span class="dot" aria-hidden="true"></span>
+            <span id="discordStatusText" class="text"></span>
+          </div>
+          <div id="quote" class="quote">-</div>
+          <div class="location" id="loc"></div>
+          <div class="discord-badges hidden" id="discordBadges"></div>
+          <div class="badges" id="badges"></div>
 
-        <div id="audioPlayer" class="audio-player hidden">
-          <div class="audio-meta">
-            <div class="audio-title-wrap">
-              <img
-                id="audioIcon"
-                class="audio-icon hidden"
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-              <span id="audioTitle" class="audio-title">Audio</span>
+          <div id="audioPlayer" class="audio-player hidden">
+            <div class="audio-meta">
+              <div class="audio-title-wrap">
+                <img
+                  id="audioIcon"
+                  class="audio-icon hidden"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span id="audioTitle" class="audio-title">Audio</span>
+              </div>
+              <span id="audioTime" class="audio-time">0:00 / 0:00</span>
             </div>
-            <span id="audioTime" class="audio-time">0:00 / 0:00</span>
+            <input
+              id="audioSeek"
+              class="audio-seek"
+              type="range"
+              min="0"
+              max="0"
+              value="0"
+            />
+            <div class="audio-controls">
+              <button
+                id="audioBack"
+                class="audio-btn"
+                type="button"
+                aria-label="Back 10 seconds"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                  <path d="M11 18V6l-6 6 6 6zM19 18V6l-6 6 6 6z" />
+                </svg>
+              </button>
+              <button
+                id="audioPlay"
+                class="audio-btn primary"
+                type="button"
+                aria-label="Play or pause"
+              >
+                <svg
+                  class="icon-play"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="currentColor"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                <svg
+                  class="icon-pause"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="currentColor"
+                >
+                  <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
+                </svg>
+              </button>
+              <button
+                id="audioForward"
+                class="audio-btn"
+                type="button"
+                aria-label="Forward 10 seconds"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                  <path d="M13 6v12l6-6-6-6zM5 6v12l6-6-6-6z" />
+                </svg>
+              </button>
+            </div>
           </div>
-          <input
-            id="audioSeek"
-            class="audio-seek"
-            type="range"
-            min="0"
-            max="0"
-            value="0"
-          />
-          <div class="audio-controls">
-            <button
-              id="audioBack"
-              class="audio-btn"
-              type="button"
-              aria-label="Back 10 seconds"
+          <div class="links" id="links"></div>
+          <div id="visitCounter" class="visit-counter" style="display: none">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
-                <path d="M11 18V6l-6 6 6 6zM19 18V6l-6 6 6 6z" />
-              </svg>
-            </button>
-            <button
-              id="audioPlay"
-              class="audio-btn primary"
-              type="button"
-              aria-label="Play or pause"
-            >
-              <svg
-                class="icon-play"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                fill="currentColor"
-              >
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              <svg
-                class="icon-pause"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                fill="currentColor"
-              >
-                <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
-              </svg>
-            </button>
-            <button
-              id="audioForward"
-              class="audio-btn"
-              type="button"
-              aria-label="Forward 10 seconds"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
-                <path d="M13 6v12l6-6-6-6zM5 6v12l6-6-6-6z" />
-              </svg>
-            </button>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+            <span id="visitCounterValue">0</span>
           </div>
         </div>
-        <div class="links" id="links"></div>
-        <div id="visitCounter" class="visit-counter" style="display: none">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-            />
-          </svg>
-          <span id="visitCounterValue">0</span>
+      </main>
+
+      <aside class="inspector" aria-label="Canvas inspector">
+        <div class="inspector-header">
+          <div class="field">
+            <label for="inDevice">Device</label>
+            <select id="inDevice" class="select">
+              <option value="pc">Desktop</option>
+              <option value="mobile">Mobile</option>
+            </select>
+          </div>
         </div>
-      </div>
-    </main>
+        <div class="inspector-body">
+          <div id="inspectorMsg" class="inspector-note"></div>
+          <div>
+            <h3>Canvas size</h3>
+            <div class="row">
+              <div class="field" style="flex: 1">
+                <label for="inCanvasW">Width (px)</label>
+                <input id="inCanvasW" class="input" type="number" min="10" />
+              </div>
+              <div class="field" style="flex: 1">
+                <label for="inCanvasH">Height (px)</label>
+                <input id="inCanvasH" class="input" type="number" min="10" />
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Canvas reset</label>
+            <button id="btnCanvasReset" class="btn ghost" type="button">
+              Reset canvas to linktree
+            </button>
+            <div class="inspector-note">
+              Resets the canvas layout to match the current linktree.
+            </div>
+          </div>
+
+          <div>
+            <h3>Selection</h3>
+            <div class="inspector-note" id="selectionLabel">
+              Select an element on the canvas.
+            </div>
+            <div class="row" style="margin-top: 0.6rem">
+              <div class="field" style="flex: 1">
+                <label for="inSelX">X (px)</label>
+                <input id="inSelX" class="input" type="number" />
+              </div>
+              <div class="field" style="flex: 1">
+                <label for="inSelY">Y (px)</label>
+                <input id="inSelY" class="input" type="number" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field" style="flex: 1">
+                <label for="inSelW">Width (px)</label>
+                <input id="inSelW" class="input" type="number" />
+              </div>
+              <div class="field" style="flex: 1">
+                <label for="inSelH">Height (px)</label>
+                <input id="inSelH" class="input" type="number" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="inspector-footer">
+          <button id="btnSaveCanvas" class="btn" type="button">
+            Save canvas
+          </button>
+        </div>
+      </aside>
+    </div>
 
     <footer>© <span id="year"></span> TAOMA™</footer>
 
@@ -1938,6 +2196,7 @@
         const DEFAULT_AUDIO_ACCENT_COLOR = "#85a3ff";
         const DEFAULT_CURSOR_FX_ALPHA = 0.7;
         const CURSOR_IMAGE_SIZE = 32;
+        const EDITOR_MODE = true;
         const SECTION_ORDER_DEFAULT = [
           "pfp",
           "name",
@@ -1952,6 +2211,17 @@
         const SECTION_KEY_ALIASES = {
           discord_badges: "badges",
         };
+        const SECTION_LABELS = {
+          pfp: "Profile picture",
+          name: "Display name",
+          discord_status: "Discord status",
+          quote: "Quote",
+          location: "Location",
+          badges: "Badges",
+          audio: "Audio player",
+          links: "Links",
+          visit_counter: "Visit counter",
+        };
         const SECTION_ORDER_ALLOWED = new Set(SECTION_ORDER_DEFAULT);
         const CANVAS_PLATE_MIN_W = 1;
         const CANVAS_PLATE_MIN_H = 1;
@@ -1960,6 +2230,14 @@
         const CANVAS_SIZE_MIN_W = 1;
         const CANVAS_SIZE_MIN_H = 1;
         const CANVAS_LEGACY_GRID_DEFAULT = 8;
+        let canvasLayout = null;
+        let canvasSelection = null;
+        let canvasDragState = null;
+        let canvasStageBound = false;
+        let canvasDirty = false;
+        let pfpSizeOffsets = null;
+        let currentDevice = "pc";
+        let linktreeId = null;
 
         function defaultPlateUnits(key) {
           switch (key) {
@@ -2144,6 +2422,10 @@
             el.style.removeProperty("height");
             el.style.removeProperty("max-width");
             el.style.removeProperty("max-height");
+            el.onmousedown = null;
+            el.onclick = null;
+            el.removeAttribute("data-key");
+            el.querySelectorAll(".resize-handle").forEach((n) => n.remove());
             if (key === "pfp") {
               const img = el.querySelector(".pfp");
               if (img) {
@@ -2185,6 +2467,45 @@
             plates,
             groups: {},
           };
+        }
+
+        function buildCanvasLayoutFromDom(order) {
+          const card = document.getElementById("card");
+          const layout = buildDefaultCanvasLayout(order);
+          if (!card) return layout;
+          const cardRect = card.getBoundingClientRect();
+          const nextPlates = { ...layout.plates };
+          flattenSectionOrder(order).forEach((key) => {
+            const el = getSectionElement(key);
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            if (!rect.width && !rect.height) return;
+            const x = Math.round(rect.left - cardRect.left);
+            const y = Math.round(rect.top - cardRect.top);
+            const w = Math.round(rect.width);
+            const h = Math.round(rect.height);
+            nextPlates[key] = {
+              x: Math.max(0, x),
+              y: Math.max(0, y),
+              w: Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_PLATE_MIN_W, w || defaultPlatePixels(key).w),
+              ),
+              h: Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_PLATE_MIN_H, h || defaultPlatePixels(key).h),
+              ),
+              group: null,
+            };
+          });
+          const sizeW = Math.round(cardRect.width);
+          const sizeH = Math.round(cardRect.height);
+          layout.plates = nextPlates;
+          layout.size = {
+            w: Math.max(CANVAS_SIZE_MIN_W, sizeW),
+            h: Math.max(CANVAS_SIZE_MIN_H, sizeH),
+          };
+          return layout;
         }
 
         function normalizeCanvasLayout(raw, order) {
@@ -2234,49 +2555,73 @@
             Object.entries(data.plates).forEach(([key, plate]) => {
               const rawKey = String(key || "").trim().toLowerCase();
               const k = SECTION_KEY_ALIASES[rawKey] || rawKey;
-              if (!k || !SECTION_ORDER_ALLOWED.has(k)) return;
-              if (!plate || typeof plate !== "object") return;
-              const px = parseInt(plate.x ?? 0, 10);
-              const py = parseInt(plate.y ?? 0, 10);
-              if (!Number.isFinite(px) || !Number.isFinite(py)) return;
-              const entry = { x: px * scale, y: py * scale };
-              const pw = parseInt(plate.w ?? 0, 10);
-              const ph = parseInt(plate.h ?? 0, 10);
-              if (Number.isFinite(pw) && pw > 0) {
-                entry.w = Math.min(
-                  CANVAS_PLATE_MAX_W,
-                  Math.max(CANVAS_PLATE_MIN_W, pw * scale),
-                );
-              }
-              if (Number.isFinite(ph) && ph > 0) {
-                entry.h = Math.min(
-                  CANVAS_PLATE_MAX_H,
-                  Math.max(CANVAS_PLATE_MIN_H, ph * scale),
-                );
-              }
-              if (plate.group && groups[plate.group]) {
-                entry.group = plate.group;
-              }
-              plates[k] = entry;
-            });
-          }
-          Object.keys(fallback.plates).forEach((key) => {
-            if (!plates[key]) plates[key] = { ...fallback.plates[key] };
+            if (!k || !SECTION_ORDER_ALLOWED.has(k)) return;
+            if (!plate || typeof plate !== "object") return;
+            const px = parseInt(plate.x ?? 0, 10);
+            const py = parseInt(plate.y ?? 0, 10);
+            if (!Number.isFinite(px) || !Number.isFinite(py)) return;
+            const entry = { x: px * scale, y: py * scale };
+            const pw = parseInt(plate.w ?? 0, 10);
+            const ph = parseInt(plate.h ?? 0, 10);
+            if (Number.isFinite(pw) && pw > 0) {
+              entry.w = Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_PLATE_MIN_W, pw * scale),
+              );
+            }
+            if (Number.isFinite(ph) && ph > 0) {
+              entry.h = Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_PLATE_MIN_H, ph * scale),
+              );
+            }
+            if (plate.group && groups[plate.group]) {
+              entry.group = plate.group;
+            }
+            plates[k] = entry;
           });
-          if (!size) {
-            const bounds = computeCanvasContentBounds({ plates, groups });
-            size = { w: bounds.w, h: bounds.h };
+        }
+        Object.keys(fallback.plates).forEach((key) => {
+          if (!plates[key]) plates[key] = { ...fallback.plates[key] };
+        });
+        if (!size) {
+          const bounds = computeCanvasContentBounds({ plates, groups });
+          size = { w: bounds.w, h: bounds.h };
+        }
+        return {
+          enabled: true,
+          grid: 1,
+          size,
+          plates,
+          groups,
+        };
+      }
+
+        function ensureCanvasLayoutSize(layout) {
+          if (!layout) return;
+          const bounds = computeCanvasContentBounds(layout);
+          if (!layout.size) {
+            layout.size = { w: bounds.w, h: bounds.h };
+            return;
           }
-          return {
-            enabled: true,
-            grid: 1,
-            size,
-            plates,
-            groups,
-          };
+          if (!Number.isFinite(layout.size.w)) layout.size.w = bounds.w;
+          if (!Number.isFinite(layout.size.h)) layout.size.h = bounds.h;
+          if (layout.size.w < bounds.w) layout.size.w = bounds.w;
+          if (layout.size.h < bounds.h) layout.size.h = bounds.h;
         }
 
-        let pfpSizeOffsets = null;
+        function updateCanvasCardSize(layout) {
+          const card = document.getElementById("card");
+          if (!card || !layout || !layout.size) return;
+          card.style.width = `${layout.size.w}px`;
+          card.style.height = `${layout.size.h}px`;
+        }
+
+        function updateCanvasGridStyle(layout) {
+          const card = document.getElementById("card");
+          if (!card) return;
+          card.style.setProperty("--canvas-grid", "1px");
+        }
 
         function capturePfpOffsets() {
           const wrap = document.querySelector(".pfp-wrap");
@@ -2293,10 +2638,135 @@
           };
         }
 
-        function applyCanvasLayout(rawLayout, rawOrder, { isMobile } = {}) {
+        function getPlateElement(key) {
+          return getSectionElement(key);
+        }
+
+        function applyPlateStyles(key, plate) {
+          const el = getPlateElement(key);
+          if (!el || !plate) return;
+          el.style.transform = `translate(${plate.x}px, ${plate.y}px)`;
+          el.style.margin = "0";
+          if (Number.isFinite(plate.w)) {
+            const width = plate.w;
+            el.style.width = `${width}px`;
+            el.style.maxWidth = "none";
+            if (key === "pfp") {
+              const img = el.querySelector(".pfp");
+              if (img && pfpSizeOffsets) {
+                img.style.width = `${width + pfpSizeOffsets.imgW}px`;
+              }
+            }
+          }
+          if (Number.isFinite(plate.h)) {
+            const height = plate.h;
+            el.style.height = `${height}px`;
+            el.style.maxHeight = "none";
+            if (key === "pfp") {
+              const img = el.querySelector(".pfp");
+              if (img && pfpSizeOffsets) {
+                img.style.height = `${height + pfpSizeOffsets.imgH}px`;
+              }
+            }
+          }
+        }
+
+        function updateGroupBounds(groupEl, groupId, layout) {
+          if (!groupEl || !layout) return;
+          const plates = Object.entries(layout.plates || {}).filter(
+            ([, plate]) => plate && plate.group === groupId,
+          );
+          if (!plates.length) {
+            groupEl.style.width = "0px";
+            groupEl.style.height = "0px";
+            return;
+          }
+          let maxX = 0;
+          let maxY = 0;
+          plates.forEach(([key, plate]) => {
+            const wUnits = Number.isFinite(plate.w)
+              ? plate.w
+              : defaultPlatePixels(key).w;
+            const hUnits = Number.isFinite(plate.h)
+              ? plate.h
+              : defaultPlatePixels(key).h;
+            const px = plate.x;
+            const py = plate.y;
+            maxX = Math.max(maxX, px + wUnits);
+            maxY = Math.max(maxY, py + hUnits);
+          });
+          groupEl.style.width = `${maxX}px`;
+          groupEl.style.height = `${maxY}px`;
+        }
+
+        function attachResizeHandles(el, key) {
+          if (!el) return;
+          el.querySelectorAll(".resize-handle").forEach((n) => n.remove());
+          const handleE = document.createElement("div");
+          handleE.className = "resize-handle resize-e";
+          handleE.addEventListener("mousedown", (evt) => {
+            evt.stopPropagation();
+            startCanvasDrag(evt, { type: "resize", key, dir: "e", el });
+          });
+          const handleS = document.createElement("div");
+          handleS.className = "resize-handle resize-s";
+          handleS.addEventListener("mousedown", (evt) => {
+            evt.stopPropagation();
+            startCanvasDrag(evt, { type: "resize", key, dir: "s", el });
+          });
+          const handleSE = document.createElement("div");
+          handleSE.className = "resize-handle resize-se";
+          handleSE.addEventListener("mousedown", (evt) => {
+            evt.stopPropagation();
+            startCanvasDrag(evt, { type: "resize", key, dir: "se", el });
+          });
+          el.appendChild(handleE);
+          el.appendChild(handleS);
+          el.appendChild(handleSE);
+        }
+
+        function ensurePlateSizesFromDom() {
+          if (!canvasLayout) return;
+          let changed = false;
+          SECTION_ORDER_DEFAULT.forEach((key) => {
+            const plate = canvasLayout.plates?.[key];
+            const el = getPlateElement(key);
+            if (!plate || !el) return;
+            if (Number.isFinite(plate.w) && Number.isFinite(plate.h)) return;
+            const rect = el.getBoundingClientRect();
+            if (!Number.isFinite(plate.w)) {
+              const wUnits = Math.round(rect.width);
+              plate.w = Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_PLATE_MIN_W, wUnits || defaultPlatePixels(key).w),
+              );
+              changed = true;
+            }
+            if (!Number.isFinite(plate.h)) {
+              const hUnits = Math.round(rect.height);
+              plate.h = Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_PLATE_MIN_H, hUnits || defaultPlatePixels(key).h),
+              );
+              changed = true;
+            }
+            if (changed) applyPlateStyles(key, plate);
+          });
+          if (changed) {
+            ensureCanvasLayoutSize(canvasLayout);
+            updateCanvasCardSize(canvasLayout);
+            syncCanvasControls();
+          }
+        }
+
+        function applyCanvasLayout(
+          rawLayout,
+          rawOrder,
+          { isMobile, forceCanvas = false, forEditor = false, layoutOverride } = {},
+        ) {
           const card = document.getElementById("card");
           if (!card) return false;
-          const layout = normalizeCanvasLayout(rawLayout, rawOrder);
+          const layout = layoutOverride || normalizeCanvasLayout(rawLayout, rawOrder);
           if (!layout) return false;
           resetCanvasLayout(card);
           card.classList.add("canvas");
@@ -2308,6 +2778,18 @@
             groupEl.className = "plate-group";
             groupEl.dataset.groupId = gid;
             groupEl.style.transform = `translate(${g.x}px, ${g.y}px)`;
+            if (forEditor) {
+              const handle = document.createElement("div");
+              handle.className = "group-handle";
+              handle.textContent = "Group";
+              handle.onmousedown = (evt) =>
+                startCanvasDrag(evt, { type: "group", id: gid, el: groupEl });
+              handle.onclick = (evt) => {
+                evt.stopPropagation();
+                setCanvasSelection({ type: "group", id: gid });
+              };
+              groupEl.appendChild(handle);
+            }
             card.appendChild(groupEl);
             groupEls[gid] = groupEl;
           });
@@ -2347,6 +2829,16 @@
                 }
               }
             }
+            if (forEditor) {
+              el.dataset.key = key;
+              el.onmousedown = (evt) =>
+                startCanvasDrag(evt, { type: "plate", key, el });
+              el.onclick = (evt) => {
+                evt.stopPropagation();
+                setCanvasSelection({ type: "plate", key });
+              };
+              attachResizeHandles(el, key);
+            }
             parent.appendChild(el);
           });
 
@@ -2372,7 +2864,255 @@
               card.style.minWidth = "";
             }
           }
+          Object.entries(groupEls).forEach(([gid, groupEl]) => {
+            updateGroupBounds(groupEl, gid, layout);
+          });
+          if (forEditor) {
+            card.querySelectorAll(".canvas-resize-handle").forEach((n) => n.remove());
+            const resizeHandle = document.createElement("div");
+            resizeHandle.className = "canvas-resize-handle";
+            resizeHandle.onmousedown = (evt) => {
+              evt.stopPropagation();
+              startCanvasDrag(evt, { type: "canvas-resize", el: card });
+            };
+            card.appendChild(resizeHandle);
+          }
           return true;
+        }
+
+        function clearCanvasSelection() {
+          canvasSelection = null;
+          document
+            .querySelectorAll(".canvas-plate.selected, .plate-group.selected")
+            .forEach((el) => el.classList.remove("selected"));
+          syncSelectionPanel();
+        }
+
+        function setCanvasSelection(target) {
+          canvasSelection = target;
+          document
+            .querySelectorAll(".canvas-plate.selected, .plate-group.selected")
+            .forEach((el) => el.classList.remove("selected"));
+          if (target && target.type === "plate") {
+            const el = getPlateElement(target.key);
+            if (el) el.classList.add("selected");
+          }
+          if (target && target.type === "group") {
+            const el = document.querySelector(
+              `.plate-group[data-group-id="${target.id}"]`,
+            );
+            if (el) el.classList.add("selected");
+          }
+          syncSelectionPanel();
+        }
+
+        function syncCanvasControls() {
+          const canvasW = document.getElementById("inCanvasW");
+          const canvasH = document.getElementById("inCanvasH");
+          if (!canvasLayout) return;
+          ensureCanvasLayoutSize(canvasLayout);
+          if (canvasW && canvasLayout.size) canvasW.value = canvasLayout.size.w;
+          if (canvasH && canvasLayout.size) canvasH.value = canvasLayout.size.h;
+        }
+
+        function syncSelectionPanel() {
+          const label = document.getElementById("selectionLabel");
+          const xInput = document.getElementById("inSelX");
+          const yInput = document.getElementById("inSelY");
+          const wInput = document.getElementById("inSelW");
+          const hInput = document.getElementById("inSelH");
+          if (!label || !xInput || !yInput || !wInput || !hInput) return;
+          if (!canvasLayout || !canvasSelection) {
+            label.textContent = "Select an element on the canvas.";
+            xInput.value = "";
+            yInput.value = "";
+            wInput.value = "";
+            hInput.value = "";
+            xInput.disabled = true;
+            yInput.disabled = true;
+            wInput.disabled = true;
+            hInput.disabled = true;
+            return;
+          }
+          if (canvasSelection.type === "group") {
+            const group = canvasLayout.groups?.[canvasSelection.id];
+            if (!group) return;
+            label.textContent = `Group ${canvasSelection.id}`;
+            xInput.value = group.x;
+            yInput.value = group.y;
+            wInput.value = "";
+            hInput.value = "";
+            xInput.disabled = false;
+            yInput.disabled = false;
+            wInput.disabled = true;
+            hInput.disabled = true;
+            return;
+          }
+          const key = canvasSelection.key;
+          const plate = canvasLayout.plates?.[key];
+          if (!plate) return;
+          label.textContent = SECTION_LABELS[key] || key;
+          xInput.value = plate.x;
+          yInput.value = plate.y;
+          wInput.value = Number.isFinite(plate.w)
+            ? plate.w
+            : defaultPlatePixels(key).w;
+          hInput.value = Number.isFinite(plate.h)
+            ? plate.h
+            : defaultPlatePixels(key).h;
+          xInput.disabled = false;
+          yInput.disabled = false;
+          wInput.disabled = false;
+          hInput.disabled = false;
+        }
+
+        function bindCanvasStageEvents() {
+          const card = document.getElementById("card");
+          if (!card || canvasStageBound) return;
+          card.addEventListener("click", (evt) => {
+            if (evt.target === card) {
+              clearCanvasSelection();
+            }
+          });
+          canvasStageBound = true;
+        }
+
+        function startCanvasDrag(evt, target) {
+          if (!canvasLayout || evt.button !== 0) return;
+          evt.preventDefault();
+          if (target.type === "plate") {
+            const plate = canvasLayout.plates[target.key];
+            if (!plate) return;
+            canvasDragState = {
+              type: "plate",
+              key: target.key,
+              el: target.el,
+              startX: evt.clientX,
+              startY: evt.clientY,
+              originX: plate.x,
+              originY: plate.y,
+            };
+          } else if (target.type === "resize") {
+            const plate = canvasLayout.plates[target.key];
+            if (!plate) return;
+            const fallback = defaultPlatePixels(target.key);
+            canvasDragState = {
+              type: "resize",
+              key: target.key,
+              dir: target.dir,
+              el: target.el,
+              startX: evt.clientX,
+              startY: evt.clientY,
+              originW: Number.isFinite(plate.w) ? plate.w : fallback.w,
+              originH: Number.isFinite(plate.h) ? plate.h : fallback.h,
+            };
+          } else if (target.type === "group") {
+            const group = canvasLayout.groups[target.id];
+            if (!group) return;
+            canvasDragState = {
+              type: "group",
+              id: target.id,
+              el: target.el,
+              startX: evt.clientX,
+              startY: evt.clientY,
+              originX: group.x,
+              originY: group.y,
+            };
+          } else if (target.type === "canvas-resize") {
+            ensureCanvasLayoutSize(canvasLayout);
+            const size = canvasLayout.size || {
+              w: CANVAS_SIZE_MIN_W,
+              h: CANVAS_SIZE_MIN_H,
+            };
+            canvasDragState = {
+              type: "canvas-resize",
+              el: target.el,
+              startX: evt.clientX,
+              startY: evt.clientY,
+              originW: size.w,
+              originH: size.h,
+            };
+          }
+          document.addEventListener("mousemove", onCanvasDrag);
+          document.addEventListener("mouseup", stopCanvasDrag);
+        }
+
+        function onCanvasDrag(evt) {
+          if (!canvasLayout || !canvasDragState) return;
+          const dx = Math.round(evt.clientX - canvasDragState.startX);
+          const dy = Math.round(evt.clientY - canvasDragState.startY);
+          if (canvasDragState.type === "plate") {
+            const plate = canvasLayout.plates[canvasDragState.key];
+            if (!plate) return;
+            plate.x = canvasDragState.originX + dx;
+            plate.y = canvasDragState.originY + dy;
+            if (plate.group) {
+              plate.x = Math.max(0, plate.x);
+              plate.y = Math.max(0, plate.y);
+            }
+            applyPlateStyles(canvasDragState.key, plate);
+            if (plate.group) {
+              const groupEl = document.querySelector(
+                `.plate-group[data-group-id="${plate.group}"]`,
+              );
+              updateGroupBounds(groupEl, plate.group, canvasLayout);
+            }
+          } else if (canvasDragState.type === "resize") {
+            const plate = canvasLayout.plates[canvasDragState.key];
+            if (!plate) return;
+            let nextW = canvasDragState.originW;
+            let nextH = canvasDragState.originH;
+            if (canvasDragState.dir.includes("e")) {
+              nextW = canvasDragState.originW + dx;
+            }
+            if (canvasDragState.dir.includes("s")) {
+              nextH = canvasDragState.originH + dy;
+            }
+            nextW = Math.min(
+              CANVAS_PLATE_MAX_W,
+              Math.max(CANVAS_PLATE_MIN_W, nextW),
+            );
+            nextH = Math.min(
+              CANVAS_PLATE_MAX_H,
+              Math.max(CANVAS_PLATE_MIN_H, nextH),
+            );
+            plate.w = nextW;
+            plate.h = nextH;
+            applyPlateStyles(canvasDragState.key, plate);
+            if (plate.group) {
+              const groupEl = document.querySelector(
+                `.plate-group[data-group-id="${plate.group}"]`,
+              );
+              updateGroupBounds(groupEl, plate.group, canvasLayout);
+            }
+          } else if (canvasDragState.type === "group") {
+            const group = canvasLayout.groups[canvasDragState.id];
+            if (!group) return;
+            group.x = canvasDragState.originX + dx;
+            group.y = canvasDragState.originY + dy;
+            canvasDragState.el.style.transform = `translate(${group.x}px, ${group.y}px)`;
+          } else if (canvasDragState.type === "canvas-resize") {
+            const bounds = computeCanvasContentBounds(canvasLayout);
+            let nextW = canvasDragState.originW + dx;
+            let nextH = canvasDragState.originH + dy;
+            nextW = Math.max(CANVAS_SIZE_MIN_W, Math.max(bounds.w, nextW));
+            nextH = Math.max(CANVAS_SIZE_MIN_H, Math.max(bounds.h, nextH));
+            canvasLayout.size = {
+              w: Math.min(CANVAS_PLATE_MAX_W, nextW),
+              h: Math.min(CANVAS_PLATE_MAX_H, nextH),
+            };
+          }
+          canvasDirty = true;
+          ensureCanvasLayoutSize(canvasLayout);
+          updateCanvasCardSize(canvasLayout);
+          syncCanvasControls();
+          syncSelectionPanel();
+        }
+
+        function stopCanvasDrag() {
+          canvasDragState = null;
+          document.removeEventListener("mousemove", onCanvasDrag);
+          document.removeEventListener("mouseup", stopCanvasDrag);
         }
 
         function applySectionOrder(rawOrder) {
@@ -2404,7 +3144,12 @@
         }
 
         function applySectionLayout(rawOrder, rawCanvas, { isMobile } = {}) {
-          const usedCanvas = applyCanvasLayout(rawCanvas, rawOrder, { isMobile });
+          const usedCanvas = applyCanvasLayout(rawCanvas, rawOrder, {
+            isMobile,
+            forceCanvas: false,
+            forEditor: EDITOR_MODE,
+            layoutOverride: EDITOR_MODE ? canvasLayout : null,
+          });
           if (usedCanvas) {
             return { usedCanvas: true, hasSideBySide: false };
           }
@@ -3601,29 +4346,9 @@
             if (!r.ok) return null;
             const json = await r.json();
             currentUser = json && json.user ? json.user : null;
-            if (currentUser && lastData) {
-              updateEditorLink(lastData);
-            }
             return currentUser;
           } catch (_) {
             return null;
-          }
-        }
-
-        function updateEditorLink(data) {
-          const actions = document.getElementById("editorActions");
-          const btn = document.getElementById("editCanvasBtn");
-          if (!actions || !btn || !data) return;
-          const slug = data.slug || "";
-          const ownerMatch =
-            currentUser &&
-            (currentUser.linktree_slug === slug ||
-              currentUser.username === data.user_username);
-          actions.classList.toggle("hidden", !ownerMatch);
-          if (ownerMatch) {
-            btn.href = `/linktree_canvas.html?slug=${encodeURIComponent(
-              slug
-            )}&device=${encodeURIComponent(lastDevice || "pc")}`;
           }
         }
 
@@ -3672,6 +4397,216 @@
           return await r.json();
         }
 
+        function showEditorMessage(text, ok = false) {
+          const msg = document.getElementById("inspectorMsg");
+          if (!msg) return;
+          msg.textContent = text || "";
+          msg.style.color = ok ? "#71e5d2" : "var(--muted)";
+        }
+
+        function headers() {
+          return { "Content-Type": "application/json" };
+        }
+
+        function slugFromQuery() {
+          const params = new URLSearchParams(location.search);
+          const slug = params.get("slug");
+          return slug ? slug.trim() : "";
+        }
+
+        function deviceFromQuery() {
+          const params = new URLSearchParams(location.search);
+          const device = params.get("device");
+          return device === "mobile" ? "mobile" : device === "pc" ? "pc" : "";
+        }
+
+        async function apiLoadTreeOwnerBySlug(slug, device = "pc") {
+          const r = await fetch(
+            `/api/linktrees/by-slug/${encodeURIComponent(
+              slug,
+            )}/manage?device=${encodeURIComponent(device)}`,
+            { credentials: "include", headers: headers() },
+          );
+          if (!r.ok) return null;
+          return await r.json();
+        }
+
+        async function apiCloneVariant(slug, targetDevice = "mobile") {
+          const r = await fetch(
+            `/api/linktrees/${encodeURIComponent(
+              slug,
+            )}/clone?target_device=${encodeURIComponent(targetDevice)}`,
+            { method: "POST", headers: headers(), credentials: "include" },
+          );
+          if (!r.ok) throw new Error(await r.text());
+          return await r.json();
+        }
+
+        async function saveCanvasLayout() {
+          if (!linktreeId || !canvasLayout) {
+            showEditorMessage("No linktree loaded.", false);
+            return;
+          }
+          ensureCanvasLayoutSize(canvasLayout);
+          const payload = {
+            canvas_layout: {
+              enabled: true,
+              grid: 1,
+              size: canvasLayout.size,
+              plates: canvasLayout.plates,
+              groups: canvasLayout.groups,
+            },
+          };
+          try {
+            const r = await fetch(`/api/linktrees/${linktreeId}`, {
+              method: "PATCH",
+              credentials: "include",
+              headers: headers(),
+              body: JSON.stringify(payload),
+            });
+            if (!r.ok) {
+              showEditorMessage("Save failed.", false);
+              return;
+            }
+            canvasDirty = false;
+            showEditorMessage("Canvas saved.", true);
+          } catch (err) {
+            showEditorMessage("Save failed.", false);
+          }
+        }
+
+        function bindInspectorEvents() {
+          const deviceSelect = document.getElementById("inDevice");
+          const canvasW = document.getElementById("inCanvasW");
+          const canvasH = document.getElementById("inCanvasH");
+          const selX = document.getElementById("inSelX");
+          const selY = document.getElementById("inSelY");
+          const selW = document.getElementById("inSelW");
+          const selH = document.getElementById("inSelH");
+          const saveBtn = document.getElementById("btnSaveCanvas");
+          const resetBtn = document.getElementById("btnCanvasReset");
+
+          if (deviceSelect) {
+            deviceSelect.addEventListener("change", async (e) => {
+              currentDevice = e.target.value === "mobile" ? "mobile" : "pc";
+              await loadTree();
+            });
+          }
+          if (canvasW) {
+            canvasW.addEventListener("change", (e) => {
+              if (!canvasLayout) return;
+              const raw = parseInt(e.target.value || "0", 10);
+              if (!Number.isFinite(raw)) return;
+              canvasLayout.size = canvasLayout.size || { w: raw, h: CANVAS_SIZE_MIN_H };
+              canvasLayout.size.w = Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_SIZE_MIN_W, raw),
+              );
+              canvasDirty = true;
+              ensureCanvasLayoutSize(canvasLayout);
+              updateCanvasCardSize(canvasLayout);
+              syncCanvasControls();
+            });
+          }
+          if (canvasH) {
+            canvasH.addEventListener("change", (e) => {
+              if (!canvasLayout) return;
+              const raw = parseInt(e.target.value || "0", 10);
+              if (!Number.isFinite(raw)) return;
+              canvasLayout.size = canvasLayout.size || { w: CANVAS_SIZE_MIN_W, h: raw };
+              canvasLayout.size.h = Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_SIZE_MIN_H, raw),
+              );
+              canvasDirty = true;
+              ensureCanvasLayoutSize(canvasLayout);
+              updateCanvasCardSize(canvasLayout);
+              syncCanvasControls();
+            });
+          }
+
+          const updateSelectionFromInputs = () => {
+            if (!canvasLayout || !canvasSelection) return;
+            if (canvasSelection.type === "group") {
+              const group = canvasLayout.groups?.[canvasSelection.id];
+              if (!group) return;
+              const nextX = parseInt(selX.value || group.x, 10);
+              const nextY = parseInt(selY.value || group.y, 10);
+              if (Number.isFinite(nextX)) group.x = nextX;
+              if (Number.isFinite(nextY)) group.y = nextY;
+              canvasDirty = true;
+              const groupEl = document.querySelector(
+                `.plate-group[data-group-id="${canvasSelection.id}"]`,
+              );
+              if (groupEl) {
+                groupEl.style.transform = `translate(${group.x}px, ${group.y}px)`;
+              }
+              return;
+            }
+            const key = canvasSelection.key;
+            const plate = canvasLayout.plates?.[key];
+            if (!plate) return;
+            const nextX = parseInt(selX.value || plate.x, 10);
+            const nextY = parseInt(selY.value || plate.y, 10);
+            const nextW = parseInt(selW.value || plate.w, 10);
+            const nextH = parseInt(selH.value || plate.h, 10);
+            if (Number.isFinite(nextX)) plate.x = nextX;
+            if (Number.isFinite(nextY)) plate.y = nextY;
+            if (Number.isFinite(nextW)) {
+              plate.w = Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_PLATE_MIN_W, nextW),
+              );
+            }
+            if (Number.isFinite(nextH)) {
+              plate.h = Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_PLATE_MIN_H, nextH),
+              );
+            }
+            canvasDirty = true;
+            applyPlateStyles(key, plate);
+            if (plate.group) {
+              const groupEl = document.querySelector(
+                `.plate-group[data-group-id="${plate.group}"]`,
+              );
+              updateGroupBounds(groupEl, plate.group, canvasLayout);
+            }
+            ensureCanvasLayoutSize(canvasLayout);
+            updateCanvasCardSize(canvasLayout);
+            syncCanvasControls();
+          };
+
+          if (selX) selX.addEventListener("change", updateSelectionFromInputs);
+          if (selY) selY.addEventListener("change", updateSelectionFromInputs);
+          if (selW) selW.addEventListener("change", updateSelectionFromInputs);
+          if (selH) selH.addEventListener("change", updateSelectionFromInputs);
+          if (saveBtn) saveBtn.addEventListener("click", saveCanvasLayout);
+          if (resetBtn) {
+            resetBtn.addEventListener("click", () => {
+              if (!lastData) return;
+              const card = document.getElementById("card");
+              if (!card) return;
+              resetCanvasLayout(card);
+              const hasSideBySide = applySectionOrder(lastData.section_order);
+              if (hasSideBySide) {
+                card.classList.add("wide");
+              } else {
+                card.classList.remove("wide");
+              }
+              capturePfpOffsets();
+              canvasLayout = buildCanvasLayoutFromDom(lastData.section_order);
+              canvasDirty = true;
+              clearCanvasSelection();
+              applySectionLayout(lastData.section_order, lastData.canvas_layout, {
+                isMobile: currentDevice === "mobile",
+              });
+              syncCanvasControls();
+              showEditorMessage("Canvas reset to linktree layout.", true);
+            });
+          }
+        }
+
         function renderTree(
           data,
           {
@@ -3684,15 +4619,56 @@
           lastData = data;
           lastMediaMode = preferLite ? "lite" : "full";
           lastDevice = device;
-          updateEditorLink(data);
           const isMobile = device === "mobile";
+          let normalizedLayout = normalizeCanvasLayout(
+            data.canvas_layout,
+            data.section_order,
+          );
+          const hasSavedLayout = !!normalizedLayout;
+          if (EDITOR_MODE) {
+            if (!canvasLayout || !canvasDirty) {
+              canvasLayout = normalizedLayout;
+              canvasDirty = false;
+            }
+            if (canvasLayout) ensureCanvasLayoutSize(canvasLayout);
+          }
           const layoutResult = applySectionLayout(
             data.section_order,
             data.canvas_layout,
             { isMobile },
           );
           const hasSideBySide = layoutResult.hasSideBySide;
-          const usedCanvas = layoutResult.usedCanvas;
+          let usedCanvas = layoutResult.usedCanvas;
+          if (EDITOR_MODE) {
+            if (!hasSavedLayout && !canvasDirty && !usedCanvas) {
+              canvasLayout = buildCanvasLayoutFromDom(data.section_order);
+              canvasDirty = true;
+              const reapply = applySectionLayout(
+                data.section_order,
+                data.canvas_layout,
+                {
+                  isMobile,
+                },
+              );
+              usedCanvas = reapply.usedCanvas;
+            }
+            if (canvasLayout) {
+              updateCanvasGridStyle(canvasLayout);
+              updateCanvasCardSize(canvasLayout);
+              syncCanvasControls();
+            }
+            if (usedCanvas && canvasLayout) {
+              requestAnimationFrame(() => {
+                ensurePlateSizesFromDom();
+                syncSelectionPanel();
+              });
+            } else {
+              requestAnimationFrame(() => {
+                capturePfpOffsets();
+              });
+            }
+            bindCanvasStageEvents();
+          }
           let needsGate = false;
 
           const bgSource = pickBackgroundSource(data, preferLite);
@@ -4314,45 +5290,49 @@
 
         async function loadTree() {
           try {
-            const params = new URLSearchParams(location.search);
-            let templateId = params.get("template_id");
-            const parts = location.pathname.split("/").filter(Boolean);
-            if (
-              !templateId &&
-              parts[0] === "marketplace" &&
-              parts[1] === "templates"
-            ) {
-              templateId = parts[2] || null;
+            const user = await fetchSessionUser();
+            if (!user) {
+              showEditorMessage("Please log in to edit your canvas.", false);
+              return;
             }
-            const requestedDevice = params.get("device");
-            const device = detectDevice(requestedDevice);
-            const slug = decodeURIComponent(
-              location.pathname.split("/").pop() || "",
-            );
-            const cacheKey = makeCacheKey({ slug, templateId, device });
-            const preferLite = shouldUseLiteMedia();
-
-            const userPromise = fetchSessionUser();
-            const cached = readCachedTree(cacheKey);
-            if (cached && !initialRenderDone) {
-              renderTree(cached, { preferLite, fromCache: true, device });
-              initialRenderDone = true;
+            currentUser = user;
+            const slugParam = slugFromQuery();
+            const slug =
+              slugParam ||
+              String(user.linktree_slug || "").trim() ||
+              String(user.username || "").trim().toLowerCase();
+            if (!slug) {
+              showEditorMessage("Missing slug.", false);
+              return;
             }
-
-            const dataPromise = fetchTreeData({ templateId, slug, device });
-            const liveData = await dataPromise;
-            let data = liveData || cached;
-            if (!data) return;
-            writeCachedTree(cacheKey, data);
-            if (!initialRenderDone) {
-              renderTree(data, { preferLite, fromCache: false, device });
-              initialRenderDone = true;
-            } else {
-              lastData = data;
+            const deviceParam = deviceFromQuery();
+            currentDevice = deviceParam || currentDevice || "pc";
+            const deviceSelect = document.getElementById("inDevice");
+            if (deviceSelect) deviceSelect.value = currentDevice;
+            canvasDirty = false;
+            canvasLayout = null;
+            let data = await apiLoadTreeOwnerBySlug(slug, currentDevice);
+            if (!data && currentDevice === "mobile") {
+              try {
+                data = await apiCloneVariant(slug, "mobile");
+                showEditorMessage("Mobile version created from desktop.", true);
+              } catch (_) {
+                showEditorMessage("Create mobile copy failed.", false);
+              }
             }
-            await hydrateTemplateDemo(data, device, userPromise, preferLite);
+            if (!data) {
+              showEditorMessage("No linktree found for this slug.", false);
+              return;
+            }
+            linktreeId = data.id;
+            renderTree(data, {
+              preferLite: shouldUseLiteMedia(),
+              device: currentDevice,
+            });
+            showEditorMessage("Canvas ready.", true);
           } catch (e) {
             console.error("loadTree failed:", e);
+            showEditorMessage("Failed to load canvas.", false);
           }
         }
 
@@ -4388,6 +5368,7 @@
           prefersReducedData.addListener(handleMediaPreferenceChange);
         }
 
+        bindInspectorEvents();
         loadTree();
         document.addEventListener("DOMContentLoaded", () => {
           console.log("Page loaded (HTML ready)");

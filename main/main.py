@@ -4,6 +4,9 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 from pydantic import BaseModel, EmailStr, Field
 import os, httpx
+import hashlib
+import smtplib
+from email.message import EmailMessage
 import re
 from dotenv import load_dotenv
 import logging
@@ -106,6 +109,7 @@ class DiscordAccount(Base):
     )
 
 DisplayNameMode = Literal["slug", "username", "custom"]
+LayoutMode = Literal["center", "wide"]
 DeviceType = Literal["pc", "mobile"]
 load_dotenv()
 app = FastAPI(title="Anime GIF API", version="0.1.0")
@@ -278,6 +282,231 @@ def _clean_upload_filename(name: str | None) -> str | None:
     return cleaned
 
 
+def _normalize_text_list(
+    value: Any,
+    *,
+    max_items: int | None = None,
+    max_len: int | None = None,
+    dedupe: bool = True,
+) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple, set)):
+        items = list(value)
+    else:
+        items = [value]
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        if item is None:
+            continue
+        text = str(item).strip()
+        if not text:
+            continue
+        if max_len is not None and len(text) > max_len:
+            text = text[:max_len]
+        if dedupe:
+            if text in seen:
+                continue
+            seen.add(text)
+        out.append(text)
+        if max_items is not None and len(out) >= max_items:
+            break
+    return out
+
+
+def _list_to_json(
+    value: Any,
+    *,
+    max_items: int | None = None,
+    max_len: int | None = None,
+    allow_empty: bool = False,
+) -> str | None:
+    if value is None:
+        return None
+    items = _normalize_text_list(value, max_items=max_items, max_len=max_len)
+    if not items and not allow_empty:
+        return None
+    return json.dumps(items)
+
+
+def _json_to_list(
+    raw: Any,
+    *,
+    max_items: int | None = None,
+    max_len: int | None = None,
+    none_if_missing: bool = False,
+) -> list[str] | None:
+    if raw is None:
+        return None if none_if_missing else []
+    if isinstance(raw, str):
+        if not raw.strip():
+            return None if none_if_missing else []
+        try:
+            data = json.loads(raw)
+        except Exception:
+            data = [raw]
+    else:
+        data = raw
+    items = _normalize_text_list(data, max_items=max_items, max_len=max_len)
+    if none_if_missing and raw is None:
+        return None
+    return items
+
+
+def _normalize_section_order(value: Any) -> list[Any] | None:
+    if value is None:
+        return None
+    data = value
+    if isinstance(value, str):
+        if not value.strip():
+            return None
+        try:
+            data = json.loads(value)
+        except Exception:
+            data = [value]
+    if not isinstance(data, (list, tuple, set)):
+        data = [data]
+    out: list[Any] = []
+    seen: set[str] = set()
+    for item in data:
+        if item is None:
+            continue
+        if isinstance(item, (list, tuple, set)):
+            row: list[str] = []
+            for sub in item:
+                raw = str(sub).strip().lower()
+                key = SECTION_KEY_ALIASES.get(raw, raw)
+                if not key or key not in SECTION_ORDER_ALLOWED:
+                    continue
+                if key in seen:
+                    continue
+                seen.add(key)
+                row.append(key)
+                if len(row) >= 2:
+                    break
+            if len(row) == 1:
+                out.append(row[0])
+            elif len(row) > 1:
+                out.append(row)
+            continue
+        raw = str(item).strip().lower()
+        key = SECTION_KEY_ALIASES.get(raw, raw)
+        if not key or key not in SECTION_ORDER_ALLOWED:
+            continue
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(key)
+    if not out:
+        return None
+    for key in SECTION_ORDER_DEFAULT:
+        if key not in seen:
+            out.append(key)
+            seen.add(key)
+    return out
+
+
+def _normalize_canvas_layout(value: Any) -> dict | None:
+    if value is None:
+        return None
+    data = value
+    if isinstance(value, str):
+        if not value.strip():
+            return None
+        try:
+            data = json.loads(value)
+        except Exception:
+            return None
+    if not isinstance(data, dict):
+        return None
+    enabled = bool(data.get("enabled", False))
+    plate_min_w = 1
+    plate_min_h = 1
+    plate_max_w = 20000
+    plate_max_h = 20000
+    size_min_w = 1
+    size_min_h = 1
+    size_max_w = 20000
+    size_max_h = 20000
+    try:
+        grid = int(data.get("grid", 1))
+    except Exception:
+        grid = 1
+    grid = max(1, min(1000, grid))
+    plates_raw = data.get("plates") or {}
+    groups_raw = data.get("groups") or {}
+    size_raw = data.get("size")
+    plates: dict[str, dict] = {}
+    groups: dict[str, dict] = {}
+    size: dict[str, int] | None = None
+    if isinstance(size_raw, dict):
+        try:
+            sw = int(size_raw.get("w", 0))
+            sh = int(size_raw.get("h", 0))
+        except Exception:
+            sw = 0
+            sh = 0
+        if sw > 0 and sh > 0:
+            size = {
+                "w": max(size_min_w, min(size_max_w, sw)),
+                "h": max(size_min_h, min(size_max_h, sh)),
+            }
+    if isinstance(groups_raw, dict):
+        for gid, raw in groups_raw.items():
+            if not isinstance(raw, dict):
+                continue
+            try:
+                gx = int(raw.get("x", 0))
+                gy = int(raw.get("y", 0))
+            except Exception:
+                continue
+            groups[str(gid)] = {"x": gx, "y": gy}
+    if isinstance(plates_raw, dict):
+        for key, raw in plates_raw.items():
+            raw_key = str(key).strip().lower()
+            k = SECTION_KEY_ALIASES.get(raw_key, raw_key)
+            if not k or k not in SECTION_ORDER_ALLOWED:
+                continue
+            if not isinstance(raw, dict):
+                continue
+            try:
+                x = int(raw.get("x", 0))
+                y = int(raw.get("y", 0))
+            except Exception:
+                continue
+            plate = {"x": x, "y": y}
+            try:
+                w = int(raw.get("w", 0))
+            except Exception:
+                w = 0
+            try:
+                h = int(raw.get("h", 0))
+            except Exception:
+                h = 0
+            if w > 0:
+                plate["w"] = max(plate_min_w, min(plate_max_w, w))
+            if h > 0:
+                plate["h"] = max(plate_min_h, min(plate_max_h, h))
+            group = raw.get("group")
+            if group is not None:
+                gid = str(group)
+                if gid in groups:
+                    plate["group"] = gid
+            plates[k] = plate
+    if not plates and not groups and not enabled and not size:
+        return None
+    result = {
+        "enabled": enabled,
+        "grid": grid,
+        "plates": plates,
+        "groups": groups,
+    }
+    if size is not None:
+        result["size"] = size
+    return result
+
+
 def _add_local_media_url(url: str | None, bucket: set[str]) -> None:
     if not url:
         return
@@ -299,6 +528,11 @@ def _count_db_references(url: str) -> int:
         )
         total += int(cur.fetchone()[0])
         cur.execute("SELECT COUNT(*) FROM linktrees WHERE background_url = %s", (url,))
+        total += int(cur.fetchone()[0])
+        cur.execute(
+            "SELECT COUNT(*) FROM linktrees WHERE linktree_profile_picture = %s",
+            (url,),
+        )
         total += int(cur.fetchone()[0])
         cur.execute("SELECT COUNT(*) FROM linktrees WHERE cursor_url = %s", (url,))
         total += int(cur.fetchone()[0])
@@ -360,7 +594,13 @@ def _template_doc_has_url(data: dict, url: str) -> bool:
             continue
         if any(
             variant.get(k) == url
-            for k in ("song_url", "song_icon_url", "background_url", "cursor_url")
+            for k in (
+                "song_url",
+                "song_icon_url",
+                "background_url",
+                "cursor_url",
+                "linktree_profile_picture",
+            )
         ):
             return True
         links = variant.get("links") or []
@@ -371,7 +611,13 @@ def _template_doc_has_url(data: dict, url: str) -> bool:
     if isinstance(legacy, dict):
         if any(
             legacy.get(k) == url
-            for k in ("song_url", "song_icon_url", "background_url", "cursor_url")
+            for k in (
+                "song_url",
+                "song_icon_url",
+                "background_url",
+                "cursor_url",
+                "linktree_profile_picture",
+            )
         ):
             return True
         links = legacy.get("links") or []
@@ -413,6 +659,7 @@ def _collect_template_media_urls() -> tuple[set[str], bool, list[str]]:
             _add_local_media_url(variant.get("song_icon_url"), urls)
             _add_local_media_url(variant.get("background_url"), urls)
             _add_local_media_url(variant.get("cursor_url"), urls)
+            _add_local_media_url(variant.get("linktree_profile_picture"), urls)
             links = variant.get("links") or []
             for link in links:
                 if isinstance(link, dict):
@@ -423,6 +670,7 @@ def _collect_template_media_urls() -> tuple[set[str], bool, list[str]]:
             _add_local_media_url(legacy.get("song_icon_url"), urls)
             _add_local_media_url(legacy.get("background_url"), urls)
             _add_local_media_url(legacy.get("cursor_url"), urls)
+            _add_local_media_url(legacy.get("linktree_profile_picture"), urls)
             links = legacy.get("links") or []
             for link in links:
                 if isinstance(link, dict):
@@ -440,6 +688,7 @@ def _collect_media_references() -> tuple[set[str], bool, list[str]]:
                 "SELECT song_url FROM linktrees WHERE song_url IS NOT NULL",
                 "SELECT song_icon_url FROM linktrees WHERE song_icon_url IS NOT NULL",
                 "SELECT background_url FROM linktrees WHERE background_url IS NOT NULL",
+                "SELECT linktree_profile_picture FROM linktrees WHERE linktree_profile_picture IS NOT NULL",
                 "SELECT cursor_url FROM linktrees WHERE cursor_url IS NOT NULL",
                 "SELECT icon_url FROM linktree_links WHERE icon_url IS NOT NULL",
                 "SELECT image_url FROM icons WHERE image_url IS NOT NULL",
@@ -575,6 +824,92 @@ DISCORD_OAUTH_SCOPES = os.getenv("DISCORD_OAUTH_SCOPES", "identify")
 DISCORD_STATE_TTL = int(os.getenv("DISCORD_STATE_TTL", "600"))
 DISCORD_STATE_STORE: dict[str, dict] = {}
 logger = logging.getLogger("uvicorn.error")
+
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://taoma.space").rstrip("/")
+RESET_TOKEN_TTL_MINUTES = int(os.getenv("RESET_TOKEN_TTL_MINUTES", "30"))
+SMTP_HOST = os.getenv("SMTP_HOST")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587") or "587")
+SMTP_USER = os.getenv("SMTP_USER")
+SMTP_PASS = os.getenv("SMTP_PASS")
+SMTP_FROM = os.getenv("SMTP_FROM")
+SMTP_TLS = (os.getenv("SMTP_TLS", "true").lower() not in {"0", "false", "no"})
+
+
+def _email_configured() -> bool:
+    return bool(SMTP_HOST and SMTP_FROM)
+
+
+def _send_email(to_email: str, subject: str, body: str) -> bool:
+    if not _email_configured():
+        return False
+    msg = EmailMessage()
+    msg["From"] = SMTP_FROM
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.set_content(body)
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as smtp:
+            if SMTP_TLS:
+                smtp.starttls()
+            if SMTP_USER and SMTP_PASS:
+                smtp.login(SMTP_USER, SMTP_PASS)
+            smtp.send_message(msg)
+        return True
+    except Exception as exc:
+        logger.warning("Email send failed: %s", exc)
+        return False
+
+
+def _hash_reset_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _create_password_reset(user_id: int) -> str:
+    if not isinstance(db, PgGifDB):
+        raise HTTPException(501, "Password reset requires PostgreSQL.")
+    token = secrets.token_urlsafe(32)
+    token_hash = _hash_reset_token(token)
+    expires = datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_TTL_MINUTES)
+    with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM password_resets WHERE user_id=%s AND used_at IS NULL",
+            (user_id,),
+        )
+        cur.execute(
+            """
+            INSERT INTO password_resets (user_id, token_hash, expires_at)
+            VALUES (%s, %s, %s)
+            """,
+            (user_id, token_hash, expires),
+        )
+        conn.commit()
+    return token
+
+
+def _consume_password_reset(token: str) -> int:
+    if not isinstance(db, PgGifDB):
+        raise HTTPException(501, "Password reset requires PostgreSQL.")
+    token_hash = _hash_reset_token(token)
+    now = datetime.now(timezone.utc)
+    with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT id, user_id, expires_at, used_at
+            FROM password_resets
+            WHERE token_hash=%s
+            LIMIT 1
+            """,
+            (token_hash,),
+        )
+        row = cur.fetchone()
+        if not row or row.get("used_at") or row.get("expires_at") < now:
+            raise HTTPException(400, "Invalid or expired reset token")
+        cur.execute(
+            "UPDATE password_resets SET used_at=now() WHERE id=%s",
+            (row["id"],),
+        )
+        conn.commit()
+        return int(row["user_id"])
 
 
 def _ensure_discord_config():
@@ -925,9 +1260,53 @@ ALLOWED_MIME = ALLOWED_IMAGE_CT
 
 
 EffectName = Literal["none", "glow", "neon", "rainbow"]
-BgEffectName = Literal["none", "night", "rain", "snow"]
+QuoteFontFamily = Literal["default", "serif", "mono", "script", "display"]
+BgEffectName = Literal[
+    "none",
+    "night",
+    "rain",
+    "snow",
+    "noise",
+    "gradient",
+    "parallax",
+    "particles",
+    "sweep",
+    "mesh",
+    "grid",
+    "vignette",
+    "scanlines",
+    "glitch",
+]
+CursorEffectName = Literal[
+    "none",
+    "glow",
+    "particles",
+    "trail",
+    "aura",
+    "magnet",
+    "morph",
+    "snap",
+    "velocity",
+    "ripple",
+    "blend",
+    "sticky",
+    "rotate",
+]
 DiscordPresence = Literal["online", "idle", "dnd", "offline"]
 HEX_COLOR_RE = r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+SECTION_ORDER_DEFAULT = [
+    "pfp",
+    "name",
+    "discord_status",
+    "quote",
+    "location",
+    "badges",
+    "audio",
+    "links",
+    "visit_counter",
+]
+SECTION_ORDER_ALLOWED = set(SECTION_ORDER_DEFAULT)
+SECTION_KEY_ALIASES = {"discord_badges": "badges"}
 
 
 class LinkOut(BaseModel):
@@ -959,6 +1338,24 @@ class LinktreeCreateIn(BaseModel):
     device_type: DeviceType = "pc"
     location: Optional[str] = None
     quote: Optional[str] = None
+    quote_typing_enabled: bool = False
+    quote_typing_texts: Optional[List[str]] = None
+    entry_text: Optional[str] = Field(None, max_length=120)
+    quote_typing_speed: Optional[int] = Field(None, ge=20, le=200)
+    quote_typing_pause: Optional[int] = Field(None, ge=200, le=10000)
+    quote_font_size: Optional[int] = Field(None, ge=10, le=40)
+    quote_font_family: QuoteFontFamily = "default"
+    quote_effect: EffectName = "none"
+    quote_effect_strength: int = Field(70, ge=0, le=100)
+    entry_bg_alpha: int = Field(85, ge=0, le=100)
+    entry_text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    entry_font_size: int = Field(16, ge=10, le=40)
+    entry_font_family: QuoteFontFamily = "default"
+    entry_effect: EffectName = "none"
+    entry_overlay_alpha: int = Field(35, ge=0, le=100)
+    entry_box_enabled: bool = True
+    entry_border_enabled: bool = True
+    entry_border_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -973,7 +1370,11 @@ class LinktreeCreateIn(BaseModel):
     name_effect: EffectName = "none"
     background_effect: BgEffectName = "none"
     display_name_mode: DisplayNameMode = "slug"
+    layout_mode: LayoutMode = "center"
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
+    linktree_profile_picture: Optional[str] = None
+    section_order: Optional[List[Any]] = None
+    canvas_layout: Optional[dict] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
@@ -983,16 +1384,24 @@ class LinktreeCreateIn(BaseModel):
     location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
+    cursor_effect: CursorEffectName = "none"
+    cursor_effect_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    cursor_effect_alpha: int = Field(70, ge=0, le=100)
     discord_frame_enabled: bool = False
     discord_presence_enabled: bool = False
     discord_presence: DiscordPresence = "online"
     discord_status_enabled: bool = False
     discord_status_text: Optional[str] = Field(None, max_length=140)
     discord_badges_enabled: bool = False
+    discord_badge_codes: Optional[List[str]] = None
     show_visit_counter: bool = False
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_alpha: int = Field(20, ge=0, le=100)
+    demo_show_links: bool = False
+    demo_link_label: Optional[str] = Field(None, max_length=80)
+    demo_link_url: Optional[str] = Field(None, max_length=500)
+    demo_link_icon_url: Optional[str] = Field(None, max_length=500)
 
 
 class LinktreeUpdateIn(BaseModel):
@@ -1002,6 +1411,24 @@ class LinktreeUpdateIn(BaseModel):
     device_type: Optional[DeviceType] = None
     location: Optional[str] = None
     quote: Optional[str] = None
+    quote_typing_enabled: Optional[bool] = None
+    quote_typing_texts: Optional[List[str]] = None
+    entry_text: Optional[str] = Field(None, max_length=120)
+    quote_typing_speed: Optional[int] = Field(None, ge=20, le=200)
+    quote_typing_pause: Optional[int] = Field(None, ge=200, le=10000)
+    quote_font_size: Optional[int] = Field(None, ge=10, le=40)
+    quote_font_family: Optional[QuoteFontFamily] = None
+    quote_effect: Optional[EffectName] = None
+    quote_effect_strength: Optional[int] = Field(None, ge=0, le=100)
+    entry_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
+    entry_text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    entry_font_size: Optional[int] = Field(None, ge=10, le=40)
+    entry_font_family: Optional[QuoteFontFamily] = None
+    entry_effect: Optional[EffectName] = None
+    entry_overlay_alpha: Optional[int] = Field(None, ge=0, le=100)
+    entry_box_enabled: Optional[bool] = None
+    entry_border_enabled: Optional[bool] = None
+    entry_border_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -1016,7 +1443,11 @@ class LinktreeUpdateIn(BaseModel):
     name_effect: Optional[EffectName] = None
     background_effect: Optional[BgEffectName] = None
     display_name_mode: Optional[DisplayNameMode] = None
+    layout_mode: Optional[LayoutMode] = None
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
+    linktree_profile_picture: Optional[str] = None
+    section_order: Optional[List[Any]] = None
+    canvas_layout: Optional[dict] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
@@ -1026,12 +1457,16 @@ class LinktreeUpdateIn(BaseModel):
     location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
+    cursor_effect: Optional[CursorEffectName] = None
+    cursor_effect_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    cursor_effect_alpha: Optional[int] = Field(None, ge=0, le=100)
     discord_frame_enabled: Optional[bool] = None
     discord_presence_enabled: Optional[bool] = None
     discord_presence: Optional[DiscordPresence] = None
     discord_status_enabled: Optional[bool] = None
     discord_status_text: Optional[str] = Field(None, max_length=140)
     discord_badges_enabled: Optional[bool] = None
+    discord_badge_codes: Optional[List[str]] = None
     show_visit_counter: Optional[bool] = None
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -1061,6 +1496,24 @@ class LinktreeOut(BaseModel):
     device_type: DeviceType
     location: Optional[str] = None
     quote: Optional[str] = None
+    quote_typing_enabled: bool = False
+    quote_typing_texts: Optional[List[str]] = None
+    entry_text: Optional[str] = None
+    quote_typing_speed: Optional[int] = None
+    quote_typing_pause: Optional[int] = None
+    quote_font_size: Optional[int] = None
+    quote_font_family: Optional[QuoteFontFamily] = None
+    quote_effect: Optional[EffectName] = None
+    quote_effect_strength: Optional[int] = None
+    entry_bg_alpha: Optional[int] = None
+    entry_text_color: Optional[str] = None
+    entry_font_size: Optional[int] = None
+    entry_font_family: Optional[QuoteFontFamily] = None
+    entry_effect: Optional[EffectName] = None
+    entry_overlay_alpha: Optional[int] = None
+    entry_box_enabled: Optional[bool] = None
+    entry_border_enabled: Optional[bool] = None
+    entry_border_color: Optional[str] = None
     song_url: Optional[str] = None
     song_name: Optional[str] = None
     song_icon_url: Optional[str] = None
@@ -1075,6 +1528,7 @@ class LinktreeOut(BaseModel):
     name_effect: EffectName
     background_effect: BgEffectName
     display_name_mode: DisplayNameMode  # NEU
+    layout_mode: Optional[LayoutMode] = None
     custom_display_name: Optional[str] = None
     link_color: Optional[str] = None
     link_bg_color: Optional[str] = None
@@ -1085,6 +1539,9 @@ class LinktreeOut(BaseModel):
     location_color: Optional[str] = None
     quote_color: Optional[str] = None
     cursor_url: Optional[str] = None
+    cursor_effect: CursorEffectName = "none"
+    cursor_effect_color: Optional[str] = None
+    cursor_effect_alpha: int = 70
     discord_frame_enabled: bool = False
     discord_decoration_url: Optional[str] = None
     discord_presence_enabled: bool = False
@@ -1093,7 +1550,11 @@ class LinktreeOut(BaseModel):
     discord_status_text: Optional[str] = None
     discord_badges_enabled: bool = False
     discord_badges: Optional[List[DiscordBadgeOut]] = None
+    discord_badge_codes: Optional[List[str]] = None
     discord_linked: bool = False
+    linktree_profile_picture: Optional[str] = None
+    section_order: Optional[List[Any]] = None
+    canvas_layout: Optional[dict] = None
     profile_picture: Optional[str] = None  # NEU - fuer Avatar
     user_username: Optional[str] = None  # NEU - fuer "username"-Modus
     show_visit_counter: bool = False
@@ -1176,6 +1637,7 @@ class ToggleDisplayedIn(BaseModel):
 
 class MeUpdateIn(BaseModel):
     username: Optional[str] = Field(None, min_length=3, max_length=32)
+    email: Optional[EmailStr] = None
     profile_picture: Optional[str] = None
     linktree_id: Optional[int] = None
     current_password: Optional[str] = None
@@ -1244,6 +1706,7 @@ class Contact(BaseModel):
 class UserOut(BaseModel):
     id: int
     username: str
+    email: Optional[str] = None
     linktree_id: Optional[int] = None
     linktree_slug: Optional[str] = None  # <- add this
     profile_picture: Optional[str] = None
@@ -1254,13 +1717,15 @@ class UserOut(BaseModel):
 
 class UserCreateIn(BaseModel):
     username: str = Field(..., min_length=3, max_length=32)
-    password: str = Field(..., min_length=8)
+    email: Optional[EmailStr] = None
+    password: Optional[str] = Field(None, min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
 
 
 class UserUpdateIn(BaseModel):
     username: Optional[str] = Field(None, min_length=3, max_length=32)
+    email: Optional[EmailStr] = None
     password: Optional[str] = Field(None, min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
@@ -1271,12 +1736,17 @@ JOB_STORE: dict[str, dict] = {}
 
 
 class LoginUserIn(BaseModel):
-    username: str
+    identifier: str = Field(
+        ...,
+        validation_alias=AliasChoices("identifier", "username"),
+    )
     password: str
+    email: Optional[EmailStr] = None
 
 
 class RegisterIn(BaseModel):
     username: str = Field(..., min_length=3, max_length=32)
+    email: EmailStr
     password: str = Field(..., min_length=8)
     linktree_id: Optional[int] = None
     profile_picture: Optional[str] = None
@@ -1286,6 +1756,15 @@ class RegisterOut(BaseModel):
     token: str
     expires_at: Optional[str] = None
     user: UserOut
+
+
+class PasswordResetRequestIn(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetIn(BaseModel):
+    token: str = Field(..., min_length=20, max_length=200)
+    password: str = Field(..., min_length=8)
 
 
 
@@ -1713,6 +2192,7 @@ def verify(token: str = Depends(require_token)):
     user_out = {
         "id": user.get("id"),
         "username": user.get("username"),
+        "email": user.get("email"),
         "admin": bool(user.get("admin", False)),
         "linktree_id": user.get("linktree_id"),
         "linktree_slug": linktree_slug,  # <-- add this
@@ -1745,6 +2225,24 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         cur.execute(
             """
             SELECT id, user_id, slug, location, quote, song_url, song_name, song_icon_url, background_url,
+                   COALESCE(quote_typing_enabled, false) AS quote_typing_enabled,
+                   quote_typing_texts,
+                   quote_typing_speed,
+                   quote_typing_pause,
+                   quote_font_size,
+                   quote_font_family,
+                   COALESCE(quote_effect, 'none') AS quote_effect,
+                   COALESCE(quote_effect_strength, 70) AS quote_effect_strength,
+                   entry_text,
+                   COALESCE(entry_bg_alpha, 85) AS entry_bg_alpha,
+                   entry_text_color,
+                   COALESCE(entry_font_size, 16) AS entry_font_size,
+                   COALESCE(entry_font_family, 'default') AS entry_font_family,
+                   COALESCE(entry_effect, 'none') AS entry_effect,
+                   COALESCE(entry_overlay_alpha, 35) AS entry_overlay_alpha,
+                   COALESCE(entry_box_enabled, true) AS entry_box_enabled,
+                   COALESCE(entry_border_enabled, true) AS entry_border_enabled,
+                   entry_border_color,
                    COALESCE(show_audio_player, false) AS show_audio_player,
                    audio_player_bg_color,
                    COALESCE(audio_player_bg_alpha, 60) AS audio_player_bg_alpha,
@@ -1756,7 +2254,11 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    COALESCE(background_effect,'none')  AS background_effect,
                    device_type,
                    COALESCE(display_name_mode,'slug')  AS display_name_mode,
+                   COALESCE(layout_mode,'center')      AS layout_mode,
                     custom_display_name,
+                    linktree_profile_picture,
+                    section_order,
+                    canvas_layout,
                     link_color,
                     link_bg_color,
                     COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
@@ -1766,12 +2268,16 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    location_color,
                    quote_color,
                    cursor_url,
+                   COALESCE(cursor_effect, 'none') AS cursor_effect,
+                   cursor_effect_color,
+                   COALESCE(cursor_effect_alpha, 70) AS cursor_effect_alpha,
                    COALESCE(discord_frame_enabled, false) AS discord_frame_enabled,
                     COALESCE(discord_presence_enabled, false) AS discord_presence_enabled,
                     COALESCE(discord_presence, 'online') AS discord_presence,
                     COALESCE(discord_status_enabled, false) AS discord_status_enabled,
                     discord_status_text,
                     COALESCE(discord_badges_enabled, false) AS discord_badges_enabled,
+                    discord_badge_codes,
                     COALESCE(show_visit_counter, false) AS show_visit_counter,
                     visit_counter_color,
                     visit_counter_bg_color,
@@ -1841,6 +2347,28 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "device_type": lt.get("device_type", "pc"),
         "location": lt.get("location"),
         "quote": lt.get("quote"),
+        "quote_typing_enabled": bool(lt.get("quote_typing_enabled", False)),
+        "quote_typing_texts": _json_to_list(
+            lt.get("quote_typing_texts"),
+            max_items=3,
+            max_len=180,
+        ),
+        "quote_typing_speed": lt.get("quote_typing_speed"),
+        "quote_typing_pause": lt.get("quote_typing_pause"),
+        "quote_font_size": lt.get("quote_font_size"),
+        "quote_font_family": lt.get("quote_font_family") or "default",
+        "quote_effect": lt.get("quote_effect") or "none",
+        "quote_effect_strength": int(lt.get("quote_effect_strength", 70) or 70),
+        "entry_text": lt.get("entry_text"),
+        "entry_bg_alpha": int(lt.get("entry_bg_alpha", 85) or 85),
+        "entry_text_color": lt.get("entry_text_color"),
+        "entry_font_size": int(lt.get("entry_font_size", 16) or 16),
+        "entry_font_family": lt.get("entry_font_family") or "default",
+        "entry_effect": lt.get("entry_effect") or "none",
+        "entry_overlay_alpha": int(lt.get("entry_overlay_alpha", 35) or 35),
+        "entry_box_enabled": bool(lt.get("entry_box_enabled", True)),
+        "entry_border_enabled": bool(lt.get("entry_border_enabled", True)),
+        "entry_border_color": lt.get("entry_border_color"),
         "song_url": lt.get("song_url"),
         "song_name": lt.get("song_name"),
         "song_icon_url": lt.get("song_icon_url"),
@@ -1850,7 +2378,11 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "name_effect": lt.get("name_effect") or "none",
         "background_effect": lt.get("background_effect") or "none",
         "display_name_mode": lt.get("display_name_mode") or "slug",
+        "layout_mode": lt.get("layout_mode") or "center",
         "custom_display_name": lt.get("custom_display_name"),
+        "linktree_profile_picture": lt.get("linktree_profile_picture"),
+        "section_order": _normalize_section_order(lt.get("section_order")),
+        "canvas_layout": _normalize_canvas_layout(lt.get("canvas_layout")),
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
@@ -1860,6 +2392,9 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "location_color": lt.get("location_color"),
         "quote_color": lt.get("quote_color"),
         "cursor_url": lt.get("cursor_url"),
+        "cursor_effect": lt.get("cursor_effect") or "none",
+        "cursor_effect_color": lt.get("cursor_effect_color"),
+        "cursor_effect_alpha": int(lt.get("cursor_effect_alpha") or 70),
         "show_audio_player": bool(lt.get("show_audio_player", False)),
         "audio_player_bg_color": lt.get("audio_player_bg_color"),
         "audio_player_bg_alpha": int(lt.get("audio_player_bg_alpha", 60) or 60),
@@ -1873,6 +2408,12 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "discord_status_text": status_text,
         "discord_badges_enabled": bool(lt.get("discord_badges_enabled", False)),
         "discord_badges": discord_badges if lt.get("discord_badges_enabled") else [],
+        "discord_badge_codes": _json_to_list(
+            lt.get("discord_badge_codes"),
+            max_items=50,
+            max_len=64,
+            none_if_missing=True,
+        ),
         "discord_linked": discord_linked,
         "profile_picture": user_pfp,
         "user_username": user_username,
@@ -2293,10 +2834,19 @@ def get_user(user_id: int, current: dict = Depends(require_user)):
     dependencies=[Depends(require_admin)],
 )
 def create_user(payload: UserCreateIn):
+    email = payload.email.strip().lower() if payload.email else None
+    if email and db.getUserByEmail(email):
+        raise HTTPException(status_code=409, detail="email already exists")
+    password_raw = payload.password.strip() if payload.password else None
+    if not password_raw:
+        if not email:
+            raise HTTPException(status_code=400, detail="email required")
+        password_raw = secrets.token_urlsafe(12)
     try:
         new_id = db.createUser(
             username=payload.username.strip(),
-            hashed_password=hashPassword(payload.password),
+            email=email,
+            hashed_password=hashPassword(password_raw),
             linktree_id=payload.linktree_id,
             profile_picture=payload.profile_picture,
             admin=False,  # ← hart
@@ -2334,12 +2884,21 @@ def update_user(
     # Nicht-Admin darf nur sich selbst ändern und admin-Feld wird ignoriert
     if not is_admin and not is_self:
         raise HTTPException(403, "Forbidden")
+    if payload.email is not None:
+        email = payload.email.strip().lower()
+        if not email:
+            raise HTTPException(400, "email required")
+        other = db.getUserByEmail(email)
+        if other and other["id"] != user_id:
+            raise HTTPException(409, "email already exists")
+
     admin_value = payload.admin if is_admin else None
 
     try:
         db.updateUser(
             user_id,
             username=payload.username.strip() if payload.username is not None else None,
+            email=payload.email.strip().lower() if payload.email is not None else None,
             password=(
                 hashPassword(payload.password) if payload.password is not None else None
             ),
@@ -2362,11 +2921,29 @@ def update_user(
 
 @app.post("/api/auth/login_user", response_model=LoginOut)
 def login_user(payload: LoginUserIn):
-    user = db.getUserByUsername(payload.username.strip())
+    identifier = payload.identifier.strip()
+    email_input = payload.email.strip().lower() if payload.email else None
+    user = db.getUserByEmail(identifier) or db.getUserByUsername(identifier)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not CheckPassword(user["password"], payload.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    existing_email = (user.get("email") or "").strip()
+    if not existing_email:
+        if not email_input:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error": "email_required",
+                    "message": "Email required for this account.",
+                },
+            )
+        other = db.getUserByEmail(email_input)
+        if other and other["id"] != user["id"]:
+            raise HTTPException(status_code=409, detail="email already exists")
+        db.updateUser(user["id"], email=email_input)
+    elif email_input and existing_email.lower() != email_input.lower():
+        raise HTTPException(status_code=400, detail="email does not match this account")
     token = db.create_token(hours_valid=24, user_id=user["id"])
     expires = db.get_token_expiry(token)
     return _session_response({"token": token, "expires_at": expires}, token)
@@ -2375,8 +2952,11 @@ def login_user(payload: LoginUserIn):
 @app.post("/api/auth/register", response_model=RegisterOut)
 def register(payload: RegisterIn):
     uname = payload.username.strip()
+    email = payload.email.strip().lower()
     if db.getUserByUsername(uname):
         raise HTTPException(status_code=409, detail="username already exists")
+    if db.getUserByEmail(email):
+        raise HTTPException(status_code=409, detail="email already exists")
 
     # hash
     hashed = hashPassword(payload.password)
@@ -2384,6 +2964,7 @@ def register(payload: RegisterIn):
     try:
         new_id = db.createUser(
             username=uname,
+            email=email,
             hashed_password=hashed,
             linktree_id=payload.linktree_id,
             profile_picture=payload.profile_picture,
@@ -2401,6 +2982,7 @@ def register(payload: RegisterIn):
     user_out = {
         "id": row["id"],
         "username": row["username"],
+        "email": row.get("email"),
         "admin": bool(row.get("admin", False)),
         "linktree_id": row.get("linktree_id"),
         "profile_picture": row.get("profile_picture"),
@@ -2420,6 +3002,40 @@ def register(payload: RegisterIn):
     )
 
 
+
+@app.post("/api/auth/password/request")
+def request_password_reset(
+    payload: PasswordResetRequestIn, background: BackgroundTasks
+):
+    email = payload.email.strip().lower()
+    user = db.getUserByEmail(email)
+    if not user:
+        return {"ok": True}
+    token = _create_password_reset(user["id"])
+    reset_url = f"{PUBLIC_BASE_URL}/reset?token={token}"
+    subject = "Reset your TAOMA password"
+    body = (
+        "We received a request to reset your password.\n\n"
+        f"Reset link: {reset_url}\n\n"
+        "If you did not request this, you can ignore this email."
+    )
+    if _email_configured():
+        background.add_task(_send_email, email, subject, body)
+    else:
+        logger.warning("Password reset requested but SMTP is not configured")
+    return {"ok": True}
+
+
+@app.post("/api/auth/password/reset")
+def reset_password(payload: PasswordResetIn):
+    token = payload.token.strip()
+    user_id = _consume_password_reset(token)
+    db.updateUser(user_id, password=hashPassword(payload.password))
+    if isinstance(db, PgGifDB):
+        db.revoke_user_tokens(user_id)
+    return {"ok": True}
+
+
 @app.get("/register", include_in_schema=False)
 def register_page():
     return FileResponse("register.html")
@@ -2428,6 +3044,11 @@ def register_page():
 @app.get("/login", include_in_schema=False)
 def login_page():
     return FileResponse("login.html")
+
+
+@app.get("/reset", include_in_schema=False)
+def reset_page():
+    return FileResponse("reset.html")
 
 
 @app.post("/admin/users/{user_id}/grant", dependencies=[Depends(require_admin)])
@@ -2460,10 +3081,19 @@ def update_me(payload: MeUpdateIn, current: dict = Depends(require_user)):
         if other and other["id"] != current["id"]:
             raise HTTPException(409, "username already exists")
 
+    if payload.email is not None:
+        email = payload.email.strip().lower()
+        if not email:
+            raise HTTPException(400, "email required")
+        other = db.getUserByEmail(email)
+        if other and other["id"] != current["id"]:
+            raise HTTPException(409, "email already exists")
+
     try:
         db.updateUser(
             current["id"],
             username=payload.username.strip() if payload.username is not None else None,
+            email=payload.email.strip().lower() if payload.email is not None else None,
             password=(
                 hashPassword(payload.new_password)
                 if payload.new_password is not None
@@ -2739,6 +3369,60 @@ async def upload_avatar(
     return row
 
 
+@app.post("/api/users/me/linktree-pfp")
+async def upload_linktree_pfp(
+    file: UploadFile = File(...),
+    current: dict = Depends(require_user),
+    device: DeviceType | None = Query(None, description="pc or mobile"),
+):
+    _ensure_pg()
+    if file.content_type not in ALLOWED_IMAGE_CT:
+        raise HTTPException(415, "Unsupported image type")
+    data = await file.read()
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(413, "File too large (max 5MB)")
+    ext = _detect_image_ext(data)
+    if not ext:
+        raise HTTPException(400, "File is not a valid image")
+    target_device = device or "pc"
+
+    old_url = None
+    try:
+        with psycopg.connect(db.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT lt.linktree_profile_picture
+                  FROM linktrees lt
+                 WHERE lt.user_id = %s AND lt.device_type = %s
+            """,
+                (current["id"], target_device),
+            )
+            row = cur.fetchone()
+            old_url = row[0] if row else None
+            if row is None:
+                raise HTTPException(404, "Linktree for device not found")
+    except HTTPException:
+        raise
+    except Exception:
+        old_url = None
+
+    fname = f"user{current['id']}_ltpfp_{uuid.uuid4().hex}.{ext}"
+    out_path = UPLOAD_DIR / fname
+    out_path.write_bytes(data)
+    url = f"/media/{UPLOAD_DIR.name}/{fname}"
+
+    updated = db.update_linktree_by_user_and_device(
+        current["id"], target_device, linktree_profile_picture=url
+    )
+    if not updated:
+        raise HTTPException(404, "Linktree for device not found")
+
+    if old_url and old_url != url:
+        _delete_if_unreferenced(old_url)
+
+    return {"url": url}
+
+
 @app.get("/api/avatars")
 def list_avatars():
     base = pathlib.Path("static/avatars")
@@ -2759,6 +3443,11 @@ def list_avatars():
 @app.get("/linktree/config", include_in_schema=False)
 def linktree_config_page():
     return FileResponse("linktree_config.html")
+
+
+@app.get("/linktree_canvas.html", include_in_schema=False)
+def linktree_canvas_page():
+    return FileResponse("linktree_canvas.html")
 
 
 # ---------- Linktree: public read ----------
@@ -2802,6 +3491,29 @@ def get_linktree(
     except Exception:
         decoration_url = None
     presence_value, status_text = _resolve_discord_presence(lt, acct if discord_linked else None)
+    quote_typing_texts = _json_to_list(
+        lt.get("quote_typing_texts"),
+        max_items=3,
+        max_len=180,
+    )
+    quote_typing_speed = lt.get("quote_typing_speed")
+    quote_typing_pause = lt.get("quote_typing_pause")
+    quote_font_size = lt.get("quote_font_size")
+    quote_font_family = lt.get("quote_font_family") or "default"
+    quote_effect = lt.get("quote_effect") or "none"
+    quote_effect_strength = lt.get("quote_effect_strength", 70)
+    entry_bg_alpha = lt.get("entry_bg_alpha", 85)
+    entry_text_color = lt.get("entry_text_color")
+    entry_font_size = lt.get("entry_font_size", 16)
+    entry_font_family = lt.get("entry_font_family") or "default"
+    entry_effect = lt.get("entry_effect") or "none"
+    entry_overlay_alpha = lt.get("entry_overlay_alpha", 35)
+    discord_badge_codes = _json_to_list(
+        lt.get("discord_badge_codes"),
+        max_items=50,
+        max_len=64,
+        none_if_missing=True,
+    )
 
     icons = [
         {
@@ -2849,6 +3561,24 @@ def get_linktree(
         "device_type": lt.get("device_type", "pc"),
         "location": lt.get("location"),
         "quote": lt.get("quote"),
+        "quote_typing_enabled": bool(lt.get("quote_typing_enabled", False)),
+        "quote_typing_texts": quote_typing_texts,
+        "quote_typing_speed": quote_typing_speed,
+        "quote_typing_pause": quote_typing_pause,
+        "quote_font_size": quote_font_size,
+        "quote_font_family": quote_font_family,
+        "quote_effect": quote_effect,
+        "quote_effect_strength": int(quote_effect_strength or 70),
+        "entry_text": lt.get("entry_text"),
+        "entry_bg_alpha": int(entry_bg_alpha or 85),
+        "entry_text_color": entry_text_color,
+        "entry_font_size": int(entry_font_size or 16),
+        "entry_font_family": entry_font_family,
+        "entry_effect": entry_effect,
+        "entry_overlay_alpha": int(entry_overlay_alpha or 35),
+        "entry_box_enabled": bool(lt.get("entry_box_enabled", True)),
+        "entry_border_enabled": bool(lt.get("entry_border_enabled", True)),
+        "entry_border_color": lt.get("entry_border_color"),
         "song_url": lt.get("song_url"),
         "song_name": lt.get("song_name"),
         "song_icon_url": lt.get("song_icon_url"),
@@ -2863,7 +3593,11 @@ def get_linktree(
         "name_effect": lt.get("name_effect", "none"),
         "background_effect": lt.get("background_effect", "none"),
         "display_name_mode": lt.get("display_name_mode", "slug"),
+        "layout_mode": lt.get("layout_mode") or "center",
         "custom_display_name": lt.get("custom_display_name"),
+        "linktree_profile_picture": lt.get("linktree_profile_picture"),
+        "section_order": _normalize_section_order(lt.get("section_order")),
+        "canvas_layout": _normalize_canvas_layout(lt.get("canvas_layout")),
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": lt.get("link_bg_alpha", 100),
@@ -2873,6 +3607,9 @@ def get_linktree(
         "location_color": lt.get("location_color"),
         "quote_color": lt.get("quote_color"),
         "cursor_url": lt.get("cursor_url"),
+        "cursor_effect": lt.get("cursor_effect") or "none",
+        "cursor_effect_color": lt.get("cursor_effect_color"),
+        "cursor_effect_alpha": int(lt.get("cursor_effect_alpha") or 70),
         "discord_frame_enabled": frame_enabled,
         "discord_decoration_url": decoration_url if frame_enabled else None,
         "discord_presence_enabled": bool(lt.get("discord_presence_enabled", False)),
@@ -2881,6 +3618,7 @@ def get_linktree(
         "discord_status_text": status_text,
         "discord_badges_enabled": bool(lt.get("discord_badges_enabled", False)),
         "discord_badges": discord_badges if lt.get("discord_badges_enabled") else [],
+        "discord_badge_codes": discord_badge_codes,
         "discord_linked": discord_linked,
         "profile_picture": user_pfp,  # <= jetzt dabei
         "user_username": user_username,  # <= jetzt dabei
@@ -2924,12 +3662,119 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             else payload.background_is_video
         )
         song_name = _clean_upload_filename(payload.song_name)
+        quote_texts = _normalize_text_list(
+            payload.quote_typing_texts,
+            max_items=3,
+            max_len=180,
+            dedupe=False,
+        )
+        if payload.quote and not quote_texts:
+            quote_texts = [payload.quote]
+        quote_texts_json = json.dumps(quote_texts) if quote_texts else None
+        badge_codes_json = _list_to_json(
+            payload.discord_badge_codes,
+            max_items=50,
+            max_len=64,
+            allow_empty=True,
+        )
+        section_order = _normalize_section_order(payload.section_order)
+        section_order_json = json.dumps(section_order) if section_order else None
+        canvas_layout = _normalize_canvas_layout(payload.canvas_layout)
+        canvas_layout_json = json.dumps(canvas_layout) if canvas_layout is not None else None
+        entry_text = payload.entry_text.strip() if isinstance(payload.entry_text, str) else None
+        entry_bg_alpha = (
+            int(payload.entry_bg_alpha)
+            if payload.entry_bg_alpha is not None
+            else 85
+        )
+        entry_bg_alpha = max(0, min(100, entry_bg_alpha))
+        entry_overlay_alpha = (
+            int(payload.entry_overlay_alpha)
+            if payload.entry_overlay_alpha is not None
+            else 35
+        )
+        entry_overlay_alpha = max(0, min(100, entry_overlay_alpha))
+        entry_box_enabled = (
+            bool(payload.entry_box_enabled)
+            if payload.entry_box_enabled is not None
+            else True
+        )
+        entry_border_enabled = (
+            bool(payload.entry_border_enabled)
+            if payload.entry_border_enabled is not None
+            else True
+        )
+        entry_border_color = (
+            payload.entry_border_color.strip()
+            if isinstance(payload.entry_border_color, str)
+            else None
+        )
+        if entry_border_color and not re.match(HEX_COLOR_RE, entry_border_color):
+            entry_border_color = None
+        entry_font_size = (
+            int(payload.entry_font_size)
+            if payload.entry_font_size is not None
+            else 16
+        )
+        entry_font_size = max(10, min(40, entry_font_size))
+        entry_font_family = payload.entry_font_family or "default"
+        entry_effect = payload.entry_effect or "none"
+        entry_text_color = (
+            payload.entry_text_color.strip()
+            if isinstance(payload.entry_text_color, str)
+            else None
+        )
+        if entry_text_color and not re.match(HEX_COLOR_RE, entry_text_color):
+            entry_text_color = None
+        quote_speed = (
+            int(payload.quote_typing_speed)
+            if payload.quote_typing_speed is not None
+            else None
+        )
+        if quote_speed is not None:
+            quote_speed = max(20, min(200, quote_speed))
+        quote_pause = (
+            int(payload.quote_typing_pause)
+            if payload.quote_typing_pause is not None
+            else None
+        )
+        if quote_pause is not None:
+            quote_pause = max(200, min(10000, quote_pause))
+        quote_size = int(payload.quote_font_size) if payload.quote_font_size is not None else None
+        if quote_size is not None:
+            quote_size = max(10, min(40, quote_size))
+        quote_font_family = payload.quote_font_family or "default"
+        quote_effect = payload.quote_effect or "none"
+        quote_effect_strength = (
+            int(payload.quote_effect_strength)
+            if payload.quote_effect_strength is not None
+            else 70
+        )
+        quote_effect_strength = max(0, min(100, quote_effect_strength))
         linktree_id = db.create_linktree(
             user_id=user["id"],
             slug=payload.slug,
             device_type=payload.device_type,
             location=payload.location,
             quote=payload.quote,
+            quote_typing_enabled=payload.quote_typing_enabled,
+            quote_typing_texts=quote_texts_json,
+            quote_typing_speed=quote_speed,
+            quote_typing_pause=quote_pause,
+            quote_font_size=quote_size,
+            quote_font_family=quote_font_family,
+            quote_effect=quote_effect,
+            quote_effect_strength=quote_effect_strength,
+            entry_text=entry_text,
+            entry_bg_alpha=entry_bg_alpha,
+            entry_text_color=entry_text_color,
+            entry_font_size=entry_font_size,
+            entry_font_family=entry_font_family,
+            entry_effect=entry_effect,
+            entry_overlay_alpha=entry_overlay_alpha,
+            entry_box_enabled=entry_box_enabled,
+            entry_border_enabled=entry_border_enabled,
+            entry_border_color=entry_border_color,
             song_url=payload.song_url,
             song_name=song_name,
             song_icon_url=payload.song_icon_url,
@@ -2944,7 +3789,11 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             name_effect=payload.name_effect,
             background_effect=payload.background_effect,
             display_name_mode=payload.display_name_mode,  # <-- NEU
+            layout_mode=payload.layout_mode,
             custom_display_name=payload.custom_display_name,
+            linktree_profile_picture=payload.linktree_profile_picture,
+            section_order=section_order_json,
+            canvas_layout=canvas_layout_json,
             link_color=payload.link_color,
             link_bg_color=payload.link_bg_color,
             link_bg_alpha=payload.link_bg_alpha,
@@ -2954,12 +3803,16 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             location_color=payload.location_color,
             quote_color=payload.quote_color,
             cursor_url=payload.cursor_url,
+            cursor_effect=payload.cursor_effect,
+            cursor_effect_color=payload.cursor_effect_color,
+            cursor_effect_alpha=payload.cursor_effect_alpha,
             discord_frame_enabled=payload.discord_frame_enabled,
             discord_presence_enabled=payload.discord_presence_enabled,
             discord_presence=payload.discord_presence,
             discord_status_enabled=payload.discord_status_enabled,
             discord_status_text=payload.discord_status_text,
             discord_badges_enabled=payload.discord_badges_enabled,
+            discord_badge_codes=badge_codes_json,
             show_visit_counter=payload.show_visit_counter,
             visit_counter_color=payload.visit_counter_color,
             visit_counter_bg_color=payload.visit_counter_bg_color,
@@ -3004,7 +3857,7 @@ def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
     # Sammle Owner und evtl. Medien-URLs (für Cleanup)
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
         cur.execute(
-            "SELECT user_id, song_url, background_url, cursor_url FROM linktrees WHERE id=%s",
+            "SELECT user_id, song_url, background_url, cursor_url, linktree_profile_picture FROM linktrees WHERE id=%s",
             (linktree_id,),
         )
         row = cur.fetchone()
@@ -3015,6 +3868,7 @@ def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
         song_url = row.get("song_url")
         bg_url = row.get("background_url")
         cursor_url = row.get("cursor_url")
+        pfp_url = row.get("linktree_profile_picture")
 
         # Icon-URLs der Links sammeln (können lokale Medien sein)
         cur.execute(
@@ -3035,7 +3889,7 @@ def delete_linktree_ep(linktree_id: int, user: dict = Depends(require_user)):
         conn.commit()
 
     # Medien aufräumen (nur wenn nirgendwo mehr referenziert)
-    for url in [song_url, bg_url, cursor_url, *icon_urls]:
+    for url in [song_url, bg_url, cursor_url, pfp_url, *icon_urls]:
         if url:
             _delete_if_unreferenced(url)
 
@@ -3636,6 +4490,10 @@ def globalChat():
 def privacyPolicy():
     return FileResponse("datenschutz.html")
 
+@app.get("/impressum.html", include_in_schema=False)
+def impressum_page():
+    return FileResponse("impressum.html")
+
 @app.patch("/api/linktrees/{linktree_id}", response_model=dict)
 def update_linktree_ep(
     linktree_id: int,
@@ -3647,15 +4505,130 @@ def update_linktree_ep(
     _require_tree_owner_or_admin(linktree_id, user)
 
     fields = payload.model_dump(exclude_unset=True)
+    if "quote_typing_texts" in fields:
+        qt = _normalize_text_list(
+            fields.get("quote_typing_texts"),
+            max_items=3,
+            max_len=180,
+            dedupe=False,
+        )
+        if fields.get("quote") and not qt:
+            qt = [str(fields.get("quote")).strip()]
+        fields["quote_typing_texts"] = json.dumps(qt) if qt else None
+    if "discord_badge_codes" in fields:
+        fields["discord_badge_codes"] = _list_to_json(
+            fields.get("discord_badge_codes"),
+            max_items=50,
+            max_len=64,
+            allow_empty=True,
+        )
+    if "section_order" in fields:
+        order = _normalize_section_order(fields.get("section_order"))
+        fields["section_order"] = json.dumps(order) if order else None
+    if "canvas_layout" in fields:
+        layout = _normalize_canvas_layout(fields.get("canvas_layout"))
+        fields["canvas_layout"] = json.dumps(layout) if layout is not None else None
+    if "entry_text" in fields and isinstance(fields["entry_text"], str):
+        fields["entry_text"] = fields["entry_text"].strip() or None
+    if "quote_typing_speed" in fields:
+        try:
+            speed = int(fields.get("quote_typing_speed"))
+        except Exception:
+            speed = None
+        fields["quote_typing_speed"] = (
+            max(20, min(200, speed)) if speed is not None else None
+        )
+    if "quote_typing_pause" in fields:
+        try:
+            pause = int(fields.get("quote_typing_pause"))
+        except Exception:
+            pause = None
+        fields["quote_typing_pause"] = (
+            max(200, min(10000, pause)) if pause is not None else None
+        )
+    if "quote_font_size" in fields:
+        try:
+            size = int(fields.get("quote_font_size"))
+        except Exception:
+            size = None
+        fields["quote_font_size"] = (
+            max(10, min(40, size)) if size is not None else None
+        )
+    if "entry_bg_alpha" in fields:
+        try:
+            alpha = int(fields.get("entry_bg_alpha"))
+        except Exception:
+            alpha = None
+        fields["entry_bg_alpha"] = (
+            max(0, min(100, alpha)) if alpha is not None else None
+        )
+    if "entry_font_size" in fields:
+        try:
+            size = int(fields.get("entry_font_size"))
+        except Exception:
+            size = None
+        fields["entry_font_size"] = (
+            max(10, min(40, size)) if size is not None else None
+        )
+    if "entry_font_family" in fields:
+        fam = str(fields.get("entry_font_family") or "default").lower()
+        fields["entry_font_family"] = (
+            fam if fam in {"default", "serif", "mono", "script", "display"} else "default"
+        )
+    if "entry_effect" in fields:
+        fx = str(fields.get("entry_effect") or "none").lower()
+        fields["entry_effect"] = (
+            fx if fx in {"none", "glow", "neon", "rainbow"} else "none"
+        )
+    if "entry_overlay_alpha" in fields:
+        try:
+            alpha = int(fields.get("entry_overlay_alpha"))
+        except Exception:
+            alpha = None
+        fields["entry_overlay_alpha"] = (
+            max(0, min(100, alpha)) if alpha is not None else None
+        )
+    if "entry_box_enabled" in fields:
+        fields["entry_box_enabled"] = bool(fields.get("entry_box_enabled"))
+    if "entry_border_enabled" in fields:
+        fields["entry_border_enabled"] = bool(fields.get("entry_border_enabled"))
+    if "entry_border_color" in fields and isinstance(fields.get("entry_border_color"), str):
+        val = fields.get("entry_border_color").strip()
+        fields["entry_border_color"] = val if re.match(HEX_COLOR_RE, val) else None
+    if "entry_text_color" in fields and isinstance(fields.get("entry_text_color"), str):
+        val = fields.get("entry_text_color").strip()
+        fields["entry_text_color"] = val if re.match(HEX_COLOR_RE, val) else None
+    if "quote_font_family" in fields:
+        fam = str(fields.get("quote_font_family") or "default").lower()
+        fields["quote_font_family"] = (
+            fam if fam in {"default", "serif", "mono", "script", "display"} else "default"
+        )
+    if "quote_effect" in fields:
+        fx = str(fields.get("quote_effect") or "none").lower()
+        fields["quote_effect"] = (
+            fx if fx in {"none", "glow", "neon", "rainbow"} else "none"
+        )
+    if "layout_mode" in fields:
+        mode = str(fields.get("layout_mode") or "center").lower()
+        fields["layout_mode"] = mode if mode in {"center", "wide"} else "center"
+    if "quote_effect_strength" in fields:
+        try:
+            strength = int(fields.get("quote_effect_strength"))
+        except Exception:
+            strength = None
+        fields["quote_effect_strength"] = (
+            max(0, min(100, strength)) if strength is not None else 70
+        )
 
     # Vorherige Medien-URLs zum Aufräumen merken + device_type
     old_song = None
     old_song_icon = None
     old_bg = None
+    old_pfp = None
     current_device_type = None
     with psycopg.connect(db.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
         cur.execute(
-            "SELECT song_url, song_icon_url, background_url, device_type FROM linktrees WHERE id=%s",
+            "SELECT song_url, song_icon_url, background_url, linktree_profile_picture, device_type FROM linktrees WHERE id=%s",
             (linktree_id,),
         )
         row = cur.fetchone()
@@ -3664,6 +4637,7 @@ def update_linktree_ep(
         old_song = row.get("song_url")
         old_song_icon = row.get("song_icon_url")
         old_bg = row.get("background_url")
+        old_pfp = row.get("linktree_profile_picture")
         current_device_type = row.get("device_type") or "pc"
 
     # Wenn slug geändert werden soll: einfache Kollision prüfen (gleicher device_type)
@@ -3701,12 +4675,15 @@ def update_linktree_ep(
     new_song = fields.get("song_url", old_song)
     new_song_icon = fields.get("song_icon_url", old_song_icon)
     new_bg = fields.get("background_url", old_bg)
+    new_pfp = fields.get("linktree_profile_picture", old_pfp)
     if old_song and old_song != new_song:
         _delete_if_unreferenced(old_song)
     if old_song_icon and old_song_icon != new_song_icon:
         _delete_if_unreferenced(old_song_icon)
     if old_bg and old_bg != new_bg:
         _delete_if_unreferenced(old_bg)
+    if old_pfp and old_pfp != new_pfp:
+        _delete_if_unreferenced(old_pfp)
 
     return {"ok": True}
 
@@ -3771,6 +4748,23 @@ class TemplateVariantIn(BaseModel):
     device_type: DeviceType
     location: Optional[str] = None
     quote: Optional[str] = None
+    quote_typing_enabled: bool = False
+    quote_typing_texts: Optional[List[str]] = None
+    quote_typing_speed: Optional[int] = Field(None, ge=20, le=200)
+    quote_typing_pause: Optional[int] = Field(None, ge=200, le=10000)
+    quote_font_size: Optional[int] = Field(None, ge=10, le=40)
+    quote_font_family: Optional[QuoteFontFamily] = None
+    quote_effect: Optional[EffectName] = None
+    entry_text: Optional[str] = Field(None, max_length=120)
+    entry_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
+    entry_text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    entry_font_size: Optional[int] = Field(None, ge=10, le=40)
+    entry_font_family: Optional[QuoteFontFamily] = None
+    entry_effect: Optional[EffectName] = None
+    entry_overlay_alpha: Optional[int] = Field(None, ge=0, le=100)
+    entry_box_enabled: Optional[bool] = None
+    entry_border_enabled: Optional[bool] = None
+    entry_border_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     song_url: Optional[str] = None
     song_name: Optional[str] = Field(None, max_length=120)
     song_icon_url: Optional[str] = None
@@ -3785,7 +4779,11 @@ class TemplateVariantIn(BaseModel):
     name_effect: EffectName = "none"
     background_effect: BgEffectName = "none"
     display_name_mode: DisplayNameMode = "slug"
+    layout_mode: Optional[LayoutMode] = None
     custom_display_name: Optional[str] = Field(None, min_length=1, max_length=64)
+    linktree_profile_picture: Optional[str] = None
+    section_order: Optional[List[Any]] = None
+    canvas_layout: Optional[dict] = None
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
@@ -3795,12 +4793,16 @@ class TemplateVariantIn(BaseModel):
     location_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     quote_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     cursor_url: Optional[str] = None
+    cursor_effect: CursorEffectName = "none"
+    cursor_effect_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
+    cursor_effect_alpha: int = Field(70, ge=0, le=100)
     discord_frame_enabled: bool = False
     discord_presence_enabled: bool = False
     discord_presence: DiscordPresence = "online"
     discord_status_enabled: bool = False
     discord_status_text: Optional[str] = Field(None, max_length=140)
     discord_badges_enabled: bool = False
+    discord_badge_codes: Optional[List[str]] = None
     show_visit_counter: bool = False
     visit_counter_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     visit_counter_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -3853,11 +4855,125 @@ def _doc_time_iso(value: Any) -> Optional[str]:
 
 def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data = payload.model_dump(exclude_none=True)
+    if "quote_typing_texts" in data:
+        data["quote_typing_texts"] = _normalize_text_list(
+            data.get("quote_typing_texts"),
+            max_items=3,
+            max_len=180,
+            dedupe=False,
+        )
+    if "quote_typing_speed" in data:
+        try:
+            speed = int(data.get("quote_typing_speed"))
+        except Exception:
+            speed = None
+        data["quote_typing_speed"] = (
+            max(20, min(200, speed)) if speed is not None else None
+        )
+    if "quote_typing_pause" in data:
+        try:
+            pause = int(data.get("quote_typing_pause"))
+        except Exception:
+            pause = None
+        data["quote_typing_pause"] = (
+            max(200, min(10000, pause)) if pause is not None else None
+        )
+    if "quote_font_size" in data:
+        try:
+            size = int(data.get("quote_font_size"))
+        except Exception:
+            size = None
+        data["quote_font_size"] = (
+            max(10, min(40, size)) if size is not None else None
+        )
+    if "quote_font_family" in data:
+        fam = str(data.get("quote_font_family") or "").lower()
+        if fam in {"default", "serif", "mono", "script", "display"}:
+            data["quote_font_family"] = fam
+        else:
+            data["quote_font_family"] = "default"
+    if "quote_effect" in data:
+        fx = str(data.get("quote_effect") or "").lower()
+        if fx in {"none", "glow", "neon", "rainbow"}:
+            data["quote_effect"] = fx
+        else:
+            data["quote_effect"] = "none"
+    if "quote_effect_strength" in data:
+        try:
+            strength = int(data.get("quote_effect_strength"))
+        except Exception:
+            strength = None
+        data["quote_effect_strength"] = (
+            max(0, min(100, strength)) if strength is not None else 70
+        )
+    if "entry_bg_alpha" in data:
+        try:
+            alpha = int(data.get("entry_bg_alpha"))
+        except Exception:
+            alpha = None
+        data["entry_bg_alpha"] = max(0, min(100, alpha)) if alpha is not None else 85
+    if "entry_font_size" in data:
+        try:
+            size = int(data.get("entry_font_size"))
+        except Exception:
+            size = None
+        data["entry_font_size"] = max(10, min(40, size)) if size is not None else 16
+    if "entry_font_family" in data:
+        fam = str(data.get("entry_font_family") or "").lower()
+        if fam in {"default", "serif", "mono", "script", "display"}:
+            data["entry_font_family"] = fam
+        else:
+            data["entry_font_family"] = "default"
+    if "entry_effect" in data:
+        fx = str(data.get("entry_effect") or "").lower()
+        if fx in {"none", "glow", "neon", "rainbow"}:
+            data["entry_effect"] = fx
+        else:
+            data["entry_effect"] = "none"
+    if "entry_overlay_alpha" in data:
+        try:
+            alpha = int(data.get("entry_overlay_alpha"))
+        except Exception:
+            alpha = None
+        data["entry_overlay_alpha"] = (
+            max(0, min(100, alpha)) if alpha is not None else 35
+        )
+    if "entry_box_enabled" in data:
+        data["entry_box_enabled"] = bool(data.get("entry_box_enabled"))
+    if "entry_border_enabled" in data:
+        data["entry_border_enabled"] = bool(data.get("entry_border_enabled"))
+    if "entry_border_color" in data and isinstance(data.get("entry_border_color"), str):
+        val = data.get("entry_border_color").strip()
+        data["entry_border_color"] = val if re.match(HEX_COLOR_RE, val) else None
+    if "entry_text_color" in data and isinstance(data.get("entry_text_color"), str):
+        val = data.get("entry_text_color").strip()
+        data["entry_text_color"] = val if re.match(HEX_COLOR_RE, val) else None
+    if "linktree_profile_picture" in data and isinstance(
+        data.get("linktree_profile_picture"), str
+    ):
+        val = data.get("linktree_profile_picture").strip()
+        data["linktree_profile_picture"] = val or None
+    if "layout_mode" in data:
+        mode = str(data.get("layout_mode") or "center").lower()
+        data["layout_mode"] = mode if mode in {"center", "wide"} else "center"
+    if "section_order" in data:
+        data["section_order"] = _normalize_section_order(data.get("section_order"))
+    if "canvas_layout" in data:
+        data["canvas_layout"] = _normalize_canvas_layout(data.get("canvas_layout"))
+    if "discord_badge_codes" in data:
+        data["discord_badge_codes"] = _normalize_text_list(
+            data.get("discord_badge_codes"),
+            max_items=50,
+            max_len=64,
+        )
     data.setdefault("background_is_video", False)
     data.setdefault("transparency", 0)
     data.setdefault("name_effect", "none")
     data.setdefault("background_effect", "none")
+    data.setdefault("cursor_effect", "none")
+    data.setdefault("cursor_effect_alpha", 70)
     data.setdefault("display_name_mode", "slug")
+    data.setdefault("layout_mode", "center")
     data.setdefault("link_bg_alpha", 100)
     data.setdefault("audio_player_bg_alpha", 60)
     data.setdefault("visit_counter_bg_alpha", 20)
@@ -3868,6 +4984,21 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("discord_presence", "online")
     data.setdefault("discord_status_enabled", False)
     data.setdefault("discord_badges_enabled", False)
+    data.setdefault("quote_typing_enabled", False)
+    data.setdefault("quote_font_family", "default")
+    data.setdefault("quote_effect", "none")
+    data.setdefault("quote_effect_strength", 70)
+    data.setdefault("entry_bg_alpha", 85)
+    data.setdefault("entry_font_size", 16)
+    data.setdefault("entry_font_family", "default")
+    data.setdefault("entry_effect", "none")
+    data.setdefault("entry_overlay_alpha", 35)
+    data.setdefault("entry_box_enabled", True)
+    data.setdefault("entry_border_enabled", True)
+    data.setdefault("demo_show_links", False)
+    for key in ("demo_link_label", "demo_link_url", "demo_link_icon_url"):
+        if key in data and isinstance(data[key], str):
+            data[key] = data[key].strip() or None
     return data
 
 
@@ -3973,6 +5104,15 @@ def _extract_linktree_fields(data: dict) -> dict:
         "device_type",
         "location",
         "quote",
+        "quote_typing_enabled",
+        "quote_typing_texts",
+        "entry_text",
+        "quote_typing_speed",
+        "quote_typing_pause",
+        "quote_font_size",
+        "quote_font_family",
+        "quote_effect",
+        "quote_effect_strength",
         "song_url",
         "song_name",
         "song_icon_url",
@@ -3987,7 +5127,11 @@ def _extract_linktree_fields(data: dict) -> dict:
         "name_effect",
         "background_effect",
         "display_name_mode",
+        "layout_mode",
         "custom_display_name",
+        "linktree_profile_picture",
+        "section_order",
+        "canvas_layout",
         "link_color",
         "link_bg_color",
         "link_bg_alpha",
@@ -3996,19 +5140,119 @@ def _extract_linktree_fields(data: dict) -> dict:
         "name_color",
         "location_color",
         "quote_color",
+        "entry_bg_alpha",
+        "entry_text_color",
+        "entry_font_size",
+        "entry_font_family",
+        "entry_effect",
+        "entry_overlay_alpha",
+        "entry_box_enabled",
+        "entry_border_enabled",
+        "entry_border_color",
         "cursor_url",
+        "cursor_effect",
+        "cursor_effect_color",
+        "cursor_effect_alpha",
         "discord_frame_enabled",
         "discord_presence_enabled",
         "discord_presence",
         "discord_status_enabled",
         "discord_status_text",
         "discord_badges_enabled",
+        "discord_badge_codes",
         "show_visit_counter",
         "visit_counter_color",
         "visit_counter_bg_color",
         "visit_counter_bg_alpha",
     }
-    return {k: v for k, v in data.items() if k in allowed}
+    fields = {k: v for k, v in data.items() if k in allowed}
+    if "quote_typing_texts" in fields:
+        fields["quote_typing_texts"] = _list_to_json(
+            fields.get("quote_typing_texts"),
+            max_items=3,
+            max_len=180,
+        )
+    if "section_order" in fields:
+        order = _normalize_section_order(fields.get("section_order"))
+        fields["section_order"] = json.dumps(order) if order else None
+    if "canvas_layout" in fields:
+        layout = _normalize_canvas_layout(fields.get("canvas_layout"))
+        fields["canvas_layout"] = json.dumps(layout) if layout is not None else None
+    if "quote_typing_speed" in fields:
+        try:
+            speed = int(fields.get("quote_typing_speed"))
+        except Exception:
+            speed = None
+        fields["quote_typing_speed"] = (
+            max(20, min(200, speed)) if speed is not None else None
+        )
+    if "quote_typing_pause" in fields:
+        try:
+            pause = int(fields.get("quote_typing_pause"))
+        except Exception:
+            pause = None
+        fields["quote_typing_pause"] = (
+            max(200, min(10000, pause)) if pause is not None else None
+        )
+    if "quote_font_size" in fields:
+        try:
+            size = int(fields.get("quote_font_size"))
+        except Exception:
+            size = None
+        fields["quote_font_size"] = (
+            max(10, min(40, size)) if size is not None else None
+        )
+    if "quote_font_family" in fields:
+        fam = str(fields.get("quote_font_family") or "").lower()
+        if fam in {"default", "serif", "mono", "script", "display"}:
+            fields["quote_font_family"] = fam
+        else:
+            fields["quote_font_family"] = "default"
+    if "quote_effect" in fields:
+        fx = str(fields.get("quote_effect") or "").lower()
+        if fx in {"none", "glow", "neon", "rainbow"}:
+            fields["quote_effect"] = fx
+        else:
+            fields["quote_effect"] = "none"
+    if "entry_bg_alpha" in fields:
+        try:
+            alpha = int(fields.get("entry_bg_alpha"))
+        except Exception:
+            alpha = None
+        fields["entry_bg_alpha"] = (
+            max(0, min(100, alpha)) if alpha is not None else None
+        )
+    if "entry_font_size" in fields:
+        try:
+            size = int(fields.get("entry_font_size"))
+        except Exception:
+            size = None
+        fields["entry_font_size"] = (
+            max(10, min(40, size)) if size is not None else None
+        )
+    if "entry_font_family" in fields:
+        fam = str(fields.get("entry_font_family") or "default").lower()
+        fields["entry_font_family"] = (
+            fam if fam in {"default", "serif", "mono", "script", "display"} else "default"
+        )
+    if "entry_effect" in fields:
+        fx = str(fields.get("entry_effect") or "none").lower()
+        fields["entry_effect"] = (
+            fx if fx in {"none", "glow", "neon", "rainbow"} else "none"
+        )
+    if "entry_text_color" in fields and isinstance(fields.get("entry_text_color"), str):
+        val = fields.get("entry_text_color").strip()
+        fields["entry_text_color"] = val if re.match(HEX_COLOR_RE, val) else None
+    if "discord_badge_codes" in fields:
+        fields["discord_badge_codes"] = _list_to_json(
+            fields.get("discord_badge_codes"),
+            max_items=50,
+            max_len=64,
+            allow_empty=True,
+        )
+    if "entry_text" in fields and isinstance(fields["entry_text"], str):
+        fields["entry_text"] = fields["entry_text"].strip() or None
+    return fields
 
 
 @app.get("/marketplace", include_in_schema=False)

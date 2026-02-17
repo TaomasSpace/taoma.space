@@ -289,6 +289,12 @@
             </div>
 
             <div class="field">
+                <label>Email</label>
+                <div class="control"><input id="email" type="email" autocomplete="email"
+                        placeholder="you@example.com" required></div>
+            </div>
+
+            <div class="field">
                 <label>Password</label>
                 <div class="control">
                     <input id="password" type="password" minlength="8" placeholder="••••••••" required
@@ -341,6 +347,7 @@
         if (backToLogin) backToLogin.href = `/login?next=${encodeURIComponent(nextUrl)}`;
 
         const u = document.getElementById('username');
+        const e = document.getElementById('email');
         const p = document.getElementById('password');
         const c = document.getElementById('confirm');
         const btn = document.getElementById('submitBtn');
@@ -350,13 +357,15 @@
         function showErr(m) { err.textContent = m; err.classList.add('show'); ok.classList.remove('show'); }
         function showOk(m) { ok.textContent = m; ok.classList.add('show'); err.classList.remove('show'); }
 
-        [u, p, c].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); }));
+        [u, e, p, c].filter(Boolean).forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); }));
 
         btn.addEventListener('click', async () => {
             const username = u.value.trim();
+            const email = e.value.trim();
             const pw = p.value.trim();
             const cf = c.value.trim();
             if (!username) { showErr("Please enter a username."); u.focus(); return; }
+            if (!email) { showErr("Please enter an email."); e.focus(); return; }
             if (pw.length < 8) { showErr("Password must be at least 8 characters."); p.focus(); return; }
             if (pw !== cf) { showErr("Passwords do not match."); c.focus(); return; }
 
@@ -366,7 +375,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({ username, password: pw })
+                    body: JSON.stringify({ username, email, password: pw })
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) {

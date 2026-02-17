@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TAOMAT - Reset Password</title>
+    <meta name="theme-color" content="#0f1223" />
+    <link rel="icon" type="image/png" href="/static/icon.png">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0e1020;
+            --bg-soft: #141735;
+            --card: #171b3b;
+            --ink: #e9ebff;
+            --muted: #a2a9c8;
+            --acc: #85a3ff;
+            --acc-2: #5b7bff;
+            --ok: #35d79c;
+            --danger: #ff5a6a;
+            --ring: #85a3ff55;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .25);
+            --radius: 16px;
+            --space: clamp(16px, 2vw, 24px);
+            --container: 1100px
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background: var(--bg);
+            font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100dvh
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(1400px 900px at 12% -8%, #1b1f45 0%, #1b1f45 35%, transparent 72%),
+                radial-gradient(1200px 800px at 100% -10%, #0b4ea8 0%, #0b4ea8 28%, transparent 68%),
+                radial-gradient(900px 500px at 95% 115%, #0b4ea84d 0%, transparent 60%),
+                linear-gradient(160deg, #0f1531 0%, #0e1020 72%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none
+        }
+
+        .container {
+            max-width: var(--container);
+            margin: 0 auto;
+            padding-inline: var(--space)
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: saturate(1.1) blur(10px);
+            background: linear-gradient(180deg, #0c0f24cc 0%, #0c0f2400 100%);
+            border-bottom: 1px solid #ffffff14
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            font-weight: 800;
+            letter-spacing: .4px
+        }
+
+        .brand .logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: block
+        }
+
+        .links {
+            display: flex;
+            gap: 1rem;
+            align-items: center
+        }
+
+        .links a {
+            padding: .45rem .7rem;
+            border-radius: 10px;
+            border: 1px solid transparent
+        }
+
+        .links a:hover {
+            border-color: #ffffff1f;
+            background: #ffffff0f
+        }
+
+        .mobile-toggle {
+            display: none
+        }
+
+        @media (max-width:800px) {
+            .mobile-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                border: 1px solid #ffffff26;
+                background: transparent
+            }
+
+            .links {
+                position: fixed;
+                inset: 64px 0 auto 0;
+                background: linear-gradient(180deg, #0b0f29, #0b0f2945);
+                padding: 1rem;
+                display: none;
+                flex-direction: column
+            }
+
+            .links.open {
+                display: flex
+            }
+        }
+
+        .card {
+            background: linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 8%), var(--card));
+            border: 1px solid #ffffff1a;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow)
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .75rem 1rem;
+            border-radius: 12px;
+            background: var(--acc);
+            color: white;
+            font-weight: 600;
+            border: 1px solid #ffffff1a;
+            transition: .2s ease
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            filter: saturate(1.1)
+        }
+
+        .btn.ghost {
+            background: transparent;
+            color: var(--ink);
+            border: 1px solid #ffffff26;
+            box-shadow: none
+        }
+
+        .form {
+            max-width: 460px;
+            margin: clamp(48px, 8vw, 120px) auto;
+            padding: clamp(18px, 3vw, 26px);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem
+        }
+
+        .form h1 {
+            margin: 0 0 .25rem 0;
+            font-size: clamp(22px, 3.4vw, 32px)
+        }
+
+        .form p.muted {
+            margin: .1rem 0 1rem;
+            color: var(--muted)
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: .45rem
+        }
+
+        .control {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            background: #0f1331;
+            border: 1px solid #ffffff22;
+            border-radius: 12px;
+            padding: .65rem .75rem
+        }
+
+        .control:focus-within {
+            border-color: var(--acc);
+            box-shadow: 0 0 0 6px var(--ring)
+        }
+
+        .control input {
+            flex: 1;
+            background: transparent;
+            color: var(--ink);
+            border: 0;
+            outline: 0;
+            font: 600 15px/1.4 Inter
+        }
+
+        .row {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap
+        }
+
+        .error,
+        .success {
+            display: none;
+            border-radius: 12px;
+            padding: .75rem .9rem
+        }
+
+        .error {
+            border: 1px solid #ff5a6a55;
+            background: #ff5a6a2e
+        }
+
+        .success {
+            border: 1px solid #35d79c55;
+            background: #35d79c2e
+        }
+
+        .show {
+            display: block
+        }
+
+        footer {
+            margin-top: auto;
+            border-top: 1px solid #ffffff14;
+            padding: 1.5rem 0
+        }
+
+        .foot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem
+        }
+
+        @media (max-width:700px) {
+            .foot {
+                flex-direction: column
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container nav" role="navigation" aria-label="Primary">
+            <div class="brand">
+                <a href="/"><img class="logo" src="/static/icon.png" alt="TAOMA logo" width="28" height="28"></a>
+                <a href="/"><span>TAOMAT</span></a>
+            </div>
+            <button type="button" class="mobile-toggle" id="mobileToggle" aria-controls="primary-menu"
+                aria-expanded="false" aria-label="Toggle menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+            <nav id="primary-menu" class="links" aria-label="Site">
+                <a href="/">Home</a>
+                <a href="/api">GIF API</a>
+                <a href="/api/gif/admin">Add GIFs</a>
+                <a href="/marketplace">Marketplace</a>
+                <a href="/linktree/config">Linktree</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="card form" aria-labelledby="reset-title">
+            <div>
+                <h1 id="reset-title">Reset password</h1>
+                <p class="muted" id="subtitle">Enter your email to receive a reset link.</p>
+            </div>
+
+            <div class="error" id="err"></div>
+            <div class="success" id="ok"></div>
+
+            <div id="requestPanel">
+                <div class="field">
+                    <label for="email">Email</label>
+                    <div class="control">
+                        <input id="email" type="email" autocomplete="email" placeholder="you@example.com" required />
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="btn" id="requestBtn" type="button">Send reset link</button>
+                    <a class="btn ghost" href="/login?next=/">Back to Login</a>
+                </div>
+            </div>
+
+            <div id="resetPanel" style="display:none">
+                <div class="field">
+                    <label for="newPassword">New password</label>
+                    <div class="control">
+                        <input id="newPassword" type="password" minlength="8" autocomplete="new-password"
+                            placeholder="At least 8 characters" required />
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="confirmPassword">Confirm password</label>
+                    <div class="control">
+                        <input id="confirmPassword" type="password" minlength="8" autocomplete="new-password"
+                            placeholder="Repeat new password" required />
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="btn" id="resetBtn" type="button">Set new password</button>
+                    <a class="btn ghost" href="/login?next=/">Back to Login</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container foot">
+            <small class="muted">&copy; <span id="year"></span> TAOMAT. All rights reserved.</small>
+        </div>
+    </footer>
+
+    <script>
+        const toggle = document.getElementById('mobileToggle');
+        const menu = document.getElementById('primary-menu');
+        toggle?.addEventListener('click', () => {
+            const open = menu.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', String(open));
+        });
+
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        const params = new URLSearchParams(location.search);
+        const token = params.get('token');
+        const subtitle = document.getElementById('subtitle');
+        const requestPanel = document.getElementById('requestPanel');
+        const resetPanel = document.getElementById('resetPanel');
+        const err = document.getElementById('err');
+        const ok = document.getElementById('ok');
+
+        function showErr(msg) { err.textContent = msg; err.classList.add('show'); ok.classList.remove('show'); }
+        function showOk(msg) { ok.textContent = msg; ok.classList.add('show'); err.classList.remove('show'); }
+
+        if (token) {
+            subtitle.textContent = 'Choose a new password for your account.';
+            requestPanel.style.display = 'none';
+            resetPanel.style.display = 'block';
+        }
+
+        document.getElementById('requestBtn')?.addEventListener('click', async () => {
+            const email = document.getElementById('email').value.trim();
+            if (!email) { showErr('Please enter your email.'); return; }
+            try {
+                const res = await fetch('/api/auth/password/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    showErr(data?.detail || 'Request failed');
+                    return;
+                }
+                showOk('If that email exists, a reset link has been sent.');
+            } catch (e) {
+                showErr('Network error: ' + (e?.message || e));
+            }
+        });
+
+        document.getElementById('resetBtn')?.addEventListener('click', async () => {
+            const newPassword = document.getElementById('newPassword').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value.trim();
+            if (newPassword.length < 8) { showErr('Password must be at least 8 characters.'); return; }
+            if (newPassword !== confirmPassword) { showErr('Passwords do not match.'); return; }
+            try {
+                const res = await fetch('/api/auth/password/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, password: newPassword })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showErr(data?.detail || 'Reset failed');
+                    return;
+                }
+                showOk('Password updated. Redirecting to login...');
+                setTimeout(() => { window.location.href = '/login?next=/'; }, 800);
+            } catch (e) {
+                showErr('Network error: ' + (e?.message || e));
+            }
+        });
+    </script>
+</body>
+
+</html>

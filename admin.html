@@ -1288,8 +1288,8 @@
         <h2>Users — Create</h2>
         <form id="fCreateUser">
           <label>Username</label><input name="username" required minlength="3" maxlength="32">
-          <label>Password</label><input name="password" type="password" required minlength="8">
-          <label>Linktree ID (optional)</label><input name="linktree_id" type="number" min="1" placeholder="e.g. 1">
+          <label>Email</label><input name="email" type="email" placeholder="user@example.com" required>
+                    <label>Linktree ID (optional)</label><input name="linktree_id" type="number" min="1" placeholder="e.g. 1">
           <label>Profile Picture URL (optional)</label><input name="profile_picture" placeholder="/media/avatars/…">
           <div class="actions">
             <button class="btn" type="submit">Create User</button>
@@ -1317,7 +1317,7 @@
                 placeholder="leave empty to keep">
             </div>
             <div style="flex:1 1 240px">
-              <label>New Password</label><input name="password" type="password" minlength="8"
+              <label>Email</label><input name="email" type="email"
                 placeholder="leave empty to keep">
             </div>
           </div>
@@ -1337,6 +1337,8 @@
               <option value="true">true</option>
               <option value="false">false</option>
             </select>
+            <span class="right"></span>
+            <button class="btn ghost" id="btnSendReset" type="button">Send Reset Email</button>
             <span class="right"></span>
             <button class="btn ghost" id="btnClearUserLT" type="button"
               title="PATCH /user/{id} {linktree_id:null}">Clear Linktree</button>
@@ -1453,6 +1455,16 @@
                 <option>night</option>
                 <option>rain</option>
                 <option>snow</option>
+                <option>noise</option>
+                <option>gradient</option>
+                <option>parallax</option>
+                <option>particles</option>
+                <option>sweep</option>
+                <option>mesh</option>
+                <option>grid</option>
+                <option>vignette</option>
+                <option>scanlines</option>
+                <option>glitch</option>
               </select>
             </div>
             <div style="flex:1 1 180px">
@@ -1539,7 +1551,7 @@
 
   <footer>
     <div class="container foot">
-      <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved. · <a href="/datenschutz.html">Privacy Policy</a></small>
+      <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved. · <a href="/datenschutz.html">Privacy Policy</a> · <a href="/impressum.html">Imprint</a></small>
       <div class="visitor-counter">
         <!-- Eye Icon -->
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1639,6 +1651,8 @@
     const apipatch = async (url, body) => (await fetch(url, { method: 'PATCH', headers: headers(), credentials: 'include', body: j(body) }));
     const apidelete = async (url) => (await fetch(url, { method: 'DELETE', headers: headers(false), credentials: 'include' }));
 
+let currentUser = null;
+
     // --- Gate: must be admin ---
     (async () => {
       try {
@@ -1659,14 +1673,20 @@
       const f = e.target;
       const body = {
         username: f.username.value.trim(),
-        password: f.password.value,
+        email: f.email.value.trim() || null,
         linktree_id: f.linktree_id.value ? Number(f.linktree_id.value) : null,
         profile_picture: f.profile_picture.value || null
       };
       try {
         const r = await apipost('/user', body);
         const t = await r.json().catch(() => ({}));
-        show('#logCreateUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
+        let msg = r.ok ? 'User created.' : (t?.detail || JSON.stringify(t));
+        if (r.ok && body.email) {
+          const rr = await apipost('/api/auth/password/request', { email: body.email });
+          const rt = await rr.json().catch(() => ({}));
+          msg += rr.ok ? ' Reset email triggered.' : ` Reset email failed: ${rt?.detail || JSON.stringify(rt)}`;
+        }
+        show('#logCreateUser', msg, r.ok);
       } catch (err) { show('#logCreateUser', String(err), false); }
     });
 
@@ -1678,6 +1698,11 @@
       try {
         const r = await apiget(`/user/${id}`);
         const t = await r.json();
+        if (r.ok) {
+          currentUser = t;
+          const emailInput = $('#fUpdateUser [name="email"]');
+          if (emailInput) emailInput.value = t.email || '';
+        }
         show('#logUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
       } catch (err) { show('#logUser', String(err), false); }
     });
@@ -1693,14 +1718,25 @@
       } catch (err) { show('#logUser', String(err), false); }
     });
 
-    $('#fUpdateUser')?.addEventListener('submit', async (e) => {
+    $('#btnSendReset')?.addEventListener('click', async () => {
+      const emailInput = $('#fUpdateUser [name="email"]');
+      const email = (currentUser && currentUser.email) || (emailInput ? emailInput.value.trim() : '');
+      if (!email) { show('#logUser', 'Email required to send reset', false); return; }
+      try {
+        const r = await apipost('/api/auth/password/request', { email });
+        const t = await r.json().catch(() => ({}));
+        show('#logUser', r.ok ? 'Reset email triggered.' : t?.detail || JSON.stringify(t), r.ok);
+      } catch (err) { show('#logUser', String(err), false); }
+    });
+
+$('#fUpdateUser')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = Number($('#fGetUser [name="user_id"]').value);
       if (!id) { show('#logUser', 'Fetch user or enter User ID first', false); return; }
       const f = e.target;
       const body = {};
       if (f.username.value.trim()) body.username = f.username.value.trim();
-      if (f.password.value) body.password = f.password.value;
+      if (f.email.value.trim()) body.email = f.email.value.trim();
       if (f.linktree_id.value) body.linktree_id = Number(f.linktree_id.value);
       if (f.profile_picture.value) body.profile_picture = f.profile_picture.value;
       if (f.admin.value !== '') body.admin = (f.admin.value === 'true');
@@ -1708,6 +1744,7 @@
       try {
         const r = await apipatch(`/user/${id}`, body);
         const t = await r.json();
+        if (r.ok) currentUser = t;
         show('#logUser', r.ok ? t : t?.detail || JSON.stringify(t), r.ok);
       } catch (err) { show('#logUser', String(err), false); }
     });
@@ -1743,9 +1780,39 @@
     });
 
     // --- ICONS: upload, preview, set URL ---
+    const hashedFileCache = new WeakMap();
+    async function withHashedFile(file) {
+      if (!file) return null;
+      if (hashedFileCache.has(file)) return hashedFileCache.get(file);
+      const name = file.name || "upload";
+      const dot = name.lastIndexOf(".");
+      const base = dot > 0 ? name.slice(0, dot) : name;
+      const ext = dot > 0 ? name.slice(dot) : "";
+      let hash = "";
+      try {
+        const buf = await file.arrayBuffer();
+        const digest = await crypto.subtle.digest("SHA-256", buf);
+        hash = Array.from(new Uint8Array(digest))
+          .map(b => b.toString(16).padStart(2, "0"))
+          .join("")
+          .slice(0, 16);
+      } catch (_) {
+        hash = Math.random().toString(16).slice(2, 10);
+      }
+      const safeBase = base.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const hashedName = `${safeBase}--${hash}${ext}`;
+      const hashed = new File([file], hashedName, {
+        type: file.type,
+        lastModified: file.lastModified
+      });
+      hashedFileCache.set(file, hashed);
+      return hashed;
+    }
+
     async function uploadIconFile(inputId) {
       const inp = document.getElementById(inputId);
-      const file = inp?.files?.[0];
+      const raw = inp?.files?.[0];
+      const file = (await withHashedFile(raw)) || raw;
       if (!file) return null;
       const fd = new FormData();
       fd.append('file', file);

@@ -369,17 +369,24 @@
         <section class="card form" aria-labelledby="login-title">
             <div>
                 <h1 id="login-title">Login</h1>
-                <p class="muted">Sign in with your username and password.</p>
+                <p class="muted">Sign in with your username or email and password.</p>
             </div>
 
             <div class="error" id="err"></div>
             <div class="success" id="ok"></div>
 
-            <!-- Username -->
+            <!-- Username or Email -->
             <div class="field">
-                <div class="label-row"><label for="username">Username</label></div>
-                <div class="control"><input id="username" name="username" type="text" autocomplete="username"
-                        placeholder="yourname" required minlength="3" /></div>
+                <div class="label-row"><label for="identifier">Username or email</label></div>
+                <div class="control"><input id="identifier" name="identifier" type="text" autocomplete="username"
+                        placeholder="yourname or you@example.com" required minlength="3" /></div>
+            </div>
+
+            <!-- Email (required for legacy accounts without email) -->
+            <div class="field" id="emailWrap" style="display:none">
+                <div class="label-row"><label for="email">Email (required if your account has no email)</label></div>
+                <div class="control"><input id="email" name="email" type="email" autocomplete="email"
+                        placeholder="you@example.com" /></div>
             </div>
 
             <!-- Password -->
@@ -413,6 +420,7 @@
                     Login
                 </button>
                 <a class="btn ghost" href="/register" aria-label="Register">Register</a>
+                <a class="btn ghost" href="/reset" aria-label="Reset password">Forgot password?</a>
             </div>
 
         </section>
@@ -420,7 +428,7 @@
 
     <footer>
         <div class="container foot">
-            <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved. · <a href="/datenschutz.html">Privacy Policy</a></small>
+            <small class="muted">© <span id="year"></span> TAOMA™. All rights reserved. · <a href="/datenschutz.html">Privacy Policy</a> · <a href="/impressum.html">Imprint</a></small>
             <div class="visitor-counter" title="Visitors (daily de-duplicated)">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                     aria-hidden="true">
@@ -466,13 +474,25 @@
         // Redirect target
         const params = new URLSearchParams(location.search);
         const storedNext = sessionStorage.getItem('taoma_next');
-        const nextUrl = params.get('next') || storedNext || document.referrer || '/';
+        const rawNext = params.get('next') || storedNext || document.referrer || '/';
+        const nextUrl = (() => {
+            try {
+                const url = new URL(rawNext, location.origin);
+                if (url.origin !== location.origin) return '/';
+                if (url.pathname === '/reset') return '/';
+                return url.pathname + url.search + url.hash;
+            } catch {
+                return '/';
+            }
+        })();
         if (nextUrl) sessionStorage.setItem('taoma_next', nextUrl);
         const registerLink = document.querySelector('a[href="/register"]');
         if (registerLink) registerLink.href = `/register?next=${encodeURIComponent(nextUrl)}`;
 
         // UI helpers
-        const userEl = document.getElementById('username');
+        const identifierEl = document.getElementById('identifier');
+        const emailWrap = document.getElementById('emailWrap');
+        const emailEl = document.getElementById('email');
         const pw = document.getElementById('password');
         const btn = document.getElementById('submitBtn');
         const err = document.getElementById('err');
@@ -490,12 +510,14 @@
         pw.addEventListener('keydown', handleCaps);
         togglePw.addEventListener('click', () => { pw.type = pw.type === 'password' ? 'text' : 'password'; pw.focus(); });
 
-        [userEl, pw].forEach(i => i.addEventListener('keydown', (e) => { if (e.key === 'Enter') btn.click(); }));
+        [identifierEl, pw, emailEl].filter(Boolean).forEach(i => i.addEventListener('keydown', (e) => { if (e.key === 'Enter') btn.click(); }));
 
         btn.addEventListener('click', async () => {
-            const username = userEl.value.trim();
+            const identifier = identifierEl.value.trim();
+            const email = emailEl ? emailEl.value.trim() : '';
             const password = pw.value.trim();
-            if (!username) { showErr("Please enter your username."); userEl.focus(); return; }
+            if (!identifier) { showErr("Please enter your username or email."); identifierEl.focus(); return; }
+            if (emailWrap && emailWrap.style.display !== 'none' && !email) { showErr("Please enter your email."); emailEl.focus(); return; }
             if (!password) { showErr("Please enter your password."); pw.focus(); return; }
 
             btn.disabled = true; btn.style.opacity = .7;
@@ -505,12 +527,20 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ identifier, password, email: email || undefined })
                 });
 
                 if (!res.ok) {
                     const data = await res.json().catch(() => ({ detail: 'Invalid credentials' }));
-                    const msg = (data && (data.detail || data.error)) || 'Invalid credentials';
+                    const detail = data && (data.detail || data.error);
+                    if (detail && typeof detail === 'object' && detail.error === 'email_required') {
+                        if (emailWrap) emailWrap.style.display = 'block';
+                        if (emailEl) emailEl.required = true;
+                        showErr(detail.message || 'Email required for this account.');
+                        if (emailEl) emailEl.focus();
+                        return;
+                    }
+                    const msg = detail || 'Invalid credentials';
                     showErr(typeof msg === 'string' ? msg : JSON.stringify(msg));
                     return;
                 }

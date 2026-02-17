@@ -64,6 +64,7 @@ ON CONFLICT (id) DO NOTHING;
 CREATE TABLE IF NOT EXISTS users (
     id                SERIAL PRIMARY KEY,
     username          TEXT NOT NULL,
+    email             TEXT,
     password          TEXT NOT NULL,
     linktree_id       INTEGER,
     profile_picture   TEXT,
@@ -71,6 +72,17 @@ CREATE TABLE IF NOT EXISTS users (
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at        TIMESTAMPTZ
 );
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id          SERIAL PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  TEXT NOT NULL UNIQUE,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    used_at     TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+CREATE INDEX IF NOT EXISTS idx_password_resets_expires ON password_resets(expires_at);
 
 CREATE TABLE IF NOT EXISTS linktrees (
     id                  SERIAL PRIMARY KEY,
@@ -81,6 +93,32 @@ CREATE TABLE IF NOT EXISTS linktrees (
     slug                TEXT NOT NULL,            -- wird zu /tree/{slug}
     location            TEXT,
     quote               TEXT,
+    quote_typing_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    quote_typing_texts  TEXT,
+    quote_typing_speed  SMALLINT,
+    quote_typing_pause  SMALLINT,
+    quote_font_size     SMALLINT,
+    quote_font_family   TEXT DEFAULT 'default'
+                        CHECK (quote_font_family IN ('default','serif','mono','script','display')),
+    quote_effect        TEXT NOT NULL DEFAULT 'none'
+                        CHECK (quote_effect IN ('none','glow','neon','rainbow')),
+    quote_effect_strength SMALLINT NOT NULL DEFAULT 70
+                        CHECK (quote_effect_strength BETWEEN 0 AND 100),
+    entry_text          TEXT,
+    entry_bg_alpha      SMALLINT NOT NULL DEFAULT 85
+                        CHECK (entry_bg_alpha BETWEEN 0 AND 100),
+    entry_text_color    TEXT,
+    entry_font_size     SMALLINT NOT NULL DEFAULT 16
+                        CHECK (entry_font_size BETWEEN 10 AND 40),
+    entry_font_family   TEXT NOT NULL DEFAULT 'default'
+                        CHECK (entry_font_family IN ('default','serif','mono','script','display')),
+    entry_effect        TEXT NOT NULL DEFAULT 'none'
+                        CHECK (entry_effect IN ('none','glow','neon','rainbow')),
+    entry_overlay_alpha SMALLINT NOT NULL DEFAULT 35
+                        CHECK (entry_overlay_alpha BETWEEN 0 AND 100),
+    entry_box_enabled   BOOLEAN NOT NULL DEFAULT TRUE,
+    entry_border_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    entry_border_color  TEXT,
     song_url            TEXT,                     -- Audio-URL
     song_name           TEXT,                     -- Original filename
     song_icon_url       TEXT,
@@ -97,10 +135,15 @@ CREATE TABLE IF NOT EXISTS linktrees (
     name_effect         TEXT NOT NULL DEFAULT 'none'
                         CHECK (name_effect IN ('none','glow','neon','rainbow')),
     background_effect   TEXT NOT NULL DEFAULT 'none'
-                        CHECK (background_effect IN ('none','night','rain','snow')),
+                        CHECK (background_effect IN ('none','night','rain','snow','noise','gradient','parallax','particles','sweep','mesh','grid','vignette','scanlines','glitch')),
     display_name_mode   TEXT NOT NULL DEFAULT 'slug'
                         CHECK (display_name_mode IN ('slug','username','custom')),
+    layout_mode         TEXT NOT NULL DEFAULT 'center'
+                        CHECK (layout_mode IN ('center','wide')),
     custom_display_name TEXT,
+    linktree_profile_picture TEXT,
+    section_order       TEXT,
+    canvas_layout       TEXT,
     link_color          TEXT,
     link_bg_color       TEXT,
     link_bg_alpha       SMALLINT NOT NULL DEFAULT 100
@@ -111,6 +154,11 @@ CREATE TABLE IF NOT EXISTS linktrees (
     location_color      TEXT,
     quote_color         TEXT,
     cursor_url          TEXT,
+    cursor_effect       TEXT NOT NULL DEFAULT 'none'
+                        CHECK (cursor_effect IN ('none','glow','particles')),
+    cursor_effect_color TEXT,
+    cursor_effect_alpha SMALLINT NOT NULL DEFAULT 70
+                        CHECK (cursor_effect_alpha BETWEEN 0 AND 100),
     discord_frame_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     discord_presence_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     discord_presence    TEXT NOT NULL DEFAULT 'online'
@@ -118,6 +166,7 @@ CREATE TABLE IF NOT EXISTS linktrees (
     discord_status_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     discord_status_text TEXT,
     discord_badges_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    discord_badge_codes TEXT,
     show_visit_counter  BOOLEAN NOT NULL DEFAULT FALSE,
     visit_counter_color TEXT,
     visit_counter_bg_color TEXT,
@@ -298,6 +347,18 @@ class PgGifDB:
   ADD CONSTRAINT linktrees_display_name_mode_check
   CHECK (display_name_mode IN ('slug','username','custom'));
                 """)
+                cur.execute("""ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS layout_mode TEXT NOT NULL DEFAULT 'center'
+    CHECK (layout_mode IN ('center','wide'));""")
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS linktrees_layout_mode_check;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT linktrees_layout_mode_check
+  CHECK (layout_mode IN ('center','wide'));
+                """)
                 cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS device_type TEXT NOT NULL DEFAULT 'pc';
@@ -329,6 +390,18 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS custom_display_name TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS linktree_profile_picture TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS section_order TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS canvas_layout TEXT;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -410,6 +483,10 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS discord_badges_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS discord_badge_codes TEXT;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -527,7 +604,346 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS quote_typing_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS quote_typing_texts TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS quote_typing_speed SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS quote_typing_pause SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS quote_font_size SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS quote_font_family TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS quote_effect TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS quote_effect_strength SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_text TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_bg_alpha SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_text_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_font_size SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_font_family TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_effect TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_overlay_alpha SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_box_enabled BOOLEAN;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_border_enabled BOOLEAN;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS entry_border_color TEXT;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET quote_effect = 'none'
+   WHERE quote_effect IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET quote_effect_strength = 70
+   WHERE quote_effect_strength IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET quote_font_family = 'default'
+   WHERE quote_font_family IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_bg_alpha = 85
+   WHERE entry_bg_alpha IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_font_size = 16
+   WHERE entry_font_size IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_font_family = 'default'
+   WHERE entry_font_family IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_effect = 'none'
+   WHERE entry_effect IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_overlay_alpha = 35
+   WHERE entry_overlay_alpha IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_box_enabled = TRUE
+   WHERE entry_box_enabled IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET entry_border_enabled = TRUE
+   WHERE entry_border_enabled IS NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN quote_effect SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN quote_effect SET DEFAULT 'none';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN quote_effect_strength SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN quote_effect_strength SET DEFAULT 70;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN quote_font_family SET DEFAULT 'default';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_bg_alpha SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_bg_alpha SET DEFAULT 85;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_font_size SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_font_size SET DEFAULT 16;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_font_family SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_font_family SET DEFAULT 'default';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_effect SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_effect SET DEFAULT 'none';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_overlay_alpha SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_overlay_alpha SET DEFAULT 35;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_box_enabled SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_box_enabled SET DEFAULT TRUE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_border_enabled SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN entry_border_enabled SET DEFAULT TRUE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_quote_effect;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_quote_effect
+  CHECK (quote_effect IN ('none','glow','neon','rainbow'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_quote_effect_strength;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_quote_effect_strength
+  CHECK (quote_effect_strength BETWEEN 0 AND 100);
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_quote_font_family;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_quote_font_family
+  CHECK (quote_font_family IN ('default','serif','mono','script','display'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_entry_bg_alpha;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_entry_bg_alpha
+  CHECK (entry_bg_alpha BETWEEN 0 AND 100);
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_entry_font_size;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_entry_font_size
+  CHECK (entry_font_size BETWEEN 10 AND 40);
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_entry_font_family;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_entry_font_family
+  CHECK (entry_font_family IN ('default','serif','mono','script','display'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_entry_effect;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_entry_effect
+  CHECK (entry_effect IN ('none','glow','neon','rainbow'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_entry_overlay_alpha;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_entry_overlay_alpha
+  CHECK (entry_overlay_alpha BETWEEN 0 AND 100);
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS cursor_url TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS cursor_effect TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS cursor_effect_color TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS cursor_effect_alpha SMALLINT;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET cursor_effect_alpha = 70
+   WHERE cursor_effect_alpha IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET cursor_effect = 'none'
+   WHERE cursor_effect IS NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN cursor_effect SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN cursor_effect SET DEFAULT 'none';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN cursor_effect_alpha SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN cursor_effect_alpha SET DEFAULT 70;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_background_effect;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS linktrees_background_effect_check;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_background_effect
+  CHECK (background_effect IN ('none','night','rain','snow','noise','gradient','parallax','particles','sweep','mesh','grid','vignette','scanlines','glitch'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_cursor_effect;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_cursor_effect
+  CHECK (cursor_effect IN ('none','glow','particles','trail','aura','magnet','morph','snap','velocity','ripple','blend','sticky','rotate'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_cursor_effect_alpha;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_cursor_effect_alpha
+  CHECK (cursor_effect_alpha BETWEEN 0 AND 100);
                 """)
                 cur.execute("""
   ALTER TABLE discord_accounts
@@ -627,6 +1043,12 @@ class PgGifDB:
                 )
                 cur.execute(
                     """
+                    ALTER TABLE users
+                    ADD COLUMN IF NOT EXISTS email TEXT
+                """
+                )
+                cur.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_sessions_user
                     ON sessions(user_id)
                 """
@@ -635,6 +1057,12 @@ class PgGifDB:
                     """
                     CREATE UNIQUE INDEX IF NOT EXISTS ux_users_username_ci
                     ON users (lower(username))
+                """
+                )
+                cur.execute(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS ux_users_email_ci
+                    ON users (lower(email))
                 """
                 )
                 cur.execute(
@@ -1186,6 +1614,11 @@ class PgGifDB:
             cur.execute("DELETE FROM sessions WHERE token=%s", (token,))
             conn.commit()
 
+    def revoke_user_tokens(self, user_id: int) -> None:
+        with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute("DELETE FROM sessions WHERE user_id=%s", (user_id,))
+            conn.commit()
+
     # ---- Suggest Helpers (identisch zu SQLite-Variante) ----
     def list_all_anime(self) -> list[str]:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
@@ -1254,6 +1687,7 @@ class PgGifDB:
     def createUser(
         self,
         username: str,
+        email: str | None,
         hashed_password: str,
         linktree_id: int | None = None,
         profile_picture: str | None = None,
@@ -1262,11 +1696,11 @@ class PgGifDB:
         with psycopg.connect(self.dsn) as conn, conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO users (username, password, linktree_id, profile_picture, admin)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO users (username, email, password, linktree_id, profile_picture, admin)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 RETURNING id
             """,
-                (username, hashed_password, linktree_id, profile_picture, admin),
+                (username, email, hashed_password, linktree_id, profile_picture, admin),
             )
             new_id = cur.fetchone()[0]
             conn.commit()
@@ -1277,6 +1711,7 @@ class PgGifDB:
         user_id: int,
         *,
         username: str | None = None,
+        email: str | None = None,
         password: str | None = None,
         linktree_id: int | None = None,
         profile_picture: str | None = None,
@@ -1286,6 +1721,10 @@ class PgGifDB:
             if username is not None:
                 cur.execute(
                     "UPDATE users SET username = %s WHERE id = %s", (username, user_id)
+                )
+            if email is not None:
+                cur.execute(
+                    "UPDATE users SET email = %s WHERE id = %s", (email, user_id)
                 )
             if password is not None:
                 cur.execute(
@@ -1335,6 +1774,7 @@ class PgGifDB:
                 SELECT
                     u.id,
                     u.username,
+                    u.email,
                     u.password,
                     u.admin,
                     u.profile_picture,
@@ -1348,6 +1788,32 @@ class PgGifDB:
                 LIMIT 1
                 """,
                 (username,),
+            )
+            return cur.fetchone()
+
+    def getUserByEmail(self, email: str) -> dict | None:
+        if not email:
+            return None
+        with psycopg.connect(self.dsn, row_factory=dict_row) as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.password,
+                    u.admin,
+                    u.profile_picture,
+                    u.linktree_id,
+                    u.created_at,
+                    u.updated_at,
+                    l.slug AS linktree_slug
+                FROM users AS u
+                LEFT JOIN linktrees AS l ON l.id = u.linktree_id
+                WHERE LOWER(u.email) = LOWER(%s)
+                LIMIT 1
+                """,
+                (email,),
             )
             return cur.fetchone()
 
@@ -1462,6 +1928,24 @@ class PgGifDB:
         *,
         location: str | None = None,
         quote: str | None = None,
+        quote_typing_enabled: bool = False,
+        quote_typing_texts: str | None = None,
+        quote_typing_speed: int | None = None,
+        quote_typing_pause: int | None = None,
+        quote_font_size: int | None = None,
+        quote_font_family: str | None = None,
+        quote_effect: str = "none",
+        quote_effect_strength: int = 70,
+        entry_text: str | None = None,
+        entry_bg_alpha: int = 85,
+        entry_text_color: str | None = None,
+        entry_font_size: int = 16,
+        entry_font_family: str = "default",
+        entry_effect: str = "none",
+        entry_overlay_alpha: int = 35,
+        entry_box_enabled: bool = True,
+        entry_border_enabled: bool = True,
+        entry_border_color: str | None = None,
         song_url: str | None = None,
         song_name: str | None = None,
         song_icon_url: str | None = None,
@@ -1476,8 +1960,12 @@ class PgGifDB:
         name_effect: str = "none",
         background_effect: str = "none",
         display_name_mode: str = "slug",  # <-- NEU
+        layout_mode: str = "center",
         device_type: str = "pc",
         custom_display_name: str | None = None,
+        linktree_profile_picture: str | None = None,
+        section_order: str | None = None,
+        canvas_layout: str | None = None,
         link_color: str | None = None,
         link_bg_color: str | None = None,
         link_bg_alpha: int = 100,
@@ -1487,12 +1975,16 @@ class PgGifDB:
         location_color: str | None = None,
         quote_color: str | None = None,
         cursor_url: str | None = None,
+        cursor_effect: str = "none",
+        cursor_effect_color: str | None = None,
+        cursor_effect_alpha: int = 70,
         discord_frame_enabled: bool = False,
         discord_presence_enabled: bool = False,
         discord_presence: str = "online",
         discord_status_enabled: bool = False,
         discord_status_text: str | None = None,
         discord_badges_enabled: bool = False,
+        discord_badge_codes: str | None = None,
         show_visit_counter: bool = False,
         visit_counter_color: str | None = None,
         visit_counter_bg_color: str | None = None,
@@ -1502,12 +1994,16 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, quote_effect_strength, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, entry_box_enabled, entry_border_enabled, entry_border_color, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,          -- <-- NEU
+                    layout_mode,
                     custom_display_name,
+                    linktree_profile_picture,
+                    section_order,
+                    canvas_layout,
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
@@ -1517,53 +2013,42 @@ class PgGifDB:
                     location_color,
                     quote_color,
                     cursor_url,
+                    cursor_effect,
+                    cursor_effect_color,
+                    cursor_effect_alpha,
                     discord_frame_enabled,
                     discord_presence_enabled,
                     discord_presence,
                     discord_status_enabled,
                     discord_status_text,
                     discord_badges_enabled,
+                    discord_badge_codes,
                     show_visit_counter,
                     visit_counter_color,
                     visit_counter_bg_color,
                     visit_counter_bg_alpha
                 )
                 VALUES (
-                    %s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,
-                    %s,%s,
-                    %s,%s,%s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
                 (
-                    user_id, slug, device_type, location, quote, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, quote_effect_strength, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, entry_box_enabled, entry_border_enabled, entry_border_color, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
                     display_name_mode,
+                    layout_mode,
                     custom_display_name,
+                    linktree_profile_picture,
+                    section_order,
+                    canvas_layout,
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
@@ -1573,12 +2058,16 @@ class PgGifDB:
                     location_color,
                     quote_color,
                     cursor_url,
+                    cursor_effect,
+                    cursor_effect_color,
+                    cursor_effect_alpha,
                     discord_frame_enabled,
                     discord_presence_enabled,
                     discord_presence,
                     discord_status_enabled,
                     discord_status_text,
                     discord_badges_enabled,
+                    discord_badge_codes,
                     show_visit_counter,
                     visit_counter_color,
                     visit_counter_bg_color,
@@ -1601,6 +2090,24 @@ class PgGifDB:
             "device_type",
             "location",
             "quote",
+            "quote_typing_enabled",
+            "quote_typing_texts",
+            "quote_typing_speed",
+            "quote_typing_pause",
+            "quote_font_size",
+            "quote_font_family",
+            "quote_effect",
+            "quote_effect_strength",
+            "entry_text",
+            "entry_bg_alpha",
+            "entry_text_color",
+            "entry_font_size",
+            "entry_font_family",
+            "entry_effect",
+            "entry_overlay_alpha",
+            "entry_box_enabled",
+            "entry_border_enabled",
+            "entry_border_color",
             "song_url",
             "song_name",
             "song_icon_url",
@@ -1615,7 +2122,11 @@ class PgGifDB:
             "name_effect",
             "background_effect",
             "display_name_mode",
+            "layout_mode",
             "custom_display_name",
+            "linktree_profile_picture",
+            "section_order",
+            "canvas_layout",
             "link_color",
             "link_bg_color",
             "link_bg_alpha",
@@ -1625,12 +2136,16 @@ class PgGifDB:
             "location_color",
             "quote_color",
             "cursor_url",
+            "cursor_effect",
+            "cursor_effect_color",
+            "cursor_effect_alpha",
             "discord_frame_enabled",
             "discord_presence_enabled",
             "discord_presence",
             "discord_status_enabled",
             "discord_status_text",
             "discord_badges_enabled",
+            "discord_badge_codes",
             "show_visit_counter",
             "visit_counter_color",
             "visit_counter_bg_color",
@@ -1673,27 +2188,23 @@ class PgGifDB:
             cur.execute(
                 """
                 INSERT INTO linktrees (
-                    user_id, slug, device_type, location, quote, song_url, song_name, song_icon_url, show_audio_player,
+                    user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, quote_effect_strength, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, entry_box_enabled, entry_border_enabled, entry_border_color, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
                     transparency, name_effect, background_effect,
-                    display_name_mode, custom_display_name,
+                    display_name_mode, layout_mode, custom_display_name, linktree_profile_picture, section_order, canvas_layout,
                     link_color, link_bg_color, link_bg_alpha, card_color, text_color,
-                    name_color, location_color, quote_color, cursor_url, discord_frame_enabled,
-                    discord_presence_enabled, discord_presence, discord_status_enabled, discord_status_text, discord_badges_enabled,
+                    name_color, location_color, quote_color, cursor_url, cursor_effect, cursor_effect_color, cursor_effect_alpha, discord_frame_enabled,
+                    discord_presence_enabled, discord_presence, discord_status_enabled, discord_status_text, discord_badges_enabled, discord_badge_codes,
                     show_visit_counter,
                     visit_counter_color, visit_counter_bg_color, visit_counter_bg_alpha
                 ) VALUES (
-                    %s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,
-                    %s,%s,
-                    %s,%s,%s,
-                    %s,%s,
-                    %s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,
-                    %s,
-                    %s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
@@ -1703,6 +2214,24 @@ class PgGifDB:
                     target_device,
                     src.get("location"),
                     src.get("quote"),
+                    src.get("quote_typing_enabled", False),
+                    src.get("quote_typing_texts"),
+                    src.get("quote_typing_speed"),
+                    src.get("quote_typing_pause"),
+                    src.get("quote_font_size"),
+                    src.get("quote_font_family"),
+                    src.get("quote_effect"),
+                    src.get("quote_effect_strength", 70),
+                    src.get("entry_text"),
+                    src.get("entry_bg_alpha", 85),
+                    src.get("entry_text_color"),
+                    src.get("entry_font_size", 16),
+                    src.get("entry_font_family", "default"),
+                    src.get("entry_effect", "none"),
+                    src.get("entry_overlay_alpha", 35),
+                    src.get("entry_box_enabled", True),
+                    src.get("entry_border_enabled", True),
+                    src.get("entry_border_color"),
                     src.get("song_url"),
                     src.get("song_name"),
                     src.get("song_icon_url"),
@@ -1717,7 +2246,11 @@ class PgGifDB:
                     src.get("name_effect"),
                     src.get("background_effect"),
                     src.get("display_name_mode"),
+                    src.get("layout_mode", "center"),
                     src.get("custom_display_name"),
+                    src.get("linktree_profile_picture"),
+                    src.get("section_order"),
+                    src.get("canvas_layout"),
                     src.get("link_color"),
                     src.get("link_bg_color"),
                     src.get("link_bg_alpha", 100),
@@ -1727,12 +2260,16 @@ class PgGifDB:
                     src.get("location_color"),
                     src.get("quote_color"),
                     src.get("cursor_url"),
+                    src.get("cursor_effect"),
+                    src.get("cursor_effect_color"),
+                    src.get("cursor_effect_alpha", 70),
                     src.get("discord_frame_enabled", False),
                     src.get("discord_presence_enabled", False),
                     src.get("discord_presence", "online"),
                     src.get("discord_status_enabled", False),
                     src.get("discord_status_text"),
                     src.get("discord_badges_enabled", False),
+                    src.get("discord_badge_codes"),
                     src.get("show_visit_counter", False),
                     src.get("visit_counter_color"),
                     src.get("visit_counter_bg_color"),

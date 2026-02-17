@@ -478,6 +478,45 @@
         letter-spacing: 0.2px;
       }
 
+      details.fold {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0.5rem 0.7rem;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      details.fold > summary {
+        list-style: none;
+        cursor: pointer;
+        user-select: none;
+        font-weight: 800;
+        font-size: 0.9rem;
+        letter-spacing: 0.2px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      details.fold > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details.fold > summary::after {
+        content: "▾";
+        font-size: 0.9rem;
+        transition: transform 0.18s ease;
+      }
+
+      details.fold[open] > summary::after {
+        transform: rotate(180deg);
+      }
+
+      .fold-body {
+        margin-top: 0.6rem;
+        display: grid;
+        gap: 0.6rem;
+      }
+
       .input,
       .select,
       textarea {
@@ -491,6 +530,15 @@
         min-width: 0;
         font: inherit;
         transition: border-color 0.18s ease, background 0.18s ease;
+      }
+      .select {
+        background: var(--surface-2);
+        color: var(--ink);
+      }
+      .select option,
+      .select optgroup {
+        background: var(--surface-2);
+        color: var(--ink);
       }
 
       @media (prefers-color-scheme: light) {
@@ -681,6 +729,316 @@
         opacity: 0.82;
         border-color: rgba(93, 214, 194, 0.55);
         background: rgba(93, 214, 194, 0.1);
+      }
+
+      .section-order-list {
+        display: grid;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .section-order-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 0.6rem 0.75rem;
+        flex-wrap: wrap;
+        width: 100%;
+      }
+
+      .section-order-item .label {
+        flex: 1;
+        min-width: 160px;
+        font-weight: 700;
+      }
+
+      .section-order-item .handle {
+        cursor: grab;
+        opacity: 0.7;
+        user-select: none;
+      }
+
+      .section-order-item.is-row .label {
+        min-width: 220px;
+      }
+
+      .canvas-editor {
+        position: relative;
+        min-height: 420px;
+        border: 1px dashed var(--border-2);
+        border-radius: 16px;
+        background-color: rgba(255, 255, 255, 0.02);
+        overflow: auto;
+        --canvas-grid: 8px;
+        background-image: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.08) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.08) 1px,
+            transparent 1px
+          );
+        background-size: var(--canvas-grid) var(--canvas-grid);
+        padding: 0;
+      }
+
+      .canvas-plate {
+        position: absolute;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 14px;
+        border: 1px solid rgba(122, 162, 255, 0.25);
+        background: rgba(122, 162, 255, 0.1);
+        color: inherit;
+        cursor: grab;
+        user-select: none;
+        text-align: center;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
+        box-sizing: border-box;
+      }
+
+      .canvas-plate .resize-handle {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(93, 214, 194, 0.92);
+        border: 2px solid rgba(14, 18, 32, 0.85);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        pointer-events: auto;
+        touch-action: none;
+        z-index: 4;
+      }
+
+      .canvas-plate .resize-e {
+        right: -6px;
+        top: 50%;
+        transform: translate(50%, -50%);
+        cursor: ew-resize;
+      }
+
+      .canvas-plate .resize-s {
+        left: 50%;
+        bottom: -6px;
+        transform: translate(-50%, 50%);
+        cursor: ns-resize;
+      }
+
+      .canvas-plate .resize-se {
+        right: -6px;
+        bottom: -6px;
+        transform: translate(50%, 50%);
+        cursor: nwse-resize;
+      }
+
+      .canvas-resize-handle {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        background: rgba(122, 162, 255, 0.85);
+        border: 2px solid rgba(14, 18, 32, 0.85);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+        cursor: nwse-resize;
+        touch-action: none;
+        z-index: 6;
+      }
+
+      .canvas-plate.selected {
+        outline: 2px solid rgba(93, 214, 194, 0.75);
+        outline-offset: 2px;
+      }
+
+      .canvas-plate * {
+        pointer-events: none;
+      }
+
+      .canvas-plate .resize-handle {
+        pointer-events: auto;
+      }
+
+      .canvas-group {
+        position: absolute;
+        border-radius: 16px;
+        border: 1px dashed rgba(93, 214, 194, 0.6);
+        background: rgba(93, 214, 194, 0.08);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .canvas-group .group-handle {
+        position: absolute;
+        top: -28px;
+        left: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid rgba(93, 214, 194, 0.65);
+        background: rgba(14, 18, 32, 0.85);
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: grab;
+        user-select: none;
+      }
+
+      .canvas-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .canvas-preview {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.6rem;
+        border-radius: 12px;
+        background: rgba(15, 18, 35, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .canvas-preview.pfp {
+        padding: 0;
+        border-radius: 50%;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.pfp img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .canvas-preview.name {
+        font-weight: 800;
+        font-size: 1.2rem;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.status {
+        font-size: 0.95rem;
+        gap: 0.4rem;
+      }
+
+      .canvas-preview.status .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #23a559;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+      }
+
+      .canvas-preview.quote {
+        max-width: 280px;
+        font-style: italic;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.location {
+        font-size: 0.95rem;
+        gap: 0.35rem;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.badges {
+        gap: 0.35rem;
+        flex-wrap: wrap;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.badges img {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        object-fit: contain;
+        background: rgba(255, 255, 255, 0.12);
+        padding: 0.15rem;
+      }
+
+      .canvas-preview.audio {
+        gap: 0.5rem;
+      }
+
+      .canvas-preview.audio img {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+
+      .canvas-preview.links {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .canvas-preview.links .canvas-preview-link {
+        padding: 0.75rem 1rem;
+        border-radius: 16px;
+        background: rgba(23, 27, 59, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .canvas-preview.counter {
+        gap: 0.35rem;
+        font-weight: 700;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      .section-order-pair {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex: 1;
+        min-width: 220px;
+        flex-wrap: wrap;
+      }
+
+      .section-order-chip {
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid rgba(122, 162, 255, 0.35);
+        background: rgba(122, 162, 255, 0.12);
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+
+      .section-order-sep {
+        opacity: 0.6;
+        font-size: 0.85rem;
       }
 
       .link-item input {
@@ -1169,390 +1527,857 @@
           </div>
         </section>
 
-        <!-- Left: Meta / Badges -->
-        <section class="card panel">
-          <h2>Profile & Appearance</h2>
+        <!-- Linktree editor -->
+        <section class="card panel" style="grid-column: 1 / -1">
+          <h2>Linktree editor</h2>
           <div id="msgMeta" class="alert" style="display: none"></div>
 
-          <form id="formMeta" class="grid cols-2" autocomplete="off">
-            <div class="field">
-              <label for="inDevice">Editing for</label>
-              <select id="inDevice" class="select">
-                <option value="pc">Desktop</option>
-                <option value="mobile">Mobile</option>
-              </select>
-              <div class="preview-note muted">
-                Default is Desktop. Switching to Mobile can create a separate
-                copy.
+          <form id="formMeta" class="grid" autocomplete="off">
+            <details class="fold" open>
+              <summary>Section order</summary>
+              <div class="fold-body">
+                <div class="preview-note muted">
+                  Move sections up or down to change their order on your linktree.
+                  Use the side-by-side button to place two sections in one row.
+                  Layout switches to Wide automatically when a row is paired.
+                </div>
+                <div id="sectionOrderList" class="section-order-list"></div>
+                <input type="hidden" id="inSectionOrder" />
+                <div class="row" style="margin-top: 0.5rem">
+                  <button
+                    class="btn sm ghost"
+                    type="button"
+                    id="btnResetSectionOrder"
+                  >
+                    Reset to default
+                  </button>
+                </div>
               </div>
-            </div>
-            <div class="field">
-              <label for="inSlug">Slug (URL)</label>
-              <input
-                id="inSlug"
-                class="input"
-                placeholder="your-handle"
-                required
-              />
-              <div class="preview-note muted">
-                Preview:
-                <code class="kbd">/tree/<span id="slugPreview">-</span></code>
-              </div>
-            </div>
-            <div class="field">
-              <label for="inLocation">Location</label>
-              <input id="inLocation" class="input" placeholder="Switzerland" />
-            </div>
+            </details>
 
-            <div class="field" style="grid-column: 1 / -1">
-              <label for="inQuote">Quote</label>
-              <textarea
-                id="inQuote"
-                class="input"
-                placeholder="Write your bio/quote…"
-              ></textarea>
-            </div>
-            <div class="field">
-              <label for="fileSong">Upload Song</label>
-              <input type="file" id="fileSong" accept="audio/*" />
-              <input type="hidden" id="inSong" />
-              <input type="hidden" id="inSongName" />
-              <div id="songStatus" class="preview-note muted">
-                No song uploaded yet.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemoveSong">
-                  Remove Song
-                </button>
-              </div>
-            </div>
-            <div class="field">
-              <label for="fileSongIcon">Upload Song Icon</label>
-              <input type="file" id="fileSongIcon" accept="image/*" />
-              <input type="hidden" id="inSongIcon" />
-              <div id="songIconStatus" class="preview-note muted">
-                No icon uploaded.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemoveSongIcon">
-                  Remove Icon
-                </button>
-              </div>
-            </div>
-            <div class="field">
-              <label class="row" style="gap: 0.4rem; align-items: center">
-                <input type="checkbox" id="inAudioPlayer" />
-                <span>Show audio player controls</span>
-              </label>
-              <div class="help">
-                Shows the player when a song is uploaded.
-              </div>
-            </div>
-            <div class="field">
-              <label for="inAudioBgColor">Audio player background</label>
-              <input
-                id="inAudioBgColor"
-                class="input"
-                type="color"
-                value="#171b3b"
-              />
-            </div>
-            <div class="field">
-              <label for="inAudioBgAlpha">Audio player transparency (0-100)</label>
-              <input
-                id="inAudioBgAlpha"
-                class="input"
-                type="number"
-                min="0"
-                max="100"
-                value="60"
-              />
-            </div>
-            <div class="field">
-              <label for="inAudioTextColor">Audio player text color</label>
-              <input
-                id="inAudioTextColor"
-                class="input"
-                type="color"
-                value="#e9ebff"
-              />
-            </div>
-            <div class="field">
-              <label for="inAudioAccentColor">Audio player accent color</label>
-              <input
-                id="inAudioAccentColor"
-                class="input"
-                type="color"
-                value="#85a3ff"
-              />
-            </div>
-            <div class="field">
-              <label for="fileBg">Upload Background</label>
-              <input type="file" id="fileBg" accept="image/*,video/*" />
-              <input type="hidden" id="inBg" />
-              <div id="bgStatus" class="preview-note muted">
-                No background uploaded yet.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemoveBg">
-                  Remove Background
-                </button>
-              </div>
-            </div>
-            <div class="field">
-              <label for="fileCursor">Upload Cursor (Desktop)</label>
-              <input type="file" id="fileCursor" accept="image/*" />
-              <input type="hidden" id="inCursor" />
-              <div class="preview-note muted">
-                Use a small PNG/WEBP for best results.
-              </div>
-              <div id="cursorStatus" class="preview-note muted">
-                No cursor uploaded.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemoveCursor">
-                  Remove Cursor
-                </button>
-              </div>
-            </div>
-            <div class="field">
-              <label for="inTrans">Card Transparency (0-100)</label>
-              <input
-                id="inTrans"
-                class="input"
-                type="number"
-                min="0"
-                max="100"
-                value="100"
-              />
-              <div class="preview-note muted">
-                0 = transparent, 100 = opaque (matches link background slider).
-              </div>
-            </div>
-            <div class="field">
-              <label for="inCardColor">Card/Base Color</label>
-              <input
-                id="inCardColor"
-                class="input"
-                type="color"
-                value="#171b3b"
-              />
-            </div>
-            <div class="field">
-              <label for="inDisplayName">Display Name</label>
-              <select id="inDisplayName" class="select">
-                <option value="slug">Slug</option>
-                <option value="username">Username</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="inCustomName">Custom Name</label>
-              <input
-                id="inCustomName"
-                class="input"
-                placeholder="Your name/nickname"
-                maxlength="64"
-              />
-              <div class="preview-note muted">
-                Used when Display Name is set to Custom.
-              </div>
-            </div>
-            <div class="field">
-              <label for="inNameFx">Name Effect</label>
-              <select id="inNameFx" class="select">
-                <option value="none">none</option>
-                <option value="glow">glow</option>
-                <option value="neon">neon</option>
-                <option value="rainbow">rainbow</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="inTextColor">Text Color</label>
-              <input
-                id="inTextColor"
-                class="input"
-                type="color"
-                value="#e9ebff"
-              />
-            </div>
-            <div class="field">
-              <label for="inNameColor">Name Color</label>
-              <input
-                id="inNameColor"
-                class="input"
-                type="color"
-                value="#e9ebff"
-              />
-            </div>
-            <div class="field">
-              <label for="inLocationColor">Location Color</label>
-              <input
-                id="inLocationColor"
-                class="input"
-                type="color"
-                value="#a2a9c8"
-              />
-            </div>
-            <div class="field">
-              <label for="inQuoteColor">Quote Color</label>
-              <input
-                id="inQuoteColor"
-                class="input"
-                type="color"
-                value="#e9ebff"
-              />
-            </div>
-            <div class="field">
-              <label for="inLinkColor">Link Text Color</label>
-              <input
-                id="inLinkColor"
-                class="input"
-                type="color"
-                value="#e9ebff"
-              />
-            </div>
-            <div class="field">
-              <label for="inLinkBgColor">Link Background Color</label>
-              <input
-                id="inLinkBgColor"
-                class="input"
-                type="color"
-                value="#171b3b"
-              />
-            </div>
-            <div class="field">
-              <label for="inLinkBgAlpha"
-                >Link Background Transparency (0-100)</label
-              >
-              <input
-                id="inLinkBgAlpha"
-                class="input"
-                type="number"
-                min="0"
-                max="100"
-                value="100"
-              />
-            </div>
-            <div class="field">
-              <label for="inBgFx">Background Effect</label>
-              <select id="inBgFx" class="select">
-                <option value="none">none</option>
-                <option value="night">night</option>
-                <option value="rain">rain</option>
-                <option value="snow">snow</option>
-              </select>
-            </div>
-
-            <div class="field" style="grid-column: 1 / -1">
-              <label>Discord (optional)</label>
-              <div class="discord-box">
-                <div>
-                  <div id="discordStatusText" class="muted">Not linked</div>
-                  <div id="discordPreview" class="discord-preview muted">
-                    Link Discord to use your profile frame.
+            <details class="fold" open>
+              <summary>General & layout</summary>
+              <div class="fold-body grid cols-2">
+                <div class="field">
+                  <label for="inDevice">Editing for</label>
+                  <select id="inDevice" class="select">
+                    <option value="pc">Desktop</option>
+                    <option value="mobile">Mobile</option>
+                  </select>
+                  <div class="preview-note muted">
+                    Default is Desktop. Switching to Mobile can create a separate
+                    copy.
                   </div>
                 </div>
-                <div class="row" style="gap: 0.5rem; flex-wrap: wrap">
-                  <button type="button" class="btn sm" id="btnDiscordLink">
-                    Link Discord
-                  </button>
-                  <button
-                    type="button"
-                    class="btn sm ghost"
-                    id="btnDiscordUnlink"
-                    style="display: none"
+                <div class="field">
+                  <label for="inSlug">Slug (URL)</label>
+                  <input
+                    id="inSlug"
+                    class="input"
+                    placeholder="your-handle"
+                    required
+                  />
+                  <div class="preview-note muted">
+                    Preview:
+                    <code class="kbd">/tree/<span id="slugPreview">-</span></code>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="inLayoutMode">Layout (Desktop)</label>
+                  <select id="inLayoutMode" class="select">
+                    <option value="center">Centered</option>
+                    <option value="wide">Wide</option>
+                  </select>
+                  <div class="preview-note muted">
+                    Applies to desktop layout only. Auto-switches to Wide when
+                    sections are paired side-by-side.
+                  </div>
+                </div>
+                <div class="field" style="grid-column: 1 / -1">
+                  <label for="inEntryText">Entry overlay text</label>
+                  <input
+                    id="inEntryText"
+                    class="input"
+                    placeholder="Click to enter"
+                    maxlength="120"
+                  />
+                  <div class="help">
+                    Shown on the entry gate before media plays.
+                  </div>
+                  <details class="fold">
+                    <summary>Entry styling</summary>
+                    <div class="fold-body">
+                      <div class="field">
+                        <label for="inEntryTextColor">Entry text color</label>
+                        <input
+                          id="inEntryTextColor"
+                          class="input"
+                          type="color"
+                          value="#e9ebff"
+                        />
+                      </div>
+                      <div class="field">
+                        <label for="inEntryFont">Entry font style</label>
+                        <select id="inEntryFont" class="select">
+                          <option value="default">Default</option>
+                          <option value="serif">Serif</option>
+                          <option value="mono">Mono</option>
+                          <option value="script">Script</option>
+                          <option value="display">Display</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label for="inEntryEffect">Entry effect</label>
+                        <select id="inEntryEffect" class="select">
+                          <option value="none">None</option>
+                          <option value="glow">Glow</option>
+                          <option value="neon">Neon</option>
+                          <option value="rainbow">Rainbow</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label for="inEntryFontSize">Entry font size (px)</label>
+                        <input
+                          id="inEntryFontSize"
+                          class="input"
+                          type="number"
+                          min="10"
+                          max="40"
+                          value="16"
+                        />
+                      </div>
+                      <div class="field">
+                        <label for="inEntryBgAlpha">Entry box alpha (0-100)</label>
+                        <input
+                          id="inEntryBgAlpha"
+                          class="input"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value="85"
+                        />
+                      </div>
+                      <div class="field">
+                        <label for="inEntryOverlayAlpha"
+                          >Entry overlay alpha (0-100)</label
+                        >
+                        <input
+                          id="inEntryOverlayAlpha"
+                          class="input"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value="35"
+                        />
+                      </div>
+                      <div class="field">
+                        <label class="row" style="gap: 0.5rem">
+                          <input type="checkbox" id="inEntryBoxEnabled" checked />
+                          <span>Show entry box</span>
+                        </label>
+                      </div>
+                      <div class="field">
+                        <label class="row" style="gap: 0.5rem">
+                          <input type="checkbox" id="inEntryBorderEnabled" checked />
+                          <span>Show entry border</span>
+                        </label>
+                      </div>
+                      <div class="field">
+                        <label for="inEntryBorderColor">Entry border color</label>
+                        <input
+                          id="inEntryBorderColor"
+                          class="input"
+                          type="text"
+                          maxlength="7"
+                          placeholder="#RRGGBB"
+                        />
+                      </div>
+                    </div>
+                  </details>
+                </div>
+                <div class="field">
+                  <label for="fileBg">Upload Background</label>
+                  <input type="file" id="fileBg" accept="image/*,video/*" />
+                  <input type="hidden" id="inBg" />
+                  <div id="bgStatus" class="preview-note muted">
+                    No background uploaded yet.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn sm ghost" type="button" id="btnRemoveBg">
+                      Remove Background
+                    </button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="fileCursor">Upload Cursor (Desktop)</label>
+                  <input type="file" id="fileCursor" accept="image/*" />
+                  <input type="hidden" id="inCursor" />
+                  <div class="preview-note muted">
+                    Use a small PNG/WEBP for best results.
+                  </div>
+                  <div id="cursorStatus" class="preview-note muted">
+                    No cursor uploaded.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn sm ghost" type="button" id="btnRemoveCursor">
+                      Remove Cursor
+                    </button>
+                  </div>
+                </div>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Background effects</summary>
+                  <div class="fold-body">
+                    <div class="field">
+                      <label for="inBgFx">Background Effect</label>
+                      <select id="inBgFx" class="select">
+                        <option value="none">none</option>
+                        <option value="night">night</option>
+                        <option value="rain">rain</option>
+                        <option value="snow">snow</option>
+                      </select>
+                    </div>
+                  </div>
+                </details>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Cursor effects</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inCursorFx">Cursor effect (Desktop)</label>
+                      <select id="inCursorFx" class="select">
+                        <option value="none">none</option>
+                        <option value="glow">glow</option>
+                        <option value="particles">particles</option>
+                      </select>
+                      <div class="preview-note muted">
+                        Runs only on desktop screens.
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label for="inCursorFxColor">Cursor effect color</label>
+                      <input
+                        id="inCursorFxColor"
+                        class="input"
+                        type="color"
+                        value="#85a3ff"
+                      />
+                    </div>
+                    <div class="field" style="grid-column: 1 / -1">
+                      <label for="inCursorFxAlpha"
+                        >Cursor effect intensity (0-100)</label
+                      >
+                      <input
+                        id="inCursorFxAlpha"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="70"
+                      />
+                      <div class="preview-note muted">
+                        Applies to glow and particles.
+                      </div>
+                    </div>
+                  </div>
+                </details>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Card styling</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inTrans">Card Transparency (0-100)</label>
+                      <input
+                        id="inTrans"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="100"
+                      />
+                      <div class="preview-note muted">
+                        0 = transparent, 100 = opaque (matches link background slider).
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label for="inCardColor">Card/Base Color</label>
+                      <input
+                        id="inCardColor"
+                        class="input"
+                        type="color"
+                        value="#171b3b"
+                      />
+                    </div>
+                  </div>
+                </details>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Text styling</summary>
+                  <div class="fold-body">
+                    <div class="field">
+                      <label for="inTextColor">Text Color</label>
+                      <input
+                        id="inTextColor"
+                        class="input"
+                        type="color"
+                        value="#e9ebff"
+                      />
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Profile picture</summary>
+              <div class="fold-body grid cols-2">
+                <div class="field" style="grid-column: 1 / -1">
+                  <label for="filePfp">Upload Profile Picture (Linktree)</label>
+                  <input type="file" id="filePfp" accept="image/*" />
+                  <input type="hidden" id="inLinktreePfp" />
+                  <div class="preview-note muted">
+                    If empty, your account profile picture is used.
+                  </div>
+                  <div id="pfpStatus" class="preview-note muted">
+                    Using your account profile picture.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn sm ghost" type="button" id="btnRemovePfp">
+                      Remove Picture
+                    </button>
+                  </div>
+                </div>
+                <div class="field" style="grid-column: 1 / -1">
+                  <label>Discord (optional)</label>
+                  <div class="discord-box">
+                    <div>
+                      <div id="discordStatusText" class="muted">Not linked</div>
+                      <div id="discordPreview" class="discord-preview muted">
+                        Link Discord to use your profile frame.
+                      </div>
+                    </div>
+                    <div class="row" style="gap: 0.5rem; flex-wrap: wrap">
+                      <button type="button" class="btn sm" id="btnDiscordLink">
+                        Link Discord
+                      </button>
+                      <button
+                        type="button"
+                        class="btn sm ghost"
+                        id="btnDiscordUnlink"
+                        style="display: none"
+                      >
+                        Unlink
+                      </button>
+                    </div>
+                  </div>
+                  <label
+                    class="row"
+                    style="margin-top: 0.5rem; gap: 0.4rem; align-items: center"
                   >
-                    Unlink
-                  </button>
-                </div>
-              </div>
-              <label
-                class="row"
-                style="margin-top: 0.5rem; gap: 0.4rem; align-items: center"
-              >
-                <input type="checkbox" id="inDiscordFrame" />
-                <span>Show my Discord profile frame around my avatar</span>
-              </label>
-              <div class="help">
-                Optional. Uses your current Discord profile frame if available.
-              </div>
+                    <input type="checkbox" id="inDiscordFrame" />
+                    <span>Show my Discord profile frame around my avatar</span>
+                  </label>
+                  <div class="help">
+                    Optional. Uses your current Discord profile frame if available.
+                  </div>
 
-              <label
-                class="row"
-                style="margin-top: 0.75rem; gap: 0.4rem; align-items: center"
-              >
-                <input type="checkbox" id="inDiscordPresence" />
-                <span>Show my Discord activity status on my avatar</span>
-              </label>
-              <div class="help" style="margin-top: 0.35rem">
-                Status is read automatically from Discord (last known).
-              </div>
-              <label
-                class="row"
-                style="margin-top: 0.5rem; gap: 0.4rem; align-items: center"
-              >
-                <input type="checkbox" id="inDiscordStatus" />
-                <span>Show my Discord status line on the linktree</span>
-              </label>
-              <div class="help" style="margin-top: 0.35rem">
-                Custom status text is pulled from Discord automatically.
-              </div>
-              <label
-                class="row"
-                style="margin-top: 0.5rem; gap: 0.4rem; align-items: center"
-              >
-                <input type="checkbox" id="inDiscordBadges" />
-                <span>Show my Discord badges</span>
-              </label>
-
-              <label
-                class="row"
-                style="margin-top: 0.75rem; gap: 0.4rem; align-items: center"
-              >
-                <input type="checkbox" id="inShowCounter" />
-                <span>Show visitor counter on my profile</span>
-              </label>
-              <div class="help">
-                Counts unique visitors (shared desktop/mobile). Current:
-                <strong id="inVisitCount">0</strong>
-              </div>
-              <div class="grid cols-2" style="margin-top: 0.75rem">
-                <div class="field">
-                  <label for="inCounterColor">Counter Text/Icon Color</label>
-                  <input
-                    id="inCounterColor"
-                    class="input"
-                    type="color"
-                    value="#e9ebff"
-                  />
-                </div>
-                <div class="field">
-                  <label for="inCounterBgColor">Counter Background Color</label>
-                  <input
-                    id="inCounterBgColor"
-                    class="input"
-                    type="color"
-                    value="#ffffff"
-                  />
-                </div>
-                <div class="field">
-                  <label for="inCounterBgAlpha"
-                    >Counter Background Transparency (0-100)</label
+                  <label
+                    class="row"
+                    style="margin-top: 0.75rem; gap: 0.4rem; align-items: center"
                   >
-                  <input
-                    id="inCounterBgAlpha"
-                    class="input"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value="20"
-                  />
+                    <input type="checkbox" id="inDiscordPresence" />
+                    <span>Show my Discord activity status on my avatar</span>
+                  </label>
+                  <div class="help" style="margin-top: 0.35rem">
+                    Status is read automatically from Discord (last known).
+                  </div>
                 </div>
               </div>
-            </div>
+            </details>
 
-            <div class="row" style="grid-column: 1 / -1; margin-top: 0.4rem">
+            <details class="fold">
+              <summary>Display name</summary>
+              <div class="fold-body grid cols-2">
+                <div class="field">
+                  <label for="inDisplayName">Display Name</label>
+                  <select id="inDisplayName" class="select">
+                    <option value="slug">Slug</option>
+                    <option value="username">Username</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="inCustomName">Custom Name</label>
+                  <input
+                    id="inCustomName"
+                    class="input"
+                    placeholder="Your name/nickname"
+                    maxlength="64"
+                  />
+                  <div class="preview-note muted">
+                    Used when Display Name is set to Custom.
+                  </div>
+                </div>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Name styling</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inNameFx">Name Effect</label>
+                      <select id="inNameFx" class="select">
+                        <option value="none">none</option>
+                        <option value="glow">glow</option>
+                        <option value="neon">neon</option>
+                        <option value="rainbow">rainbow</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="inNameColor">Name Color</label>
+                      <input
+                        id="inNameColor"
+                        class="input"
+                        type="color"
+                        value="#e9ebff"
+                      />
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Discord status line</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label
+                    class="row"
+                    style="gap: 0.4rem; align-items: center"
+                  >
+                    <input type="checkbox" id="inDiscordStatus" />
+                    <span>Show my Discord status line on the linktree</span>
+                  </label>
+                  <div class="help" style="margin-top: 0.35rem">
+                    Custom status text is pulled from Discord automatically.
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Quote</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label for="inQuote">Quote</label>
+                  <textarea
+                    id="inQuote"
+                    class="input"
+                    placeholder="Write your bio/quote…"
+                  ></textarea>
+                  <label
+                    class="row"
+                    style="gap: 0.4rem; align-items: center; margin-top: 0.35rem"
+                  >
+                    <input type="checkbox" id="inQuoteTyping" />
+                    <span>Typewriter quote (cycle up to 3 texts)</span>
+                  </label>
+                  <div
+                    class="grid cols-2"
+                    id="quoteTypingFields"
+                    style="margin-top: 0.5rem"
+                  >
+                    <div class="field">
+                      <label for="inQuoteAlt1">Quote text 2</label>
+                      <input
+                        id="inQuoteAlt1"
+                        class="input"
+                        placeholder="Second quote text"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inQuoteAlt2">Quote text 3</label>
+                      <input
+                        id="inQuoteAlt2"
+                        class="input"
+                        placeholder="Third quote text"
+                      />
+                    </div>
+                  </div>
+                  <div
+                    class="field"
+                    id="quoteTypingSpeedWrap"
+                    style="margin-top: 0.5rem"
+                  >
+                    <label for="inQuoteSpeed"
+                      >Typewriter speed (ms per char)</label
+                    >
+                    <input
+                      id="inQuoteSpeed"
+                      class="input"
+                      type="number"
+                      min="20"
+                      max="200"
+                      value="42"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="inQuotePause"
+                      >Pause before next quote (ms)</label
+                    >
+                    <input
+                      id="inQuotePause"
+                      class="input"
+                      type="number"
+                      min="200"
+                      max="10000"
+                      value="1200"
+                    />
+                  </div>
+                  <details class="fold">
+                    <summary>Quote styling</summary>
+                    <div class="fold-body">
+                      <div class="field">
+                        <label for="inQuoteColor">Quote Color</label>
+                        <input
+                          id="inQuoteColor"
+                          class="input"
+                          type="color"
+                          value="#e9ebff"
+                        />
+                      </div>
+                      <div class="field">
+                        <label for="inQuoteFont">Quote font style</label>
+                        <select id="inQuoteFont" class="select">
+                          <option value="default">Default</option>
+                          <option value="serif">Serif</option>
+                          <option value="mono">Mono</option>
+                          <option value="script">Script</option>
+                          <option value="display">Display</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label for="inQuoteEffect">Quote effect</label>
+                        <select id="inQuoteEffect" class="select">
+                          <option value="none">None</option>
+                          <option value="glow">Glow</option>
+                          <option value="neon">Neon</option>
+                          <option value="rainbow">Rainbow</option>
+                        </select>
+                      </div>
+                  <div class="field">
+                    <label for="inQuoteSize">Quote font size (px)</label>
+                    <input
+                      id="inQuoteSize"
+                      class="input"
+                      type="number"
+                      min="10"
+                      max="40"
+                      value="15"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="inQuoteEffectStrength"
+                      >Quote effect strength (0-100)</label
+                    >
+                    <input
+                      id="inQuoteEffectStrength"
+                      class="input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value="70"
+                    />
+                  </div>
+                </div>
+              </details>
+                </div>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Location</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label for="inLocation">Location</label>
+                  <input id="inLocation" class="input" placeholder="Switzerland" />
+                  <details class="fold">
+                    <summary>Location styling</summary>
+                    <div class="fold-body">
+                      <div class="field">
+                        <label for="inLocationColor">Location Color</label>
+                        <input
+                          id="inLocationColor"
+                          class="input"
+                          type="color"
+                          value="#a2a9c8"
+                        />
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Discord badges</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inDiscordBadges" />
+                    <span>Show my Discord badges</span>
+                  </label>
+                </div>
+                <div id="discordBadgesList" class="grid"></div>
+                <div
+                  id="discordBadgesHint"
+                  class="muted"
+                  style="margin-top: 0.35rem"
+                ></div>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Badges</summary>
+              <div class="fold-body">
+                <div id="badges" class="grid"></div>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Audio player</summary>
+              <div class="fold-body grid cols-2">
+                <div class="field">
+                  <label for="fileSong">Upload Song</label>
+                  <input type="file" id="fileSong" accept="audio/*" />
+                  <input type="hidden" id="inSong" />
+                  <input type="hidden" id="inSongName" />
+                  <div id="songStatus" class="preview-note muted">
+                    No song uploaded yet.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn sm ghost" type="button" id="btnRemoveSong">
+                      Remove Song
+                    </button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="fileSongIcon">Upload Song Icon</label>
+                  <input type="file" id="fileSongIcon" accept="image/*" />
+                  <input type="hidden" id="inSongIcon" />
+                  <div id="songIconStatus" class="preview-note muted">
+                    No icon uploaded.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn sm ghost" type="button" id="btnRemoveSongIcon">
+                      Remove Icon
+                    </button>
+                  </div>
+                </div>
+                <div class="field" style="grid-column: 1 / -1">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inAudioPlayer" />
+                    <span>Show audio player controls</span>
+                  </label>
+                  <div class="help">
+                    Shows the player when a song is uploaded.
+                  </div>
+                </div>
+                <details class="fold" style="grid-column: 1 / -1">
+                  <summary>Audio player styling</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inAudioBgColor">Audio player background</label>
+                      <input
+                        id="inAudioBgColor"
+                        class="input"
+                        type="color"
+                        value="#171b3b"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inAudioBgAlpha"
+                        >Audio player transparency (0-100)</label
+                      >
+                      <input
+                        id="inAudioBgAlpha"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="60"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inAudioTextColor">Audio player text color</label>
+                      <input
+                        id="inAudioTextColor"
+                        class="input"
+                        type="color"
+                        value="#e9ebff"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inAudioAccentColor">Audio player accent color</label>
+                      <input
+                        id="inAudioAccentColor"
+                        class="input"
+                        type="color"
+                        value="#85a3ff"
+                      />
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Links</summary>
+              <div class="fold-body">
+                <div id="msgLinks" class="alert" style="display: none"></div>
+
+                <details class="fold">
+                  <summary>Link styling</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inLinkColor">Link Text Color</label>
+                      <input
+                        id="inLinkColor"
+                        class="input"
+                        type="color"
+                        value="#e9ebff"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inLinkBgColor">Link Background Color</label>
+                      <input
+                        id="inLinkBgColor"
+                        class="input"
+                        type="color"
+                        value="#171b3b"
+                      />
+                    </div>
+                    <div class="field" style="grid-column: 1 / -1">
+                      <label for="inLinkBgAlpha"
+                        >Link Background Transparency (0-100)</label
+                      >
+                      <input
+                        id="inLinkBgAlpha"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="100"
+                      />
+                    </div>
+                  </div>
+                </details>
+
+                <div class="hr"></div>
+
+                <div class="grid cols-2">
+                  <div class="field">
+                    <label for="inLinkUrl">URL</label>
+                    <input
+                      id="inLinkUrl"
+                      class="input"
+                      placeholder="https://…"
+                      form="formAddLink"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="inLinkLabel">Label</label>
+                    <input
+                      id="inLinkLabel"
+                      class="input"
+                      placeholder="My Link"
+                      form="formAddLink"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="fileIcon">Upload Link Icon</label>
+                    <input
+                      type="file"
+                      id="fileIcon"
+                      accept="image/*"
+                      form="formAddLink"
+                    />
+                    <input type="hidden" id="inLinkIcon" form="formAddLink" />
+                    <div id="linkIconStatus" class="preview-note muted">
+                      No icon uploaded.
+                    </div>
+                    <div class="row" style="margin-top: 0.4rem">
+                      <button class="btn sm ghost" type="button" id="btnRemoveLinkIcon">
+                        Remove Icon
+                      </button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="inLinkActive">Active</label>
+                    <select id="inLinkActive" class="select" form="formAddLink">
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+                  <div class="row" style="grid-column: 1 / -1">
+                    <button class="btn sm" type="submit" form="formAddLink">
+                      Add Link
+                    </button>
+                  </div>
+                </div>
+
+                <div class="hr"></div>
+
+                <div class="links-list" id="linksList" aria-live="polite"></div>
+              </div>
+            </details>
+
+            <details class="fold">
+              <summary>Visit counter</summary>
+              <div class="fold-body">
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inShowCounter" />
+                    <span>Show visitor counter on my profile</span>
+                  </label>
+                  <div class="help">
+                    Counts unique visitors (shared desktop/mobile). Current:
+                    <strong id="inVisitCount">0</strong>
+                  </div>
+                </div>
+                <details class="fold">
+                  <summary>Counter styling</summary>
+                  <div class="fold-body grid cols-2">
+                    <div class="field">
+                      <label for="inCounterColor">Counter Text/Icon Color</label>
+                      <input
+                        id="inCounterColor"
+                        class="input"
+                        type="color"
+                        value="#e9ebff"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inCounterBgColor">Counter Background Color</label>
+                      <input
+                        id="inCounterBgColor"
+                        class="input"
+                        type="color"
+                        value="#ffffff"
+                      />
+                    </div>
+                    <div class="field" style="grid-column: 1 / -1">
+                      <label for="inCounterBgAlpha"
+                        >Counter Background Transparency (0-100)</label
+                      >
+                      <input
+                        id="inCounterBgAlpha"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="20"
+                      />
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <div class="row" style="margin-top: 0.4rem">
               <button type="submit" class="btn sm" id="btnSaveMeta">
                 Save
               </button>
@@ -1567,55 +2392,9 @@
             </div>
           </form>
 
-          <div class="hr"></div>
-
-          <h3>Badges (earned icons)</h3>
-          <div id="badges" class="grid"></div>
+          <form id="formAddLink" autocomplete="off"></form>
         </section>
 
-        <!-- Right: Links -->
-        <section class="card panel">
-          <h2>Links</h2>
-          <div id="msgLinks" class="alert" style="display: none"></div>
-
-          <form id="formAddLink" class="grid cols-2" autocomplete="off">
-            <div class="field">
-              <label for="inLinkUrl">URL</label>
-              <input id="inLinkUrl" class="input" placeholder="https://…" />
-            </div>
-            <div class="field">
-              <label for="inLinkLabel">Label</label>
-              <input id="inLinkLabel" class="input" placeholder="My Link" />
-            </div>
-            <div class="field">
-              <label for="fileIcon">Upload Link Icon</label>
-              <input type="file" id="fileIcon" accept="image/*" />
-              <input type="hidden" id="inLinkIcon" />
-              <div id="linkIconStatus" class="preview-note muted">
-                No icon uploaded.
-              </div>
-              <div class="row" style="margin-top: 0.4rem">
-                <button class="btn sm ghost" type="button" id="btnRemoveLinkIcon">
-                  Remove Icon
-                </button>
-              </div>
-            </div>
-            <div class="field">
-              <label for="inLinkActive">Active</label>
-              <select id="inLinkActive" class="select">
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-            <div class="row" style="grid-column: 1 / -1">
-              <button class="btn sm" type="submit">Add Link</button>
-            </div>
-          </form>
-
-          <div class="hr"></div>
-
-          <div class="links-list" id="linksList" aria-live="polite"></div>
-        </section>
       </div>
     </main>
 
@@ -1623,7 +2402,7 @@
       <div class="container foot">
         <small class="muted"
           >© <span id="year"></span> TAOMA™. All rights reserved. ·
-          <a href="/datenschutz.html">Privacy Policy</a></small
+          <a href="/datenschutz.html">Privacy Policy</a> · <a href="/impressum.html">Imprint</a></small
         >
         <div class="visitor-counter">
           <svg
@@ -1930,6 +2709,7 @@
       let linktreeId = null;
       let currentDevice = "pc";
       let discordStatus = { linked: false };
+      let discordBadgeCodes = null;
       let savedTemplates = [];
       const HIDE_LINKS =
         new URLSearchParams(location.search).get("hideLinks") === "true";
@@ -1975,9 +2755,61 @@
       const DEFAULT_NAME_COLOR = "#e9ebff";
       const DEFAULT_LOCATION_COLOR = "#a2a9c8";
       const DEFAULT_QUOTE_COLOR = "#e9ebff";
+      const DEFAULT_ENTRY_TEXT_COLOR = "#e9ebff";
+      const DEFAULT_ENTRY_FONT_SIZE = 16;
+      const DEFAULT_ENTRY_BG_ALPHA = 85;
+      const DEFAULT_ENTRY_OVERLAY_ALPHA = 35;
+      const DEFAULT_QUOTE_SPEED = 42;
+      const DEFAULT_QUOTE_PAUSE = 1200;
+      const DEFAULT_QUOTE_SIZE = 15;
+      const DEFAULT_QUOTE_EFFECT_STRENGTH = 70;
+      const DEFAULT_LAYOUT_MODE = "center";
+      const DEFAULT_CURSOR_FX_COLOR = DEFAULT_AUDIO_ACCENT_COLOR;
+      const DEFAULT_CURSOR_FX_ALPHA = 70;
       const PRIVATE_TEMPLATE_DESC =
         "Private snapshot created from Linktree Config.";
       const PRIVATE_TEMPLATE_MARKER = PRIVATE_TEMPLATE_DESC.toLowerCase();
+      const SECTION_ORDER_DEFAULT = [
+        "pfp",
+        "name",
+        "discord_status",
+        "quote",
+        "location",
+        "badges",
+        "audio",
+        "links",
+        "visit_counter",
+      ];
+      const SECTION_KEY_ALIASES = {
+        discord_badges: "badges",
+      };
+      const SECTION_LABELS = {
+        pfp: "Profile picture",
+        name: "Display name",
+        discord_status: "Discord status line",
+        quote: "Quote",
+        location: "Location",
+        badges: "Badges",
+        audio: "Audio player",
+        links: "Links",
+        visit_counter: "Visit counter",
+      };
+      let sectionOrder = SECTION_ORDER_DEFAULT.slice();
+      const CANVAS_GRID_DEFAULT = 1;
+      const CANVAS_PLATE_MIN_W = 1;
+      const CANVAS_PLATE_MIN_H = 1;
+      const CANVAS_PLATE_MAX_W = 20000;
+      const CANVAS_PLATE_MAX_H = 20000;
+      const CANVAS_SIZE_MIN_W = 1;
+      const CANVAS_SIZE_MIN_H = 1;
+      const CANVAS_LEGACY_GRID_DEFAULT = 8;
+      let canvasLayout = null;
+      let canvasSelection = new Set();
+      let canvasDragState = null;
+      let canvasRefreshTimer = null;
+      let canvasPreviewState = null;
+      let currentLinks = [];
+      let currentBadges = [];
 
       function hexOrNull(val) {
         const t = (val || "").trim();
@@ -1990,6 +2822,1074 @@
         const n = parseInt(val ?? fallback, 10);
         if (Number.isNaN(n)) return Math.min(100, Math.max(0, fallback));
         return Math.min(100, Math.max(0, n));
+      }
+
+      function normalizeSectionOrder(raw) {
+        let items = [];
+        if (Array.isArray(raw)) {
+          items = raw;
+        } else if (typeof raw === "string") {
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) items = parsed;
+          } catch (_) {
+            items = [raw];
+          }
+        }
+        const out = [];
+        const seen = new Set();
+        items.forEach((item) => {
+          if (item === null || item === undefined) return;
+          if (Array.isArray(item)) {
+            const row = [];
+            item.forEach((sub) => {
+              const rawKey = String(sub || "").trim().toLowerCase();
+              const key = SECTION_KEY_ALIASES[rawKey] || rawKey;
+              if (!key || !SECTION_LABELS[key] || seen.has(key)) return;
+              seen.add(key);
+              row.push(key);
+            });
+            if (row.length === 1) {
+              out.push(row[0]);
+            } else if (row.length > 1) {
+              out.push(row.slice(0, 2));
+            }
+            return;
+          }
+          const rawKey = String(item || "").trim().toLowerCase();
+          const key = SECTION_KEY_ALIASES[rawKey] || rawKey;
+          if (!key || !SECTION_LABELS[key] || seen.has(key)) return;
+          seen.add(key);
+          out.push(key);
+        });
+        SECTION_ORDER_DEFAULT.forEach((key) => {
+          if (!seen.has(key)) {
+            out.push(key);
+            seen.add(key);
+          }
+        });
+        return out;
+      }
+
+      function flattenSectionOrder(order) {
+        const list = [];
+        (order || SECTION_ORDER_DEFAULT).forEach((item) => {
+          if (Array.isArray(item)) {
+            item.forEach((key) => list.push(key));
+          } else {
+            list.push(item);
+          }
+        });
+        return list;
+      }
+
+      function defaultPlateUnits(key) {
+        switch (key) {
+          case "pfp":
+            return { w: 14, h: 14 };
+          case "name":
+            return { w: 24, h: 6 };
+          case "discord_status":
+            return { w: 24, h: 6 };
+          case "quote":
+            return { w: 32, h: 10 };
+          case "location":
+            return { w: 20, h: 5 };
+          case "badges":
+            return { w: 24, h: 8 };
+          case "audio":
+            return { w: 28, h: 8 };
+          case "links":
+            return { w: 32, h: 26 };
+          case "visit_counter":
+            return { w: 20, h: 6 };
+          default:
+            return { w: 18, h: 6 };
+        }
+      }
+
+      function defaultPlatePixels(key) {
+        const units = defaultPlateUnits(key);
+        return {
+          w: units.w * CANVAS_LEGACY_GRID_DEFAULT,
+          h: units.h * CANVAS_LEGACY_GRID_DEFAULT,
+        };
+      }
+
+      function computeCanvasContentBounds(layout, previewState) {
+        const plates = layout?.plates || {};
+        const groups = layout?.groups || {};
+        let maxX = 0;
+        let maxY = 0;
+        Object.entries(plates).forEach(([key, plate]) => {
+          if (!plate) return;
+          if (previewState && !isCanvasSectionVisible(key, previewState)) return;
+        const w = Number.isFinite(plate.w) ? plate.w : defaultPlatePixels(key).w;
+        const h = Number.isFinite(plate.h) ? plate.h : defaultPlatePixels(key).h;
+          const group = plate.group && groups[plate.group] ? groups[plate.group] : null;
+          const offsetX = group ? group.x : 0;
+          const offsetY = group ? group.y : 0;
+          const x = (Number.isFinite(plate.x) ? plate.x : 0) + offsetX;
+          const y = (Number.isFinite(plate.y) ? plate.y : 0) + offsetY;
+          maxX = Math.max(maxX, x + w);
+          maxY = Math.max(maxY, y + h);
+        });
+        return {
+          w: Math.max(CANVAS_SIZE_MIN_W, maxX + 2),
+          h: Math.max(CANVAS_SIZE_MIN_H, maxY + 2),
+        };
+      }
+
+      function buildDefaultCanvasLayout(order) {
+        const plates = {};
+        const flat = flattenSectionOrder(order);
+        let y = 24;
+        flat.forEach((key) => {
+          const size = defaultPlatePixels(key);
+          plates[key] = { x: 24, y, w: size.w, h: size.h, group: null };
+          y += size.h + 24;
+        });
+        const bounds = computeCanvasContentBounds({ plates }, null);
+        return {
+          enabled: true,
+          grid: 1,
+          size: { w: bounds.w, h: bounds.h },
+          plates,
+          groups: {},
+        };
+      }
+
+      function normalizeCanvasLayout(raw, order) {
+        let data = raw;
+        if (typeof raw === "string") {
+          try {
+            data = JSON.parse(raw);
+          } catch (_) {
+            data = null;
+          }
+        }
+        const fallback = buildDefaultCanvasLayout(order);
+        if (!data || typeof data !== "object") return null;
+        const hasRawPlates =
+          data.plates && typeof data.plates === "object"
+            ? Object.keys(data.plates).length > 0
+            : false;
+        const hasRawGroups =
+          data.groups && typeof data.groups === "object"
+            ? Object.keys(data.groups).length > 0
+            : false;
+        const hasRawSize = data.size && typeof data.size === "object";
+        if (!hasRawPlates && !hasRawGroups && !hasRawSize) return null;
+        const gridRaw = parseInt(data.grid ?? 1, 10);
+        const legacyGrid = Number.isFinite(gridRaw) && gridRaw > 1 ? gridRaw : 1;
+        const scale = legacyGrid;
+        const plates = {};
+        const groups = {};
+        let size = null;
+        if (data.size && typeof data.size === "object") {
+          const sw = parseInt(data.size.w ?? 0, 10);
+          const sh = parseInt(data.size.h ?? 0, 10);
+          if (Number.isFinite(sw) && Number.isFinite(sh)) {
+            size = {
+              w: Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_SIZE_MIN_W, sw * scale),
+              ),
+              h: Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_SIZE_MIN_H, sh * scale),
+              ),
+            };
+          }
+        }
+        if (data.groups && typeof data.groups === "object") {
+          Object.entries(data.groups).forEach(([gid, g]) => {
+            if (!g || typeof g !== "object") return;
+            const gx = parseInt(g.x ?? 0, 10);
+            const gy = parseInt(g.y ?? 0, 10);
+            if (!Number.isFinite(gx) || !Number.isFinite(gy)) return;
+            groups[String(gid)] = { x: gx * scale, y: gy * scale };
+          });
+        }
+        if (data.plates && typeof data.plates === "object") {
+          Object.entries(data.plates).forEach(([key, plate]) => {
+            const rawKey = String(key || "").trim().toLowerCase();
+            const k = SECTION_KEY_ALIASES[rawKey] || rawKey;
+            if (!k || !SECTION_LABELS[k]) return;
+            if (!plate || typeof plate !== "object") return;
+            const px = parseInt(plate.x ?? 0, 10);
+            const py = parseInt(plate.y ?? 0, 10);
+            if (!Number.isFinite(px) || !Number.isFinite(py)) return;
+            const entry = { x: px * scale, y: py * scale };
+            const pw = parseInt(plate.w ?? 0, 10);
+            const ph = parseInt(plate.h ?? 0, 10);
+            if (Number.isFinite(pw) && pw > 0) {
+              entry.w = Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_PLATE_MIN_W, pw * scale),
+              );
+            }
+            if (Number.isFinite(ph) && ph > 0) {
+              entry.h = Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_PLATE_MIN_H, ph * scale),
+              );
+            }
+            if (plate.group && groups[plate.group]) {
+              entry.group = plate.group;
+            }
+            plates[k] = entry;
+          });
+        }
+        Object.keys(fallback.plates).forEach((key) => {
+          if (!plates[key]) plates[key] = { ...fallback.plates[key] };
+        });
+        if (!size) {
+          const bounds = computeCanvasContentBounds({ plates }, null);
+          size = { w: bounds.w, h: bounds.h };
+        }
+        return {
+          enabled: true,
+          grid: 1,
+          size,
+          plates,
+          groups,
+        };
+      }
+
+      function ensureCanvasLayoutSize(previewState) {
+        if (!canvasLayout) return;
+        const bounds = computeCanvasContentBounds(canvasLayout, previewState || null);
+        if (
+          !canvasLayout.size ||
+          !Number.isFinite(canvasLayout.size.w) ||
+          !Number.isFinite(canvasLayout.size.h)
+        ) {
+          canvasLayout.size = { w: bounds.w, h: bounds.h };
+          return;
+        }
+        if (canvasLayout.size.w < bounds.w) canvasLayout.size.w = bounds.w;
+        if (canvasLayout.size.h < bounds.h) canvasLayout.size.h = bounds.h;
+      }
+
+      function updateCanvasEditorSize() {
+        const editor = $("canvasEditor");
+        if (!editor || !canvasLayout || !canvasLayout.size) return;
+        const width = canvasLayout.size.w;
+        const height = canvasLayout.size.h;
+        editor.style.width = `${width}px`;
+        editor.style.height = `${height}px`;
+        editor.style.minWidth = `${width}px`;
+        editor.style.minHeight = `${height}px`;
+      }
+
+      function serializeCanvasLayout() {
+        if (!canvasLayout) return null;
+        const previewState = canvasPreviewState || getCanvasPreviewState();
+        ensureCanvasLayoutSize(previewState);
+        const plates = {};
+        Object.entries(canvasLayout.plates || {}).forEach(([key, plate]) => {
+          if (!plate) return;
+          const entry = { ...plate };
+          if (!Number.isFinite(entry.w)) entry.w = defaultPlatePixels(key).w;
+          if (!Number.isFinite(entry.h)) entry.h = defaultPlatePixels(key).h;
+          plates[key] = entry;
+        });
+        return {
+          enabled: true,
+          grid: 1,
+          size: canvasLayout.size,
+          plates,
+          groups: canvasLayout.groups,
+        };
+      }
+
+      function scheduleCanvasRefresh() {
+        if (!canvasLayout) return;
+        if (canvasRefreshTimer) clearTimeout(canvasRefreshTimer);
+        canvasRefreshTimer = setTimeout(() => {
+          renderCanvasEditor();
+        }, 120);
+      }
+
+      function clearCanvasSelection() {
+        canvasSelection = new Set();
+        document
+          .querySelectorAll(".canvas-plate.selected")
+          .forEach((el) => el.classList.remove("selected"));
+        updateCanvasToolbar();
+      }
+
+      function setPlateSelected(key, selected) {
+        const plateEl = document.querySelector(
+          `.canvas-plate[data-key="${key}"]`,
+        );
+        if (selected) {
+          canvasSelection.add(key);
+          if (plateEl) plateEl.classList.add("selected");
+        } else {
+          canvasSelection.delete(key);
+          if (plateEl) plateEl.classList.remove("selected");
+        }
+      }
+
+      function updateCanvasToolbar() {
+        const groupBtn = $("btnCanvasGroup");
+        const ungroupBtn = $("btnCanvasUngroup");
+        if (groupBtn) {
+          const canGroup =
+            Array.from(canvasSelection).filter((key) => {
+              const plate = canvasLayout && canvasLayout.plates[key];
+              return plate && !plate.group;
+            }).length >= 2;
+          groupBtn.disabled = !canGroup;
+        }
+        if (ungroupBtn) {
+          const canUngroup = Array.from(canvasSelection).some((key) => {
+            const plate = canvasLayout && canvasLayout.plates[key];
+            return plate && plate.group;
+          });
+          ungroupBtn.disabled = !canUngroup;
+        }
+      }
+
+      function updateGroupBounds(groupEl, groupId) {
+        if (!canvasLayout || !groupEl) return;
+        const plates = Object.entries(canvasLayout.plates).filter(
+          ([key, plate]) =>
+            plate.group === groupId &&
+            (!canvasPreviewState ||
+              isCanvasSectionVisible(key, canvasPreviewState)),
+        );
+        if (!plates.length) {
+          groupEl.style.width = "0px";
+          groupEl.style.height = "0px";
+          return;
+        }
+        let maxX = 0;
+        let maxY = 0;
+        plates.forEach(([key, plate]) => {
+          const px = plate.x;
+          const py = plate.y;
+          const wUnits = Number.isFinite(plate.w)
+            ? plate.w
+            : defaultPlatePixels(key).w;
+          const hUnits = Number.isFinite(plate.h)
+            ? plate.h
+            : defaultPlatePixels(key).h;
+          maxX = Math.max(maxX, px + wUnits);
+          maxY = Math.max(maxY, py + hUnits);
+        });
+        groupEl.style.width = `${maxX}px`;
+        groupEl.style.height = `${maxY}px`;
+      }
+
+      function getDisplayNameForCanvas() {
+        const mode = $("inDisplayName")?.value || "slug";
+        const slug = $("inSlug")?.value.trim() || "user";
+        const custom = $("inCustomName")?.value.trim() || "";
+        if (mode === "username") {
+          return (currentUser && currentUser.username) || slug;
+        }
+        if (mode === "custom" && custom) return custom;
+        return slug;
+      }
+
+      function getActiveLinksForCanvas() {
+        return (currentLinks || []).filter((l) => l && l.is_active);
+      }
+
+      function getActiveBadgesForCanvas() {
+        const normal = (currentBadges || []).filter((ic) => ic && ic.displayed);
+        const discordEnabled = $("inDiscordBadges")?.checked && discordStatus?.linked;
+        let discord = [];
+        if (discordEnabled && Array.isArray(discordStatus?.badges)) {
+          const filterCodes = Array.isArray(discordBadgeCodes)
+            ? discordBadgeCodes
+            : null;
+          discord = filterCodes
+            ? discordStatus.badges.filter((b) => filterCodes.includes(b && b.code))
+            : discordStatus.badges.slice();
+        }
+        return { normal, discord };
+      }
+
+      function getCanvasPreviewState() {
+        const quoteTexts = collectQuoteTexts();
+        const quoteText = quoteTexts[0] || "";
+        const quoteSize = parseInt($("inQuoteSize")?.value || "", 10);
+        const locationText = $("inLocation")?.value.trim() || "";
+        const showStatus =
+          $("inDiscordStatus")?.checked && discordStatus && discordStatus.linked;
+        const statusText =
+          (discordStatus && discordStatus.status_text) ||
+          (discordStatus && discordStatus.presence) ||
+          "Online";
+        const songUrl = $("inSong")?.value.trim() || "";
+        const songName =
+          $("inSongName")?.value.trim() ||
+          fileNameFromUrl(songUrl) ||
+          "Audio";
+        const songIcon = $("inSongIcon")?.value.trim() || "";
+        const showAudio = $("inAudioPlayer")?.checked && !!songUrl;
+        const links = getActiveLinksForCanvas();
+        const badges = getActiveBadgesForCanvas();
+        const showBadges = badges.normal.length + badges.discord.length > 0;
+        const showLinks = links.length > 0;
+        const showCounter = $("inShowCounter")?.checked;
+        const showQuote = !!quoteText;
+        return {
+          name: getDisplayNameForCanvas(),
+          quoteText,
+          quoteSize: Number.isFinite(quoteSize)
+            ? Math.min(40, Math.max(10, quoteSize))
+            : null,
+          locationText,
+          showStatus,
+          statusText,
+          showAudio,
+          songName,
+          songIcon,
+          links,
+          badges,
+          showBadges,
+          showLinks,
+          showCounter,
+          showQuote,
+        };
+      }
+
+      function isCanvasSectionVisible(key, state) {
+        switch (key) {
+          case "pfp":
+          case "name":
+            return true;
+          case "discord_status":
+            return !!state.showStatus;
+          case "quote":
+            return !!state.showQuote;
+          case "location":
+            return !!state.locationText;
+          case "badges":
+            return !!state.showBadges;
+          case "audio":
+            return !!state.showAudio;
+          case "links":
+            return !!state.showLinks;
+          case "visit_counter":
+            return !!state.showCounter;
+          default:
+            return true;
+        }
+      }
+
+      function buildCanvasPlateContent(key, state) {
+        const wrap = document.createElement("div");
+        wrap.className = `canvas-preview ${key.replace("_", "-")}`;
+        if (key === "pfp") {
+          wrap.classList.add("pfp");
+          const img = document.createElement("img");
+          const linktreePfp = $("inLinktreePfp")?.value.trim();
+          img.src =
+            linktreePfp ||
+            (currentUser && currentUser.profile_picture) ||
+            "/static/icon.png";
+          img.alt = "Profile picture";
+          wrap.appendChild(img);
+          return wrap;
+        }
+        if (key === "name") {
+          wrap.classList.add("name");
+          wrap.textContent = state.name || "User";
+          const nameColor = $("inNameColor")?.value;
+          if (nameColor) wrap.style.color = nameColor;
+          return wrap;
+        }
+        if (key === "discord_status") {
+          wrap.classList.add("status");
+          const dot = document.createElement("span");
+          dot.className = "dot";
+          const label = document.createElement("span");
+          label.textContent = state.statusText || "Online";
+          wrap.appendChild(dot);
+          wrap.appendChild(label);
+          return wrap;
+        }
+        if (key === "quote") {
+          wrap.classList.add("quote");
+          wrap.textContent = state.quoteText || "Quote";
+          if (state.quoteSize) {
+            wrap.style.fontSize = `${state.quoteSize}px`;
+          }
+          const quoteColor = $("inQuoteColor")?.value;
+          if (quoteColor) wrap.style.color = quoteColor;
+          return wrap;
+        }
+        if (key === "location") {
+          wrap.classList.add("location");
+          wrap.textContent = `📍 ${state.locationText}`;
+          const locationColor = $("inLocationColor")?.value;
+          if (locationColor) wrap.style.color = locationColor;
+          return wrap;
+        }
+        if (key === "badges") {
+          wrap.classList.add("badges");
+          const list = [
+            ...(state.badges?.normal || []).map((ic) => ic.image_url),
+            ...(state.badges?.discord || []).map((b) => b.icon_url),
+          ].filter(Boolean);
+          if (!list.length) {
+            wrap.textContent = "Badges";
+            return wrap;
+          }
+          list.forEach((url) => {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = "";
+            wrap.appendChild(img);
+          });
+          return wrap;
+        }
+        if (key === "audio") {
+          wrap.classList.add("audio");
+          if (state.songIcon) {
+            const img = document.createElement("img");
+            img.src = state.songIcon;
+            img.alt = "";
+            wrap.appendChild(img);
+          }
+          const label = document.createElement("span");
+          label.textContent = state.songName || "Audio player";
+          wrap.appendChild(label);
+          return wrap;
+        }
+        if (key === "links") {
+          wrap.classList.add("links");
+          const linkColor = $("inLinkColor")?.value || "#e9ebff";
+          const linkBg = $("inLinkBgColor")?.value || "#171b3b";
+          (state.links || []).forEach((l) => {
+            const item = document.createElement("div");
+            item.className = "canvas-preview-link";
+            item.textContent = l.label || l.url || "Link";
+            item.style.color = linkColor;
+            item.style.background = linkBg;
+            wrap.appendChild(item);
+          });
+          return wrap;
+        }
+        if (key === "visit_counter") {
+          wrap.classList.add("counter");
+          wrap.textContent = `👀 ${Number(
+            (currentTree && currentTree.visit_count) || 0,
+          ).toLocaleString()}`;
+          const counterColor = $("inCounterColor")?.value;
+          if (counterColor) wrap.style.color = counterColor;
+          return wrap;
+        }
+        wrap.textContent = SECTION_LABELS[key] || key;
+        return wrap;
+      }
+
+      function renderCanvasEditor() {
+        const editor = $("canvasEditor");
+        if (!editor || !canvasLayout) return;
+        canvasSelection = new Set();
+        editor.innerHTML = "";
+        editor.style.setProperty("--canvas-grid", "1px");
+        const previewState = getCanvasPreviewState();
+        canvasPreviewState = previewState;
+        ensureCanvasLayoutSize(previewState);
+        updateCanvasEditorSize();
+        const visibleGroups = new Set();
+        SECTION_ORDER_DEFAULT.forEach((key) => {
+          if (!isCanvasSectionVisible(key, previewState)) return;
+          const plateData = canvasLayout.plates[key];
+          if (plateData && plateData.group) visibleGroups.add(plateData.group);
+        });
+        const groupEls = {};
+        Object.entries(canvasLayout.groups || {}).forEach(([gid, g]) => {
+          if (!visibleGroups.has(gid)) return;
+          const groupEl = document.createElement("div");
+          groupEl.className = "canvas-group";
+          groupEl.dataset.groupId = gid;
+          groupEl.style.transform = `translate(${g.x}px, ${g.y}px)`;
+          const handle = document.createElement("div");
+          handle.className = "group-handle";
+          handle.textContent = "Group";
+          handle.addEventListener("mousedown", (evt) =>
+            startCanvasDrag(evt, { type: "group", id: gid, el: groupEl }),
+          );
+          groupEl.appendChild(handle);
+          editor.appendChild(groupEl);
+          groupEls[gid] = groupEl;
+        });
+
+        SECTION_ORDER_DEFAULT.forEach((key) => {
+          const plateData = canvasLayout.plates[key];
+          if (!plateData) return;
+          if (!isCanvasSectionVisible(key, previewState)) return;
+          const plateEl = document.createElement("div");
+          plateEl.className = "canvas-plate";
+          plateEl.dataset.key = key;
+          const preview = buildCanvasPlateContent(key, previewState);
+          if (preview) plateEl.appendChild(preview);
+          const handleE = document.createElement("div");
+          handleE.className = "resize-handle resize-e";
+          handleE.addEventListener("mousedown", (evt) => {
+            evt.stopPropagation();
+            startCanvasDrag(evt, {
+              type: "resize",
+              key,
+              dir: "e",
+              el: plateEl,
+            });
+          });
+          const handleS = document.createElement("div");
+          handleS.className = "resize-handle resize-s";
+          handleS.addEventListener("mousedown", (evt) => {
+            evt.stopPropagation();
+            startCanvasDrag(evt, {
+              type: "resize",
+              key,
+              dir: "s",
+              el: plateEl,
+            });
+          });
+          const handleSE = document.createElement("div");
+          handleSE.className = "resize-handle resize-se";
+          handleSE.addEventListener("mousedown", (evt) => {
+            evt.stopPropagation();
+            startCanvasDrag(evt, {
+              type: "resize",
+              key,
+              dir: "se",
+              el: plateEl,
+            });
+          });
+          plateEl.appendChild(handleE);
+          plateEl.appendChild(handleS);
+          plateEl.appendChild(handleSE);
+          const parent = plateData.group
+            ? groupEls[plateData.group]
+            : editor;
+          if (!parent) return;
+          plateEl.style.transform = `translate(${plateData.x}px, ${plateData.y}px)`;
+          let widthUnits = Number.isFinite(plateData.w) ? plateData.w : null;
+          let heightUnits = Number.isFinite(plateData.h) ? plateData.h : null;
+          if (Number.isFinite(widthUnits)) {
+            plateEl.style.width = `${widthUnits}px`;
+          }
+          if (Number.isFinite(heightUnits)) {
+            plateEl.style.height = `${heightUnits}px`;
+          }
+          plateEl.addEventListener("mousedown", (evt) =>
+            startCanvasDrag(evt, { type: "plate", key, el: plateEl }),
+          );
+          plateEl.addEventListener("click", (evt) => {
+            evt.stopPropagation();
+            const wasSelected = canvasSelection.has(key);
+            if (!evt.shiftKey) clearCanvasSelection();
+            setPlateSelected(key, !wasSelected);
+          });
+          parent.appendChild(plateEl);
+          if (!Number.isFinite(widthUnits) || !Number.isFinite(heightUnits)) {
+            const rect = plateEl.getBoundingClientRect();
+            const fallback = defaultPlatePixels(key);
+            if (!Number.isFinite(widthUnits)) {
+              const measuredW = Math.round(rect.width);
+              widthUnits = Math.min(
+                CANVAS_PLATE_MAX_W,
+                Math.max(CANVAS_PLATE_MIN_W, measuredW || fallback.w),
+              );
+              plateData.w = widthUnits;
+              plateEl.style.width = `${widthUnits}px`;
+            }
+            if (!Number.isFinite(heightUnits)) {
+              const measuredH = Math.round(rect.height);
+              heightUnits = Math.min(
+                CANVAS_PLATE_MAX_H,
+                Math.max(CANVAS_PLATE_MIN_H, measuredH || fallback.h),
+              );
+              plateData.h = heightUnits;
+              plateEl.style.height = `${heightUnits}px`;
+            }
+          }
+        });
+
+        Object.entries(groupEls).forEach(([gid, groupEl]) => {
+          updateGroupBounds(groupEl, gid);
+        });
+        ensureCanvasLayoutSize(previewState);
+        updateCanvasEditorSize();
+        const canvasHandle = document.createElement("div");
+        canvasHandle.className = "canvas-resize-handle";
+        canvasHandle.addEventListener("mousedown", (evt) => {
+          evt.stopPropagation();
+          startCanvasDrag(evt, { type: "canvas-resize", el: editor });
+        });
+        editor.appendChild(canvasHandle);
+        updateCanvasToolbar();
+      }
+
+      function startCanvasDrag(evt, target) {
+        if (!canvasLayout || evt.button !== 0) return;
+        evt.preventDefault();
+        if (target.type === "plate") {
+          const plate = canvasLayout.plates[target.key];
+          if (!plate) return;
+          canvasDragState = {
+            type: "plate",
+            key: target.key,
+            el: target.el,
+            startX: evt.clientX,
+            startY: evt.clientY,
+            originX: plate.x,
+            originY: plate.y,
+          };
+        } else if (target.type === "resize") {
+          const plate = canvasLayout.plates[target.key];
+          if (!plate) return;
+          const fallback = defaultPlatePixels(target.key);
+          canvasDragState = {
+            type: "resize",
+            key: target.key,
+            dir: target.dir,
+            el: target.el,
+            startX: evt.clientX,
+            startY: evt.clientY,
+            originW: Number.isFinite(plate.w) ? plate.w : fallback.w,
+            originH: Number.isFinite(plate.h) ? plate.h : fallback.h,
+          };
+        } else if (target.type === "group") {
+          const group = canvasLayout.groups[target.id];
+          if (!group) return;
+          canvasDragState = {
+            type: "group",
+            id: target.id,
+            el: target.el,
+            startX: evt.clientX,
+            startY: evt.clientY,
+            originX: group.x,
+            originY: group.y,
+          };
+        } else if (target.type === "canvas-resize") {
+          ensureCanvasLayoutSize(canvasPreviewState || getCanvasPreviewState());
+          const size = canvasLayout.size || {
+            w: CANVAS_SIZE_MIN_W,
+            h: CANVAS_SIZE_MIN_H,
+          };
+          canvasDragState = {
+            type: "canvas-resize",
+            el: target.el,
+            startX: evt.clientX,
+            startY: evt.clientY,
+            originW: size.w,
+            originH: size.h,
+          };
+        }
+        document.addEventListener("mousemove", onCanvasDrag);
+        document.addEventListener("mouseup", stopCanvasDrag);
+      }
+
+      function onCanvasDrag(evt) {
+        if (!canvasLayout || !canvasDragState) return;
+        const dx = Math.round(evt.clientX - canvasDragState.startX);
+        const dy = Math.round(evt.clientY - canvasDragState.startY);
+        if (canvasDragState.type === "plate") {
+          const plate = canvasLayout.plates[canvasDragState.key];
+          if (!plate) return;
+          plate.x = canvasDragState.originX + dx;
+          plate.y = canvasDragState.originY + dy;
+          if (plate.group) {
+            plate.x = Math.max(0, plate.x);
+            plate.y = Math.max(0, plate.y);
+          }
+          canvasDragState.el.style.transform = `translate(${plate.x}px, ${plate.y}px)`;
+          if (plate.group) {
+            const groupEl = document.querySelector(
+              `.canvas-group[data-group-id="${plate.group}"]`,
+            );
+            updateGroupBounds(groupEl, plate.group);
+          }
+          ensureCanvasLayoutSize(canvasPreviewState);
+          updateCanvasEditorSize();
+        } else if (canvasDragState.type === "resize") {
+          const plate = canvasLayout.plates[canvasDragState.key];
+          if (!plate) return;
+          let nextW = canvasDragState.originW;
+          let nextH = canvasDragState.originH;
+          if (canvasDragState.dir.includes("e")) {
+            nextW = canvasDragState.originW + dx;
+          }
+          if (canvasDragState.dir.includes("s")) {
+            nextH = canvasDragState.originH + dy;
+          }
+          nextW = Math.min(
+            CANVAS_PLATE_MAX_W,
+            Math.max(CANVAS_PLATE_MIN_W, nextW),
+          );
+          nextH = Math.min(
+            CANVAS_PLATE_MAX_H,
+            Math.max(CANVAS_PLATE_MIN_H, nextH),
+          );
+          plate.w = nextW;
+          plate.h = nextH;
+          canvasDragState.el.style.width = `${nextW}px`;
+          canvasDragState.el.style.height = `${nextH}px`;
+          if (plate.group) {
+            const groupEl = document.querySelector(
+              `.canvas-group[data-group-id="${plate.group}"]`,
+            );
+            updateGroupBounds(groupEl, plate.group);
+          }
+          ensureCanvasLayoutSize(canvasPreviewState);
+          updateCanvasEditorSize();
+        } else if (canvasDragState.type === "group") {
+          const group = canvasLayout.groups[canvasDragState.id];
+          if (!group) return;
+          group.x = canvasDragState.originX + dx;
+          group.y = canvasDragState.originY + dy;
+          canvasDragState.el.style.transform = `translate(${group.x}px, ${group.y}px)`;
+          ensureCanvasLayoutSize(canvasPreviewState);
+          updateCanvasEditorSize();
+        } else if (canvasDragState.type === "canvas-resize") {
+          const bounds = computeCanvasContentBounds(
+            canvasLayout,
+            canvasPreviewState,
+          );
+          let nextW = canvasDragState.originW + dx;
+          let nextH = canvasDragState.originH + dy;
+          nextW = Math.max(CANVAS_SIZE_MIN_W, Math.max(bounds.w, nextW));
+          nextH = Math.max(CANVAS_SIZE_MIN_H, Math.max(bounds.h, nextH));
+          canvasLayout.size = {
+            w: Math.min(CANVAS_PLATE_MAX_W, nextW),
+            h: Math.min(CANVAS_PLATE_MAX_H, nextH),
+          };
+          updateCanvasEditorSize();
+        }
+      }
+
+      function stopCanvasDrag() {
+        canvasDragState = null;
+        document.removeEventListener("mousemove", onCanvasDrag);
+        document.removeEventListener("mouseup", stopCanvasDrag);
+      }
+
+      function groupSelectedPlates() {
+        if (!canvasLayout) return;
+        const keys = Array.from(canvasSelection).filter((key) => {
+          const plate = canvasLayout.plates[key];
+          return plate && !plate.group;
+        });
+        if (keys.length < 2) return;
+        let minX = Infinity;
+        let minY = Infinity;
+        keys.forEach((key) => {
+          const plate = canvasLayout.plates[key];
+          minX = Math.min(minX, plate.x);
+          minY = Math.min(minY, plate.y);
+        });
+        const groupId = `g${Date.now().toString(36)}`;
+        canvasLayout.groups[groupId] = { x: minX, y: minY };
+        keys.forEach((key) => {
+          const plate = canvasLayout.plates[key];
+          plate.x = plate.x - minX;
+          plate.y = plate.y - minY;
+          plate.group = groupId;
+        });
+        renderCanvasEditor();
+        keys.forEach((key) => setPlateSelected(key, true));
+      }
+
+      function ungroupSelectedPlates() {
+        if (!canvasLayout) return;
+        const groupsToCheck = new Set();
+        Array.from(canvasSelection).forEach((key) => {
+          const plate = canvasLayout.plates[key];
+          if (!plate || !plate.group) return;
+          const groupId = plate.group;
+          const group = canvasLayout.groups[groupId];
+          if (!group) return;
+          plate.x = group.x + plate.x;
+          plate.y = group.y + plate.y;
+          delete plate.group;
+          groupsToCheck.add(groupId);
+        });
+        groupsToCheck.forEach((groupId) => {
+          const stillHas = Object.values(canvasLayout.plates).some(
+            (plate) => plate.group === groupId,
+          );
+          if (!stillHas) delete canvasLayout.groups[groupId];
+        });
+        renderCanvasEditor();
+        updateCanvasToolbar();
+      }
+
+      function resetCanvasLayout() {
+        canvasLayout = buildDefaultCanvasLayout(sectionOrder);
+        renderCanvasEditor();
+        syncCanvasInputs();
+      }
+
+      function syncCanvasInputs() {
+        if (!canvasLayout) return;
+        const enabledInput = $("inCanvasEnabled");
+        const gridInput = $("inCanvasGrid");
+        const gridValue = $("canvasGridValue");
+        if (enabledInput) enabledInput.checked = true;
+        if (gridInput) gridInput.value = "1";
+        if (gridValue) gridValue.textContent = "1px";
+      }
+
+      function hasSideBySide(order) {
+        return (order || []).some(
+          (item) => Array.isArray(item) && item.length > 1
+        );
+      }
+
+      function layoutModeFromOrder(order) {
+        return hasSideBySide(order) ? "wide" : "center";
+      }
+
+      function syncLayoutModeFromOrder() {
+        const select = $("inLayoutMode");
+        if (!select) return;
+        select.value = layoutModeFromOrder(sectionOrder);
+      }
+
+      function updateSectionOrderInput() {
+        const input = $("inSectionOrder");
+        if (input) input.value = JSON.stringify(sectionOrder);
+        syncLayoutModeFromOrder();
+      }
+
+      function moveSectionOrder(index, direction) {
+        const next = index + direction;
+        if (next < 0 || next >= sectionOrder.length) return;
+        const updated = sectionOrder.slice();
+        const temp = updated[index];
+        updated[index] = updated[next];
+        updated[next] = temp;
+        sectionOrder = updated;
+        renderSectionOrder();
+      }
+
+      function pairSectionOrder(index) {
+        if (index < 0 || index >= sectionOrder.length - 1) return;
+        const current = sectionOrder[index];
+        const next = sectionOrder[index + 1];
+        if (Array.isArray(current) || Array.isArray(next)) return;
+        sectionOrder.splice(index, 2, [current, next]);
+        renderSectionOrder();
+      }
+
+      function splitSectionOrder(index) {
+        if (index < 0 || index >= sectionOrder.length) return;
+        const current = sectionOrder[index];
+        if (!Array.isArray(current)) return;
+        const left = current[0];
+        const right = current[1];
+        const nextItems = [];
+        if (left) nextItems.push(left);
+        if (right) nextItems.push(right);
+        if (!nextItems.length) return;
+        sectionOrder.splice(index, 1, ...nextItems);
+        renderSectionOrder();
+      }
+
+      function swapSectionOrder(index) {
+        if (index < 0 || index >= sectionOrder.length) return;
+        const current = sectionOrder[index];
+        if (!Array.isArray(current) || current.length < 2) return;
+        sectionOrder[index] = [current[1], current[0]];
+        renderSectionOrder();
+      }
+
+      function renderSectionOrder() {
+        const list = $("sectionOrderList");
+        if (!list) return;
+        list.innerHTML = "";
+        sectionOrder.forEach((entry, idx) => {
+          const isRow = Array.isArray(entry);
+          const row = document.createElement("div");
+          row.className = `section-order-item${isRow ? " is-row" : ""}`;
+          const keys = isRow ? entry : [entry];
+          const labels = keys.map((key) =>
+            escapeHtml(SECTION_LABELS[key] || key)
+          );
+          const canPair =
+            !isRow &&
+            idx < sectionOrder.length - 1 &&
+            !Array.isArray(sectionOrder[idx + 1]);
+          const labelHtml = isRow
+            ? `
+          <div class="section-order-pair">
+            <span class="section-order-chip">${labels[0] || ""}</span>
+            <span class="section-order-sep">+</span>
+            <span class="section-order-chip">${labels[1] || ""}</span>
+          </div>
+        `
+            : `<span class="label">${labels[0] || ""}</span>`;
+          row.innerHTML = `
+        <span class="handle" title="Move" aria-hidden="true">☰</span>
+        ${labelHtml}
+        ${
+          !isRow
+            ? `<button class="btn sm ghost" type="button" data-act="pair" ${
+                canPair ? "" : "disabled"
+              } title="Side-by-side with next">⇔</button>`
+            : ""
+        }
+        ${
+          isRow
+            ? `<button class="btn sm ghost" type="button" data-act="swap" title="Swap left/right">⇄</button>`
+            : ""
+        }
+        ${
+          isRow
+            ? `<button class="btn sm ghost" type="button" data-act="split" title="Unpair row">Unpair</button>`
+            : ""
+        }
+        <button class="btn sm ghost" type="button" data-act="up" ${
+          idx === 0 ? "disabled" : ""
+        }>▲</button>
+        <button class="btn sm ghost" type="button" data-act="down" ${
+          idx === sectionOrder.length - 1 ? "disabled" : ""
+        }>▼</button>
+      `;
+          const upBtn = row.querySelector('[data-act="up"]');
+          const downBtn = row.querySelector('[data-act="down"]');
+          if (upBtn) {
+            upBtn.addEventListener("click", () => {
+              moveSectionOrder(idx, -1);
+            });
+          }
+          if (downBtn) {
+            downBtn.addEventListener("click", () => {
+              moveSectionOrder(idx, 1);
+            });
+          }
+          const pairBtn = row.querySelector('[data-act="pair"]');
+          if (pairBtn) {
+            pairBtn.addEventListener("click", () => {
+              pairSectionOrder(idx);
+            });
+          }
+          const splitBtn = row.querySelector('[data-act="split"]');
+          if (splitBtn) {
+            splitBtn.addEventListener("click", () => {
+              splitSectionOrder(idx);
+            });
+          }
+          const swapBtn = row.querySelector('[data-act="swap"]');
+          if (swapBtn) {
+            swapBtn.addEventListener("click", () => {
+              swapSectionOrder(idx);
+            });
+          }
+          list.appendChild(row);
+        });
+        updateSectionOrderInput();
       }
 
 
@@ -2033,7 +3933,53 @@
         $("inDevice").value = lt.device_type || "pc";
         currentDevice = lt.device_type || "pc";
         $("inLocation").value = lt.location || "";
-        $("inQuote").value = lt.quote || "";
+        const qt = Array.isArray(lt.quote_typing_texts)
+          ? lt.quote_typing_texts
+          : [];
+        const q1 = qt[0] || lt.quote || "";
+        $("inQuote").value = q1 || "";
+        $("inQuoteAlt1").value = qt[1] || "";
+        $("inQuoteAlt2").value = qt[2] || "";
+        $("inQuoteTyping").checked = !!lt.quote_typing_enabled;
+        $("inQuoteSpeed").value =
+          lt.quote_typing_speed !== undefined && lt.quote_typing_speed !== null
+            ? lt.quote_typing_speed
+            : DEFAULT_QUOTE_SPEED;
+        $("inQuotePause").value =
+          lt.quote_typing_pause !== undefined && lt.quote_typing_pause !== null
+            ? lt.quote_typing_pause
+            : DEFAULT_QUOTE_PAUSE;
+        $("inQuoteSize").value =
+          lt.quote_font_size !== undefined && lt.quote_font_size !== null
+            ? lt.quote_font_size
+            : DEFAULT_QUOTE_SIZE;
+        $("inEntryText").value = lt.entry_text || "";
+        $("inEntryTextColor").value =
+          lt.entry_text_color || DEFAULT_ENTRY_TEXT_COLOR;
+        $("inEntryFont").value = lt.entry_font_family || "default";
+        $("inEntryEffect").value = lt.entry_effect || "none";
+        $("inEntryFontSize").value =
+          lt.entry_font_size !== undefined && lt.entry_font_size !== null
+            ? lt.entry_font_size
+            : DEFAULT_ENTRY_FONT_SIZE;
+        $("inEntryBgAlpha").value =
+          lt.entry_bg_alpha !== undefined && lt.entry_bg_alpha !== null
+            ? lt.entry_bg_alpha
+            : DEFAULT_ENTRY_BG_ALPHA;
+      $("inEntryOverlayAlpha").value =
+        lt.entry_overlay_alpha !== undefined &&
+        lt.entry_overlay_alpha !== null
+          ? lt.entry_overlay_alpha
+          : DEFAULT_ENTRY_OVERLAY_ALPHA;
+      $("inEntryBoxEnabled").checked =
+        lt.entry_box_enabled !== undefined && lt.entry_box_enabled !== null
+          ? !!lt.entry_box_enabled
+          : true;
+      $("inEntryBorderEnabled").checked =
+        lt.entry_border_enabled !== undefined && lt.entry_border_enabled !== null
+          ? !!lt.entry_border_enabled
+          : true;
+      $("inEntryBorderColor").value = lt.entry_border_color || "";
         $("inSong").value = lt.song_url || "";
         $("inSongName").value = lt.song_name || "";
         $("inSongIcon").value = lt.song_icon_url || "";
@@ -2065,6 +4011,13 @@
           lt.location_color || lt.text_color || DEFAULT_LOCATION_COLOR;
         $("inQuoteColor").value =
           lt.quote_color || lt.text_color || DEFAULT_QUOTE_COLOR;
+        $("inQuoteFont").value = lt.quote_font_family || "default";
+        $("inQuoteEffect").value = lt.quote_effect || "none";
+        $("inQuoteEffectStrength").value =
+          lt.quote_effect_strength !== undefined && lt.quote_effect_strength !== null
+            ? lt.quote_effect_strength
+            : DEFAULT_QUOTE_EFFECT_STRENGTH;
+        $("inLayoutMode").value = lt.layout_mode || DEFAULT_LAYOUT_MODE;
         $("inLinkColor").value = lt.link_color || DEFAULT_LINK_COLOR;
         $("inLinkBgColor").value = lt.link_bg_color || DEFAULT_LINK_BG_COLOR;
         $("inCardColor").value = lt.card_color || DEFAULT_CARD_COLOR;
@@ -2073,6 +4026,19 @@
             ? lt.link_bg_alpha
             : 100;
         $("inCursor").value = lt.cursor_url || "";
+        $("inCursorFx").value = lt.cursor_effect || "none";
+        $("inCursorFxColor").value =
+          lt.cursor_effect_color || DEFAULT_CURSOR_FX_COLOR;
+        $("inCursorFxAlpha").value =
+          lt.cursor_effect_alpha !== undefined && lt.cursor_effect_alpha !== null
+            ? lt.cursor_effect_alpha
+            : DEFAULT_CURSOR_FX_ALPHA;
+        $("inLinktreePfp").value = lt.linktree_profile_picture || "";
+        sectionOrder = normalizeSectionOrder(lt.section_order);
+        renderSectionOrder();
+        canvasLayout = normalizeCanvasLayout(lt.canvas_layout, sectionOrder);
+        syncCanvasInputs();
+        renderCanvasEditor();
         setUploadStatus(
           "songStatus",
           lt.song_url,
@@ -2080,6 +4046,11 @@
           lt.song_name
         );
         setUploadStatus("songIconStatus", lt.song_icon_url, "No icon uploaded.");
+        setUploadStatus(
+          "pfpStatus",
+          lt.linktree_profile_picture,
+          "Using your account profile picture."
+        );
         setUploadStatus(
           "bgStatus",
           lt.background_url,
@@ -2102,9 +4073,23 @@
             ? lt.visit_counter_bg_alpha
             : 20;
         toggleCustomNameField();
+        toggleQuoteTypingFields();
         const btnOpen = $("btnOpenPublic");
         btnOpen.href = `/tree/${encodeURIComponent(lt.slug)}`;
         btnOpen.textContent = `/tree/${lt.slug}`;
+        const availableBadges = Array.isArray(discordStatus?.badges)
+          ? discordStatus.badges
+          : [];
+        if (Array.isArray(lt.discord_badge_codes)) {
+          discordBadgeCodes = lt.discord_badge_codes;
+        } else if (availableBadges.length) {
+          discordBadgeCodes = availableBadges
+            .map((b) => b && b.code)
+            .filter(Boolean);
+        } else {
+          discordBadgeCodes = [];
+        }
+        renderDiscordBadges();
         updateDiscordUI();
       }
 
@@ -2115,6 +4100,31 @@
         if (input.parentElement) {
           input.parentElement.classList.toggle("muted", !isCustom);
         }
+      }
+
+      function toggleQuoteTypingFields() {
+        const enabled = $("inQuoteTyping").checked;
+        const wrap = $("quoteTypingFields");
+        const speedWrap = $("quoteTypingSpeedWrap");
+        const pauseInput = $("inQuotePause");
+        if (wrap) {
+          wrap.style.display = enabled ? "grid" : "none";
+        }
+        if (speedWrap) {
+          speedWrap.style.display = enabled ? "block" : "none";
+        }
+        if (pauseInput && pauseInput.parentElement) {
+          pauseInput.parentElement.style.display = enabled ? "block" : "none";
+        }
+      }
+
+      function collectQuoteTexts() {
+        const list = [
+          $("inQuote").value.trim(),
+          $("inQuoteAlt1").value.trim(),
+          $("inQuoteAlt2").value.trim(),
+        ].filter(Boolean);
+        return list.slice(0, 3);
       }
 
       function resolveTemplateDevice(tpl) {
@@ -2132,10 +4142,62 @@
       function variantFromTreeData(lt) {
         if (!lt || !lt.background_url) return null;
         const disp = lt.display_name_mode || "slug";
+        const normalizedOrder = normalizeSectionOrder(lt.section_order);
+        const normalizedCanvas = normalizeCanvasLayout(
+          lt.canvas_layout,
+          normalizedOrder,
+        );
         return {
           device_type: lt.device_type || "pc",
           location: lt.location || "",
           quote: lt.quote || "",
+          quote_typing_enabled: !!lt.quote_typing_enabled,
+          quote_typing_texts: Array.isArray(lt.quote_typing_texts)
+            ? lt.quote_typing_texts
+            : [],
+          quote_typing_speed:
+            lt.quote_typing_speed !== undefined && lt.quote_typing_speed !== null
+              ? lt.quote_typing_speed
+              : DEFAULT_QUOTE_SPEED,
+          quote_typing_pause:
+            lt.quote_typing_pause !== undefined && lt.quote_typing_pause !== null
+              ? lt.quote_typing_pause
+              : DEFAULT_QUOTE_PAUSE,
+          quote_font_size:
+            lt.quote_font_size !== undefined && lt.quote_font_size !== null
+              ? lt.quote_font_size
+              : DEFAULT_QUOTE_SIZE,
+          quote_font_family: lt.quote_font_family || "default",
+          quote_effect: lt.quote_effect || "none",
+          quote_effect_strength:
+            lt.quote_effect_strength !== undefined && lt.quote_effect_strength !== null
+              ? lt.quote_effect_strength
+              : DEFAULT_QUOTE_EFFECT_STRENGTH,
+          entry_text: lt.entry_text || "",
+          entry_bg_alpha:
+            lt.entry_bg_alpha !== undefined && lt.entry_bg_alpha !== null
+              ? lt.entry_bg_alpha
+              : DEFAULT_ENTRY_BG_ALPHA,
+          entry_text_color: hexOrNull(lt.entry_text_color),
+          entry_font_size:
+            lt.entry_font_size !== undefined && lt.entry_font_size !== null
+              ? lt.entry_font_size
+              : DEFAULT_ENTRY_FONT_SIZE,
+          entry_font_family: lt.entry_font_family || "default",
+          entry_effect: lt.entry_effect || "none",
+          entry_overlay_alpha:
+            lt.entry_overlay_alpha !== undefined && lt.entry_overlay_alpha !== null
+              ? lt.entry_overlay_alpha
+              : DEFAULT_ENTRY_OVERLAY_ALPHA,
+          entry_box_enabled:
+            lt.entry_box_enabled !== undefined && lt.entry_box_enabled !== null
+              ? !!lt.entry_box_enabled
+              : true,
+          entry_border_enabled:
+            lt.entry_border_enabled !== undefined && lt.entry_border_enabled !== null
+              ? !!lt.entry_border_enabled
+              : true,
+          entry_border_color: hexOrNull(lt.entry_border_color),
           song_url: lt.song_url || "",
           song_name: lt.song_name || "",
           song_icon_url: lt.song_icon_url || "",
@@ -2154,8 +4216,12 @@
           name_effect: lt.name_effect || "none",
           background_effect: lt.background_effect || "none",
           display_name_mode: disp,
+          layout_mode: layoutModeFromOrder(normalizedOrder),
+          canvas_layout: normalizedCanvas,
           custom_display_name:
             disp === "custom" ? lt.custom_display_name || "" : null,
+          linktree_profile_picture: lt.linktree_profile_picture || null,
+          section_order: normalizedOrder,
           link_color: hexOrNull(lt.link_color),
           link_bg_color: hexOrNull(lt.link_bg_color),
           link_bg_alpha: clampPercent(lt.link_bg_alpha ?? 100, 100),
@@ -2165,10 +4231,19 @@
           location_color: hexOrNull(lt.location_color),
           quote_color: hexOrNull(lt.quote_color),
           cursor_url: lt.cursor_url || null,
+          cursor_effect: lt.cursor_effect || "none",
+          cursor_effect_color: hexOrNull(lt.cursor_effect_color),
+          cursor_effect_alpha: clampPercent(
+            lt.cursor_effect_alpha ?? DEFAULT_CURSOR_FX_ALPHA,
+            DEFAULT_CURSOR_FX_ALPHA
+          ),
           discord_frame_enabled: !!lt.discord_frame_enabled,
           discord_presence_enabled: !!lt.discord_presence_enabled,
           discord_status_enabled: !!lt.discord_status_enabled,
           discord_badges_enabled: !!lt.discord_badges_enabled,
+          discord_badge_codes: Array.isArray(lt.discord_badge_codes)
+            ? lt.discord_badge_codes
+            : [],
           show_visit_counter: !!lt.show_visit_counter,
           visit_counter_color: hexOrNull(lt.visit_counter_color),
           visit_counter_bg_color: hexOrNull(lt.visit_counter_bg_color),
@@ -2202,14 +4277,86 @@
         }
         const linkBgAlpha = clampPercent($("inLinkBgAlpha").value ?? 100, 100);
         const cardAlphaInput = clampPercent($("inTrans").value ?? 100, 100);
+        const cursorFxAlpha = clampPercent(
+          $("inCursorFxAlpha").value ?? DEFAULT_CURSOR_FX_ALPHA,
+          DEFAULT_CURSOR_FX_ALPHA
+        );
         const counterAlpha = clampPercent(
           $("inCounterBgAlpha").value ?? 20,
           20
         );
+        const quoteTexts = collectQuoteTexts();
+        const quoteSpeed = Math.min(
+          200,
+          Math.max(20, parseInt($("inQuoteSpeed").value || DEFAULT_QUOTE_SPEED, 10))
+        );
+        const quotePause = Math.min(
+          10000,
+          Math.max(
+            200,
+            parseInt($("inQuotePause").value || DEFAULT_QUOTE_PAUSE, 10)
+          )
+        );
+        const quoteSize = Math.min(
+          40,
+          Math.max(10, parseInt($("inQuoteSize").value || DEFAULT_QUOTE_SIZE, 10))
+        );
+        const quoteEffectStrength = clampPercent(
+          $("inQuoteEffectStrength").value ?? DEFAULT_QUOTE_EFFECT_STRENGTH,
+          DEFAULT_QUOTE_EFFECT_STRENGTH
+        );
+        const entryFontSize = Math.min(
+          40,
+          Math.max(
+            10,
+            parseInt($("inEntryFontSize").value || DEFAULT_ENTRY_FONT_SIZE, 10)
+          )
+        );
+        const entryBgAlpha = clampPercent(
+          $("inEntryBgAlpha").value ?? DEFAULT_ENTRY_BG_ALPHA,
+          DEFAULT_ENTRY_BG_ALPHA
+        );
+        const entryOverlayAlpha = clampPercent(
+          $("inEntryOverlayAlpha").value ?? DEFAULT_ENTRY_OVERLAY_ALPHA,
+          DEFAULT_ENTRY_OVERLAY_ALPHA
+        );
+        const entryBoxEnabled = $("inEntryBoxEnabled").checked;
+        const entryBorderEnabled = $("inEntryBorderEnabled").checked;
+        const entryBorderColor = hexOrNull($("inEntryBorderColor").value);
         return {
           device_type: dev,
           location: $("inLocation").value.trim() || "",
-          quote: $("inQuote").value.trim() || "",
+          quote: quoteTexts[0] || "",
+          quote_typing_enabled: $("inQuoteTyping").checked,
+          quote_typing_texts: quoteTexts,
+          quote_typing_speed: Number.isFinite(quoteSpeed)
+            ? quoteSpeed
+            : DEFAULT_QUOTE_SPEED,
+          quote_typing_pause: Number.isFinite(quotePause)
+            ? quotePause
+            : DEFAULT_QUOTE_PAUSE,
+          quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
+          quote_font_family: $("inQuoteFont").value || "default",
+          quote_effect: $("inQuoteEffect").value || "none",
+          quote_effect_strength: Number.isFinite(quoteEffectStrength)
+            ? quoteEffectStrength
+            : DEFAULT_QUOTE_EFFECT_STRENGTH,
+          entry_bg_alpha: Number.isFinite(entryBgAlpha)
+            ? entryBgAlpha
+            : DEFAULT_ENTRY_BG_ALPHA,
+          entry_text_color: hexOrNull($("inEntryTextColor").value),
+          entry_font_size: Number.isFinite(entryFontSize)
+            ? entryFontSize
+            : DEFAULT_ENTRY_FONT_SIZE,
+          entry_font_family: $("inEntryFont").value || "default",
+          entry_effect: $("inEntryEffect").value || "none",
+          entry_overlay_alpha: Number.isFinite(entryOverlayAlpha)
+            ? entryOverlayAlpha
+            : DEFAULT_ENTRY_OVERLAY_ALPHA,
+          entry_box_enabled: !!entryBoxEnabled,
+          entry_border_enabled: !!entryBorderEnabled,
+          entry_border_color: entryBorderColor,
+          entry_text: $("inEntryText").value.trim() || "",
           song_url: $("inSong").value.trim() || "",
           song_name: $("inSongName").value.trim() || "",
           song_icon_url: $("inSongIcon").value.trim() || null,
@@ -2227,7 +4374,11 @@
           name_effect: $("inNameFx").value || "none",
           background_effect: $("inBgFx").value || "none",
           display_name_mode: displayMode,
+          layout_mode: layoutModeFromOrder(sectionOrder),
+          canvas_layout: serializeCanvasLayout(),
           custom_display_name: displayMode === "custom" ? customName : null,
+          linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
+          section_order: sectionOrder,
           link_color: hexOrNull($("inLinkColor").value),
           link_bg_color: hexOrNull($("inLinkBgColor").value),
           link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
@@ -2237,10 +4388,18 @@
           location_color: hexOrNull($("inLocationColor").value),
           quote_color: hexOrNull($("inQuoteColor").value),
           cursor_url: $("inCursor").value.trim() || null,
+          cursor_effect: $("inCursorFx").value || "none",
+          cursor_effect_color: hexOrNull($("inCursorFxColor").value),
+          cursor_effect_alpha: Number.isFinite(cursorFxAlpha)
+            ? cursorFxAlpha
+            : DEFAULT_CURSOR_FX_ALPHA,
           discord_frame_enabled: $("inDiscordFrame").checked,
           discord_presence_enabled: $("inDiscordPresence").checked,
           discord_status_enabled: $("inDiscordStatus").checked,
           discord_badges_enabled: $("inDiscordBadges").checked,
+          discord_badge_codes: Array.isArray(discordBadgeCodes)
+            ? discordBadgeCodes
+            : [],
           show_visit_counter: $("inShowCounter").checked,
           visit_counter_color: hexOrNull($("inCounterColor").value),
           visit_counter_bg_color: hexOrNull($("inCounterBgColor").value),
@@ -2510,7 +4669,11 @@
 
       function renderLinks(links) {
         const wrap = $("linksList");
-        if (HIDE_LINKS || !wrap) return;
+        currentLinks = Array.isArray(links) ? links.slice() : [];
+        if (HIDE_LINKS || !wrap) {
+          scheduleCanvasRefresh();
+          return;
+        }
         wrap.innerHTML = "";
         ensureLinksDrag(wrap);
         (links || []).forEach((l, idx) => {
@@ -2642,11 +4805,16 @@
           });
           wrap.appendChild(row);
         });
+        scheduleCanvasRefresh();
       }
 
       function renderBadges(list) {
         const box = $("badges");
-        if (!box) return;
+        currentBadges = Array.isArray(list) ? list.slice() : [];
+        if (!box) {
+          scheduleCanvasRefresh();
+          return;
+        }
         box.innerHTML = "";
         (list || []).forEach((ic) => {
           const item = document.createElement("div");
@@ -2671,6 +4839,90 @@
           });
           box.appendChild(item);
         });
+        scheduleCanvasRefresh();
+      }
+
+      async function apiUpdateDiscordBadgeCodes(codes) {
+        if (!linktreeId) {
+          showMsg(msgMeta, "Create the Linktree first", false);
+          return;
+        }
+        const r = await fetch(`/api/linktrees/${linktreeId}`, {
+          method: "PATCH",
+          headers: headers(),
+          credentials: "include",
+          body: JSON.stringify({ discord_badge_codes: codes }),
+        });
+        if (!r.ok) {
+          showMsg(msgMeta, "Discord badges update failed", false);
+          return;
+        }
+        showMsg(msgMeta, "Discord badges updated", true);
+        await refreshData();
+      }
+
+      function renderDiscordBadges() {
+        const box = $("discordBadgesList");
+        const hint = $("discordBadgesHint");
+        if (!box) return;
+        box.innerHTML = "";
+        if (hint) hint.textContent = "";
+
+        const linked = !!(discordStatus && discordStatus.linked);
+        if (!linked) {
+          if (hint)
+            hint.textContent = "Link Discord to manage your Discord badges.";
+          scheduleCanvasRefresh();
+          return;
+        }
+        const list = Array.isArray(discordStatus?.badges)
+          ? discordStatus.badges
+          : [];
+        if (!list.length) {
+          if (hint) hint.textContent = "No Discord badges found on your account.";
+          scheduleCanvasRefresh();
+          return;
+        }
+
+        if (!Array.isArray(discordBadgeCodes)) {
+          discordBadgeCodes = list.map((b) => b && b.code).filter(Boolean);
+        }
+
+        list.forEach((badge) => {
+          if (!badge) return;
+          const item = document.createElement("div");
+          item.className = "badge-item";
+          const label = badge.label || badge.code || "badge";
+          const icon = sanitizeUrl(badge.icon_url ? String(badge.icon_url) : "");
+          const checked =
+            Array.isArray(discordBadgeCodes) &&
+            discordBadgeCodes.includes(badge.code);
+          item.innerHTML = `
+        <img src="${icon}" alt="${badge.code || ""}" class="icon-16">
+        <strong>${escapeHtml(badge.code || "badge")}</strong>
+        <span class="muted">${escapeHtml(label)}</span>
+        <span class="kbd"></span>
+        <label class="row" style="margin-left:auto;gap:.35rem">
+          <span class="muted">Displayed</span>
+          <input type="checkbox" data-code="${escapeHtml(
+            badge.code || ""
+          )}" ${checked ? "checked" : ""} aria-label="Displayed">
+        </label>
+      `;
+          const chk = item.querySelector('input[type="checkbox"]');
+          chk.addEventListener("change", async () => {
+            const codes = Array.from(
+              box.querySelectorAll('input[type="checkbox"][data-code]')
+            )
+              .filter((input) => input.checked)
+              .map((input) => input.getAttribute("data-code"))
+              .filter(Boolean);
+            discordBadgeCodes = codes;
+            await apiUpdateDiscordBadgeCodes(codes);
+          });
+          box.appendChild(item);
+        });
+        scheduleCanvasRefresh();
       }
 
       function updateDiscordUI() {
@@ -2729,6 +4981,7 @@
               : "Link Discord to use your Discord profile frame.";
           }
         }
+        renderDiscordBadges();
       }
 
       async function loadDiscordStatus() {
@@ -2737,8 +4990,10 @@
             credentials: "include",
           });
           discordStatus = r.ok ? await r.json() : { linked: false };
+          discordBadgeCodes = null;
         } catch (_) {
           discordStatus = { linked: false };
+          discordBadgeCodes = null;
         }
         updateDiscordUI();
       }
@@ -2831,11 +5086,85 @@
           $("inAudioBgAlpha").value ?? DEFAULT_AUDIO_BG_ALPHA,
           DEFAULT_AUDIO_BG_ALPHA
         );
+        const cursorFxAlpha = clampPercent(
+          $("inCursorFxAlpha").value ?? DEFAULT_CURSOR_FX_ALPHA,
+          DEFAULT_CURSOR_FX_ALPHA
+        );
+        const quoteTexts = collectQuoteTexts();
+        const quoteSpeed = Math.min(
+          200,
+          Math.max(20, parseInt($("inQuoteSpeed").value || DEFAULT_QUOTE_SPEED, 10))
+        );
+        const quotePause = Math.min(
+          10000,
+          Math.max(
+            200,
+            parseInt($("inQuotePause").value || DEFAULT_QUOTE_PAUSE, 10)
+          )
+        );
+        const quoteSize = Math.min(
+          40,
+          Math.max(10, parseInt($("inQuoteSize").value || DEFAULT_QUOTE_SIZE, 10))
+        );
+        const entryFontSize = Math.min(
+          40,
+          Math.max(
+            10,
+            parseInt($("inEntryFontSize").value || DEFAULT_ENTRY_FONT_SIZE, 10)
+          )
+        );
+        const entryBgAlpha = Math.min(
+          100,
+          Math.max(
+            0,
+            parseInt($("inEntryBgAlpha").value || DEFAULT_ENTRY_BG_ALPHA, 10)
+          )
+        );
+        const entryOverlayAlpha = Math.min(
+          100,
+          Math.max(
+            0,
+            parseInt(
+              $("inEntryOverlayAlpha").value || DEFAULT_ENTRY_OVERLAY_ALPHA,
+              10
+            )
+          )
+        );
+        const entryBoxEnabled = $("inEntryBoxEnabled").checked;
+        const entryBorderEnabled = $("inEntryBorderEnabled").checked;
+        const entryBorderColor = hexOrNull($("inEntryBorderColor").value);
         const body = {
           slug: $("inSlug").value.trim(),
           device_type: currentDevice,
           location: $("inLocation").value.trim() || null,
-          quote: $("inQuote").value.trim() || null,
+          quote: quoteTexts[0] || null,
+          quote_typing_enabled: $("inQuoteTyping").checked,
+          quote_typing_texts: quoteTexts,
+          quote_typing_speed: Number.isFinite(quoteSpeed)
+            ? quoteSpeed
+            : DEFAULT_QUOTE_SPEED,
+          quote_typing_pause: Number.isFinite(quotePause)
+            ? quotePause
+            : DEFAULT_QUOTE_PAUSE,
+          quote_font_size: Number.isFinite(quoteSize) ? quoteSize : DEFAULT_QUOTE_SIZE,
+          quote_font_family: $("inQuoteFont").value || "default",
+          quote_effect: $("inQuoteEffect").value || "none",
+          entry_bg_alpha: Number.isFinite(entryBgAlpha)
+            ? entryBgAlpha
+            : DEFAULT_ENTRY_BG_ALPHA,
+          entry_overlay_alpha: Number.isFinite(entryOverlayAlpha)
+            ? entryOverlayAlpha
+            : DEFAULT_ENTRY_OVERLAY_ALPHA,
+          entry_box_enabled: !!entryBoxEnabled,
+          entry_border_enabled: !!entryBorderEnabled,
+          entry_border_color: entryBorderColor,
+          entry_text_color: hexOrNull($("inEntryTextColor").value),
+          entry_font_size: Number.isFinite(entryFontSize)
+            ? entryFontSize
+            : DEFAULT_ENTRY_FONT_SIZE,
+          entry_font_family: $("inEntryFont").value || "default",
+          entry_effect: $("inEntryEffect").value || "none",
+          entry_text: $("inEntryText").value.trim() || null,
           song_url: $("inSong").value.trim() || null,
           song_name: $("inSongName").value.trim() || null,
           song_icon_url: $("inSongIcon").value.trim() || null,
@@ -2849,10 +5178,14 @@
           background_url: $("inBg").value.trim() || null,
           background_is_video: looksLikeVideoUrl($("inBg").value.trim()),
           transparency: 100 - cardAlphaInput,
-          name_effect: $("inNameFx").value,
-          background_effect: $("inBgFx").value,
+          name_effect: $("inNameFx").value || "none",
+          background_effect: $("inBgFx").value || "none",
           display_name_mode: $("inDisplayName").value,
+          layout_mode: layoutModeFromOrder(sectionOrder),
+          canvas_layout: serializeCanvasLayout(),
           custom_display_name: $("inCustomName").value.trim() || null,
+          linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
+          section_order: sectionOrder,
           text_color: $("inTextColor").value || null,
           name_color: $("inNameColor").value || null,
           location_color: $("inLocationColor").value || null,
@@ -2862,10 +5195,18 @@
           link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
           card_color: $("inCardColor").value || null,
           cursor_url: $("inCursor").value.trim() || null,
+          cursor_effect: $("inCursorFx").value || "none",
+          cursor_effect_color: $("inCursorFxColor").value || null,
+          cursor_effect_alpha: Number.isFinite(cursorFxAlpha)
+            ? cursorFxAlpha
+            : DEFAULT_CURSOR_FX_ALPHA,
           discord_frame_enabled: $("inDiscordFrame").checked,
           discord_presence_enabled: $("inDiscordPresence").checked,
           discord_status_enabled: $("inDiscordStatus").checked,
           discord_badges_enabled: $("inDiscordBadges").checked,
+          discord_badge_codes: Array.isArray(discordBadgeCodes)
+            ? discordBadgeCodes
+            : null,
           show_visit_counter: $("inShowCounter").checked,
           visit_counter_color: $("inCounterColor").value || null,
           visit_counter_bg_color: $("inCounterBgColor").value || null,
@@ -2996,6 +5337,29 @@
           (params.toString() ? "?" + params.toString() : "");
       }
 
+      async function autoSaveBeforeDeviceSwitch() {
+        if (!currentUser) {
+          showMsg(msgMeta, "Not logged in", false);
+          return false;
+        }
+        const slug = $("inSlug").value.trim();
+        if (!slug) {
+          showMsg(msgMeta, "Set a slug before switching devices", false);
+          return false;
+        }
+        try {
+          const exists = !!linktreeId;
+          const res = await apiEnsureOrUpdateMeta(exists);
+          if (!exists && res && res.id) {
+            linktreeId = res.id;
+          }
+          return true;
+        } catch (err) {
+          showMsg(msgMeta, String(err), false);
+          return false;
+        }
+      }
+
       $("inSlug").addEventListener("input", (e) => {
         $("slugPreview").textContent = e.target.value.trim() || "-";
         $("btnOpenPublic").href = `/tree/${encodeURIComponent(
@@ -3004,10 +5368,52 @@
         updateCreateTemplateLink();
       });
       $("inDisplayName").addEventListener("change", toggleCustomNameField);
+      $("inQuoteTyping").addEventListener("change", toggleQuoteTypingFields);
+      $("inLayoutMode").addEventListener("change", () => {
+        syncLayoutModeFromOrder();
+      });
+      if ($("inCanvasEnabled")) {
+        $("inCanvasEnabled").addEventListener("change", (e) => {
+          if (canvasLayout) canvasLayout.enabled = true;
+        });
+      }
+      if ($("inCanvasGrid")) {
+        $("inCanvasGrid").addEventListener("input", (e) => {
+          if (!canvasLayout) return;
+          canvasLayout.grid = 1;
+          syncCanvasInputs();
+          renderCanvasEditor();
+        });
+      }
+      if ($("btnCanvasGroup")) {
+        $("btnCanvasGroup").addEventListener("click", groupSelectedPlates);
+      }
+      if ($("btnCanvasUngroup")) {
+        $("btnCanvasUngroup").addEventListener("click", ungroupSelectedPlates);
+      }
+      if ($("btnCanvasReset")) {
+        $("btnCanvasReset").addEventListener("click", resetCanvasLayout);
+      }
+      if ($("canvasEditor")) {
+        $("canvasEditor").addEventListener("click", clearCanvasSelection);
+      }
+      if ($("formMeta")) {
+        $("formMeta").addEventListener("input", scheduleCanvasRefresh);
+        $("formMeta").addEventListener("change", scheduleCanvasRefresh);
+      }
       toggleCustomNameField();
+      toggleQuoteTypingFields();
 
       $("inDevice").addEventListener("change", async (e) => {
-        currentDevice = e.target.value || "pc";
+        const nextDevice = e.target.value || "pc";
+        const prevDevice = currentDevice || "pc";
+        if (nextDevice === prevDevice) return;
+        const ok = await autoSaveBeforeDeviceSwitch();
+        if (!ok) {
+          e.target.value = prevDevice;
+          return;
+        }
+        currentDevice = nextDevice;
         updateCreateTemplateLink();
         await refreshData();
       });
@@ -3067,6 +5473,11 @@
 
         if (!slugInput) {
           currentTree = null;
+          if (!canvasLayout) {
+            canvasLayout = buildDefaultCanvasLayout(sectionOrder);
+          }
+          syncCanvasInputs();
+          renderCanvasEditor();
           return;
         }
 
@@ -3086,6 +5497,11 @@
 
         if (!lt) {
           currentTree = null;
+          if (!canvasLayout) {
+            canvasLayout = buildDefaultCanvasLayout(sectionOrder);
+          }
+          syncCanvasInputs();
+          renderCanvasEditor();
           return;
         }
 
@@ -3116,6 +5532,8 @@
             return;
           }
           document.getElementById("cfgWrap").style.display = "grid";
+          sectionOrder = SECTION_ORDER_DEFAULT.slice();
+          renderSectionOrder();
 
           const preferred =
             slugFromQuery() ||
@@ -3170,14 +5588,45 @@
       }
       boot();
 
+      const hashedFileCache = new WeakMap();
+      async function withHashedFile(file) {
+        if (!file) return null;
+        if (hashedFileCache.has(file)) return hashedFileCache.get(file);
+        const name = file.name || "upload";
+        const dot = name.lastIndexOf(".");
+        const base = dot > 0 ? name.slice(0, dot) : name;
+        const ext = dot > 0 ? name.slice(dot) : "";
+        let hash = "";
+        try {
+          const buf = await file.arrayBuffer();
+          const digest = await crypto.subtle.digest("SHA-256", buf);
+          hash = Array.from(new Uint8Array(digest))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("")
+            .slice(0, 16);
+        } catch (_) {
+          hash = Math.random().toString(16).slice(2, 10);
+        }
+        const safeBase = base.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const hashedName = `${safeBase}--${hash}${ext}`;
+        const hashed = new File([file], hashedName, {
+          type: file.type,
+          lastModified: file.lastModified,
+        });
+        hashedFileCache.set(file, hashed);
+        return hashed;
+      }
+
       async function uploadInlineFile(inputEl, endpoint) {
         if (!inputEl || !inputEl.files || !inputEl.files[0]) return null;
         if (!currentUser) {
           const user = await renderAuthHeader();
           if (!user) throw new Error("Not logged in");
         }
+        const raw = inputEl.files[0];
+        const file = (await withHashedFile(raw)) || raw;
         const fd = new FormData();
-        fd.append("file", inputEl.files[0]);
+        fd.append("file", file);
         const r = await fetch(endpoint, {
           method: "POST",
           credentials: "include",
@@ -3189,7 +5638,8 @@
       }
 
       async function uploadFile(inputId, endpoint) {
-        const f = $(inputId).files[0];
+        const raw = $(inputId).files[0];
+        const f = (await withHashedFile(raw)) || raw;
         if (!f) return null;
         if (!currentUser) {
           const user = await renderAuthHeader();
@@ -3216,7 +5666,8 @@
       }
 
       async function fetchUpload(inputId, endpoint) {
-        const f = $(inputId).files[0];
+        const raw = $(inputId).files[0];
+        const f = (await withHashedFile(raw)) || raw;
         if (!f) return null;
         if (!currentUser) {
           const user = await renderAuthHeader();
@@ -3313,6 +5764,43 @@
           emptyMsg: "No icon uploaded.",
           label: "Song icon",
         });
+      });
+
+      $("filePfp").addEventListener("change", async () => {
+        try {
+          const res = await uploadFile(
+            "filePfp",
+            `/api/users/me/linktree-pfp?device=${encodeURIComponent(
+              currentDevice || "pc"
+            )}`
+          );
+          const url = res?.url || "";
+          $("inLinktreePfp").value = url;
+          setUploadStatus(
+            "pfpStatus",
+            url,
+            "Using your account profile picture."
+          );
+          showMsg(msgMeta, "Profile picture uploaded", true);
+        } catch (e) {
+          showMsg(msgMeta, "Profile picture upload failed", false);
+        }
+      });
+
+      $("btnRemovePfp")?.addEventListener("click", async () => {
+        await removeMetaUpload({
+          fieldId: "inLinktreePfp",
+          fileId: "filePfp",
+          statusId: "pfpStatus",
+          emptyMsg: "Using your account profile picture.",
+          label: "Profile picture",
+        });
+      });
+
+      $("btnResetSectionOrder")?.addEventListener("click", () => {
+        sectionOrder = SECTION_ORDER_DEFAULT.slice();
+        renderSectionOrder();
+        showMsg(msgMeta, "Section order reset", true);
       });
 
       $("fileBg").addEventListener("change", async () => {
