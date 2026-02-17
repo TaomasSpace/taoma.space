@@ -11,3 +11,4 @@ sqlalchemy
 firebase_admin
 google-cloud-firestore
 websockets>=12.0
+requests

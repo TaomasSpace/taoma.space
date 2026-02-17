@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 from typing import Any
 from fastapi import FastAPI, HTTPException, Query, Header, Depends
 from pydantic import BaseModel, HttpUrl, Field
-from typing import List, Optional
+from typing import Callable, List, Optional
 from pydantic import BaseModel
 import os
 from fastapi import Depends, Header
@@ -2057,11 +2057,17 @@ def unified_get_gifs(
 
     try:
         if tag:
-            return db.get_random_by_tag(tag, nsfw_mode=nsfw_mode)
+            return does_url_still_exist(
+                lambda: db.get_random_by_tag(tag, nsfw_mode=nsfw_mode)
+            )
         if anime:
-            return db.get_random_by_anime(anime, nsfw_mode=nsfw_mode)
+            return does_url_still_exist(
+                lambda: db.get_random_by_anime(anime, nsfw_mode=nsfw_mode)
+            )
         if character:
-            return db.get_random_by_character(character, nsfw_mode=nsfw_mode)
+            return does_url_still_exist(
+                lambda: db.get_random_by_character(character, nsfw_mode=nsfw_mode)
+            )
     except KeyError:
         if anime:
             suggestions = db.suggest_anime(anime, limit=5)
@@ -2084,9 +2090,58 @@ def unified_get_gifs(
         raise
 
     try:
-        return db.get_random(nsfw_mode=nsfw_mode)
+        return does_url_still_exist(lambda: db.get_random(nsfw_mode=nsfw_mode))
     except KeyError:
         raise HTTPException(status_code=404, detail="no gifs in database")
+
+def _gif_url_is_live(url: str) -> tuple[bool, int | None]:
+    if not isinstance(url, str) or not url.strip():
+        return False, None
+    try:
+        with httpx.Client(timeout=8.0, follow_redirects=True) as client:
+            resp = client.head(url.strip())
+            if not (200 <= resp.status_code < 300):
+                resp = client.get(url.strip(), headers={"Range": "bytes=0-0"})
+            return 200 <= resp.status_code < 300, resp.status_code
+    except httpx.HTTPError:
+        return False, None
+
+
+def does_url_still_exist(fetch_gif: Callable[[], dict], *, max_attempts: int = 12):
+    tried_ids: set[int] = set()
+    for _ in range(max_attempts):
+        gif = fetch_gif()
+        if not isinstance(gif, dict):
+            return gif
+
+        gif_id = gif.get("id")
+        if isinstance(gif_id, int):
+            if gif_id in tried_ids:
+                continue
+            tried_ids.add(gif_id)
+
+        url = str(gif.get("url") or "").strip()
+        ok, status_code = _gif_url_is_live(url)
+        if ok:
+            return gif
+
+        logger.warning(
+            "Skipping unreachable GIF id=%s url=%s status=%s",
+            gif_id,
+            url,
+            status_code,
+        )
+        # Hard-remove clear dead links so future requests can recover faster.
+        if isinstance(gif_id, int) and status_code in {404, 410}:
+            try:
+                db.delete_gif(gif_id)
+            except Exception as exc:
+                logger.warning("Failed to delete dead GIF id=%s: %s", gif_id, exc)
+
+    raise HTTPException(
+        status_code=404, detail="no reachable gifs found for this request"
+    )
+
 
 
 @app.get(
@@ -2106,7 +2161,7 @@ def random_gif_url(
             status_code=400, detail="nsfw must be one of: false, true, only"
         )
     try:
-        gif = db.get_random(nsfw_mode=nsfw_mode)
+        gif = does_url_still_exist(lambda: db.get_random(nsfw_mode=nsfw_mode))
     except KeyError:
         raise HTTPException(status_code=404, detail="no gifs in database")
     return Response(content=str(gif.get("url", "")), media_type="text/plain")
