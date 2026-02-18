@@ -4064,13 +4064,13 @@
           lastAudioSig = audioSig;
           lastCursorSig = cursorSig;
 
+          const layoutMode = (data.layout_mode || "center")
+            .toString()
+            .toLowerCase();
+          const wantsWide =
+            !isMobile && !usedCanvas && (layoutMode === "wide" || hasSideBySide);
           const cardEl = document.getElementById("card");
           if (cardEl) {
-            const layoutMode = (data.layout_mode || "center")
-              .toString()
-              .toLowerCase();
-            const wantsWide =
-              !isMobile && !usedCanvas && (layoutMode === "wide" || hasSideBySide);
             cardEl.classList.toggle("wide", wantsWide);
             const raw = Number(data.transparency);
             const clamped = Number.isFinite(raw)
