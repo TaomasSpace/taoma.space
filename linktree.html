@@ -397,6 +397,28 @@
         transform: translate(-50%, 10px);
       }
 
+      .name.font-serif {
+        font-family: Georgia, "Times New Roman", serif;
+      }
+      .name.font-mono {
+        font-family:
+          ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Monaco,
+          Consolas,
+          "Liberation Mono",
+          "Courier New",
+          monospace;
+      }
+      .name.font-script {
+        font-family: "Segoe Script", "Comic Sans MS", cursive;
+      }
+      .name.font-display {
+        font-family: Impact, "Arial Black", "Franklin Gothic", sans-serif;
+        letter-spacing: 0.4px;
+      }
+
       .location {
         display: flex;
         align-items: center;
@@ -2506,6 +2528,77 @@
           rootStyle.setProperty("--quote-neon-drop", `${drop}px`);
         }
 
+        function normalizeFontFamily(raw) {
+          const value = String(raw || "default").toLowerCase();
+          return ["default", "serif", "mono", "script", "display"].includes(value)
+            ? value
+            : "default";
+        }
+
+        function normalizeEffectName(raw) {
+          const value = String(raw || "none").toLowerCase();
+          return ["none", "glow", "neon", "rainbow"].includes(value)
+            ? value
+            : "none";
+        }
+
+        function applyNameStyles(data) {
+          const nameEl = document.getElementById("name");
+          if (!nameEl || !data) return;
+          const mode = data.display_name_mode || "slug";
+          if (mode === "username") {
+            nameEl.textContent = data.user_username || data.slug || "User";
+          } else if (mode === "custom" && data.custom_display_name) {
+            nameEl.textContent = data.custom_display_name;
+          } else {
+            nameEl.textContent = data.slug || "User";
+          }
+          nameEl.classList.remove(
+            "glow",
+            "neon",
+            "rainbow",
+            "font-serif",
+            "font-mono",
+            "font-script",
+            "font-display",
+          );
+          const fx = normalizeEffectName(data.name_effect);
+          if (fx !== "none") nameEl.classList.add(fx);
+          const fontFamily = normalizeFontFamily(data.name_font_family);
+          if (fontFamily !== "default") {
+            nameEl.classList.add(`font-${fontFamily}`);
+          }
+          if (data.user_id) {
+            nameEl.dataset.id = `ID: ${data.user_id}`;
+            nameEl.classList.add("has-id");
+            nameEl.title = `ID: ${data.user_id}`;
+          } else {
+            nameEl.classList.remove("has-id");
+            nameEl.removeAttribute("data-id");
+            nameEl.removeAttribute("title");
+          }
+        }
+
+        function applyQuoteStyles(data) {
+          const quoteEl = document.getElementById("quote");
+          if (!quoteEl || !data) return;
+          quoteEl.classList.remove(
+            "glow",
+            "neon",
+            "rainbow",
+            "font-serif",
+            "font-mono",
+            "font-script",
+            "font-display",
+          );
+          const fx = normalizeEffectName(data.quote_effect);
+          if (fx !== "none") quoteEl.classList.add(fx);
+          const fontFamily = normalizeFontFamily(data.quote_font_family);
+          if (fontFamily !== "default") {
+            quoteEl.classList.add(`font-${fontFamily}`);
+          }
+        }
+
         function stopQuoteTyping() {
           quoteTypingToken += 1;
         }
@@ -4098,55 +4191,10 @@
                 }
               }
             }
-          const nameEl = document.getElementById("name");
-          if (nameEl) {
-            const mode = data.display_name_mode || "slug";
-            if (mode === "username") {
-              nameEl.textContent = data.user_username || data.slug || "User";
-            } else if (mode === "custom" && data.custom_display_name) {
-              nameEl.textContent = data.custom_display_name;
-            } else {
-              nameEl.textContent = data.slug || "User";
-            }
-
-            // Effekt-Klassen setzen
-            nameEl.classList.remove("glow", "neon", "rainbow");
-            if (data.name_effect && data.name_effect !== "none") {
-              nameEl.classList.add(data.name_effect);
-            }
-            if (data.user_id) {
-              nameEl.dataset.id = `ID: ${data.user_id}`;
-              nameEl.classList.add("has-id");
-              nameEl.title = `ID: ${data.user_id}`;
-            } else {
-              nameEl.classList.remove("has-id");
-              nameEl.removeAttribute("data-id");
-              nameEl.removeAttribute("title");
-            }
-          }
-          const quoteEl = document.getElementById("quote");
-          if (quoteEl) {
-            quoteEl.classList.remove(
-              "glow",
-              "neon",
-              "rainbow",
-              "font-serif",
-              "font-mono",
-              "font-script",
-              "font-display",
-            );
-            const fx = (data.quote_effect || "none").toString().toLowerCase();
-            if (fx && fx !== "none") {
-              quoteEl.classList.add(fx);
-            }
-            const fontFamily = (data.quote_font_family || "default")
-              .toString()
-              .toLowerCase();
-            if (fontFamily && fontFamily !== "default") {
-              quoteEl.classList.add(`font-${fontFamily}`);
-            }
-          }
+          applyNameStyles(data);
+          applyQuoteStyles(data);
           const hasQuote = updateQuoteDisplay(data);
+          const quoteEl = document.getElementById("quote");
           if (quoteEl) {
             quoteEl.classList.toggle("hidden", !hasQuote);
           }

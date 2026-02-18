@@ -134,6 +134,8 @@ CREATE TABLE IF NOT EXISTS linktrees (
                         CHECK (transparency BETWEEN 0 AND 100),
     name_effect         TEXT NOT NULL DEFAULT 'none'
                         CHECK (name_effect IN ('none','glow','neon','rainbow')),
+    name_font_family    TEXT NOT NULL DEFAULT 'default'
+                        CHECK (name_font_family IN ('default','serif','mono','script','display')),
     background_effect   TEXT NOT NULL DEFAULT 'none'
                         CHECK (background_effect IN ('none','night','rain','snow','noise','gradient','parallax','particles','sweep','mesh','grid','vignette','scanlines','glitch')),
     display_name_mode   TEXT NOT NULL DEFAULT 'slug'
@@ -600,6 +602,10 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS name_font_family TEXT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
   ADD COLUMN IF NOT EXISTS quote_color TEXT;
                 """)
                 cur.execute("""
@@ -683,6 +689,11 @@ class PgGifDB:
   UPDATE linktrees
      SET quote_effect_strength = 70
    WHERE quote_effect_strength IS NULL;
+                """)
+                cur.execute("""
+  UPDATE linktrees
+     SET name_font_family = 'default'
+   WHERE name_font_family IS NULL;
                 """)
                 cur.execute("""
   UPDATE linktrees
@@ -770,6 +781,14 @@ class PgGifDB:
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
+  ALTER COLUMN name_font_family SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN name_font_family SET DEFAULT 'default';
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
   ALTER COLUMN entry_effect SET NOT NULL;
                 """)
                 cur.execute("""
@@ -826,6 +845,15 @@ class PgGifDB:
   ALTER TABLE linktrees
   ADD CONSTRAINT chk_linktrees_quote_font_family
   CHECK (quote_font_family IN ('default','serif','mono','script','display'));
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS chk_linktrees_name_font_family;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT chk_linktrees_name_font_family
+  CHECK (name_font_family IN ('default','serif','mono','script','display'));
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1958,6 +1986,7 @@ class PgGifDB:
         background_is_video: bool = False,
         transparency: int = 0,
         name_effect: str = "none",
+        name_font_family: str = "default",
         background_effect: str = "none",
         display_name_mode: str = "slug",  # <-- NEU
         layout_mode: str = "center",
@@ -1997,7 +2026,7 @@ class PgGifDB:
                     user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, quote_effect_strength, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, entry_box_enabled, entry_border_enabled, entry_border_color, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
-                    transparency, name_effect, background_effect,
+                    transparency, name_effect, name_font_family, background_effect,
                     display_name_mode,          -- <-- NEU
                     layout_mode,
                     custom_display_name,
@@ -2034,7 +2063,7 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
@@ -2042,7 +2071,7 @@ class PgGifDB:
                     user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, quote_effect_strength, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, entry_box_enabled, entry_border_enabled, entry_border_color, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
-                    transparency, name_effect, background_effect,
+                    transparency, name_effect, name_font_family, background_effect,
                     display_name_mode,
                     layout_mode,
                     custom_display_name,
@@ -2120,6 +2149,7 @@ class PgGifDB:
             "background_is_video",
             "transparency",
             "name_effect",
+            "name_font_family",
             "background_effect",
             "display_name_mode",
             "layout_mode",
@@ -2191,7 +2221,7 @@ class PgGifDB:
                     user_id, slug, device_type, location, quote, quote_typing_enabled, quote_typing_texts, quote_typing_speed, quote_typing_pause, quote_font_size, quote_font_family, quote_effect, quote_effect_strength, entry_text, entry_bg_alpha, entry_text_color, entry_font_size, entry_font_family, entry_effect, entry_overlay_alpha, entry_box_enabled, entry_border_enabled, entry_border_color, song_url, song_name, song_icon_url, show_audio_player,
                     audio_player_bg_color, audio_player_bg_alpha, audio_player_text_color, audio_player_accent_color,
                     background_url, background_is_video,
-                    transparency, name_effect, background_effect,
+                    transparency, name_effect, name_font_family, background_effect,
                     display_name_mode, layout_mode, custom_display_name, linktree_profile_picture, section_order, canvas_layout,
                     link_color, link_bg_color, link_bg_alpha, card_color, text_color,
                     name_color, location_color, quote_color, cursor_url, cursor_effect, cursor_effect_color, cursor_effect_alpha, discord_frame_enabled,
@@ -2204,7 +2234,7 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
                 """,
@@ -2244,6 +2274,7 @@ class PgGifDB:
                     src.get("background_is_video"),
                     src.get("transparency"),
                     src.get("name_effect"),
+                    src.get("name_font_family", "default"),
                     src.get("background_effect"),
                     src.get("display_name_mode"),
                     src.get("layout_mode", "center"),

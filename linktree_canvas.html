@@ -223,6 +223,107 @@
         color: var(--muted);
       }
 
+      .muted {
+        color: var(--muted);
+      }
+
+      .inspector-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 0.75rem 0;
+      }
+
+      .grid-2 {
+        display: grid;
+        gap: 0.6rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .btn.sm {
+        width: auto;
+        padding: 0.45rem 0.6rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+      }
+
+      .btn.danger {
+        background: #ff7a7a;
+        color: #1b0e0e;
+      }
+
+      .inspector .links-list {
+        display: grid;
+        gap: 0.7rem;
+      }
+
+      .inspector .link-item {
+        display: grid;
+        gap: 0.5rem;
+        padding: 0.7rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .inspector .link-item.dragging {
+        opacity: 0.6;
+        border-style: dashed;
+      }
+
+      .inspector .link-item .handle {
+        font-size: 0.9rem;
+        color: var(--muted);
+        cursor: grab;
+      }
+
+      .inspector .link-icon-upload {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .inspector .badge-grid {
+        display: grid;
+        gap: 0.6rem;
+      }
+
+      .inspector .badge-item {
+        display: grid;
+        gap: 0.35rem;
+        padding: 0.6rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .inspector .badge-item .badge-row {
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .inspector .badge-item img {
+        width: 20px;
+        height: 20px;
+        object-fit: cover;
+      }
+
+      .inspector .pfp-preview {
+        width: 84px;
+        height: 84px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .inspector .pfp-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
       .canvas-plate {
         position: absolute;
         inset: 0 auto auto 0;
@@ -612,6 +713,28 @@
       .name.has-id:hover::after {
         opacity: 1;
         transform: translate(-50%, 10px);
+      }
+
+      .name.font-serif {
+        font-family: Georgia, "Times New Roman", serif;
+      }
+      .name.font-mono {
+        font-family:
+          ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Monaco,
+          Consolas,
+          "Liberation Mono",
+          "Courier New",
+          monospace;
+      }
+      .name.font-script {
+        font-family: "Segoe Script", "Comic Sans MS", cursive;
+      }
+      .name.font-display {
+        font-family: Impact, "Arial Black", "Franklin Gothic", sans-serif;
+        letter-spacing: 0.4px;
       }
 
       .location {
@@ -1848,7 +1971,7 @@
         </div>
         <div class="inspector-body">
           <div id="inspectorMsg" class="inspector-note"></div>
-          <div>
+          <div id="canvasSizePanel">
             <h3>Canvas size</h3>
             <div class="row">
               <div class="field" style="flex: 1">
@@ -1894,6 +2017,449 @@
               <div class="field" style="flex: 1">
                 <label for="inSelH">Height (px)</label>
                 <input id="inSelH" class="input" type="number" />
+              </div>
+            </div>
+            <div class="field" id="selectionGroupRow">
+              <label id="selectionGroupLabel" for="inSelGroup">Group ID</label>
+              <input
+                id="inSelGroup"
+                class="input"
+                type="text"
+                list="selGroupOptions"
+              />
+              <datalist id="selGroupOptions"></datalist>
+              <div class="inspector-note">
+                Leave empty to ungroup. New IDs create a group at the current position.
+              </div>
+            </div>
+            <div id="selectionAttributes">
+              <h3>Attributes</h3>
+              <div id="selectionAttrEmpty" class="inspector-note">
+                Select an element to edit its attributes.
+              </div>
+              <div id="selectionAttrPfp" hidden>
+                <div class="field">
+                  <label for="inAttrPfpFile">Upload profile picture</label>
+                  <input id="inAttrPfpFile" class="input" type="file" accept="image/*" />
+                  <input type="hidden" id="inAttrLinktreePfp" />
+                  <div id="attrPfpStatus" class="inspector-note">
+                    Using your account profile picture.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn ghost sm" type="button" id="btnAttrRemovePfp">
+                      Remove picture
+                    </button>
+                  </div>
+                </div>
+                <div class="inspector-divider"></div>
+                <div class="field">
+                  <label>Discord (optional)</label>
+                  <div id="attrDiscordStatusText" class="inspector-note">Not linked</div>
+                  <div id="attrDiscordPreview" class="inspector-note">
+                    Link Discord to use your profile frame.
+                  </div>
+                  <div class="row" style="gap: 0.5rem; flex-wrap: wrap">
+                    <button class="btn sm" type="button" id="btnAttrDiscordLink">
+                      Link Discord
+                    </button>
+                    <button
+                      class="btn sm ghost"
+                      type="button"
+                      id="btnAttrDiscordUnlink"
+                      style="display: none"
+                    >
+                      Unlink
+                    </button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inAttrDiscordFrame" />
+                    <span>Show my Discord profile frame around my avatar</span>
+                  </label>
+                  <div class="inspector-note">
+                    Optional. Uses your current Discord profile frame if available.
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inAttrDiscordPresence" />
+                    <span>Show my Discord activity status on my avatar</span>
+                  </label>
+                  <div class="inspector-note">
+                    Status is read automatically from Discord (last known).
+                  </div>
+                </div>
+              </div>
+
+              <div id="selectionAttrName" hidden>
+                <div class="field">
+                  <label for="inAttrDisplayName">Display Name</label>
+                  <select id="inAttrDisplayName" class="select">
+                    <option value="slug">Slug</option>
+                    <option value="username">Username</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="inAttrCustomName">Custom Name</label>
+                  <input
+                    id="inAttrCustomName"
+                    class="input"
+                    placeholder="Your name/nickname"
+                    maxlength="64"
+                  />
+                  <div class="inspector-note">
+                    Used when Display Name is set to Custom.
+                  </div>
+                </div>
+                <div class="inspector-divider"></div>
+                <div class="row">
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrNameColor">Name color</label>
+                    <input id="inAttrNameColor" class="input" type="color" />
+                  </div>
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrNameEffect">Name effect</label>
+                    <select id="inAttrNameEffect" class="select">
+                      <option value="none">none</option>
+                      <option value="glow">glow</option>
+                      <option value="neon">neon</option>
+                      <option value="rainbow">rainbow</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="inAttrNameFont">Name font</label>
+                  <select id="inAttrNameFont" class="select">
+                    <option value="default">default</option>
+                    <option value="serif">serif</option>
+                    <option value="mono">mono</option>
+                    <option value="script">script</option>
+                    <option value="display">display</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="selectionAttrDiscordStatus" hidden>
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inAttrDiscordStatus" />
+                    <span>Show my Discord status line on the linktree</span>
+                  </label>
+                  <div class="inspector-note">
+                    Custom status text is pulled from Discord automatically.
+                  </div>
+                </div>
+              </div>
+
+              <div id="selectionAttrQuote" hidden>
+                <div class="field">
+                  <label for="inAttrQuote">Quote</label>
+                  <textarea
+                    id="inAttrQuote"
+                    class="input"
+                    rows="3"
+                    placeholder="Write your bio/quote…"
+                  ></textarea>
+                </div>
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inAttrQuoteTyping" />
+                    <span>Typewriter quote (cycle up to 3 texts)</span>
+                  </label>
+                </div>
+                <div id="attrQuoteTypingFields" class="grid-2">
+                  <div class="field">
+                    <label for="inAttrQuoteAlt1">Quote text 2</label>
+                    <input
+                      id="inAttrQuoteAlt1"
+                      class="input"
+                      placeholder="Second quote text"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="inAttrQuoteAlt2">Quote text 3</label>
+                    <input
+                      id="inAttrQuoteAlt2"
+                      class="input"
+                      placeholder="Third quote text"
+                    />
+                  </div>
+                </div>
+                <div class="field" id="attrQuoteTypingSpeedWrap">
+                  <label for="inAttrQuoteSpeed">Typewriter speed (ms per char)</label>
+                  <input id="inAttrQuoteSpeed" class="input" type="number" min="20" max="200" />
+                </div>
+                <div class="field" id="attrQuoteTypingPauseWrap">
+                  <label for="inAttrQuotePause">Pause before next quote (ms)</label>
+                  <input id="inAttrQuotePause" class="input" type="number" min="200" max="10000" />
+                </div>
+                <div class="inspector-divider"></div>
+                <div class="row">
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrQuoteColor">Quote color</label>
+                    <input id="inAttrQuoteColor" class="input" type="color" />
+                  </div>
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrQuoteEffect">Quote effect</label>
+                    <select id="inAttrQuoteEffect" class="select">
+                      <option value="none">none</option>
+                      <option value="glow">glow</option>
+                      <option value="neon">neon</option>
+                      <option value="rainbow">rainbow</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="inAttrQuoteFont">Quote font</label>
+                  <select id="inAttrQuoteFont" class="select">
+                    <option value="default">default</option>
+                    <option value="serif">serif</option>
+                    <option value="mono">mono</option>
+                    <option value="script">script</option>
+                    <option value="display">display</option>
+                  </select>
+                </div>
+                <div class="row">
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrQuoteSize">Quote font size (px)</label>
+                    <input
+                      id="inAttrQuoteSize"
+                      class="input"
+                      type="number"
+                      min="10"
+                      max="40"
+                    />
+                  </div>
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrQuoteEffectStrength"
+                      >Quote effect strength (0-100)</label
+                    >
+                    <input
+                      id="inAttrQuoteEffectStrength"
+                      class="input"
+                      type="number"
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div id="selectionAttrLocation" hidden>
+                <div class="field">
+                  <label for="inAttrLocation">Location</label>
+                  <input
+                    id="inAttrLocation"
+                    class="input"
+                    placeholder="Switzerland"
+                  />
+                </div>
+                <div class="field">
+                  <label for="inAttrLocationColor">Location Color</label>
+                  <input id="inAttrLocationColor" class="input" type="color" />
+                </div>
+              </div>
+
+              <div id="selectionAttrBadges" hidden>
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inAttrDiscordBadges" />
+                    <span>Show my Discord badges</span>
+                  </label>
+                </div>
+                <div id="attrDiscordBadgesList" class="badge-grid"></div>
+                <div id="attrDiscordBadgesHint" class="inspector-note"></div>
+                <div class="inspector-divider"></div>
+                <div class="field">
+                  <label>Badges</label>
+                </div>
+                <div id="attrBadgesList" class="badge-grid"></div>
+              </div>
+
+              <div id="selectionAttrAudio" hidden>
+                <div class="field">
+                  <label for="inAttrSongFile">Upload Song</label>
+                  <input type="file" id="inAttrSongFile" class="input" accept="audio/*" />
+                  <input type="hidden" id="inAttrSong" />
+                  <input type="hidden" id="inAttrSongName" />
+                  <div id="attrSongStatus" class="inspector-note">
+                    No song uploaded yet.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button class="btn ghost sm" type="button" id="btnAttrRemoveSong">
+                      Remove Song
+                    </button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="inAttrSongIconFile">Upload Song Icon</label>
+                  <input type="file" id="inAttrSongIconFile" class="input" accept="image/*" />
+                  <input type="hidden" id="inAttrSongIcon" />
+                  <div id="attrSongIconStatus" class="inspector-note">
+                    No icon uploaded.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button
+                      class="btn ghost sm"
+                      type="button"
+                      id="btnAttrRemoveSongIcon"
+                    >
+                      Remove Icon
+                    </button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inAttrAudioPlayer" />
+                    <span>Show audio player controls</span>
+                  </label>
+                  <div class="inspector-note">
+                    Shows the player when a song is uploaded.
+                  </div>
+                </div>
+                <div class="inspector-divider"></div>
+                <div class="row">
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrAudioBgColor">Audio player background</label>
+                    <input
+                      id="inAttrAudioBgColor"
+                      class="input"
+                      type="color"
+                    />
+                  </div>
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrAudioBgAlpha"
+                      >Audio player transparency (0-100)</label
+                    >
+                    <input
+                      id="inAttrAudioBgAlpha"
+                      class="input"
+                      type="number"
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrAudioTextColor">Audio player text color</label>
+                    <input
+                      id="inAttrAudioTextColor"
+                      class="input"
+                      type="color"
+                    />
+                  </div>
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrAudioAccentColor">Audio player accent color</label>
+                    <input
+                      id="inAttrAudioAccentColor"
+                      class="input"
+                      type="color"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div id="selectionAttrLinks" hidden>
+                <div id="attrLinksMsg" class="inspector-note"></div>
+                <div class="row">
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrLinkColor">Link Text Color</label>
+                    <input id="inAttrLinkColor" class="input" type="color" />
+                  </div>
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrLinkBgColor">Link Background Color</label>
+                    <input id="inAttrLinkBgColor" class="input" type="color" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="inAttrLinkBgAlpha"
+                    >Link Background Transparency (0-100)</label
+                  >
+                  <input
+                    id="inAttrLinkBgAlpha"
+                    class="input"
+                    type="number"
+                    min="0"
+                    max="100"
+                  />
+                </div>
+                <div class="inspector-divider"></div>
+                <div class="field">
+                  <label for="inAttrLinkUrl">URL</label>
+                  <input id="inAttrLinkUrl" class="input" placeholder="https://…" />
+                </div>
+                <div class="field">
+                  <label for="inAttrLinkLabel">Label</label>
+                  <input id="inAttrLinkLabel" class="input" placeholder="My Link" />
+                </div>
+                <div class="field">
+                  <label for="inAttrLinkIconFile">Upload Link Icon</label>
+                  <input type="file" id="inAttrLinkIconFile" class="input" accept="image/*" />
+                  <input type="hidden" id="inAttrLinkIcon" />
+                  <div id="attrLinkIconStatus" class="inspector-note">
+                    No icon uploaded.
+                  </div>
+                  <div class="row" style="margin-top: 0.4rem">
+                    <button
+                      class="btn ghost sm"
+                      type="button"
+                      id="btnAttrRemoveLinkIcon"
+                    >
+                      Remove Icon
+                    </button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="inAttrLinkActive">Active</label>
+                  <select id="inAttrLinkActive" class="select">
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </div>
+                <div class="row">
+                  <button class="btn sm" type="button" id="btnAttrAddLink">
+                    Add Link
+                  </button>
+                </div>
+                <div class="inspector-divider"></div>
+                <div class="links-list" id="attrLinksList" aria-live="polite"></div>
+              </div>
+
+              <div id="selectionAttrCounter" hidden>
+                <div class="field">
+                  <label class="row" style="gap: 0.4rem; align-items: center">
+                    <input type="checkbox" id="inAttrShowCounter" />
+                    <span>Show visitor counter on my profile</span>
+                  </label>
+                  <div class="inspector-note">
+                    Counts unique visitors. Current: <strong id="attrVisitCount">0</strong>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrCounterColor">Counter Text/Icon Color</label>
+                    <input id="inAttrCounterColor" class="input" type="color" />
+                  </div>
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrCounterBgColor">Counter Background Color</label>
+                    <input id="inAttrCounterBgColor" class="input" type="color" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="inAttrCounterBgAlpha"
+                    >Counter Background Transparency (0-100)</label
+                  >
+                  <input
+                    id="inAttrCounterBgAlpha"
+                    class="input"
+                    type="number"
+                    min="0"
+                    max="100"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -2011,6 +2577,116 @@
             allowRelative: true,
             allowedProtocols: ["http:", "https:"],
           });
+
+        function escapeHtml(value) {
+          return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        const hashedFileCache = new WeakMap();
+        async function withHashedFile(file) {
+          if (!file) return null;
+          if (hashedFileCache.has(file)) return hashedFileCache.get(file);
+          const name = file.name || "upload";
+          const dot = name.lastIndexOf(".");
+          const base = dot > 0 ? name.slice(0, dot) : name;
+          const ext = dot > 0 ? name.slice(dot) : "";
+          let hash = "";
+          try {
+            const buf = await file.arrayBuffer();
+            const digest = await crypto.subtle.digest("SHA-256", buf);
+            hash = Array.from(new Uint8Array(digest))
+              .map((b) => b.toString(16).padStart(2, "0"))
+              .join("")
+              .slice(0, 16);
+          } catch (_) {
+            hash = Math.random().toString(16).slice(2, 10);
+          }
+          const safeBase = base.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const hashedName = `${safeBase}--${hash}${ext}`;
+          const hashed = new File([file], hashedName, {
+            type: file.type,
+            lastModified: file.lastModified,
+          });
+          hashedFileCache.set(file, hashed);
+          return hashed;
+        }
+
+        function fileNameFromUrl(raw) {
+          if (!raw) return "";
+          try {
+            const url = new URL(raw, window.location.origin);
+            const name = url.pathname.split("/").pop() || "";
+            return decodeURIComponent(name);
+          } catch (_) {
+            const trimmed = String(raw);
+            const parts = trimmed.split("/");
+            return parts[parts.length - 1] || trimmed;
+          }
+        }
+
+        function setUploadStatus(id, url, emptyText, name) {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (url) {
+            const label = name || fileNameFromUrl(url);
+            el.textContent = label ? `Uploaded: ${label}` : "Uploaded.";
+          } else {
+            el.textContent = emptyText || "";
+          }
+        }
+
+        async function uploadFile(inputId, endpoint) {
+          const inputEl = document.getElementById(inputId);
+          if (!inputEl || !inputEl.files || !inputEl.files[0]) return null;
+          const raw = inputEl.files[0];
+          const f = (await withHashedFile(raw)) || raw;
+          if (!currentUser) await fetchSessionUser();
+          const fd = new FormData();
+          fd.append("file", f);
+          const r = await fetch(endpoint, {
+            method: "POST",
+            credentials: "include",
+            body: fd,
+          });
+          if (!r.ok) throw new Error(await r.text());
+          const data = await r.json();
+          if (!data) return { url: "" };
+          if (typeof data === "string") return { url: data };
+          if (typeof data === "object") {
+            return {
+              url: typeof data.url === "string" ? data.url : "",
+              name: typeof data.name === "string" ? data.name : "",
+            };
+          }
+          return { url: "" };
+        }
+
+        async function uploadInlineFile(inputEl, endpoint) {
+          if (!inputEl || !inputEl.files || !inputEl.files[0]) return null;
+          const raw = inputEl.files[0];
+          const f = (await withHashedFile(raw)) || raw;
+          if (!currentUser) await fetchSessionUser();
+          const fd = new FormData();
+          fd.append("file", f);
+          const r = await fetch(endpoint, {
+            method: "POST",
+            credentials: "include",
+            body: fd,
+          });
+          if (!r.ok) throw new Error(await r.text());
+          const data = await r.json();
+          if (!data) return "";
+          if (typeof data === "string") return data;
+          if (typeof data === "object" && typeof data.url === "string") {
+            return data.url;
+          }
+          return "";
+        }
 
         function hashString(input) {
           let h = 2166136261;
@@ -2208,6 +2884,8 @@
           "links",
           "visit_counter",
         ];
+        const FONT_FAMILY_OPTIONS = ["default", "serif", "mono", "script", "display"];
+        const EFFECT_OPTIONS = ["none", "glow", "neon", "rainbow"];
         const SECTION_KEY_ALIASES = {
           discord_badges: "badges",
         };
@@ -2235,9 +2913,13 @@
         let canvasDragState = null;
         let canvasStageBound = false;
         let canvasDirty = false;
+        let metaDirtyFields = new Set();
         let pfpSizeOffsets = null;
         let currentDevice = "pc";
         let linktreeId = null;
+        let currentLinks = [];
+        let discordBadgeCodes = null;
+        let dragStartOrder = "";
 
         function defaultPlateUnits(key) {
           switch (key) {
@@ -2906,6 +3588,150 @@
           syncSelectionPanel();
         }
 
+        function getGroupOffset(groupId) {
+          if (!canvasLayout || !groupId) return { x: 0, y: 0 };
+          const group = canvasLayout.groups?.[groupId];
+          return {
+            x: Number.isFinite(group?.x) ? group.x : 0,
+            y: Number.isFinite(group?.y) ? group.y : 0,
+          };
+        }
+
+        function ensureGroupEntry(groupId, initial = null) {
+          if (!canvasLayout || !groupId) return null;
+          canvasLayout.groups = canvasLayout.groups || {};
+          if (!canvasLayout.groups[groupId]) {
+            const x = Number.isFinite(initial?.x) ? initial.x : 0;
+            const y = Number.isFinite(initial?.y) ? initial.y : 0;
+            canvasLayout.groups[groupId] = { x, y };
+          }
+          return canvasLayout.groups[groupId];
+        }
+
+        function ensureGroupElement(groupId) {
+          if (!groupId) return null;
+          let groupEl = document.querySelector(
+            `.plate-group[data-group-id="${groupId}"]`,
+          );
+          if (groupEl) return groupEl;
+          const card = document.getElementById("card");
+          if (!card) return null;
+          const group = ensureGroupEntry(groupId);
+          if (!group) return null;
+          groupEl = document.createElement("div");
+          groupEl.className = "plate-group";
+          groupEl.dataset.groupId = groupId;
+          groupEl.style.transform = `translate(${group.x}px, ${group.y}px)`;
+          if (EDITOR_MODE) {
+            const handle = document.createElement("div");
+            handle.className = "group-handle";
+            handle.textContent = "Group";
+            handle.onmousedown = (evt) =>
+              startCanvasDrag(evt, { type: "group", id: groupId, el: groupEl });
+            handle.onclick = (evt) => {
+              evt.stopPropagation();
+              setCanvasSelection({ type: "group", id: groupId });
+            };
+            groupEl.appendChild(handle);
+          }
+          card.appendChild(groupEl);
+          return groupEl;
+        }
+
+        function refreshGroupOptions() {
+          const list = document.getElementById("selGroupOptions");
+          if (!list) return;
+          list.textContent = "";
+          if (!canvasLayout || !canvasLayout.groups) return;
+          Object.keys(canvasLayout.groups)
+            .sort()
+            .forEach((gid) => {
+              const opt = document.createElement("option");
+              opt.value = gid;
+              list.appendChild(opt);
+            });
+        }
+
+        function renameCanvasGroup(oldId, newId) {
+          if (!canvasLayout || !oldId || !newId) return false;
+          if (oldId === newId) return true;
+          if (canvasLayout.groups?.[newId]) {
+            showEditorMessage("Group ID already exists.", false);
+            return false;
+          }
+          const group = canvasLayout.groups?.[oldId];
+          if (!group) return false;
+          canvasLayout.groups[newId] = group;
+          delete canvasLayout.groups[oldId];
+          Object.values(canvasLayout.plates || {}).forEach((plate) => {
+            if (plate && plate.group === oldId) plate.group = newId;
+          });
+          const groupEl = document.querySelector(
+            `.plate-group[data-group-id="${oldId}"]`,
+          );
+          if (groupEl) groupEl.dataset.groupId = newId;
+          if (canvasSelection?.type === "group" && canvasSelection.id === oldId) {
+            canvasSelection.id = newId;
+          }
+          refreshGroupOptions();
+          return true;
+        }
+
+        function assignPlateToGroup(key, nextGroupIdRaw) {
+          if (!canvasLayout) return;
+          const plate = canvasLayout.plates?.[key];
+          if (!plate) return;
+          const nextGroupId = (nextGroupIdRaw || "").trim();
+          const oldGroupId = plate.group || "";
+          if (nextGroupId === oldGroupId) return;
+          const oldOffset = getGroupOffset(oldGroupId);
+          const absX = plate.x + oldOffset.x;
+          const absY = plate.y + oldOffset.y;
+          if (!nextGroupId) {
+            plate.group = null;
+            plate.x = absX;
+            plate.y = absY;
+          } else {
+            const isNew = !canvasLayout.groups?.[nextGroupId];
+            if (isNew) {
+              ensureGroupEntry(nextGroupId, { x: absX, y: absY });
+              plate.x = 0;
+              plate.y = 0;
+            } else {
+              const nextOffset = getGroupOffset(nextGroupId);
+              plate.x = absX - nextOffset.x;
+              plate.y = absY - nextOffset.y;
+            }
+            plate.group = nextGroupId;
+          }
+          const plateEl = getPlateElement(key);
+          const card = document.getElementById("card");
+          const nextParent = nextGroupId
+            ? ensureGroupElement(nextGroupId)
+            : card;
+          if (plateEl && nextParent && plateEl.parentElement !== nextParent) {
+            nextParent.appendChild(plateEl);
+          }
+          applyPlateStyles(key, plate);
+          if (oldGroupId) {
+            const oldGroupEl = document.querySelector(
+              `.plate-group[data-group-id="${oldGroupId}"]`,
+            );
+            updateGroupBounds(oldGroupEl, oldGroupId, canvasLayout);
+          }
+          if (nextGroupId) {
+            const nextGroupEl = document.querySelector(
+              `.plate-group[data-group-id="${nextGroupId}"]`,
+            );
+            updateGroupBounds(nextGroupEl, nextGroupId, canvasLayout);
+          }
+          canvasDirty = true;
+          ensureCanvasLayoutSize(canvasLayout);
+          updateCanvasCardSize(canvasLayout);
+          syncCanvasControls();
+          syncSelectionPanel();
+        }
+
         function syncCanvasControls() {
           const canvasW = document.getElementById("inCanvasW");
           const canvasH = document.getElementById("inCanvasH");
@@ -2916,22 +3742,58 @@
         }
 
         function syncSelectionPanel() {
+          const canvasSizePanel = document.getElementById("canvasSizePanel");
           const label = document.getElementById("selectionLabel");
           const xInput = document.getElementById("inSelX");
           const yInput = document.getElementById("inSelY");
           const wInput = document.getElementById("inSelW");
           const hInput = document.getElementById("inSelH");
-          if (!label || !xInput || !yInput || !wInput || !hInput) return;
+          const groupRow = document.getElementById("selectionGroupRow");
+          const groupInput = document.getElementById("inSelGroup");
+          const groupLabel = document.getElementById("selectionGroupLabel");
+          const attrEmpty = document.getElementById("selectionAttrEmpty");
+          const panels = {
+            pfp: document.getElementById("selectionAttrPfp"),
+            name: document.getElementById("selectionAttrName"),
+            discord_status: document.getElementById("selectionAttrDiscordStatus"),
+            quote: document.getElementById("selectionAttrQuote"),
+            location: document.getElementById("selectionAttrLocation"),
+            badges: document.getElementById("selectionAttrBadges"),
+            audio: document.getElementById("selectionAttrAudio"),
+            links: document.getElementById("selectionAttrLinks"),
+            visit_counter: document.getElementById("selectionAttrCounter"),
+          };
+          if (
+            !label ||
+            !xInput ||
+            !yInput ||
+            !wInput ||
+            !hInput ||
+            !groupInput ||
+            !groupLabel ||
+            !attrEmpty
+          )
+            return;
+          if (canvasSizePanel) canvasSizePanel.hidden = !!canvasSelection;
+          if (groupRow) groupRow.hidden = !canvasSelection;
+          refreshGroupOptions();
+          Object.values(panels).forEach((panel) => {
+            if (panel) panel.hidden = true;
+          });
+          attrEmpty.hidden = false;
+          xInput.disabled = true;
+          yInput.disabled = true;
+          wInput.disabled = true;
+          hInput.disabled = true;
+          groupInput.disabled = true;
           if (!canvasLayout || !canvasSelection) {
             label.textContent = "Select an element on the canvas.";
             xInput.value = "";
             yInput.value = "";
             wInput.value = "";
             hInput.value = "";
-            xInput.disabled = true;
-            yInput.disabled = true;
-            wInput.disabled = true;
-            hInput.disabled = true;
+            groupInput.value = "";
+            attrEmpty.textContent = "Select an element to edit its attributes.";
             return;
           }
           if (canvasSelection.type === "group") {
@@ -2946,6 +3808,10 @@
             yInput.disabled = false;
             wInput.disabled = true;
             hInput.disabled = true;
+            groupLabel.textContent = "Group ID";
+            groupInput.value = canvasSelection.id;
+            groupInput.disabled = false;
+            attrEmpty.textContent = "Groups do not have editable attributes.";
             return;
           }
           const key = canvasSelection.key;
@@ -2964,6 +3830,253 @@
           yInput.disabled = false;
           wInput.disabled = false;
           hInput.disabled = false;
+          groupLabel.textContent = "Group ID";
+          groupInput.value = plate.group || "";
+          groupInput.disabled = false;
+          const panelKey = SECTION_KEY_ALIASES[key] || key;
+          const activePanel = panels[panelKey];
+          if (!activePanel) {
+            attrEmpty.textContent = "No editable attributes for this element yet.";
+            return;
+          }
+          if (!lastData) {
+            attrEmpty.textContent = "No data loaded.";
+            return;
+          }
+          activePanel.hidden = false;
+          attrEmpty.hidden = true;
+          if (panelKey === "pfp") {
+            const pfpInput = document.getElementById("inAttrLinktreePfp");
+            if (pfpInput)
+              pfpInput.value = lastData.linktree_profile_picture || "";
+            setUploadStatus(
+              "attrPfpStatus",
+              lastData.linktree_profile_picture,
+              "Using your account profile picture.",
+            );
+            const frameToggle = document.getElementById("inAttrDiscordFrame");
+            const presenceToggle = document.getElementById("inAttrDiscordPresence");
+            if (frameToggle)
+              frameToggle.checked = !!lastData.discord_frame_enabled;
+            if (presenceToggle)
+              presenceToggle.checked = !!lastData.discord_presence_enabled;
+            updateAttrDiscordUI(lastData);
+            return;
+          }
+          if (panelKey === "name") {
+            const nameColorInput = document.getElementById("inAttrNameColor");
+            const nameEffectInput = document.getElementById("inAttrNameEffect");
+            const nameFontInput = document.getElementById("inAttrNameFont");
+            const displayNameInput = document.getElementById("inAttrDisplayName");
+            const customNameInput = document.getElementById("inAttrCustomName");
+            if (displayNameInput)
+              displayNameInput.value = lastData.display_name_mode || "slug";
+            if (customNameInput) {
+              customNameInput.value = lastData.custom_display_name || "";
+              customNameInput.disabled =
+                (displayNameInput?.value || "slug") !== "custom";
+            }
+            if (nameColorInput) {
+              nameColorInput.value =
+                sanitizeHexColor(lastData.name_color) ||
+                sanitizeHexColor(lastData.link_color) ||
+                DEFAULT_NAME_COLOR;
+            }
+            if (nameEffectInput)
+              nameEffectInput.value = normalizeEffectName(lastData.name_effect);
+            if (nameFontInput)
+              nameFontInput.value = normalizeFontFamily(
+                lastData.name_font_family,
+              );
+            return;
+          }
+          if (panelKey === "discord_status") {
+            const statusToggle = document.getElementById("inAttrDiscordStatus");
+            if (statusToggle)
+              statusToggle.checked = !!lastData.discord_status_enabled;
+            updateAttrDiscordUI(lastData);
+            return;
+          }
+          if (panelKey === "quote") {
+            const quoteInput = document.getElementById("inAttrQuote");
+            const alt1 = document.getElementById("inAttrQuoteAlt1");
+            const alt2 = document.getElementById("inAttrQuoteAlt2");
+            const typingToggle = document.getElementById("inAttrQuoteTyping");
+            const speedInput = document.getElementById("inAttrQuoteSpeed");
+            const pauseInput = document.getElementById("inAttrQuotePause");
+            const quoteColorInput = document.getElementById("inAttrQuoteColor");
+            const quoteEffectInput = document.getElementById("inAttrQuoteEffect");
+            const quoteFontInput = document.getElementById("inAttrQuoteFont");
+            const quoteSizeInput = document.getElementById("inAttrQuoteSize");
+            const quoteStrengthInput = document.getElementById(
+              "inAttrQuoteEffectStrength",
+            );
+            const texts = Array.isArray(lastData.quote_typing_texts)
+              ? lastData.quote_typing_texts
+              : [];
+            const baseText = texts[0] || lastData.quote || "";
+            if (quoteInput) quoteInput.value = baseText;
+            if (alt1) alt1.value = texts[1] || "";
+            if (alt2) alt2.value = texts[2] || "";
+            if (typingToggle)
+              typingToggle.checked = !!lastData.quote_typing_enabled;
+            if (speedInput)
+              speedInput.value = Number.isFinite(Number(lastData.quote_typing_speed))
+                ? lastData.quote_typing_speed
+                : 42;
+            if (pauseInput)
+              pauseInput.value = Number.isFinite(Number(lastData.quote_typing_pause))
+                ? lastData.quote_typing_pause
+                : 1200;
+            if (quoteColorInput)
+              quoteColorInput.value =
+                sanitizeHexColor(lastData.quote_color) ||
+                sanitizeHexColor(lastData.text_color) ||
+                DEFAULT_QUOTE_COLOR;
+            if (quoteEffectInput)
+              quoteEffectInput.value = normalizeEffectName(lastData.quote_effect);
+            if (quoteFontInput)
+              quoteFontInput.value = normalizeFontFamily(
+                lastData.quote_font_family,
+              );
+            if (quoteSizeInput)
+              quoteSizeInput.value = Number.isFinite(Number(lastData.quote_font_size))
+                ? lastData.quote_font_size
+                : 15;
+            if (quoteStrengthInput)
+              quoteStrengthInput.value = Number.isFinite(
+                Number(lastData.quote_effect_strength),
+              )
+                ? lastData.quote_effect_strength
+                : 70;
+            toggleAttrQuoteTypingFields();
+            return;
+          }
+          if (panelKey === "location") {
+            const locInput = document.getElementById("inAttrLocation");
+            const locColorInput = document.getElementById("inAttrLocationColor");
+            if (locInput) locInput.value = lastData.location || "";
+            if (locColorInput)
+              locColorInput.value =
+                sanitizeHexColor(lastData.location_color) ||
+                sanitizeHexColor(lastData.text_color) ||
+                DEFAULT_LOCATION_COLOR;
+            return;
+          }
+          if (panelKey === "badges") {
+            const discordBadgesToggle = document.getElementById(
+              "inAttrDiscordBadges",
+            );
+            if (discordBadgesToggle)
+              discordBadgesToggle.checked = !!lastData.discord_badges_enabled;
+            if (Array.isArray(lastData.discord_badge_codes)) {
+              discordBadgeCodes = lastData.discord_badge_codes.slice();
+            } else if (!Array.isArray(discordBadgeCodes)) {
+              const list = Array.isArray(lastData.discord_badges)
+                ? lastData.discord_badges
+                : [];
+              discordBadgeCodes = list
+                .map((b) => b && b.code)
+                .filter(Boolean);
+            }
+            updateAttrDiscordUI(lastData);
+            renderAttrDiscordBadges();
+            renderAttrBadges();
+            return;
+          }
+          if (panelKey === "audio") {
+            const songInput = document.getElementById("inAttrSong");
+            const songNameInput = document.getElementById("inAttrSongName");
+            const songIconInput = document.getElementById("inAttrSongIcon");
+            const audioToggle = document.getElementById("inAttrAudioPlayer");
+            const audioBg = document.getElementById("inAttrAudioBgColor");
+            const audioAlpha = document.getElementById("inAttrAudioBgAlpha");
+            const audioText = document.getElementById("inAttrAudioTextColor");
+            const audioAccent = document.getElementById("inAttrAudioAccentColor");
+            if (songInput) songInput.value = lastData.song_url || "";
+            if (songNameInput) songNameInput.value = lastData.song_name || "";
+            if (songIconInput)
+              songIconInput.value = lastData.song_icon_url || "";
+            setUploadStatus(
+              "attrSongStatus",
+              lastData.song_url,
+              "No song uploaded yet.",
+              lastData.song_name || "",
+            );
+            setUploadStatus(
+              "attrSongIconStatus",
+              lastData.song_icon_url,
+              "No icon uploaded.",
+            );
+            if (audioToggle)
+              audioToggle.checked = !!lastData.show_audio_player;
+            if (audioBg)
+              audioBg.value =
+                sanitizeHexColor(lastData.audio_player_bg_color) ||
+                DEFAULT_AUDIO_BG_COLOR;
+            if (audioAlpha)
+              audioAlpha.value = Number.isFinite(
+                Number(lastData.audio_player_bg_alpha),
+              )
+                ? lastData.audio_player_bg_alpha
+                : DEFAULT_AUDIO_BG_ALPHA;
+            if (audioText)
+              audioText.value =
+                sanitizeHexColor(lastData.audio_player_text_color) ||
+                sanitizeHexColor(lastData.text_color) ||
+                DEFAULT_AUDIO_TEXT_COLOR;
+            if (audioAccent)
+              audioAccent.value =
+                sanitizeHexColor(lastData.audio_player_accent_color) ||
+                sanitizeHexColor(lastData.link_color) ||
+                DEFAULT_AUDIO_ACCENT_COLOR;
+            return;
+          }
+          if (panelKey === "links") {
+            const linkColor = document.getElementById("inAttrLinkColor");
+            const linkBg = document.getElementById("inAttrLinkBgColor");
+            const linkAlpha = document.getElementById("inAttrLinkBgAlpha");
+            const iconInput = document.getElementById("inAttrLinkIcon");
+            if (linkColor)
+              linkColor.value =
+                sanitizeHexColor(lastData.link_color) || DEFAULT_LINK_COLOR;
+            if (linkBg)
+              linkBg.value =
+                sanitizeHexColor(lastData.link_bg_color) || DEFAULT_LINK_BG;
+            if (linkAlpha)
+              linkAlpha.value = clampPercent(lastData.link_bg_alpha ?? 100, 100);
+            if (iconInput) {
+              iconInput.value = iconInput.value || "";
+            }
+            setUploadStatus("attrLinkIconStatus", iconInput?.value, "No icon uploaded.");
+            renderAttrLinks(lastData.links || []);
+            return;
+          }
+          if (panelKey === "visit_counter") {
+            const showToggle = document.getElementById("inAttrShowCounter");
+            const countEl = document.getElementById("attrVisitCount");
+            const colorInput = document.getElementById("inAttrCounterColor");
+            const bgInput = document.getElementById("inAttrCounterBgColor");
+            const alphaInput = document.getElementById("inAttrCounterBgAlpha");
+            if (showToggle)
+              showToggle.checked = !!lastData.show_visit_counter;
+            if (countEl)
+              countEl.textContent = Number(lastData.visit_count || 0).toLocaleString();
+            if (colorInput)
+              colorInput.value =
+                sanitizeHexColor(lastData.visit_counter_color) ||
+                sanitizeHexColor(lastData.text_color) ||
+                DEFAULT_TEXT_COLOR;
+            if (bgInput)
+              bgInput.value =
+                sanitizeHexColor(lastData.visit_counter_bg_color) || "#ffffff";
+            if (alphaInput)
+              alphaInput.value = clampPercent(
+                lastData.visit_counter_bg_alpha ?? 20,
+                20,
+              );
+            return;
+          }
         }
 
         function bindCanvasStageEvents() {
@@ -3165,6 +4278,12 @@
             : "";
         }
 
+        function clampPercent(val, fallback = 0) {
+          const n = parseInt(val ?? fallback, 10);
+          if (Number.isNaN(n)) return Math.min(100, Math.max(0, fallback));
+          return Math.min(100, Math.max(0, n));
+        }
+
         function hexToRgb(hex) {
           const clean = sanitizeHexColor(hex);
           if (!clean) return null;
@@ -3251,6 +4370,79 @@
           rootStyle.setProperty("--quote-neon-drop", `${drop}px`);
         }
 
+        function normalizeFontFamily(raw) {
+          const value = String(raw || "default").toLowerCase();
+          return FONT_FAMILY_OPTIONS.includes(value) ? value : "default";
+        }
+
+        function normalizeEffectName(raw) {
+          const value = String(raw || "none").toLowerCase();
+          return EFFECT_OPTIONS.includes(value) ? value : "none";
+        }
+
+        function markMetaDirty(field) {
+          if (!field) return;
+          metaDirtyFields.add(field);
+        }
+
+        function applyNameStyles(data) {
+          const nameEl = document.getElementById("name");
+          if (!nameEl || !data) return;
+          const mode = data.display_name_mode || "slug";
+          if (mode === "username") {
+            nameEl.textContent = data.user_username || data.slug || "User";
+          } else if (mode === "custom" && data.custom_display_name) {
+            nameEl.textContent = data.custom_display_name;
+          } else {
+            nameEl.textContent = data.slug || "User";
+          }
+
+          nameEl.classList.remove(
+            "glow",
+            "neon",
+            "rainbow",
+            "font-serif",
+            "font-mono",
+            "font-script",
+            "font-display",
+          );
+          const fx = normalizeEffectName(data.name_effect);
+          if (fx !== "none") nameEl.classList.add(fx);
+          const fontFamily = normalizeFontFamily(data.name_font_family);
+          if (fontFamily !== "default") {
+            nameEl.classList.add(`font-${fontFamily}`);
+          }
+          if (data.user_id) {
+            nameEl.dataset.id = `ID: ${data.user_id}`;
+            nameEl.classList.add("has-id");
+            nameEl.title = `ID: ${data.user_id}`;
+          } else {
+            nameEl.classList.remove("has-id");
+            nameEl.removeAttribute("data-id");
+            nameEl.removeAttribute("title");
+          }
+        }
+
+        function applyQuoteStyles(data) {
+          const quoteEl = document.getElementById("quote");
+          if (!quoteEl || !data) return;
+          quoteEl.classList.remove(
+            "glow",
+            "neon",
+            "rainbow",
+            "font-serif",
+            "font-mono",
+            "font-script",
+            "font-display",
+          );
+          const fx = normalizeEffectName(data.quote_effect);
+          if (fx !== "none") quoteEl.classList.add(fx);
+          const fontFamily = normalizeFontFamily(data.quote_font_family);
+          if (fontFamily !== "default") {
+            quoteEl.classList.add(`font-${fontFamily}`);
+          }
+        }
+
         function stopQuoteTyping() {
           quoteTypingToken += 1;
         }
@@ -3321,6 +4513,29 @@
             }
           };
           tick();
+        }
+
+        function toggleAttrQuoteTypingFields() {
+          const toggle = document.getElementById("inAttrQuoteTyping");
+          const wrap = document.getElementById("attrQuoteTypingFields");
+          const speedWrap = document.getElementById("attrQuoteTypingSpeedWrap");
+          const pauseWrap = document.getElementById("attrQuoteTypingPauseWrap");
+          const enabled = !!(toggle && toggle.checked);
+          if (wrap) wrap.style.display = enabled ? "grid" : "none";
+          if (speedWrap) speedWrap.style.display = enabled ? "block" : "none";
+          if (pauseWrap) pauseWrap.style.display = enabled ? "block" : "none";
+        }
+
+        function collectAttrQuoteTexts() {
+          const main = document.getElementById("inAttrQuote");
+          const alt1 = document.getElementById("inAttrQuoteAlt1");
+          const alt2 = document.getElementById("inAttrQuoteAlt2");
+          const list = [
+            main ? main.value.trim() : "",
+            alt1 ? alt1.value.trim() : "",
+            alt2 ? alt2.value.trim() : "",
+          ].filter(Boolean);
+          return list.slice(0, 3);
         }
 
         function updateQuoteDisplay(data) {
@@ -3412,6 +4627,776 @@
           if (muted) audioPlayer.style.setProperty("--audio-muted", muted);
           if (accentHex)
             audioPlayer.style.setProperty("--audio-accent", accentHex);
+        }
+
+        function updateLocationDisplay(data) {
+          const locEl = document.getElementById("loc");
+          if (!locEl) return;
+          locEl.textContent = "";
+          const locText =
+            typeof data?.location === "string" ? data.location.trim() : "";
+          locEl.classList.toggle("hidden", !locText);
+          if (locText) {
+            const icon = createLocationIcon();
+            const text = document.createElement("span");
+            text.textContent = ` ${locText}`;
+            locEl.appendChild(icon);
+            locEl.appendChild(text);
+          }
+        }
+
+        function renderBadgesDisplay(data) {
+          const badgesEl = document.getElementById("badges");
+          if (!badgesEl) return;
+          badgesEl.innerHTML = "";
+          const frag = document.createDocumentFragment();
+          let badgeCount = 0;
+          (data?.icons || []).forEach((ic) => {
+            if (!ic || !ic.displayed) return;
+            const desc = ic.description || ic.code || "badge";
+            const wrap = document.createElement("span");
+            wrap.className = "badge";
+            wrap.title = desc;
+            wrap.setAttribute("aria-label", desc);
+
+            const img = document.createElement("img");
+            const iconUrl = safeMediaUrl(ic.image_url);
+            if (!iconUrl) return;
+            img.src = iconUrl;
+            img.alt = desc;
+            img.width = 20;
+            img.height = 20;
+            img.loading = "lazy";
+            img.decoding = "async";
+
+            wrap.appendChild(img);
+            frag.appendChild(wrap);
+            badgeCount += 1;
+          });
+
+          const discordLinked = !!data?.discord_linked;
+          if (discordLinked && data?.discord_badges_enabled) {
+            let discordList = Array.isArray(data.discord_badges)
+              ? data.discord_badges
+              : [];
+            const filterCodes = Array.isArray(data.discord_badge_codes)
+              ? data.discord_badge_codes
+              : null;
+            if (filterCodes) {
+              discordList = discordList.filter((b) =>
+                filterCodes.includes(b && b.code),
+              );
+            }
+            discordList.forEach((badge) => {
+              if (!badge) return;
+              const desc = badge.label || badge.code || "badge";
+              const wrap = document.createElement("span");
+              wrap.className = "badge";
+              wrap.title = desc;
+              wrap.setAttribute("aria-label", desc);
+
+              const img = document.createElement("img");
+              const iconUrl = safeMediaUrl(badge.icon_url);
+              if (!iconUrl) return;
+              img.src = iconUrl;
+              img.alt = desc;
+              img.width = 20;
+              img.height = 20;
+              img.loading = "lazy";
+              img.decoding = "async";
+
+              wrap.appendChild(img);
+              frag.appendChild(wrap);
+              badgeCount += 1;
+            });
+          }
+          badgesEl.appendChild(frag);
+          badgesEl.classList.toggle("hidden", badgeCount === 0);
+        }
+
+        function renderLinksDisplay(data) {
+          const linksEl = document.getElementById("links");
+          if (!linksEl) return;
+          linksEl.textContent = "";
+          const frag = document.createDocumentFragment();
+          const rawLinks = Array.isArray(data?.links) ? data.links : [];
+          let linkItems = rawLinks;
+          if (data?.is_template_demo && data?.demo_show_links) {
+            const label = (data.demo_link_label || "").trim() || "Example Link";
+            let url = (data.demo_link_url || "").trim();
+            if (!url) url = "https://example.com";
+            const iconUrl = (data.demo_link_icon_url || "").trim() || null;
+            const demoLink = {
+              label,
+              url,
+              icon_url: iconUrl,
+              is_active: true,
+            };
+            linkItems = rawLinks.length ? rawLinks : [demoLink];
+          }
+          let linkCount = 0;
+          (linkItems || []).forEach((l) => {
+            if (!l || !l.is_active) return;
+            const href = safeLinkUrl(l.url);
+            if (!href) return;
+            const a = document.createElement("a");
+            a.className = "link";
+            a.href = href;
+            a.target = "_blank";
+            a.rel = "noreferrer noopener";
+            const iconUrl = safeMediaUrl(l.icon_url);
+            if (iconUrl) {
+              const img = document.createElement("img");
+              img.src = iconUrl;
+              img.alt = "";
+              img.loading = "lazy";
+              img.decoding = "async";
+              a.appendChild(img);
+            }
+            const span = document.createElement("span");
+            span.textContent = l.label || l.url;
+            a.appendChild(span);
+            frag.appendChild(a);
+            linkCount += 1;
+          });
+          linksEl.appendChild(frag);
+          linksEl.classList.toggle("hidden", linkCount === 0);
+        }
+
+        function updateVisitCounterDisplay(data) {
+          const visitBox = document.getElementById("visitCounter");
+          const visitValue = document.getElementById("visitCounterValue");
+          if (!visitBox || !visitValue) return;
+          if (data?.show_visit_counter) {
+            visitValue.textContent = Number(data.visit_count || 0).toLocaleString();
+            const textColor =
+              hexToRgba(data.visit_counter_color, 1) ||
+              hexToRgba(data.text_color, 1) ||
+              null;
+            if (textColor) visitBox.style.color = textColor;
+            const bgAlpha = Number.isFinite(
+              Number(data.visit_counter_bg_alpha),
+            )
+              ? Number(data.visit_counter_bg_alpha)
+              : 20;
+            const bgColor =
+              hexToRgba(
+                data.visit_counter_bg_color || "#ffffff",
+                Math.min(1, Math.max(0, bgAlpha / 100)),
+              ) || "rgba(255,255,255,0.14)";
+            visitBox.style.backgroundColor = bgColor;
+            visitBox.style.display = "inline-flex";
+          } else {
+            visitBox.style.display = "none";
+          }
+        }
+
+        function updatePfpDisplay(data) {
+          const pfp = document.getElementById("pfp");
+          const pfpFrame = document.getElementById("pfpFrame");
+          if (pfp) {
+            const prefersUserPfp =
+              data?.is_template_demo &&
+              currentUser &&
+              currentUser.profile_picture;
+            const linktreePfp = safeMediaUrl(data?.linktree_profile_picture);
+            const primaryPfp = prefersUserPfp
+              ? currentUser.profile_picture
+              : linktreePfp || data?.profile_picture;
+            const profileUrl =
+              safeMediaUrl(primaryPfp) ||
+              safeMediaUrl(currentUser && currentUser.profile_picture) ||
+              "/static/icon.png";
+            pfp.src = profileUrl;
+          }
+          if (pfpFrame) {
+            const frameUrl = safeMediaUrl(data?.discord_decoration_url);
+            if (data?.discord_frame_enabled && frameUrl) {
+              pfpFrame.src = frameUrl;
+              pfpFrame.style.display = "block";
+            } else {
+              pfpFrame.style.display = "none";
+            }
+          }
+        }
+
+        function updateDiscordStatusDisplay(data) {
+          const presence = normalizePresence(data?.discord_presence);
+          const presenceLabel = PRESENCE_LABELS[presence] || "Online";
+          const presenceEl = document.getElementById("discordPresence");
+          const statusLine = document.getElementById("discordStatusLine");
+          const statusTextEl = document.getElementById("discordStatusText");
+          const discordLinked = !!data?.discord_linked;
+          if (presenceEl) {
+            const showPresence = discordLinked && data?.discord_presence_enabled;
+            presenceEl.classList.toggle("hidden", !showPresence);
+            applyPresenceClass(presenceEl, presence);
+            presenceEl.setAttribute(
+              "aria-label",
+              `Discord status: ${presenceLabel}`,
+            );
+          }
+          if (statusLine && statusTextEl) {
+            const showStatus = discordLinked && data?.discord_status_enabled;
+            statusLine.classList.toggle("hidden", !showStatus);
+            if (showStatus) {
+              applyPresenceClass(statusLine, presence);
+              const statusText = (data?.discord_status_text || "").trim();
+              statusTextEl.textContent = statusText || presenceLabel;
+            } else {
+              statusTextEl.textContent = "";
+            }
+          }
+        }
+
+        function refreshTreeFromData({ preserveSelection = true } = {}) {
+          if (!lastData) return;
+          const selection = preserveSelection ? canvasSelection : null;
+          const preferLite =
+            lastMediaMode === "lite" ? true : shouldUseLiteMedia();
+          renderTree(lastData, {
+            preferLite,
+            fromCache: true,
+            device: currentDevice,
+          });
+          if (selection) {
+            requestAnimationFrame(() => setCanvasSelection(selection));
+          }
+        }
+
+        function updateAttrDiscordUI(data) {
+          const statusEl = document.getElementById("attrDiscordStatusText");
+          const previewEl = document.getElementById("attrDiscordPreview");
+          const linkBtn = document.getElementById("btnAttrDiscordLink");
+          const unlinkBtn = document.getElementById("btnAttrDiscordUnlink");
+          const frameToggle = document.getElementById("inAttrDiscordFrame");
+          const presenceToggle = document.getElementById("inAttrDiscordPresence");
+          const statusToggle = document.getElementById("inAttrDiscordStatus");
+          const badgesToggle = document.getElementById("inAttrDiscordBadges");
+          const linked = !!data?.discord_linked;
+
+          if (statusEl) {
+            statusEl.textContent = linked ? "Discord linked" : "Not linked";
+          }
+          if (linkBtn && unlinkBtn) {
+            linkBtn.style.display = linked ? "none" : "inline-flex";
+            unlinkBtn.style.display = linked ? "inline-flex" : "none";
+          }
+          const disableToggle = (toggleEl, field) => {
+            if (!toggleEl) return;
+            if (!linked) {
+              if (toggleEl.checked) toggleEl.checked = false;
+              if (data && data[field]) {
+                data[field] = false;
+                markMetaDirty(field);
+              }
+              toggleEl.disabled = true;
+            } else {
+              toggleEl.disabled = false;
+            }
+          };
+          disableToggle(frameToggle, "discord_frame_enabled");
+          disableToggle(presenceToggle, "discord_presence_enabled");
+          disableToggle(statusToggle, "discord_status_enabled");
+          disableToggle(badgesToggle, "discord_badges_enabled");
+
+          if (previewEl) {
+            previewEl.innerHTML = "";
+            previewEl.classList.remove("muted");
+            const frameUrl = safeMediaUrl(data?.discord_decoration_url);
+            if (linked && frameUrl) {
+              const wrap = document.createElement("div");
+              wrap.className = "pfp-preview";
+              const img = document.createElement("img");
+              img.src = frameUrl;
+              img.alt = "Discord profile frame";
+              img.loading = "lazy";
+              wrap.appendChild(img);
+              previewEl.appendChild(wrap);
+            } else {
+              previewEl.classList.add("muted");
+              previewEl.textContent = linked
+                ? "No Discord profile frame detected on your account."
+                : "Link Discord to use your Discord profile frame.";
+            }
+          }
+        }
+
+        function renderAttrDiscordBadges() {
+          const box = document.getElementById("attrDiscordBadgesList");
+          const hint = document.getElementById("attrDiscordBadgesHint");
+          if (!box) return;
+          box.innerHTML = "";
+          if (hint) hint.textContent = "";
+          if (!lastData) return;
+          const linked = !!lastData.discord_linked;
+          if (!linked) {
+            if (hint)
+              hint.textContent = "Link Discord to manage your Discord badges.";
+            return;
+          }
+          const list = Array.isArray(lastData.discord_badges)
+            ? lastData.discord_badges
+            : [];
+          if (!list.length) {
+            if (hint) hint.textContent = "No Discord badges found on your account.";
+            return;
+          }
+          if (!Array.isArray(discordBadgeCodes)) {
+            discordBadgeCodes = Array.isArray(lastData.discord_badge_codes)
+              ? lastData.discord_badge_codes.slice()
+              : list.map((b) => b && b.code).filter(Boolean);
+          }
+          list.forEach((badge) => {
+            if (!badge) return;
+            const item = document.createElement("div");
+            item.className = "badge-item";
+            const label = badge.label || badge.code || "badge";
+            const icon = safeMediaUrl(badge.icon_url ? String(badge.icon_url) : "");
+            const checked =
+              Array.isArray(discordBadgeCodes) &&
+              discordBadgeCodes.includes(badge.code);
+            item.innerHTML = `
+              <div class="badge-row">
+                ${
+                  icon
+                    ? `<img src="${icon}" alt="${badge.code || ""}">`
+                    : `<span></span>`
+                }
+                <div>
+                  <strong>${escapeHtml(badge.code || "badge")}</strong>
+                  <div class="muted">${escapeHtml(label)}</div>
+                </div>
+                <label class="row" style="gap:0.35rem">
+                  <span class="muted">Displayed</span>
+                  <input type="checkbox" data-code="${escapeHtml(
+                    badge.code || "",
+                  )}" ${checked ? "checked" : ""} aria-label="Displayed">
+                </label>
+              </div>
+            `;
+            const chk = item.querySelector('input[type="checkbox"][data-code]');
+            chk.addEventListener("change", () => {
+              const codes = Array.from(
+                box.querySelectorAll('input[type="checkbox"][data-code]'),
+              )
+                .filter((input) => input.checked)
+                .map((input) => input.getAttribute("data-code"))
+                .filter(Boolean);
+              discordBadgeCodes = codes;
+              if (lastData) {
+                lastData.discord_badge_codes = codes;
+                markMetaDirty("discord_badge_codes");
+              }
+              renderBadgesDisplay(lastData);
+            });
+            box.appendChild(item);
+          });
+        }
+
+        function renderAttrBadges() {
+          const box = document.getElementById("attrBadgesList");
+          if (!box) return;
+          box.innerHTML = "";
+          if (!lastData || !Array.isArray(lastData.icons)) return;
+          lastData.icons.forEach((ic) => {
+            if (!ic) return;
+            const item = document.createElement("div");
+            item.className = "badge-item";
+            const desc = ic.description || ic.code || "badge";
+            const icon = safeMediaUrl(ic.image_url ? String(ic.image_url) : "");
+            const acquired = ic.acquired_at
+              ? new Date(ic.acquired_at).toLocaleDateString()
+              : "";
+            item.innerHTML = `
+              <div class="badge-row">
+                ${
+                  icon
+                    ? `<img src="${icon}" alt="${escapeHtml(ic.code || "")}">`
+                    : `<span></span>`
+                }
+                <div>
+                  <strong>${escapeHtml(ic.code || "badge")}</strong>
+                  <div class="muted">${escapeHtml(desc || "")}</div>
+                </div>
+                <label class="row" style="gap:0.35rem">
+                  <span class="muted">Displayed</span>
+                  <input type="checkbox" ${
+                    ic.displayed ? "checked" : ""
+                  } aria-label="Displayed">
+                </label>
+              </div>
+              ${
+                acquired
+                  ? `<div class="muted" style="font-size:0.75rem">Acquired ${acquired}</div>`
+                  : ""
+              }
+            `;
+            const chk = item.querySelector('input[type="checkbox"]');
+            chk.addEventListener("change", async () => {
+              const ok = await apiToggleMyIcon(ic.code, chk.checked);
+              if (!ok) {
+                chk.checked = !chk.checked;
+                return;
+              }
+              if (lastData && Array.isArray(lastData.icons)) {
+                const target = lastData.icons.find((b) => b.code === ic.code);
+                if (target) target.displayed = chk.checked;
+              }
+              renderBadgesDisplay(lastData);
+            });
+            box.appendChild(item);
+          });
+        }
+
+        function domOrderKey(container) {
+          return Array.from(container.querySelectorAll(".link-item"))
+            .map((el) => el.dataset.id || "")
+            .join("|");
+        }
+
+        function getDragAfterElement(container, y) {
+          const els = Array.from(
+            container.querySelectorAll(".link-item:not(.dragging)"),
+          );
+          let closest = { offset: Number.NEGATIVE_INFINITY, el: null };
+          els.forEach((el) => {
+            const box = el.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+              closest = { offset, el };
+            }
+          });
+          return closest.el;
+        }
+
+        function ensureLinksDrag(container) {
+          if (!container || container.dataset.dragBound === "1") return;
+          container.dataset.dragBound = "1";
+          container.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            const after = getDragAfterElement(container, e.clientY);
+            const dragging = container.querySelector(".dragging");
+            if (!dragging) return;
+            if (!after) {
+              container.appendChild(dragging);
+            } else {
+              container.insertBefore(dragging, after);
+            }
+          });
+        }
+
+        async function persistLinkOrder(container) {
+          const wrap = container || document.getElementById("attrLinksList");
+          if (!wrap) return;
+          const rows = Array.from(wrap.querySelectorAll(".link-item"));
+          if (!rows.length) return;
+          const results = await Promise.all(
+            rows.map((row, idx) =>
+              apiUpdateLink(
+                Number(row.dataset.id),
+                { position: idx },
+                { silent: true },
+              ),
+            ),
+          );
+          if (results.some((ok) => ok === false)) {
+            showAttrMessage(
+              document.getElementById("attrLinksMsg"),
+              "Reorder failed",
+              false,
+            );
+            return;
+          }
+          if (lastData && Array.isArray(lastData.links)) {
+            rows.forEach((row, idx) => {
+              const link = lastData.links.find(
+                (l) => String(l.id) === String(row.dataset.id),
+              );
+              if (link) link.position = idx;
+            });
+            lastData.links.sort(
+              (a, b) => (a.position || 0) - (b.position || 0),
+            );
+          }
+          renderLinksDisplay(lastData);
+          showAttrMessage(
+            document.getElementById("attrLinksMsg"),
+            "Order updated",
+            true,
+          );
+        }
+
+        function moveLinkRow(row, direction = 0) {
+          if (!direction || !row || !row.parentElement) return;
+          const wrap = row.parentElement;
+          if (direction < 0 && row.previousElementSibling) {
+            wrap.insertBefore(row, row.previousElementSibling);
+          } else if (direction > 0 && row.nextElementSibling) {
+            wrap.insertBefore(row.nextElementSibling, row);
+          } else {
+            return;
+          }
+          persistLinkOrder(wrap);
+        }
+
+        function renderAttrLinks(links) {
+          const wrap = document.getElementById("attrLinksList");
+          currentLinks = Array.isArray(links) ? links.slice() : [];
+          if (!wrap) return;
+          wrap.innerHTML = "";
+          ensureLinksDrag(wrap);
+          const ordered = Array.isArray(links) ? links.slice() : [];
+          ordered.sort((a, b) => (a.position || 0) - (b.position || 0));
+          ordered.forEach((l) => {
+            const row = document.createElement("div");
+            row.className = "link-item";
+            row.dataset.id = l.id;
+            row.draggable = true;
+            row.innerHTML = `
+              <span class="handle" title="Move" aria-hidden="true">☰</span>
+              <input class="input" data-k="label" placeholder="Label" value="${escapeHtml(
+                l.label || "",
+              )}">
+              <input class="input" data-k="url" placeholder="https://…" value="${escapeHtml(
+                l.url || "",
+              )}">
+              <div class="link-icon-upload">
+                <input type="file" class="input" data-k="icon_file" accept="image/*">
+                <input type="hidden" data-k="icon_url" value="${escapeHtml(
+                  l.icon_url || "",
+                )}">
+                <div class="muted" data-k="icon_status"></div>
+                <button class="btn sm ghost" type="button" data-act="icon-remove">
+                  Remove Icon
+                </button>
+              </div>
+              <select class="select" data-k="is_active">
+                <option value="true"${l.is_active ? " selected" : ""}>Active</option>
+                <option value="false"${
+                  !l.is_active ? " selected" : ""
+                }>Hidden</option>
+              </select>
+              <div class="row" style="gap:0.35rem; flex-wrap: wrap">
+                <button class="btn sm ghost" data-act="up" title="Up">▲</button>
+                <button class="btn sm ghost" data-act="down" title="Down">▼</button>
+                <button class="btn sm" data-act="save">Save</button>
+                <button class="btn sm danger" data-act="del">Delete</button>
+              </div>
+            `;
+            const iconUrlInput = row.querySelector('[data-k="icon_url"]');
+            const iconStatus = row.querySelector('[data-k="icon_status"]');
+            if (iconStatus) {
+              iconStatus.textContent =
+                fileNameFromUrl(l.icon_url || "") || "No icon uploaded.";
+            }
+            const iconFile = row.querySelector('[data-k="icon_file"]');
+            if (iconFile) {
+              iconFile.addEventListener("change", async () => {
+                try {
+                  const url = await uploadInlineFile(
+                    iconFile,
+                    "/api/users/me/linkicon",
+                  );
+                  if (!url) return;
+                  if (iconUrlInput) iconUrlInput.value = url;
+                  if (iconStatus) {
+                    iconStatus.textContent =
+                      fileNameFromUrl(url) || "No icon uploaded.";
+                  }
+                  const ok = await apiUpdateLink(
+                    l.id,
+                    { icon_url: url },
+                    { silent: true },
+                  );
+                  if (!ok) {
+                    showAttrMessage(
+                      document.getElementById("attrLinksMsg"),
+                      "Icon upload failed",
+                      false,
+                    );
+                    return;
+                  }
+                  if (lastData && Array.isArray(lastData.links)) {
+                    const target = lastData.links.find((link) => link.id === l.id);
+                    if (target) target.icon_url = url;
+                  }
+                  renderLinksDisplay(lastData);
+                  showAttrMessage(
+                    document.getElementById("attrLinksMsg"),
+                    "Icon uploaded",
+                    true,
+                  );
+                } catch (e) {
+                  showAttrMessage(
+                    document.getElementById("attrLinksMsg"),
+                    "Icon upload failed",
+                    false,
+                  );
+                }
+              });
+            }
+            const iconRemove = row.querySelector('[data-act="icon-remove"]');
+            if (iconRemove) {
+              iconRemove.addEventListener("click", async () => {
+                if (iconUrlInput) iconUrlInput.value = "";
+                if (iconFile) iconFile.value = "";
+                if (iconStatus) iconStatus.textContent = "No icon uploaded.";
+                const ok = await apiUpdateLink(
+                  l.id,
+                  { icon_url: null },
+                  { silent: true },
+                );
+                if (!ok) {
+                  showAttrMessage(
+                    document.getElementById("attrLinksMsg"),
+                    "Icon remove failed",
+                    false,
+                  );
+                  return;
+                }
+                if (lastData && Array.isArray(lastData.links)) {
+                  const target = lastData.links.find((link) => link.id === l.id);
+                  if (target) target.icon_url = null;
+                }
+                renderLinksDisplay(lastData);
+                showAttrMessage(
+                  document.getElementById("attrLinksMsg"),
+                  "Icon removed",
+                  true,
+                );
+              });
+            }
+            row
+              .querySelector('[data-act="save"]')
+              .addEventListener("click", async () => {
+                const currentPosition = Array.from(wrap.children).indexOf(row);
+                const body = {
+                  label:
+                    row.querySelector('[data-k="label"]').value.trim() || null,
+                  url: row.querySelector('[data-k="url"]').value.trim(),
+                  icon_url:
+                    row.querySelector('[data-k="icon_url"]').value.trim() || null,
+                  is_active:
+                    row.querySelector('[data-k="is_active"]').value === "true",
+                  position: currentPosition,
+                };
+                const ok = await apiUpdateLink(l.id, body);
+                if (ok && lastData && Array.isArray(lastData.links)) {
+                  const target = lastData.links.find((link) => link.id === l.id);
+                  if (target) Object.assign(target, body);
+                  renderLinksDisplay(lastData);
+                }
+              });
+            row
+              .querySelector('[data-act="del"]')
+              .addEventListener("click", async () => {
+                if (!confirm("Delete this link?")) return;
+                const ok = await apiDeleteLink(l.id);
+                if (ok && lastData && Array.isArray(lastData.links)) {
+                  lastData.links = lastData.links.filter((link) => link.id !== l.id);
+                  renderLinksDisplay(lastData);
+                  renderAttrLinks(lastData.links);
+                }
+              });
+            row
+              .querySelector('[data-act="up"]')
+              .addEventListener("click", async () => {
+                moveLinkRow(row, -1);
+              });
+            row
+              .querySelector('[data-act="down"]')
+              .addEventListener("click", async () => {
+                moveLinkRow(row, 1);
+              });
+            row.addEventListener("dragstart", (evt) => {
+              dragStartOrder = domOrderKey(wrap);
+              row.classList.add("dragging");
+              if (evt.dataTransfer) {
+                evt.dataTransfer.effectAllowed = "move";
+                evt.dataTransfer.setData("text/plain", String(l.id));
+              }
+            });
+            row.addEventListener("dragend", async () => {
+              row.classList.remove("dragging");
+              const orderAfter = domOrderKey(wrap);
+              if (orderAfter !== dragStartOrder) {
+                await persistLinkOrder(wrap);
+              }
+            });
+            wrap.appendChild(row);
+          });
+        }
+
+        async function apiAddLink(body) {
+          const msgEl = document.getElementById("attrLinksMsg");
+          if (!linktreeId) {
+            showAttrMessage(msgEl, "Create the Linktree first", false);
+            return null;
+          }
+          const r = await fetch(`/api/linktrees/${linktreeId}/links`, {
+            method: "POST",
+            headers: headers(),
+            credentials: "include",
+            body: JSON.stringify(body),
+          });
+          if (!r.ok) {
+            showAttrMessage(msgEl, "Add link failed", false);
+            return null;
+          }
+          const data = await r.json();
+          showAttrMessage(msgEl, "Link added", true);
+          return data;
+        }
+
+        async function apiUpdateLink(linkId, body, opts = {}) {
+          const msgEl = document.getElementById("attrLinksMsg");
+          const { silent = false } = opts;
+          const r = await fetch(`/api/links/${linkId}`, {
+            method: "PATCH",
+            headers: headers(),
+            credentials: "include",
+            body: JSON.stringify(body),
+          });
+          if (!r.ok) {
+            if (!silent) showAttrMessage(msgEl, "Save failed", false);
+            return false;
+          }
+          if (!silent) showAttrMessage(msgEl, "Saved", true);
+          return true;
+        }
+
+        async function apiDeleteLink(linkId) {
+          const msgEl = document.getElementById("attrLinksMsg");
+          const r = await fetch(`/api/links/${linkId}`, {
+            method: "DELETE",
+            headers: headers(),
+            credentials: "include",
+          });
+          if (!r.ok) {
+            showAttrMessage(msgEl, "Delete failed", false);
+            return false;
+          }
+          showAttrMessage(msgEl, "Deleted", true);
+          return true;
+        }
+
+        async function apiToggleMyIcon(code, displayed) {
+          const r = await fetch(
+            `/api/users/me/icons/${encodeURIComponent(code)}`,
+            {
+              method: "PATCH",
+              headers: headers(),
+              credentials: "include",
+              body: JSON.stringify({ displayed }),
+            },
+          );
+          if (!r.ok) {
+            showEditorMessage("Icon toggle failed", false);
+            return false;
+          }
+          showEditorMessage("Icon updated", true);
+          return true;
         }
 
         let cursorFxMode = "none";
@@ -4058,6 +6043,77 @@
           return discordStatusPromise;
         }
 
+        async function loadDiscordStatusIntoData() {
+          discordStatusCache = null;
+          const status = await fetchDiscordStatus();
+          discordBadgeCodes = null;
+          if (!lastData) return status;
+          if (status && status.linked) {
+            lastData.discord_linked = true;
+            if (status.presence) lastData.discord_presence = status.presence;
+            if (status.status_text) lastData.discord_status_text = status.status_text;
+            if (Array.isArray(status.badges)) lastData.discord_badges = status.badges;
+            if (status.decoration_url)
+              lastData.discord_decoration_url = status.decoration_url;
+          } else {
+            lastData.discord_linked = false;
+            lastData.discord_status_text = "";
+            lastData.discord_badges = [];
+            lastData.discord_decoration_url = null;
+          }
+          updateAttrDiscordUI(lastData);
+          updateDiscordStatusDisplay(lastData);
+          renderBadgesDisplay(lastData);
+          updatePfpDisplay(lastData);
+          renderAttrDiscordBadges();
+          return status;
+        }
+
+        async function startDiscordLink() {
+          try {
+            const r = await fetch("/api/discord/oauth-url", {
+              credentials: "include",
+            });
+            if (!r.ok) {
+              showEditorMessage("Discord linking unavailable", false);
+              return;
+            }
+            const { url, configured, reason } = await r.json();
+            if (!configured || !url) {
+              showEditorMessage(reason || "Discord linking not configured", false);
+              return;
+            }
+            const w = window.open(url, "discord_link", "width=520,height=720");
+            if (!w) showEditorMessage("Allow popups to link Discord", false);
+          } catch (e) {
+            showEditorMessage("Discord link failed", false);
+          }
+        }
+
+        async function unlinkDiscord() {
+          try {
+            const r = await fetch("/api/discord/account", {
+              method: "DELETE",
+              credentials: "include",
+            });
+            if (!r.ok) throw new Error(await r.text());
+            if (lastData) {
+              lastData.discord_linked = false;
+              lastData.discord_status_text = "";
+              lastData.discord_badges = [];
+              lastData.discord_decoration_url = null;
+            }
+            updateAttrDiscordUI(lastData);
+            updateDiscordStatusDisplay(lastData);
+            renderBadgesDisplay(lastData);
+            updatePfpDisplay(lastData);
+            renderAttrDiscordBadges();
+            showEditorMessage("Discord disconnected", true);
+          } catch (e) {
+            showEditorMessage("Unlink failed", false);
+          }
+        }
+
         const MOCK_DISCORD_BADGES = [
           {
             code: "nitro",
@@ -4404,6 +6460,15 @@
           msg.style.color = ok ? "#71e5d2" : "var(--muted)";
         }
 
+        function showAttrMessage(el, text, ok = false) {
+          if (!el) {
+            showEditorMessage(text, ok);
+            return;
+          }
+          el.textContent = text || "";
+          el.style.color = ok ? "#71e5d2" : "var(--muted)";
+        }
+
         function headers() {
           return { "Content-Type": "application/json" };
         }
@@ -4457,6 +6522,11 @@
               groups: canvasLayout.groups,
             },
           };
+          if (metaDirtyFields.size && lastData) {
+            metaDirtyFields.forEach((field) => {
+              payload[field] = lastData[field] ?? null;
+            });
+          }
           try {
             const r = await fetch(`/api/linktrees/${linktreeId}`, {
               method: "PATCH",
@@ -4469,6 +6539,7 @@
               return;
             }
             canvasDirty = false;
+            metaDirtyFields = new Set();
             showEditorMessage("Canvas saved.", true);
           } catch (err) {
             showEditorMessage("Save failed.", false);
@@ -4483,6 +6554,76 @@
           const selY = document.getElementById("inSelY");
           const selW = document.getElementById("inSelW");
           const selH = document.getElementById("inSelH");
+          const selGroup = document.getElementById("inSelGroup");
+          const attrNameColor = document.getElementById("inAttrNameColor");
+          const attrNameEffect = document.getElementById("inAttrNameEffect");
+          const attrNameFont = document.getElementById("inAttrNameFont");
+          const attrDisplayName = document.getElementById("inAttrDisplayName");
+          const attrCustomName = document.getElementById("inAttrCustomName");
+          const attrDiscordStatusToggle = document.getElementById(
+            "inAttrDiscordStatus",
+          );
+          const attrQuote = document.getElementById("inAttrQuote");
+          const attrQuoteTyping = document.getElementById("inAttrQuoteTyping");
+          const attrQuoteAlt1 = document.getElementById("inAttrQuoteAlt1");
+          const attrQuoteAlt2 = document.getElementById("inAttrQuoteAlt2");
+          const attrQuoteSpeed = document.getElementById("inAttrQuoteSpeed");
+          const attrQuotePause = document.getElementById("inAttrQuotePause");
+          const attrQuoteColor = document.getElementById("inAttrQuoteColor");
+          const attrQuoteEffect = document.getElementById("inAttrQuoteEffect");
+          const attrQuoteFont = document.getElementById("inAttrQuoteFont");
+          const attrQuoteSize = document.getElementById("inAttrQuoteSize");
+          const attrQuoteStrength = document.getElementById(
+            "inAttrQuoteEffectStrength",
+          );
+          const attrLocation = document.getElementById("inAttrLocation");
+          const attrLocationColor = document.getElementById("inAttrLocationColor");
+          const attrDiscordBadgesToggle = document.getElementById(
+            "inAttrDiscordBadges",
+          );
+          const attrSongFile = document.getElementById("inAttrSongFile");
+          const attrSongIconFile = document.getElementById("inAttrSongIconFile");
+          const attrSong = document.getElementById("inAttrSong");
+          const attrSongName = document.getElementById("inAttrSongName");
+          const attrSongIcon = document.getElementById("inAttrSongIcon");
+          const attrAudioPlayer = document.getElementById("inAttrAudioPlayer");
+          const attrAudioBgColor = document.getElementById("inAttrAudioBgColor");
+          const attrAudioBgAlpha = document.getElementById("inAttrAudioBgAlpha");
+          const attrAudioTextColor = document.getElementById("inAttrAudioTextColor");
+          const attrAudioAccentColor = document.getElementById(
+            "inAttrAudioAccentColor",
+          );
+          const attrPfpFile = document.getElementById("inAttrPfpFile");
+          const attrLinktreePfp = document.getElementById("inAttrLinktreePfp");
+          const btnRemovePfp = document.getElementById("btnAttrRemovePfp");
+          const attrDiscordFrame = document.getElementById("inAttrDiscordFrame");
+          const attrDiscordPresence = document.getElementById(
+            "inAttrDiscordPresence",
+          );
+          const btnDiscordLink = document.getElementById("btnAttrDiscordLink");
+          const btnDiscordUnlink = document.getElementById("btnAttrDiscordUnlink");
+          const btnRemoveSong = document.getElementById("btnAttrRemoveSong");
+          const btnRemoveSongIcon = document.getElementById(
+            "btnAttrRemoveSongIcon",
+          );
+          const attrLinkColor = document.getElementById("inAttrLinkColor");
+          const attrLinkBgColor = document.getElementById("inAttrLinkBgColor");
+          const attrLinkBgAlpha = document.getElementById("inAttrLinkBgAlpha");
+          const attrLinkUrl = document.getElementById("inAttrLinkUrl");
+          const attrLinkLabel = document.getElementById("inAttrLinkLabel");
+          const attrLinkIconFile = document.getElementById("inAttrLinkIconFile");
+          const attrLinkIcon = document.getElementById("inAttrLinkIcon");
+          const btnRemoveLinkIcon = document.getElementById(
+            "btnAttrRemoveLinkIcon",
+          );
+          const attrLinkActive = document.getElementById("inAttrLinkActive");
+          const btnAddLink = document.getElementById("btnAttrAddLink");
+          const attrShowCounter = document.getElementById("inAttrShowCounter");
+          const attrCounterColor = document.getElementById("inAttrCounterColor");
+          const attrCounterBgColor = document.getElementById("inAttrCounterBgColor");
+          const attrCounterBgAlpha = document.getElementById(
+            "inAttrCounterBgAlpha",
+          );
           const saveBtn = document.getElementById("btnSaveCanvas");
           const resetBtn = document.getElementById("btnCanvasReset");
 
@@ -4528,7 +6669,21 @@
           const updateSelectionFromInputs = () => {
             if (!canvasLayout || !canvasSelection) return;
             if (canvasSelection.type === "group") {
-              const group = canvasLayout.groups?.[canvasSelection.id];
+              let activeGroupId = canvasSelection.id;
+              if (selGroup) {
+                const nextGroupId = selGroup.value.trim();
+                if (nextGroupId && nextGroupId !== activeGroupId) {
+                  const renamed = renameCanvasGroup(activeGroupId, nextGroupId);
+                  if (!renamed) {
+                    selGroup.value = activeGroupId;
+                  } else {
+                    activeGroupId = nextGroupId;
+                  }
+                } else if (!nextGroupId) {
+                  selGroup.value = activeGroupId;
+                }
+              }
+              const group = canvasLayout.groups?.[activeGroupId];
               if (!group) return;
               const nextX = parseInt(selX.value || group.x, 10);
               const nextY = parseInt(selY.value || group.y, 10);
@@ -4536,11 +6691,13 @@
               if (Number.isFinite(nextY)) group.y = nextY;
               canvasDirty = true;
               const groupEl = document.querySelector(
-                `.plate-group[data-group-id="${canvasSelection.id}"]`,
+                `.plate-group[data-group-id="${activeGroupId}"]`,
               );
               if (groupEl) {
                 groupEl.style.transform = `translate(${group.x}px, ${group.y}px)`;
               }
+              refreshGroupOptions();
+              syncSelectionPanel();
               return;
             }
             const key = canvasSelection.key;
@@ -4564,6 +6721,9 @@
                 Math.max(CANVAS_PLATE_MIN_H, nextH),
               );
             }
+            if (selGroup) {
+              assignPlateToGroup(key, selGroup.value);
+            }
             canvasDirty = true;
             applyPlateStyles(key, plate);
             if (plate.group) {
@@ -4581,6 +6741,490 @@
           if (selY) selY.addEventListener("change", updateSelectionFromInputs);
           if (selW) selW.addEventListener("change", updateSelectionFromInputs);
           if (selH) selH.addEventListener("change", updateSelectionFromInputs);
+          if (selGroup) selGroup.addEventListener("change", updateSelectionFromInputs);
+          const updateNameAttributes = () => {
+            if (
+              !lastData ||
+              !canvasSelection ||
+              canvasSelection.type !== "plate" ||
+              canvasSelection.key !== "name"
+            )
+              return;
+            const mode = attrDisplayName?.value || lastData.display_name_mode || "slug";
+            if (attrDisplayName) {
+              lastData.display_name_mode = mode;
+              markMetaDirty("display_name_mode");
+            }
+            if (attrCustomName) {
+              const custom = attrCustomName.value.trim();
+              lastData.custom_display_name =
+                mode === "custom" ? custom || null : null;
+              attrCustomName.disabled = mode !== "custom";
+              markMetaDirty("custom_display_name");
+            }
+            const nextColor = sanitizeHexColor(attrNameColor?.value);
+            const nextEffect = normalizeEffectName(attrNameEffect?.value);
+            const nextFont = normalizeFontFamily(attrNameFont?.value);
+            lastData.name_color = nextColor || null;
+            lastData.name_effect = nextEffect;
+            lastData.name_font_family = nextFont;
+            markMetaDirty("name_color");
+            markMetaDirty("name_effect");
+            markMetaDirty("name_font_family");
+            applyTextColors(lastData);
+            applyNameStyles(lastData);
+          };
+          const updateQuoteAttributes = () => {
+            if (
+              !lastData ||
+              !canvasSelection ||
+              canvasSelection.type !== "plate" ||
+              canvasSelection.key !== "quote"
+            )
+              return;
+            const texts = collectAttrQuoteTexts();
+            lastData.quote = texts[0] || null;
+            lastData.quote_typing_texts = texts;
+            lastData.quote_typing_enabled = !!attrQuoteTyping?.checked;
+            const speedRaw = parseInt(attrQuoteSpeed?.value ?? "", 10);
+            const pauseRaw = parseInt(attrQuotePause?.value ?? "", 10);
+            const sizeRaw = parseInt(attrQuoteSize?.value ?? "", 10);
+            const strengthRaw = parseInt(attrQuoteStrength?.value ?? "", 10);
+            lastData.quote_typing_speed = Number.isFinite(speedRaw)
+              ? Math.min(200, Math.max(20, speedRaw))
+              : 42;
+            lastData.quote_typing_pause = Number.isFinite(pauseRaw)
+              ? Math.min(10000, Math.max(200, pauseRaw))
+              : 1200;
+            lastData.quote_font_size = Number.isFinite(sizeRaw)
+              ? Math.min(40, Math.max(10, sizeRaw))
+              : 15;
+            lastData.quote_effect_strength = Number.isFinite(strengthRaw)
+              ? Math.min(100, Math.max(0, strengthRaw))
+              : 70;
+            const nextColor = sanitizeHexColor(attrQuoteColor?.value);
+            const nextEffect = normalizeEffectName(attrQuoteEffect?.value);
+            const nextFont = normalizeFontFamily(attrQuoteFont?.value);
+            lastData.quote_color = nextColor || null;
+            lastData.quote_effect = nextEffect;
+            lastData.quote_font_family = nextFont;
+            markMetaDirty("quote");
+            markMetaDirty("quote_typing_texts");
+            markMetaDirty("quote_typing_enabled");
+            markMetaDirty("quote_typing_speed");
+            markMetaDirty("quote_typing_pause");
+            markMetaDirty("quote_font_size");
+            markMetaDirty("quote_effect_strength");
+            markMetaDirty("quote_color");
+            markMetaDirty("quote_effect");
+            markMetaDirty("quote_font_family");
+            applyTextColors(lastData);
+            applyQuoteEffectStrength(lastData);
+            applyQuoteStyles(lastData);
+            const hasQuote = updateQuoteDisplay(lastData);
+            const quoteEl = document.getElementById("quote");
+            if (quoteEl) {
+              quoteEl.classList.toggle("hidden", !hasQuote);
+            }
+          };
+          const updateLocationAttributes = () => {
+            if (
+              !lastData ||
+              !canvasSelection ||
+              canvasSelection.type !== "plate" ||
+              canvasSelection.key !== "location"
+            )
+              return;
+            const text = attrLocation?.value.trim() || "";
+            const color = sanitizeHexColor(attrLocationColor?.value);
+            lastData.location = text || null;
+            lastData.location_color = color || null;
+            markMetaDirty("location");
+            markMetaDirty("location_color");
+            applyTextColors(lastData);
+            updateLocationDisplay(lastData);
+          };
+          const updateDiscordStatusAttributes = () => {
+            if (
+              !lastData ||
+              !canvasSelection ||
+              canvasSelection.type !== "plate" ||
+              canvasSelection.key !== "discord_status"
+            )
+              return;
+            lastData.discord_status_enabled = !!attrDiscordStatusToggle?.checked;
+            markMetaDirty("discord_status_enabled");
+            updateDiscordStatusDisplay(lastData);
+          };
+          const updatePfpAttributes = () => {
+            if (
+              !lastData ||
+              !canvasSelection ||
+              canvasSelection.type !== "plate" ||
+              canvasSelection.key !== "pfp"
+            )
+              return;
+            if (attrDiscordFrame) {
+              lastData.discord_frame_enabled = !!attrDiscordFrame.checked;
+              markMetaDirty("discord_frame_enabled");
+            }
+            if (attrDiscordPresence) {
+              lastData.discord_presence_enabled = !!attrDiscordPresence.checked;
+              markMetaDirty("discord_presence_enabled");
+            }
+            updatePfpDisplay(lastData);
+            updateDiscordStatusDisplay(lastData);
+          };
+          const updateBadgesAttributes = () => {
+            if (
+              !lastData ||
+              !canvasSelection ||
+              canvasSelection.type !== "plate" ||
+              canvasSelection.key !== "badges"
+            )
+              return;
+            lastData.discord_badges_enabled = !!attrDiscordBadgesToggle?.checked;
+            markMetaDirty("discord_badges_enabled");
+            renderBadgesDisplay(lastData);
+          };
+          const updateAudioAttributes = () => {
+            if (
+              !lastData ||
+              !canvasSelection ||
+              canvasSelection.type !== "plate" ||
+              canvasSelection.key !== "audio"
+            )
+              return;
+            lastData.show_audio_player = !!attrAudioPlayer?.checked;
+            lastData.audio_player_bg_color =
+              sanitizeHexColor(attrAudioBgColor?.value) || null;
+            lastData.audio_player_bg_alpha = clampPercent(
+              attrAudioBgAlpha?.value,
+              DEFAULT_AUDIO_BG_ALPHA,
+            );
+            lastData.audio_player_text_color =
+              sanitizeHexColor(attrAudioTextColor?.value) || null;
+            lastData.audio_player_accent_color =
+              sanitizeHexColor(attrAudioAccentColor?.value) || null;
+            markMetaDirty("show_audio_player");
+            markMetaDirty("audio_player_bg_color");
+            markMetaDirty("audio_player_bg_alpha");
+            markMetaDirty("audio_player_text_color");
+            markMetaDirty("audio_player_accent_color");
+            applyAudioPlayerStyles(lastData);
+            const songUrl = safeMediaUrl(lastData.song_url);
+            const showPlayer = !!lastData.show_audio_player && !!songUrl;
+            if (audioPlayer) audioPlayer.classList.toggle("hidden", !showPlayer);
+          };
+          const updateLinkStyleAttributes = () => {
+            if (
+              !lastData ||
+              !canvasSelection ||
+              canvasSelection.type !== "plate" ||
+              canvasSelection.key !== "links"
+            )
+              return;
+            lastData.link_color = sanitizeHexColor(attrLinkColor?.value) || null;
+            lastData.link_bg_color = sanitizeHexColor(attrLinkBgColor?.value) || null;
+            lastData.link_bg_alpha = clampPercent(attrLinkBgAlpha?.value, 100);
+            markMetaDirty("link_color");
+            markMetaDirty("link_bg_color");
+            markMetaDirty("link_bg_alpha");
+            applyLinkStyles(
+              lastData.link_color,
+              lastData.link_bg_color,
+              lastData.link_bg_alpha,
+            );
+          };
+          const updateCounterAttributes = () => {
+            if (
+              !lastData ||
+              !canvasSelection ||
+              canvasSelection.type !== "plate" ||
+              canvasSelection.key !== "visit_counter"
+            )
+              return;
+            lastData.show_visit_counter = !!attrShowCounter?.checked;
+            lastData.visit_counter_color =
+              sanitizeHexColor(attrCounterColor?.value) || null;
+            lastData.visit_counter_bg_color =
+              sanitizeHexColor(attrCounterBgColor?.value) || null;
+            lastData.visit_counter_bg_alpha = clampPercent(
+              attrCounterBgAlpha?.value,
+              20,
+            );
+            markMetaDirty("show_visit_counter");
+            markMetaDirty("visit_counter_color");
+            markMetaDirty("visit_counter_bg_color");
+            markMetaDirty("visit_counter_bg_alpha");
+            updateVisitCounterDisplay(lastData);
+          };
+          if (attrDisplayName)
+            attrDisplayName.addEventListener("change", updateNameAttributes);
+          if (attrCustomName)
+            attrCustomName.addEventListener("input", updateNameAttributes);
+          if (attrNameColor)
+            attrNameColor.addEventListener("input", updateNameAttributes);
+          if (attrNameEffect)
+            attrNameEffect.addEventListener("change", updateNameAttributes);
+          if (attrNameFont)
+            attrNameFont.addEventListener("change", updateNameAttributes);
+          if (attrDiscordStatusToggle)
+            attrDiscordStatusToggle.addEventListener(
+              "change",
+              updateDiscordStatusAttributes,
+            );
+          if (attrQuote) attrQuote.addEventListener("input", updateQuoteAttributes);
+          if (attrQuoteTyping)
+            attrQuoteTyping.addEventListener("change", () => {
+              toggleAttrQuoteTypingFields();
+              updateQuoteAttributes();
+            });
+          if (attrQuoteAlt1)
+            attrQuoteAlt1.addEventListener("input", updateQuoteAttributes);
+          if (attrQuoteAlt2)
+            attrQuoteAlt2.addEventListener("input", updateQuoteAttributes);
+          if (attrQuoteSpeed)
+            attrQuoteSpeed.addEventListener("change", updateQuoteAttributes);
+          if (attrQuotePause)
+            attrQuotePause.addEventListener("change", updateQuoteAttributes);
+          if (attrQuoteColor)
+            attrQuoteColor.addEventListener("input", updateQuoteAttributes);
+          if (attrQuoteEffect)
+            attrQuoteEffect.addEventListener("change", updateQuoteAttributes);
+          if (attrQuoteFont)
+            attrQuoteFont.addEventListener("change", updateQuoteAttributes);
+          if (attrQuoteSize)
+            attrQuoteSize.addEventListener("change", updateQuoteAttributes);
+          if (attrQuoteStrength)
+            attrQuoteStrength.addEventListener("change", updateQuoteAttributes);
+          if (attrLocation)
+            attrLocation.addEventListener("input", updateLocationAttributes);
+          if (attrLocationColor)
+            attrLocationColor.addEventListener("input", updateLocationAttributes);
+          if (attrDiscordBadgesToggle)
+            attrDiscordBadgesToggle.addEventListener(
+              "change",
+              updateBadgesAttributes,
+            );
+          if (attrAudioPlayer)
+            attrAudioPlayer.addEventListener("change", updateAudioAttributes);
+          if (attrAudioBgColor)
+            attrAudioBgColor.addEventListener("input", updateAudioAttributes);
+          if (attrAudioBgAlpha)
+            attrAudioBgAlpha.addEventListener("change", updateAudioAttributes);
+          if (attrAudioTextColor)
+            attrAudioTextColor.addEventListener("input", updateAudioAttributes);
+          if (attrAudioAccentColor)
+            attrAudioAccentColor.addEventListener("input", updateAudioAttributes);
+          if (attrDiscordFrame)
+            attrDiscordFrame.addEventListener("change", updatePfpAttributes);
+          if (attrDiscordPresence)
+            attrDiscordPresence.addEventListener("change", updatePfpAttributes);
+          if (attrLinkColor)
+            attrLinkColor.addEventListener("input", updateLinkStyleAttributes);
+          if (attrLinkBgColor)
+            attrLinkBgColor.addEventListener("input", updateLinkStyleAttributes);
+          if (attrLinkBgAlpha)
+            attrLinkBgAlpha.addEventListener("change", updateLinkStyleAttributes);
+          if (attrShowCounter)
+            attrShowCounter.addEventListener("change", updateCounterAttributes);
+          if (attrCounterColor)
+            attrCounterColor.addEventListener("input", updateCounterAttributes);
+          if (attrCounterBgColor)
+            attrCounterBgColor.addEventListener("input", updateCounterAttributes);
+          if (attrCounterBgAlpha)
+            attrCounterBgAlpha.addEventListener("change", updateCounterAttributes);
+
+          if (attrPfpFile) {
+            attrPfpFile.addEventListener("change", async () => {
+              if (!lastData) return;
+              try {
+                const res = await uploadFile(
+                  "inAttrPfpFile",
+                  `/api/users/me/linktree-pfp?device=${encodeURIComponent(
+                    currentDevice || "pc",
+                  )}`,
+                );
+                const url = res?.url || "";
+                if (attrLinktreePfp) attrLinktreePfp.value = url;
+                lastData.linktree_profile_picture = url || null;
+                markMetaDirty("linktree_profile_picture");
+                setUploadStatus(
+                  "attrPfpStatus",
+                  url,
+                  "Using your account profile picture.",
+                );
+                updatePfpDisplay(lastData);
+                showEditorMessage("Profile picture uploaded", true);
+              } catch (e) {
+                showEditorMessage("Profile picture upload failed", false);
+              }
+            });
+          }
+          if (btnRemovePfp) {
+            btnRemovePfp.addEventListener("click", () => {
+              if (!lastData) return;
+              if (attrLinktreePfp) attrLinktreePfp.value = "";
+              if (attrPfpFile) attrPfpFile.value = "";
+              lastData.linktree_profile_picture = null;
+              markMetaDirty("linktree_profile_picture");
+              setUploadStatus(
+                "attrPfpStatus",
+                "",
+                "Using your account profile picture.",
+              );
+              updatePfpDisplay(lastData);
+              showEditorMessage("Profile picture removed", true);
+            });
+          }
+          if (btnDiscordLink)
+            btnDiscordLink.addEventListener("click", startDiscordLink);
+          if (btnDiscordUnlink)
+            btnDiscordUnlink.addEventListener("click", unlinkDiscord);
+
+          if (attrSongFile) {
+            attrSongFile.addEventListener("change", async () => {
+              if (!lastData) return;
+              try {
+                const res = await uploadFile(
+                  "inAttrSongFile",
+                  `/api/users/me/song?device=${encodeURIComponent(
+                    currentDevice || "pc",
+                  )}`,
+                );
+                const url = res?.url || "";
+                const name = res?.name || "";
+                if (attrSong) attrSong.value = url;
+                if (attrSongName) attrSongName.value = name;
+                lastData.song_url = url || null;
+                lastData.song_name = name || null;
+                markMetaDirty("song_url");
+                markMetaDirty("song_name");
+                setUploadStatus("attrSongStatus", url, "No song uploaded yet.", name);
+                refreshTreeFromData();
+                showEditorMessage("Song uploaded", true);
+              } catch (e) {
+                showEditorMessage("Song upload failed", false);
+              }
+            });
+          }
+          if (btnRemoveSong) {
+            btnRemoveSong.addEventListener("click", () => {
+              if (!lastData) return;
+              if (attrSong) attrSong.value = "";
+              if (attrSongName) attrSongName.value = "";
+              if (attrSongFile) attrSongFile.value = "";
+              lastData.song_url = null;
+              lastData.song_name = null;
+              markMetaDirty("song_url");
+              markMetaDirty("song_name");
+              setUploadStatus("attrSongStatus", "", "No song uploaded yet.");
+              refreshTreeFromData();
+              showEditorMessage("Song removed", true);
+            });
+          }
+          if (attrSongIconFile) {
+            attrSongIconFile.addEventListener("change", async () => {
+              if (!lastData) return;
+              try {
+                const res = await uploadFile(
+                  "inAttrSongIconFile",
+                  `/api/users/me/songicon?device=${encodeURIComponent(
+                    currentDevice || "pc",
+                  )}`,
+                );
+                const url = res?.url || "";
+                if (attrSongIcon) attrSongIcon.value = url;
+                lastData.song_icon_url = url || null;
+                markMetaDirty("song_icon_url");
+                setUploadStatus("attrSongIconStatus", url, "No icon uploaded.");
+                refreshTreeFromData();
+                showEditorMessage("Song icon uploaded", true);
+              } catch (e) {
+                showEditorMessage("Song icon upload failed", false);
+              }
+            });
+          }
+          if (btnRemoveSongIcon) {
+            btnRemoveSongIcon.addEventListener("click", () => {
+              if (!lastData) return;
+              if (attrSongIcon) attrSongIcon.value = "";
+              if (attrSongIconFile) attrSongIconFile.value = "";
+              lastData.song_icon_url = null;
+              markMetaDirty("song_icon_url");
+              setUploadStatus("attrSongIconStatus", "", "No icon uploaded.");
+              refreshTreeFromData();
+              showEditorMessage("Song icon removed", true);
+            });
+          }
+          if (attrLinkIconFile) {
+            attrLinkIconFile.addEventListener("change", async () => {
+              try {
+                const url = await uploadInlineFile(
+                  attrLinkIconFile,
+                  "/api/users/me/linkicon",
+                );
+                if (!url) return;
+                if (attrLinkIcon) attrLinkIcon.value = url;
+                setUploadStatus("attrLinkIconStatus", url, "No icon uploaded.");
+                showAttrMessage(
+                  document.getElementById("attrLinksMsg"),
+                  "Icon uploaded",
+                  true,
+                );
+              } catch (e) {
+                showAttrMessage(
+                  document.getElementById("attrLinksMsg"),
+                  "Icon upload failed",
+                  false,
+                );
+              }
+            });
+          }
+          if (btnRemoveLinkIcon) {
+            btnRemoveLinkIcon.addEventListener("click", () => {
+              if (attrLinkIcon) attrLinkIcon.value = "";
+              if (attrLinkIconFile) attrLinkIconFile.value = "";
+              setUploadStatus("attrLinkIconStatus", "", "No icon uploaded.");
+            });
+          }
+          if (btnAddLink) {
+            btnAddLink.addEventListener("click", async () => {
+              const url = attrLinkUrl?.value.trim() || "";
+              const label = attrLinkLabel?.value.trim() || null;
+              const iconUrl = attrLinkIcon?.value.trim() || null;
+              const isActive = (attrLinkActive?.value || "true") === "true";
+              if (!url) {
+                showAttrMessage(
+                  document.getElementById("attrLinksMsg"),
+                  "URL is required",
+                  false,
+                );
+                return;
+              }
+              const link = await apiAddLink({
+                url,
+                label,
+                icon_url: iconUrl,
+                is_active: isActive,
+              });
+              if (!link) return;
+              if (lastData) {
+                lastData.links = Array.isArray(lastData.links)
+                  ? lastData.links.concat([link])
+                  : [link];
+              }
+              renderLinksDisplay(lastData);
+              renderAttrLinks(lastData.links || []);
+              if (attrLinkUrl) attrLinkUrl.value = "";
+              if (attrLinkLabel) attrLinkLabel.value = "";
+              if (attrLinkIcon) attrLinkIcon.value = "";
+              if (attrLinkIconFile) attrLinkIconFile.value = "";
+              setUploadStatus("attrLinkIconStatus", "", "No icon uploaded.");
+              if (attrLinkActive) attrLinkActive.value = "true";
+            });
+          }
           if (saveBtn) saveBtn.addEventListener("click", saveCanvasLayout);
           if (resetBtn) {
             resetBtn.addEventListener("click", () => {
@@ -5074,55 +7718,10 @@
                 }
               }
             }
-          const nameEl = document.getElementById("name");
-          if (nameEl) {
-            const mode = data.display_name_mode || "slug";
-            if (mode === "username") {
-              nameEl.textContent = data.user_username || data.slug || "User";
-            } else if (mode === "custom" && data.custom_display_name) {
-              nameEl.textContent = data.custom_display_name;
-            } else {
-              nameEl.textContent = data.slug || "User";
-            }
-
-            // Effekt-Klassen setzen
-            nameEl.classList.remove("glow", "neon", "rainbow");
-            if (data.name_effect && data.name_effect !== "none") {
-              nameEl.classList.add(data.name_effect);
-            }
-            if (data.user_id) {
-              nameEl.dataset.id = `ID: ${data.user_id}`;
-              nameEl.classList.add("has-id");
-              nameEl.title = `ID: ${data.user_id}`;
-            } else {
-              nameEl.classList.remove("has-id");
-              nameEl.removeAttribute("data-id");
-              nameEl.removeAttribute("title");
-            }
-          }
-          const quoteEl = document.getElementById("quote");
-          if (quoteEl) {
-            quoteEl.classList.remove(
-              "glow",
-              "neon",
-              "rainbow",
-              "font-serif",
-              "font-mono",
-              "font-script",
-              "font-display",
-            );
-            const fx = (data.quote_effect || "none").toString().toLowerCase();
-            if (fx && fx !== "none") {
-              quoteEl.classList.add(fx);
-            }
-            const fontFamily = (data.quote_font_family || "default")
-              .toString()
-              .toLowerCase();
-            if (fontFamily && fontFamily !== "default") {
-              quoteEl.classList.add(`font-${fontFamily}`);
-            }
-          }
+          applyNameStyles(data);
+          applyQuoteStyles(data);
           const hasQuote = updateQuoteDisplay(data);
+          const quoteEl = document.getElementById("quote");
           if (quoteEl) {
             quoteEl.classList.toggle("hidden", !hasQuote);
           }
@@ -5310,6 +7909,8 @@
             const deviceSelect = document.getElementById("inDevice");
             if (deviceSelect) deviceSelect.value = currentDevice;
             canvasDirty = false;
+            metaDirtyFields = new Set();
+            discordBadgeCodes = null;
             canvasLayout = null;
             let data = await apiLoadTreeOwnerBySlug(slug, currentDevice);
             if (!data && currentDevice === "mobile") {
@@ -5367,6 +7968,13 @@
         } else if (prefersReducedData && prefersReducedData.addListener) {
           prefersReducedData.addListener(handleMediaPreferenceChange);
         }
+
+        window.addEventListener("message", async (evt) => {
+          if (evt && evt.data && evt.data.type === "discord-linked") {
+            await loadDiscordStatusIntoData();
+            showEditorMessage("Discord linked", true);
+          }
+        });
 
         bindInspectorEvents();
         loadTree();

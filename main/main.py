@@ -1368,6 +1368,7 @@ class LinktreeCreateIn(BaseModel):
     background_is_video: bool = False
     transparency: int = Field(0, ge=0, le=100)
     name_effect: EffectName = "none"
+    name_font_family: QuoteFontFamily = "default"
     background_effect: BgEffectName = "none"
     display_name_mode: DisplayNameMode = "slug"
     layout_mode: LayoutMode = "center"
@@ -1441,6 +1442,7 @@ class LinktreeUpdateIn(BaseModel):
     background_is_video: Optional[bool] = None
     transparency: Optional[int] = Field(None, ge=0, le=100)
     name_effect: Optional[EffectName] = None
+    name_font_family: Optional[QuoteFontFamily] = None
     background_effect: Optional[BgEffectName] = None
     display_name_mode: Optional[DisplayNameMode] = None
     layout_mode: Optional[LayoutMode] = None
@@ -1526,6 +1528,7 @@ class LinktreeOut(BaseModel):
     background_is_video: bool
     transparency: int
     name_effect: EffectName
+    name_font_family: QuoteFontFamily = "default"
     background_effect: BgEffectName
     display_name_mode: DisplayNameMode  # NEU
     layout_mode: Optional[LayoutMode] = None
@@ -2251,6 +2254,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                    COALESCE(background_is_video, false) AS background_is_video,
                    COALESCE(transparency, 0)          AS transparency,
                    COALESCE(name_effect, 'none')       AS name_effect,
+                   COALESCE(name_font_family, 'default') AS name_font_family,
                    COALESCE(background_effect,'none')  AS background_effect,
                    device_type,
                    COALESCE(display_name_mode,'slug')  AS display_name_mode,
@@ -2376,6 +2380,7 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "background_is_video": bool(lt.get("background_is_video")),
         "transparency": int(lt.get("transparency") or 0),
         "name_effect": lt.get("name_effect") or "none",
+        "name_font_family": lt.get("name_font_family") or "default",
         "background_effect": lt.get("background_effect") or "none",
         "display_name_mode": lt.get("display_name_mode") or "slug",
         "layout_mode": lt.get("layout_mode") or "center",
@@ -3591,6 +3596,7 @@ def get_linktree(
         "background_is_video": lt.get("background_is_video", False),
         "transparency": lt.get("transparency", 0),
         "name_effect": lt.get("name_effect", "none"),
+        "name_font_family": lt.get("name_font_family") or "default",
         "background_effect": lt.get("background_effect", "none"),
         "display_name_mode": lt.get("display_name_mode", "slug"),
         "layout_mode": lt.get("layout_mode") or "center",
@@ -3751,6 +3757,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             else 70
         )
         quote_effect_strength = max(0, min(100, quote_effect_strength))
+        name_font_family = payload.name_font_family or "default"
         linktree_id = db.create_linktree(
             user_id=user["id"],
             slug=payload.slug,
@@ -3787,6 +3794,7 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             background_is_video=bg_is_video,
             transparency=payload.transparency,
             name_effect=payload.name_effect,
+            name_font_family=name_font_family,
             background_effect=payload.background_effect,
             display_name_mode=payload.display_name_mode,  # <-- NEU
             layout_mode=payload.layout_mode,
@@ -4575,6 +4583,11 @@ def update_linktree_ep(
         fields["entry_font_family"] = (
             fam if fam in {"default", "serif", "mono", "script", "display"} else "default"
         )
+    if "name_font_family" in fields:
+        fam = str(fields.get("name_font_family") or "default").lower()
+        fields["name_font_family"] = (
+            fam if fam in {"default", "serif", "mono", "script", "display"} else "default"
+        )
     if "entry_effect" in fields:
         fx = str(fields.get("entry_effect") or "none").lower()
         fields["entry_effect"] = (
@@ -4777,6 +4790,7 @@ class TemplateVariantIn(BaseModel):
     background_is_video: bool = False
     transparency: int = Field(0, ge=0, le=100)
     name_effect: EffectName = "none"
+    name_font_family: Optional[QuoteFontFamily] = None
     background_effect: BgEffectName = "none"
     display_name_mode: DisplayNameMode = "slug"
     layout_mode: Optional[LayoutMode] = None
@@ -4924,6 +4938,12 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
             data["entry_font_family"] = fam
         else:
             data["entry_font_family"] = "default"
+    if "name_font_family" in data:
+        fam = str(data.get("name_font_family") or "").lower()
+        if fam in {"default", "serif", "mono", "script", "display"}:
+            data["name_font_family"] = fam
+        else:
+            data["name_font_family"] = "default"
     if "entry_effect" in data:
         fx = str(data.get("entry_effect") or "").lower()
         if fx in {"none", "glow", "neon", "rainbow"}:
@@ -4969,6 +4989,7 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("background_is_video", False)
     data.setdefault("transparency", 0)
     data.setdefault("name_effect", "none")
+    data.setdefault("name_font_family", "default")
     data.setdefault("background_effect", "none")
     data.setdefault("cursor_effect", "none")
     data.setdefault("cursor_effect_alpha", 70)
@@ -5125,6 +5146,7 @@ def _extract_linktree_fields(data: dict) -> dict:
         "background_is_video",
         "transparency",
         "name_effect",
+        "name_font_family",
         "background_effect",
         "display_name_mode",
         "layout_mode",
