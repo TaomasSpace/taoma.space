@@ -3811,6 +3811,10 @@
           const actions = document.getElementById("editorActions");
           const btn = document.getElementById("editCanvasBtn");
           if (!actions || !btn || !data) return;
+          if (data.is_template_demo) {
+            actions.classList.add("hidden");
+            return;
+          }
           const slug = data.slug || "";
           const ownerMatch =
             currentUser &&
@@ -3918,8 +3922,10 @@
           const mediaSig = hashString(`${bgSig}|${audioSig}|${cursorSig}`);
           const bgChanged = bgSig !== lastBgSig;
           const audioChanged = audioSig !== lastAudioSig;
-          gateCacheKey = `taoma:linktree:gate:${mediaSig}`;
+          const isTemplateDemo = !!data.is_template_demo;
+          gateCacheKey = isTemplateDemo ? null : `taoma:linktree:gate:${mediaSig}`;
           const gateDismissed = (() => {
+            if (!gateCacheKey) return false;
             try {
               return sessionStorage.getItem(gateCacheKey) === "1";
             } catch (_) {
@@ -4049,6 +4055,10 @@
           }
           const hasVideo = bgChanged ? bgIsVideoNext : !!bgVideo;
           const hasAudio = audioChanged ? !!songUrlNext : !!bgAudio;
+          const hasEntryPrompt = !!String(data.entry_text || "").trim();
+          if (isTemplateDemo && hasEntryPrompt) {
+            needsGate = true;
+          }
           needsGate = needsGate || hasVideo || hasAudio;
           if (bgChanged || audioChanged) {
             if (needsGate && !gateDismissed) {
