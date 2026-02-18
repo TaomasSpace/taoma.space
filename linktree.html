@@ -3372,6 +3372,7 @@
 
         async function enterExperience() {
           showGate(false);
+          gateDismissedInPage = true;
           if (gateCacheKey) {
             try {
               sessionStorage.setItem(gateCacheKey, "1");
@@ -3428,6 +3429,7 @@
         let lastAudioSig = null;
         let lastCursorSig = null;
         let gateCacheKey = null;
+        let gateDismissedInPage = false;
         let discordStatusCache = null;
         let discordStatusPromise = null;
 
@@ -3811,7 +3813,7 @@
           const actions = document.getElementById("editorActions");
           const btn = document.getElementById("editCanvasBtn");
           if (!actions || !btn || !data) return;
-          if (data.is_template_demo) {
+          if (isTemplateDemoContext(data)) {
             actions.classList.add("hidden");
             return;
           }
@@ -3836,6 +3838,21 @@
               : window.matchMedia("(max-width: 720px)").matches
                 ? "mobile"
                 : "pc";
+        }
+
+        function isTemplateDemoContext(data) {
+          if (data && data.is_template_demo) return true;
+          try {
+            const params = new URLSearchParams(window.location.search || "");
+            if (params.get("template_id")) return true;
+          } catch (_) {}
+          const parts = (window.location.pathname || "").split("/").filter(Boolean);
+          return (
+            parts.length >= 4 &&
+            parts[0] === "marketplace" &&
+            parts[1] === "templates" &&
+            parts[3] === "demo"
+          );
         }
 
         let visibilityHandlerAdded = false;
@@ -3894,6 +3911,7 @@
           );
           const hasSideBySide = layoutResult.hasSideBySide;
           const usedCanvas = layoutResult.usedCanvas;
+          const isTemplateDemo = isTemplateDemoContext(data);
           let needsGate = false;
 
           const bgSource = pickBackgroundSource(data, preferLite);
@@ -3922,9 +3940,9 @@
           const mediaSig = hashString(`${bgSig}|${audioSig}|${cursorSig}`);
           const bgChanged = bgSig !== lastBgSig;
           const audioChanged = audioSig !== lastAudioSig;
-          const isTemplateDemo = !!data.is_template_demo;
           gateCacheKey = isTemplateDemo ? null : `taoma:linktree:gate:${mediaSig}`;
           const gateDismissed = (() => {
+            if (gateDismissedInPage) return true;
             if (!gateCacheKey) return false;
             try {
               return sessionStorage.getItem(gateCacheKey) === "1";
@@ -4060,7 +4078,9 @@
             needsGate = true;
           }
           needsGate = needsGate || hasVideo || hasAudio;
-          if (bgChanged || audioChanged) {
+          const shouldEvaluateGate =
+            bgChanged || audioChanged || (isTemplateDemo && hasEntryPrompt);
+          if (shouldEvaluateGate) {
             if (needsGate && !gateDismissed) {
               showGate(true);
             } else {
