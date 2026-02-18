@@ -150,6 +150,9 @@ CREATE TABLE IF NOT EXISTS linktrees (
     link_bg_color       TEXT,
     link_bg_alpha       SMALLINT NOT NULL DEFAULT 100
                         CHECK (link_bg_alpha BETWEEN 0 AND 100),
+    link_columns        SMALLINT
+                        CHECK (link_columns BETWEEN 1 AND 8),
+    link_icons_only     BOOLEAN NOT NULL DEFAULT FALSE,
     card_color          TEXT,
     text_color          TEXT,
     name_color          TEXT,
@@ -439,6 +442,34 @@ class PgGifDB:
                 cur.execute("""
   ALTER TABLE linktrees
   ALTER COLUMN link_bg_alpha SET NOT NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS link_columns SMALLINT;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  DROP CONSTRAINT IF EXISTS linktrees_link_columns_check;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD CONSTRAINT linktrees_link_columns_check
+  CHECK (link_columns IS NULL OR link_columns BETWEEN 1 AND 8);
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ADD COLUMN IF NOT EXISTS link_icons_only BOOLEAN;
+                """)
+                cur.execute("""
+  UPDATE linktrees SET link_icons_only = FALSE WHERE link_icons_only IS NULL;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN link_icons_only SET DEFAULT FALSE;
+                """)
+                cur.execute("""
+  ALTER TABLE linktrees
+  ALTER COLUMN link_icons_only SET NOT NULL;
                 """)
                 cur.execute("""
   ALTER TABLE linktrees
@@ -1998,6 +2029,8 @@ class PgGifDB:
         link_color: str | None = None,
         link_bg_color: str | None = None,
         link_bg_alpha: int = 100,
+        link_columns: int | None = None,
+        link_icons_only: bool = False,
         card_color: str | None = None,
         text_color: str | None = None,
         name_color: str | None = None,
@@ -2036,6 +2069,8 @@ class PgGifDB:
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
+                    link_columns,
+                    link_icons_only,
                     card_color,
                     text_color,
                     name_color,
@@ -2062,7 +2097,7 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
@@ -2081,6 +2116,8 @@ class PgGifDB:
                     link_color,
                     link_bg_color,
                     link_bg_alpha,
+                    link_columns,
+                    link_icons_only,
                     card_color,
                     text_color,
                     name_color,
@@ -2160,6 +2197,8 @@ class PgGifDB:
             "link_color",
             "link_bg_color",
             "link_bg_alpha",
+            "link_columns",
+            "link_icons_only",
             "card_color",
             "text_color",
             "name_color",
@@ -2223,7 +2262,7 @@ class PgGifDB:
                     background_url, background_is_video,
                     transparency, name_effect, name_font_family, background_effect,
                     display_name_mode, layout_mode, custom_display_name, linktree_profile_picture, section_order, canvas_layout,
-                    link_color, link_bg_color, link_bg_alpha, card_color, text_color,
+                    link_color, link_bg_color, link_bg_alpha, link_columns, link_icons_only, card_color, text_color,
                     name_color, location_color, quote_color, cursor_url, cursor_effect, cursor_effect_color, cursor_effect_alpha, discord_frame_enabled,
                     discord_presence_enabled, discord_presence, discord_status_enabled, discord_status_text, discord_badges_enabled, discord_badge_codes,
                     show_visit_counter,
@@ -2233,7 +2272,7 @@ class PgGifDB:
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 RETURNING id
@@ -2285,6 +2324,8 @@ class PgGifDB:
                     src.get("link_color"),
                     src.get("link_bg_color"),
                     src.get("link_bg_alpha", 100),
+                    src.get("link_columns"),
+                    src.get("link_icons_only", False),
                     src.get("card_color"),
                     src.get("text_color"),
                     src.get("name_color"),

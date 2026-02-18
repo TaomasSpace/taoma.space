@@ -1379,6 +1379,8 @@ class LinktreeCreateIn(BaseModel):
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
+    link_columns: Optional[int] = Field(None, ge=1, le=8)
+    link_icons_only: bool = False
     card_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -1453,6 +1455,8 @@ class LinktreeUpdateIn(BaseModel):
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
+    link_columns: Optional[int] = Field(None, ge=1, le=8)
+    link_icons_only: Optional[bool] = None
     card_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -1536,6 +1540,8 @@ class LinktreeOut(BaseModel):
     link_color: Optional[str] = None
     link_bg_color: Optional[str] = None
     link_bg_alpha: int = 100
+    link_columns: Optional[int] = None
+    link_icons_only: bool = False
     card_color: Optional[str] = None
     text_color: Optional[str] = None
     name_color: Optional[str] = None
@@ -2266,6 +2272,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
                     link_color,
                     link_bg_color,
                     COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
+                    link_columns,
+                    COALESCE(link_icons_only, false)    AS link_icons_only,
                     card_color,
                    text_color,
                    name_color,
@@ -2391,6 +2399,8 @@ def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
+        "link_columns": lt.get("link_columns"),
+        "link_icons_only": bool(lt.get("link_icons_only", False)),
         "card_color": lt.get("card_color"),
         "text_color": lt.get("text_color"),
         "name_color": lt.get("name_color"),
@@ -3607,6 +3617,8 @@ def get_linktree(
         "link_color": lt.get("link_color"),
         "link_bg_color": lt.get("link_bg_color"),
         "link_bg_alpha": lt.get("link_bg_alpha", 100),
+        "link_columns": lt.get("link_columns"),
+        "link_icons_only": bool(lt.get("link_icons_only", False)),
         "card_color": lt.get("card_color"),
         "text_color": lt.get("text_color"),
         "name_color": lt.get("name_color"),
@@ -3758,6 +3770,15 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
         )
         quote_effect_strength = max(0, min(100, quote_effect_strength))
         name_font_family = payload.name_font_family or "default"
+        link_columns = None
+        if payload.link_columns is not None:
+            try:
+                link_columns = int(payload.link_columns)
+            except Exception:
+                link_columns = None
+            if link_columns is not None:
+                link_columns = max(1, min(8, link_columns))
+        link_icons_only = bool(payload.link_icons_only)
         linktree_id = db.create_linktree(
             user_id=user["id"],
             slug=payload.slug,
@@ -3805,6 +3826,8 @@ def create_linktree_ep(payload: LinktreeCreateIn, user: dict = Depends(require_u
             link_color=payload.link_color,
             link_bg_color=payload.link_bg_color,
             link_bg_alpha=payload.link_bg_alpha,
+            link_columns=link_columns,
+            link_icons_only=link_icons_only,
             card_color=payload.card_color,
             text_color=payload.text_color,
             name_color=payload.name_color,
@@ -4611,6 +4634,16 @@ def update_linktree_ep(
     if "entry_text_color" in fields and isinstance(fields.get("entry_text_color"), str):
         val = fields.get("entry_text_color").strip()
         fields["entry_text_color"] = val if re.match(HEX_COLOR_RE, val) else None
+    if "link_columns" in fields:
+        try:
+            cols = int(fields.get("link_columns"))
+        except Exception:
+            cols = None
+        if cols is not None:
+            cols = max(1, min(8, cols))
+        fields["link_columns"] = cols
+    if "link_icons_only" in fields:
+        fields["link_icons_only"] = bool(fields.get("link_icons_only"))
     if "quote_font_family" in fields:
         fam = str(fields.get("quote_font_family") or "default").lower()
         fields["quote_font_family"] = (
@@ -4801,6 +4834,8 @@ class TemplateVariantIn(BaseModel):
     link_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     link_bg_alpha: int = Field(100, ge=0, le=100)
+    link_columns: Optional[int] = Field(None, ge=1, le=8)
+    link_icons_only: bool = False
     card_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -4973,6 +5008,16 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     ):
         val = data.get("linktree_profile_picture").strip()
         data["linktree_profile_picture"] = val or None
+    if "link_columns" in data:
+        try:
+            cols = int(data.get("link_columns"))
+        except Exception:
+            cols = None
+        if cols is not None:
+            cols = max(1, min(8, cols))
+        data["link_columns"] = cols
+    if "link_icons_only" in data:
+        data["link_icons_only"] = bool(data.get("link_icons_only"))
     if "layout_mode" in data:
         mode = str(data.get("layout_mode") or "center").lower()
         data["layout_mode"] = mode if mode in {"center", "wide"} else "center"
@@ -5157,6 +5202,8 @@ def _extract_linktree_fields(data: dict) -> dict:
         "link_color",
         "link_bg_color",
         "link_bg_alpha",
+        "link_columns",
+        "link_icons_only",
         "card_color",
         "text_color",
         "name_color",
@@ -5265,6 +5312,16 @@ def _extract_linktree_fields(data: dict) -> dict:
     if "entry_text_color" in fields and isinstance(fields.get("entry_text_color"), str):
         val = fields.get("entry_text_color").strip()
         fields["entry_text_color"] = val if re.match(HEX_COLOR_RE, val) else None
+    if "link_columns" in fields:
+        try:
+            cols = int(fields.get("link_columns"))
+        except Exception:
+            cols = None
+        if cols is not None:
+            cols = max(1, min(8, cols))
+        fields["link_columns"] = cols
+    if "link_icons_only" in fields:
+        fields["link_icons_only"] = bool(fields.get("link_icons_only"))
     if "discord_badge_codes" in fields:
         fields["discord_badge_codes"] = _list_to_json(
             fields.get("discord_badge_codes"),

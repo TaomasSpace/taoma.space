@@ -50,6 +50,7 @@
         --link-color: #e9ebff;
         --link-bg: #171b3b;
         --link-bg-hover: color-mix(in oklab, #171b3b, white 4%);
+        --link-cols: 1;
         --name-color: #e9ebff;
         --location-color: #a2a9c8;
         --quote-color: #e9ebff;
@@ -525,6 +526,7 @@
         width: 100%;
         max-width: 420px;
         margin: 0 auto;
+        grid-template-columns: repeat(var(--link-cols, 1), minmax(0, 1fr));
         /* <- zentriert die Liste innerhalb der Karte */
       }
 
@@ -1022,7 +1024,6 @@
       .card.wide .links {
         max-width: none;
         margin: 0;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .card.wide .link {
@@ -1079,7 +1080,6 @@
         }
 
         .card.wide .links {
-          grid-template-columns: minmax(0, 1fr);
           margin: 0 auto;
         }
 
@@ -1187,6 +1187,7 @@
         margin: 0 auto;
         padding: 0;
         box-sizing: border-box;
+        grid-template-columns: repeat(var(--link-cols, 1), minmax(0, 1fr));
       }
 
       /* Link Items */
@@ -1515,6 +1516,87 @@
           /* Max 2 Zeilen */
           -webkit-box-orient: vertical;
         }
+      }
+
+      .links.icons-only .link {
+        justify-content: center;
+        text-align: center;
+        padding: 0.7rem;
+        min-height: 64px;
+        aspect-ratio: 1 / 1;
+      }
+
+      .links.icons-only .link img {
+        position: static;
+        left: auto;
+        top: auto;
+        transform: none;
+        width: 36px;
+        height: 36px;
+      }
+
+      .links.icons-only .link span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .links.icons-only .link.no-icon {
+        aspect-ratio: auto;
+        padding: 0.8rem 1rem;
+        min-height: 48px;
+      }
+
+      .links.icons-only .link.no-icon span {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+      }
+
+      .links.icons-only .link::after {
+        content: attr(data-label);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        transform: translateX(-50%) translateY(4px);
+        background: rgba(0, 0, 0, 0.7);
+        color: var(--ink);
+        padding: 0.25rem 0.6rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .links.icons-only .link:hover::after,
+      .links.icons-only .link:focus-visible::after {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .links.icons-only .link[data-label=""]::after {
+        display: none;
+      }
+
+      .card.wide .links.icons-only .link {
+        justify-content: center;
+        text-align: center;
+        padding-left: 0.7rem;
       }
     </style>
   </head>
@@ -1959,6 +2041,8 @@
         const DEFAULT_AUDIO_TEXT_COLOR = "#e9ebff";
         const DEFAULT_AUDIO_ACCENT_COLOR = "#85a3ff";
         const DEFAULT_CURSOR_FX_ALPHA = 0.7;
+        const LINK_COLUMNS_MIN = 1;
+        const LINK_COLUMNS_MAX = 8;
         const CURSOR_IMAGE_SIZE = 32;
         const SECTION_ORDER_DEFAULT = [
           "pfp",
@@ -2442,6 +2526,13 @@
             : "";
         }
 
+        function normalizeLinkColumns(raw, fallback) {
+          if (raw === undefined || raw === null || raw === "") return fallback;
+          const n = parseInt(raw, 10);
+          if (Number.isNaN(n)) return fallback;
+          return Math.min(LINK_COLUMNS_MAX, Math.max(LINK_COLUMNS_MIN, n));
+        }
+
         function hexToRgb(hex) {
           const clean = sanitizeHexColor(hex);
           if (!clean) return null;
@@ -2485,6 +2576,19 @@
             "--link-bg-hover",
             hover || base || DEFAULT_LINK_BG,
           );
+        }
+
+        function applyLinkLayout(data, { isMobile, wantsWide } = {}) {
+          const linksEl = document.getElementById("links");
+          if (!linksEl) return;
+          const defaultCols = !isMobile && wantsWide ? 2 : 1;
+          const cols = normalizeLinkColumns(data?.link_columns, defaultCols);
+          if (Number.isFinite(cols)) {
+            linksEl.style.setProperty("--link-cols", String(cols));
+          } else {
+            linksEl.style.removeProperty("--link-cols");
+          }
+          linksEl.classList.toggle("icons-only", !!data?.link_icons_only);
         }
 
         function applyTextColors(data) {
@@ -3993,6 +4097,7 @@
             data.link_bg_color,
             data.link_bg_alpha,
           );
+          applyLinkLayout(data, { isMobile, wantsWide });
           const cursorFxHex =
             sanitizeHexColor(data.cursor_effect_color) ||
             sanitizeHexColor(data.link_color) ||
@@ -4301,6 +4406,7 @@
               };
               linkItems = rawLinks.length ? rawLinks : [demoLink];
             }
+            const iconsOnly = !!data.link_icons_only;
             let linkCount = 0;
             (linkItems || []).forEach((l) => {
               if (!l.is_active) return;
@@ -4311,6 +4417,13 @@
               a.href = href;
               a.target = "_blank";
               a.rel = "noreferrer noopener";
+              const labelText = (l.label || l.url || "").trim();
+              if (labelText) {
+                a.dataset.label = labelText;
+                a.setAttribute("aria-label", labelText);
+              } else {
+                a.dataset.label = "";
+              }
               const iconUrl = safeMediaUrl(l.icon_url);
               if (iconUrl) {
                 const img = document.createElement("img");
@@ -4319,9 +4432,12 @@
                 img.loading = "lazy";
                 img.decoding = "async";
                 a.appendChild(img);
+              } else if (iconsOnly) {
+                a.classList.add("no-icon");
               }
               const span = document.createElement("span");
-              span.textContent = l.label || l.url;
+              span.textContent = labelText || l.url;
+              if (iconsOnly && iconUrl) span.classList.add("sr-only");
               a.appendChild(span);
               frag.appendChild(a);
               linkCount += 1;
