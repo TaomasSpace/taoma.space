@@ -1,7 +1,9 @@
 """Route registrations extracted from main.py."""
 
-def register_linktree_routes(app, ns):
-    globals().update(ns)
+from ..main import *  # noqa: F401,F403
+
+
+def register_linktree_routes(app):
 
     @app.get("/api/linktrees/{linktree_id}/manage", response_model=LinktreeOut)
     def get_linktree_manage(linktree_id: int, user: dict = Depends(require_user)):

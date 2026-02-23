@@ -2867,7 +2867,7 @@ from .routes.gif import register_gif_routes
 from .routes.linktree import register_linktree_routes
 from .routes.rest import register_rest_routes
 
-register_portfolio_routes(app, globals())
-register_gif_routes(app, globals())
-register_linktree_routes(app, globals())
-register_rest_routes(app, globals())
+register_portfolio_routes(app)
+register_gif_routes(app)
+register_linktree_routes(app)
+register_rest_routes(app)
