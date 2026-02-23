@@ -1,9 +1,7 @@
 """Route registrations extracted from main.py."""
 
-from ..main import *  # noqa: F401,F403
-
-
-def register_portfolio_routes(app):
+def register_portfolio_routes(app, ns):
+    globals().update(ns)
 
     @app.get("/", include_in_schema=False)
     def home():

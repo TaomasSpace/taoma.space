@@ -1,9 +1,7 @@
 """Route registrations extracted from main.py."""
 
-from ..main import *  # noqa: F401,F403
-
-
-def register_gif_routes(app):
+def register_gif_routes(app, ns):
+    globals().update(ns)
 
     @app.get("/api/gif/admin", response_class=HTMLResponse)
     def admin_page():

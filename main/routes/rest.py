@@ -1,9 +1,7 @@
 """Route registrations extracted from main.py."""
 
-from ..main import *  # noqa: F401,F403
-
-
-def register_rest_routes(app):
+def register_rest_routes(app, ns):
+    globals().update(ns)
 
     @app.get("/health")
     def health():
