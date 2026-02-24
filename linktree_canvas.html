@@ -332,6 +332,37 @@
         user-select: none;
       }
 
+      /* Optional: stretch supported object surfaces/backgrounds with plate size */
+      .canvas-plate.fit-element-bg.audio-player {
+        margin: 0;
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        align-content: start;
+      }
+
+      .canvas-plate.fit-element-bg.visit-counter {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: var(--radius);
+        box-sizing: border-box;
+      }
+
+      .canvas-plate.fit-element-bg.links {
+        margin: 0;
+      }
+
+      .canvas-plate.fit-element-bg.links.icons-only.icons-grouped {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        align-content: center;
+      }
+
       .canvas-plate.selected {
         outline: 2px solid rgba(113, 229, 210, 0.9);
         outline-offset: 3px;
@@ -906,6 +937,15 @@
       .link:hover {
         transform: translateY(-2px);
         background: var(--link-bg-hover);
+      }
+
+      .links.link-bg-alpha-zero .link {
+        border-color: transparent;
+        box-shadow: none;
+      }
+
+      .links.link-bg-alpha-zero .link:hover {
+        background: transparent;
       }
 
       .link img {
@@ -1932,6 +1972,16 @@
         background: #ffffff14;
       }
 
+      .links.icons-only.icons-grouped.link-bg-alpha-zero {
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+      }
+
+      .links.icons-only.icons-grouped.link-bg-alpha-zero .link:hover {
+        background: transparent;
+      }
+
       .card.wide .links.icons-only .link {
         justify-content: center;
         text-align: center;
@@ -2111,6 +2161,24 @@
               <div class="field" style="flex: 1">
                 <label for="inCanvasH">Height (px)</label>
                 <input id="inCanvasH" class="input" type="number" min="10" />
+              </div>
+            </div>
+            <div class="field" style="margin-top: 0.5rem">
+              <label class="row" style="gap: 0.45rem; align-items: center">
+                <input type="checkbox" id="inCanvasAutoFitObjects" />
+                <span>Auto-fit canvas background to objects</span>
+              </label>
+              <div class="inspector-note">
+                If enabled, the canvas grows automatically when objects are moved or resized beyond the current canvas size.
+              </div>
+            </div>
+            <div class="field" style="margin-top: 0.5rem">
+              <label class="row" style="gap: 0.45rem; align-items: center">
+                <input type="checkbox" id="inCanvasAutoFitElementBackgrounds" />
+                <span>Auto-fit element backgrounds to object size</span>
+              </label>
+              <div class="inspector-note">
+                If enabled, backgrounds/surfaces of supported elements stretch with the resized object.
               </div>
             </div>
           </div>
@@ -2506,7 +2574,7 @@
                 </div>
                 <div class="field">
                   <label for="inAttrLinkBgAlpha"
-                    >Link Background Transparency (0-100)</label
+                    >Link Background Opacity (0 = unsichtbar, 100 = sichtbar)</label
                   >
                   <input
                     id="inAttrLinkBgAlpha"
@@ -3345,6 +3413,8 @@
           return {
             enabled: true,
             grid: 1,
+            auto_fit_canvas_to_objects: false,
+            auto_fit_element_backgrounds: false,
             size: { w: bounds.w, h: bounds.h },
             plates,
             groups: {},
@@ -3473,6 +3543,8 @@
         return {
           enabled: true,
           grid: 1,
+          auto_fit_canvas_to_objects: !!data.auto_fit_canvas_to_objects,
+          auto_fit_element_backgrounds: !!data.auto_fit_element_backgrounds,
           size,
           plates,
           groups,
@@ -3488,6 +3560,7 @@
           }
           if (!Number.isFinite(layout.size.w)) layout.size.w = bounds.w;
           if (!Number.isFinite(layout.size.h)) layout.size.h = bounds.h;
+          if (!layout.auto_fit_canvas_to_objects) return;
           if (layout.size.w < bounds.w) layout.size.w = bounds.w;
           if (layout.size.h < bounds.h) layout.size.h = bounds.h;
         }
@@ -3524,6 +3597,22 @@
           return getSectionElement(key);
         }
 
+        function applyPlateBackgroundFitMode(key, plate) {
+          const el = getPlateElement(key);
+          if (!el) return;
+          const enabled = !!canvasLayout?.auto_fit_element_backgrounds;
+          const supported = key === "audio" || key === "visit_counter" || key === "links";
+          el.classList.toggle("fit-element-bg", enabled && supported);
+          if (!(enabled && supported)) {
+            if (key === "links") el.style.removeProperty("align-content");
+            return;
+          }
+          // Keep link object backgrounds aligned to the resized plate surface.
+          if (key === "links" && Number.isFinite(plate?.h)) {
+            el.style.alignContent = "center";
+          }
+        }
+
         function applyPlateStyles(key, plate) {
           const el = getPlateElement(key);
           if (!el || !plate) return;
@@ -3551,6 +3640,7 @@
               }
             }
           }
+          applyPlateBackgroundFitMode(key, plate);
         }
 
         function updateGroupBounds(groupEl, groupId, layout) {
@@ -3711,6 +3801,7 @@
                 }
               }
             }
+            applyPlateBackgroundFitMode(key, plate);
             if (forEditor) {
               el.dataset.key = key;
               el.onmousedown = (evt) =>
@@ -3935,10 +4026,18 @@
         function syncCanvasControls() {
           const canvasW = document.getElementById("inCanvasW");
           const canvasH = document.getElementById("inCanvasH");
+          const autoFit = document.getElementById("inCanvasAutoFitObjects");
+          const autoFitElementBgs = document.getElementById(
+            "inCanvasAutoFitElementBackgrounds",
+          );
           if (!canvasLayout) return;
           ensureCanvasLayoutSize(canvasLayout);
           if (canvasW && canvasLayout.size) canvasW.value = canvasLayout.size.w;
           if (canvasH && canvasLayout.size) canvasH.value = canvasLayout.size.h;
+          if (autoFit) autoFit.checked = !!canvasLayout.auto_fit_canvas_to_objects;
+          if (autoFitElementBgs) {
+            autoFitElementBgs.checked = !!canvasLayout.auto_fit_element_backgrounds;
+          }
         }
 
         function syncSelectionPanel() {
@@ -4575,6 +4674,7 @@
 
         function applyLinkStyles(linkColorRaw, linkBgRaw, linkBgAlphaRaw) {
           const rootStyle = document.documentElement.style;
+          const linksEl = document.getElementById("links");
           const linkColor =
             sanitizeHexColor(linkColorRaw) || DEFAULT_LINK_COLOR;
           const bgHex = sanitizeHexColor(linkBgRaw) || DEFAULT_LINK_BG;
@@ -4589,6 +4689,9 @@
             "--link-bg-hover",
             hover || base || DEFAULT_LINK_BG,
           );
+          if (linksEl) {
+            linksEl.classList.toggle("link-bg-alpha-zero", alpha <= 0.001);
+          }
         }
 
         function applyLinkLayout(data, { isMobile, wantsWide } = {}) {
@@ -6835,6 +6938,8 @@
             canvas_layout: {
               enabled: true,
               grid: 1,
+              auto_fit_canvas_to_objects: !!canvasLayout.auto_fit_canvas_to_objects,
+              auto_fit_element_backgrounds: !!canvasLayout.auto_fit_element_backgrounds,
               size: canvasLayout.size,
               plates: canvasLayout.plates,
               groups: canvasLayout.groups,
@@ -6868,6 +6973,10 @@
           const deviceSelect = document.getElementById("inDevice");
           const canvasW = document.getElementById("inCanvasW");
           const canvasH = document.getElementById("inCanvasH");
+          const canvasAutoFit = document.getElementById("inCanvasAutoFitObjects");
+          const canvasAutoFitElementBgs = document.getElementById(
+            "inCanvasAutoFitElementBackgrounds",
+          );
           const selX = document.getElementById("inSelX");
           const selY = document.getElementById("inSelY");
           const selW = document.getElementById("inSelW");
@@ -6996,6 +7105,31 @@
               canvasDirty = true;
               ensureCanvasLayoutSize(canvasLayout);
               updateCanvasCardSize(canvasLayout);
+              syncCanvasControls();
+            });
+          }
+          if (canvasAutoFit) {
+            canvasAutoFit.addEventListener("change", (e) => {
+              if (!canvasLayout) return;
+              canvasLayout.auto_fit_canvas_to_objects = !!e.target.checked;
+              canvasDirty = true;
+              if (canvasLayout.auto_fit_canvas_to_objects) {
+                ensureCanvasLayoutSize(canvasLayout);
+                updateCanvasCardSize(canvasLayout);
+              }
+              syncCanvasControls();
+            });
+          }
+          if (canvasAutoFitElementBgs) {
+            canvasAutoFitElementBgs.addEventListener("change", (e) => {
+              if (!canvasLayout) return;
+              canvasLayout.auto_fit_element_backgrounds = !!e.target.checked;
+              canvasDirty = true;
+              SECTION_ORDER_DEFAULT.forEach((key) => {
+                const plate = canvasLayout.plates?.[key];
+                if (!plate) return;
+                applyPlateBackgroundFitMode(key, plate);
+              });
               syncCanvasControls();
             });
           }

@@ -590,6 +590,15 @@
         background: var(--link-bg-hover);
       }
 
+      .links.link-bg-alpha-zero .link {
+        border-color: transparent;
+        box-shadow: none;
+      }
+
+      .links.link-bg-alpha-zero .link:hover {
+        background: transparent;
+      }
+
       .link img {
         width: 35px;
         height: 35px;
@@ -1641,6 +1650,16 @@
         background: #ffffff14;
       }
 
+      .links.icons-only.icons-grouped.link-bg-alpha-zero {
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+      }
+
+      .links.icons-only.icons-grouped.link-bg-alpha-zero .link:hover {
+        background: transparent;
+      }
+
       .card.wide .links.icons-only .link {
         justify-content: center;
         text-align: center;
@@ -2632,6 +2651,7 @@
 
         function applyLinkStyles(linkColorRaw, linkBgRaw, linkBgAlphaRaw) {
           const rootStyle = document.documentElement.style;
+          const linksEl = document.getElementById("links");
           const linkColor =
             sanitizeHexColor(linkColorRaw) || DEFAULT_LINK_COLOR;
           const bgHex = sanitizeHexColor(linkBgRaw) || DEFAULT_LINK_BG;
@@ -2646,6 +2666,9 @@
             "--link-bg-hover",
             hover || base || DEFAULT_LINK_BG,
           );
+          if (linksEl) {
+            linksEl.classList.toggle("link-bg-alpha-zero", alpha <= 0.001);
+          }
         }
 
         function applyLinkLayout(data, { isMobile, wantsWide } = {}) {

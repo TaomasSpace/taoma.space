@@ -421,6 +421,8 @@ def _normalize_canvas_layout(value: Any) -> dict | None:
     if not isinstance(data, dict):
         return None
     enabled = bool(data.get("enabled", False))
+    auto_fit_canvas_to_objects = bool(data.get("auto_fit_canvas_to_objects", False))
+    auto_fit_element_backgrounds = bool(data.get("auto_fit_element_backgrounds", False))
     plate_min_w = 1
     plate_min_h = 1
     plate_max_w = 20000
@@ -499,6 +501,8 @@ def _normalize_canvas_layout(value: Any) -> dict | None:
     result = {
         "enabled": enabled,
         "grid": grid,
+        "auto_fit_canvas_to_objects": auto_fit_canvas_to_objects,
+        "auto_fit_element_backgrounds": auto_fit_element_backgrounds,
         "plates": plates,
         "groups": groups,
     }

@@ -1805,7 +1805,9 @@
                   <summary>Card styling</summary>
                   <div class="fold-body grid cols-2">
                     <div class="field">
-                      <label for="inTrans">Card Transparency (0-100)</label>
+                      <label for="inTrans"
+                        >Card Transparency (0 = sichtbar, 100 = unsichtbar)</label
+                      >
                       <input
                         id="inTrans"
                         class="input"
@@ -2284,7 +2286,7 @@
                     </div>
                     <div class="field" style="grid-column: 1 / -1">
                       <label for="inLinkBgAlpha"
-                        >Link Background Transparency (0-100)</label
+                        >Link Background Opacity (0 = unsichtbar, 100 = sichtbar)</label
                       >
                       <input
                         id="inLinkBgAlpha"
@@ -3082,6 +3084,8 @@
         return {
           enabled: true,
           grid: 1,
+          auto_fit_canvas_to_objects: false,
+          auto_fit_element_backgrounds: false,
           size: { w: bounds.w, h: bounds.h },
           plates,
           groups: {},
@@ -3180,6 +3184,8 @@
         return {
           enabled: true,
           grid: 1,
+          auto_fit_canvas_to_objects: !!data.auto_fit_canvas_to_objects,
+          auto_fit_element_backgrounds: !!data.auto_fit_element_backgrounds,
           size,
           plates,
           groups,
@@ -3197,6 +3203,7 @@
           canvasLayout.size = { w: bounds.w, h: bounds.h };
           return;
         }
+        if (!canvasLayout.auto_fit_canvas_to_objects) return;
         if (canvasLayout.size.w < bounds.w) canvasLayout.size.w = bounds.w;
         if (canvasLayout.size.h < bounds.h) canvasLayout.size.h = bounds.h;
       }
@@ -3227,6 +3234,8 @@
         return {
           enabled: true,
           grid: 1,
+          auto_fit_canvas_to_objects: !!canvasLayout.auto_fit_canvas_to_objects,
+          auto_fit_element_backgrounds: !!canvasLayout.auto_fit_element_backgrounds,
           size: canvasLayout.size,
           plates,
           groups: canvasLayout.groups,
