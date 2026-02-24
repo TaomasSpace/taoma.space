@@ -1381,6 +1381,10 @@ class LinktreeCreateIn(BaseModel):
     link_bg_alpha: int = Field(100, ge=0, le=100)
     link_columns: Optional[int] = Field(None, ge=1, le=8)
     link_icons_only: bool = False
+    link_icons_only_size: int = Field(36, ge=16, le=128)
+    link_icons_only_gap: int = Field(12, ge=0, le=64)
+    link_icons_only_grouped: bool = False
+    link_icons_only_direction: Literal["row", "column"] = "row"
     card_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -1457,6 +1461,10 @@ class LinktreeUpdateIn(BaseModel):
     link_bg_alpha: Optional[int] = Field(None, ge=0, le=100)
     link_columns: Optional[int] = Field(None, ge=1, le=8)
     link_icons_only: Optional[bool] = None
+    link_icons_only_size: Optional[int] = Field(None, ge=16, le=128)
+    link_icons_only_gap: Optional[int] = Field(None, ge=0, le=64)
+    link_icons_only_grouped: Optional[bool] = None
+    link_icons_only_direction: Optional[Literal["row", "column"]] = None
     card_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -1542,6 +1550,10 @@ class LinktreeOut(BaseModel):
     link_bg_alpha: int = 100
     link_columns: Optional[int] = None
     link_icons_only: bool = False
+    link_icons_only_size: int = 36
+    link_icons_only_gap: int = 12
+    link_icons_only_grouped: bool = False
+    link_icons_only_direction: Literal["row", "column"] = "row"
     card_color: Optional[str] = None
     text_color: Optional[str] = None
     name_color: Optional[str] = None
@@ -2365,6 +2377,10 @@ class TemplateVariantIn(BaseModel):
     link_bg_alpha: int = Field(100, ge=0, le=100)
     link_columns: Optional[int] = Field(None, ge=1, le=8)
     link_icons_only: bool = False
+    link_icons_only_size: int = Field(36, ge=16, le=128)
+    link_icons_only_gap: int = Field(12, ge=0, le=64)
+    link_icons_only_grouped: bool = False
+    link_icons_only_direction: Literal["row", "column"] = "row"
     card_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     text_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
     name_color: Optional[str] = Field(None, pattern=HEX_COLOR_RE)
@@ -2547,6 +2563,27 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
         data["link_columns"] = cols
     if "link_icons_only" in data:
         data["link_icons_only"] = bool(data.get("link_icons_only"))
+    if "link_icons_only_size" in data:
+        try:
+            size = int(data.get("link_icons_only_size"))
+        except Exception:
+            size = None
+        data["link_icons_only_size"] = (
+            max(16, min(128, size)) if size is not None else 36
+        )
+    if "link_icons_only_gap" in data:
+        try:
+            gap = int(data.get("link_icons_only_gap"))
+        except Exception:
+            gap = None
+        data["link_icons_only_gap"] = max(0, min(64, gap)) if gap is not None else 12
+    if "link_icons_only_grouped" in data:
+        data["link_icons_only_grouped"] = bool(data.get("link_icons_only_grouped"))
+    if "link_icons_only_direction" in data:
+        direction = str(data.get("link_icons_only_direction") or "row").lower()
+        data["link_icons_only_direction"] = (
+            direction if direction in {"row", "column"} else "row"
+        )
     if "layout_mode" in data:
         mode = str(data.get("layout_mode") or "center").lower()
         data["layout_mode"] = mode if mode in {"center", "wide"} else "center"
@@ -2570,6 +2607,10 @@ def _normalize_variant(payload: TemplateVariantIn) -> dict:
     data.setdefault("display_name_mode", "slug")
     data.setdefault("layout_mode", "center")
     data.setdefault("link_bg_alpha", 100)
+    data.setdefault("link_icons_only_size", 36)
+    data.setdefault("link_icons_only_gap", 12)
+    data.setdefault("link_icons_only_grouped", False)
+    data.setdefault("link_icons_only_direction", "row")
     data.setdefault("audio_player_bg_alpha", 60)
     data.setdefault("visit_counter_bg_alpha", 20)
     data.setdefault("show_visit_counter", False)
@@ -2733,6 +2774,10 @@ def _extract_linktree_fields(data: dict) -> dict:
         "link_bg_alpha",
         "link_columns",
         "link_icons_only",
+        "link_icons_only_size",
+        "link_icons_only_gap",
+        "link_icons_only_grouped",
+        "link_icons_only_direction",
         "card_color",
         "text_color",
         "name_color",
@@ -2851,6 +2896,27 @@ def _extract_linktree_fields(data: dict) -> dict:
         fields["link_columns"] = cols
     if "link_icons_only" in fields:
         fields["link_icons_only"] = bool(fields.get("link_icons_only"))
+    if "link_icons_only_size" in fields:
+        try:
+            size = int(fields.get("link_icons_only_size"))
+        except Exception:
+            size = None
+        fields["link_icons_only_size"] = (
+            max(16, min(128, size)) if size is not None else None
+        )
+    if "link_icons_only_gap" in fields:
+        try:
+            gap = int(fields.get("link_icons_only_gap"))
+        except Exception:
+            gap = None
+        fields["link_icons_only_gap"] = max(0, min(64, gap)) if gap is not None else None
+    if "link_icons_only_grouped" in fields:
+        fields["link_icons_only_grouped"] = bool(fields.get("link_icons_only_grouped"))
+    if "link_icons_only_direction" in fields:
+        direction = str(fields.get("link_icons_only_direction") or "row").lower()
+        fields["link_icons_only_direction"] = (
+            direction if direction in {"row", "column"} else "row"
+        )
     if "discord_badge_codes" in fields:
         fields["discord_badge_codes"] = _list_to_json(
             fields.get("discord_badge_codes"),

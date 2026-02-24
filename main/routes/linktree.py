@@ -53,6 +53,10 @@ def register_linktree_routes(app, ns):
                         COALESCE(link_bg_alpha, 100)        AS link_bg_alpha,
                         link_columns,
                         COALESCE(link_icons_only, false)    AS link_icons_only,
+                        COALESCE(link_icons_only_size, 36)  AS link_icons_only_size,
+                        COALESCE(link_icons_only_gap, 12)   AS link_icons_only_gap,
+                        COALESCE(link_icons_only_grouped, false) AS link_icons_only_grouped,
+                        COALESCE(link_icons_only_direction, 'row') AS link_icons_only_direction,
                         card_color,
                        text_color,
                        name_color,
@@ -180,6 +184,10 @@ def register_linktree_routes(app, ns):
             "link_bg_alpha": int(lt.get("link_bg_alpha") or 100),
             "link_columns": lt.get("link_columns"),
             "link_icons_only": bool(lt.get("link_icons_only", False)),
+            "link_icons_only_size": int(lt.get("link_icons_only_size") or 36),
+            "link_icons_only_gap": int(lt.get("link_icons_only_gap") or 12),
+            "link_icons_only_grouped": bool(lt.get("link_icons_only_grouped", False)),
+            "link_icons_only_direction": lt.get("link_icons_only_direction") or "row",
             "card_color": lt.get("card_color"),
             "text_color": lt.get("text_color"),
             "name_color": lt.get("name_color"),
@@ -484,6 +492,10 @@ def register_linktree_routes(app, ns):
             "link_bg_alpha": lt.get("link_bg_alpha", 100),
             "link_columns": lt.get("link_columns"),
             "link_icons_only": bool(lt.get("link_icons_only", False)),
+            "link_icons_only_size": int(lt.get("link_icons_only_size") or 36),
+            "link_icons_only_gap": int(lt.get("link_icons_only_gap") or 12),
+            "link_icons_only_grouped": bool(lt.get("link_icons_only_grouped", False)),
+            "link_icons_only_direction": lt.get("link_icons_only_direction") or "row",
             "card_color": lt.get("card_color"),
             "text_color": lt.get("text_color"),
             "name_color": lt.get("name_color"),
@@ -638,6 +650,22 @@ def register_linktree_routes(app, ns):
                 if link_columns is not None:
                     link_columns = max(1, min(8, link_columns))
             link_icons_only = bool(payload.link_icons_only)
+            link_icons_only_size = (
+                max(16, min(128, int(payload.link_icons_only_size)))
+                if payload.link_icons_only_size is not None
+                else 36
+            )
+            link_icons_only_gap = (
+                max(0, min(64, int(payload.link_icons_only_gap)))
+                if payload.link_icons_only_gap is not None
+                else 12
+            )
+            link_icons_only_grouped = bool(payload.link_icons_only_grouped)
+            link_icons_only_direction = (
+                payload.link_icons_only_direction
+                if payload.link_icons_only_direction in {"row", "column"}
+                else "row"
+            )
             linktree_id = db.create_linktree(
                 user_id=user["id"],
                 slug=payload.slug,
@@ -687,6 +715,10 @@ def register_linktree_routes(app, ns):
                 link_bg_alpha=payload.link_bg_alpha,
                 link_columns=link_columns,
                 link_icons_only=link_icons_only,
+                link_icons_only_size=link_icons_only_size,
+                link_icons_only_gap=link_icons_only_gap,
+                link_icons_only_grouped=link_icons_only_grouped,
+                link_icons_only_direction=link_icons_only_direction,
                 card_color=payload.card_color,
                 text_color=payload.text_color,
                 name_color=payload.name_color,
@@ -1186,6 +1218,9 @@ def register_linktree_routes(app, ns):
         _require_tree_owner_or_admin(linktree_id, user)
 
         fields = payload.model_dump(exclude_unset=True)
+        # Avoid accidental cross-variant moves when a stale frontend state patches
+        # the wrong linktree id while sending a different device_type.
+        fields.pop("device_type", None)
         if "quote_typing_texts" in fields:
             qt = _normalize_text_list(
                 fields.get("quote_typing_texts"),
@@ -1294,6 +1329,27 @@ def register_linktree_routes(app, ns):
             fields["link_columns"] = cols
         if "link_icons_only" in fields:
             fields["link_icons_only"] = bool(fields.get("link_icons_only"))
+        if "link_icons_only_size" in fields:
+            try:
+                size = int(fields.get("link_icons_only_size"))
+            except Exception:
+                size = None
+            fields["link_icons_only_size"] = (
+                max(16, min(128, size)) if size is not None else None
+            )
+        if "link_icons_only_gap" in fields:
+            try:
+                gap = int(fields.get("link_icons_only_gap"))
+            except Exception:
+                gap = None
+            fields["link_icons_only_gap"] = max(0, min(64, gap)) if gap is not None else None
+        if "link_icons_only_grouped" in fields:
+            fields["link_icons_only_grouped"] = bool(fields.get("link_icons_only_grouped"))
+        if "link_icons_only_direction" in fields:
+            direction = str(fields.get("link_icons_only_direction") or "row").lower()
+            fields["link_icons_only_direction"] = (
+                direction if direction in {"row", "column"} else "row"
+            )
         if "quote_font_family" in fields:
             fam = str(fields.get("quote_font_family") or "default").lower()
             fields["quote_font_family"] = (

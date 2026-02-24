@@ -1813,7 +1813,7 @@
         justify-content: center;
         text-align: center;
         padding: 0.7rem;
-        min-height: 64px;
+        min-height: calc(var(--link-icons-only-size, 36px) + 28px);
         aspect-ratio: 1 / 1;
       }
 
@@ -1822,8 +1822,8 @@
         left: auto;
         top: auto;
         transform: none;
-        width: 36px;
-        height: 36px;
+        width: var(--link-icons-only-size, 36px);
+        height: var(--link-icons-only-size, 36px);
       }
 
       .links.icons-only .link span {
@@ -1855,7 +1855,7 @@
       }
 
       .links.icons-only .link::after {
-        content: attr(data-label);
+        content: attr(data-tooltip);
         position: absolute;
         left: 50%;
         bottom: calc(100% + 8px);
@@ -1867,6 +1867,9 @@
         font-size: 0.75rem;
         font-weight: 600;
         white-space: nowrap;
+        max-width: min(80vw, 420px);
+        overflow: hidden;
+        text-overflow: ellipsis;
         opacity: 0;
         pointer-events: none;
         transition:
@@ -1880,8 +1883,53 @@
         transform: translateX(-50%) translateY(0);
       }
 
-      .links.icons-only .link[data-label=""]::after {
+      .links.icons-only .link[data-tooltip=""]::after {
         display: none;
+      }
+
+      .links.icons-only {
+        gap: var(--link-icons-only-gap, 12px);
+      }
+
+      .links.icons-only.dir-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        grid-template-columns: none;
+      }
+
+      .links.icons-only.dir-row .link {
+        width: calc(var(--link-icons-only-size, 36px) + 28px);
+      }
+
+      .links.icons-only.dir-row .link.no-icon {
+        width: 100%;
+      }
+
+      .links.icons-only.dir-column {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        grid-template-columns: none;
+      }
+
+      .links.icons-only.icons-grouped {
+        background: var(--link-bg);
+        border: 1px solid #ffffff22;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 0.6rem;
+      }
+
+      .links.icons-only.icons-grouped .link {
+        background: transparent;
+        box-shadow: none;
+        border-color: transparent;
+      }
+
+      .links.icons-only.icons-grouped .link:hover {
+        background: #ffffff14;
       }
 
       .card.wide .links.icons-only .link {
@@ -2486,8 +2534,48 @@
                   <div class="field" style="flex: 1">
                     <label class="row" style="gap: 0.4rem; align-items: center">
                       <input type="checkbox" id="inAttrLinkIconsOnly" />
-                      <span>Icons only (label on hover)</span>
+                      <span>Icons only (URL on hover)</span>
                     </label>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrLinkIconsOnlySize">Icon size (px)</label>
+                    <input
+                      id="inAttrLinkIconsOnlySize"
+                      class="input"
+                      type="number"
+                      min="16"
+                      max="128"
+                      value="36"
+                    />
+                  </div>
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrLinkIconsOnlyGap">Icon gap (px)</label>
+                    <input
+                      id="inAttrLinkIconsOnlyGap"
+                      class="input"
+                      type="number"
+                      min="0"
+                      max="64"
+                      value="12"
+                    />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrLinkIconsOnlyGrouped">Icon surface</label>
+                    <select id="inAttrLinkIconsOnlyGrouped" class="select">
+                      <option value="separate">Einzeln</option>
+                      <option value="grouped">Auf einem</option>
+                    </select>
+                  </div>
+                  <div class="field" style="flex: 1">
+                    <label for="inAttrLinkIconsOnlyDirection">Direction</label>
+                    <select id="inAttrLinkIconsOnlyDirection" class="select">
+                      <option value="row">Links nach rechts</option>
+                      <option value="column">Oben nach unten</option>
+                    </select>
                   </div>
                 </div>
                 <div class="inspector-divider"></div>
@@ -2977,6 +3065,12 @@
         const DEFAULT_CURSOR_FX_ALPHA = 0.7;
         const LINK_COLUMNS_MIN = 1;
         const LINK_COLUMNS_MAX = 8;
+        const LINK_ICONS_ONLY_SIZE_MIN = 16;
+        const LINK_ICONS_ONLY_SIZE_MAX = 128;
+        const LINK_ICONS_ONLY_SIZE_DEFAULT = 36;
+        const LINK_ICONS_ONLY_GAP_MIN = 0;
+        const LINK_ICONS_ONLY_GAP_MAX = 64;
+        const LINK_ICONS_ONLY_GAP_DEFAULT = 12;
         const CURSOR_IMAGE_SIZE = 32;
         const EDITOR_MODE = true;
         const SECTION_ORDER_DEFAULT = [
@@ -4146,6 +4240,18 @@
             const linkIconsOnly = document.getElementById(
               "inAttrLinkIconsOnly",
             );
+            const linkIconsOnlySize = document.getElementById(
+              "inAttrLinkIconsOnlySize",
+            );
+            const linkIconsOnlyGap = document.getElementById(
+              "inAttrLinkIconsOnlyGap",
+            );
+            const linkIconsOnlyGrouped = document.getElementById(
+              "inAttrLinkIconsOnlyGrouped",
+            );
+            const linkIconsOnlyDirection = document.getElementById(
+              "inAttrLinkIconsOnlyDirection",
+            );
             const iconInput = document.getElementById("inAttrLinkIcon");
             if (linkColor)
               linkColor.value =
@@ -4162,6 +4268,22 @@
                   : "";
             if (linkIconsOnly)
               linkIconsOnly.checked = !!lastData.link_icons_only;
+            if (linkIconsOnlySize)
+              linkIconsOnlySize.value = normalizeLinkIconsOnlySize(
+                lastData.link_icons_only_size,
+              );
+            if (linkIconsOnlyGap)
+              linkIconsOnlyGap.value = normalizeLinkIconsOnlyGap(
+                lastData.link_icons_only_gap,
+              );
+            if (linkIconsOnlyGrouped)
+              linkIconsOnlyGrouped.value = lastData.link_icons_only_grouped
+                ? "grouped"
+                : "separate";
+            if (linkIconsOnlyDirection)
+              linkIconsOnlyDirection.value = normalizeLinkIconsOnlyDirection(
+                lastData.link_icons_only_direction,
+              );
             if (iconInput) {
               iconInput.value = iconInput.value || "";
             }
@@ -4402,6 +4524,22 @@
           return Math.min(LINK_COLUMNS_MAX, Math.max(LINK_COLUMNS_MIN, n));
         }
 
+        function normalizeLinkIconsOnlySize(raw, fallback = LINK_ICONS_ONLY_SIZE_DEFAULT) {
+          const n = parseInt(raw, 10);
+          if (Number.isNaN(n)) return fallback;
+          return Math.min(LINK_ICONS_ONLY_SIZE_MAX, Math.max(LINK_ICONS_ONLY_SIZE_MIN, n));
+        }
+
+        function normalizeLinkIconsOnlyGap(raw, fallback = LINK_ICONS_ONLY_GAP_DEFAULT) {
+          const n = parseInt(raw, 10);
+          if (Number.isNaN(n)) return fallback;
+          return Math.min(LINK_ICONS_ONLY_GAP_MAX, Math.max(LINK_ICONS_ONLY_GAP_MIN, n));
+        }
+
+        function normalizeLinkIconsOnlyDirection(raw) {
+          return String(raw || "row").toLowerCase() === "column" ? "column" : "row";
+        }
+
         function clampPercent(val, fallback = 0) {
           const n = parseInt(val ?? fallback, 10);
           if (Number.isNaN(n)) return Math.min(100, Math.max(0, fallback));
@@ -4463,7 +4601,28 @@
           } else {
             linksEl.style.removeProperty("--link-cols");
           }
-          linksEl.classList.toggle("icons-only", !!data?.link_icons_only);
+          const iconsOnly = !!data?.link_icons_only;
+          linksEl.classList.toggle("icons-only", iconsOnly);
+          linksEl.style.setProperty(
+            "--link-icons-only-size",
+            `${normalizeLinkIconsOnlySize(data?.link_icons_only_size)}px`,
+          );
+          linksEl.style.setProperty(
+            "--link-icons-only-gap",
+            `${normalizeLinkIconsOnlyGap(data?.link_icons_only_gap)}px`,
+          );
+          const direction = normalizeLinkIconsOnlyDirection(
+            data?.link_icons_only_direction,
+          );
+          linksEl.classList.toggle(
+            "icons-grouped",
+            iconsOnly && !!data?.link_icons_only_grouped,
+          );
+          linksEl.classList.toggle("dir-row", iconsOnly && direction === "row");
+          linksEl.classList.toggle(
+            "dir-column",
+            iconsOnly && direction === "column",
+          );
         }
 
         function applyTextColors(data) {
@@ -4890,6 +5049,10 @@
             } else {
               a.dataset.label = "";
             }
+            const hoverTarget = (l.url || href || "").trim();
+            const hoverText = iconsOnly ? hoverTarget || labelText : labelText || "";
+            a.dataset.tooltip = hoverText;
+            if (hoverText) a.title = hoverText;
             const iconUrl = safeMediaUrl(l.icon_url);
             if (iconUrl) {
               const img = document.createElement("img");
@@ -6661,6 +6824,12 @@
             showEditorMessage("No linktree loaded.", false);
             return;
           }
+          const activeDevice = currentDevice || "pc";
+          const loadedDevice = (lastData && lastData.device_type) || null;
+          if (!lastData || loadedDevice !== activeDevice) {
+            showEditorMessage("Device variant is still loading.", false);
+            return;
+          }
           ensureCanvasLayoutSize(canvasLayout);
           const payload = {
             canvas_layout: {
@@ -6761,6 +6930,18 @@
           const attrLinkColumns = document.getElementById("inAttrLinkColumns");
           const attrLinkIconsOnly = document.getElementById(
             "inAttrLinkIconsOnly",
+          );
+          const attrLinkIconsOnlySize = document.getElementById(
+            "inAttrLinkIconsOnlySize",
+          );
+          const attrLinkIconsOnlyGap = document.getElementById(
+            "inAttrLinkIconsOnlyGap",
+          );
+          const attrLinkIconsOnlyGrouped = document.getElementById(
+            "inAttrLinkIconsOnlyGrouped",
+          );
+          const attrLinkIconsOnlyDirection = document.getElementById(
+            "inAttrLinkIconsOnlyDirection",
           );
           const attrLinkUrl = document.getElementById("inAttrLinkUrl");
           const attrLinkLabel = document.getElementById("inAttrLinkLabel");
@@ -7085,11 +7266,26 @@
               null,
             );
             lastData.link_icons_only = !!attrLinkIconsOnly?.checked;
+            lastData.link_icons_only_size = normalizeLinkIconsOnlySize(
+              attrLinkIconsOnlySize?.value,
+            );
+            lastData.link_icons_only_gap = normalizeLinkIconsOnlyGap(
+              attrLinkIconsOnlyGap?.value,
+            );
+            lastData.link_icons_only_grouped =
+              (attrLinkIconsOnlyGrouped?.value || "separate") === "grouped";
+            lastData.link_icons_only_direction = normalizeLinkIconsOnlyDirection(
+              attrLinkIconsOnlyDirection?.value,
+            );
             markMetaDirty("link_color");
             markMetaDirty("link_bg_color");
             markMetaDirty("link_bg_alpha");
             markMetaDirty("link_columns");
             markMetaDirty("link_icons_only");
+            markMetaDirty("link_icons_only_size");
+            markMetaDirty("link_icons_only_gap");
+            markMetaDirty("link_icons_only_grouped");
+            markMetaDirty("link_icons_only_direction");
             applyLinkStyles(
               lastData.link_color,
               lastData.link_bg_color,
@@ -7196,6 +7392,20 @@
             attrLinkColumns.addEventListener("change", updateLinkStyleAttributes);
           if (attrLinkIconsOnly)
             attrLinkIconsOnly.addEventListener("change", updateLinkStyleAttributes);
+          if (attrLinkIconsOnlySize)
+            attrLinkIconsOnlySize.addEventListener("change", updateLinkStyleAttributes);
+          if (attrLinkIconsOnlyGap)
+            attrLinkIconsOnlyGap.addEventListener("change", updateLinkStyleAttributes);
+          if (attrLinkIconsOnlyGrouped)
+            attrLinkIconsOnlyGrouped.addEventListener(
+              "change",
+              updateLinkStyleAttributes,
+            );
+          if (attrLinkIconsOnlyDirection)
+            attrLinkIconsOnlyDirection.addEventListener(
+              "change",
+              updateLinkStyleAttributes,
+            );
           if (attrShowCounter)
             attrShowCounter.addEventListener("change", updateCounterAttributes);
           if (attrCounterColor)
@@ -8017,6 +8227,10 @@
               } else {
                 a.dataset.label = "";
               }
+              const hoverTarget = (l.url || href || "").trim();
+              const hoverText = iconsOnly ? hoverTarget || labelText : labelText || "";
+              a.dataset.tooltip = hoverText;
+              if (hoverText) a.title = hoverText;
               const iconUrl = safeMediaUrl(l.icon_url);
               if (iconUrl) {
                 const img = document.createElement("img");
@@ -8071,6 +8285,7 @@
 
         async function loadTree() {
           try {
+            linktreeId = null;
             const user = await fetchSessionUser();
             if (!user) {
               showEditorMessage("Please log in to edit your canvas.", false);
@@ -8104,6 +8319,7 @@
               }
             }
             if (!data) {
+              linktreeId = null;
               showEditorMessage("No linktree found for this slug.", false);
               return;
             }

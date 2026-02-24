@@ -2319,11 +2319,47 @@
                     <div class="field" style="grid-column: 1 / -1">
                       <label class="row" style="gap: 0.4rem; align-items: center">
                         <input type="checkbox" id="inLinkIconsOnly" />
-                        <span>Icons only (label on hover)</span>
+                        <span>Icons only (URL on hover)</span>
                       </label>
                       <div class="help">
-                        Zeigt nur die Icons. Das Label erscheint beim Hover.
+                        Zeigt nur die Icons. Beim Hover wird die Ziel-URL angezeigt.
                       </div>
+                    </div>
+                    <div class="field">
+                      <label for="inLinkIconsOnlySize">Icon size (px)</label>
+                      <input
+                        id="inLinkIconsOnlySize"
+                        class="input"
+                        type="number"
+                        min="16"
+                        max="128"
+                        value="36"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inLinkIconsOnlyGap">Icon gap (px)</label>
+                      <input
+                        id="inLinkIconsOnlyGap"
+                        class="input"
+                        type="number"
+                        min="0"
+                        max="64"
+                        value="12"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="inLinkIconsOnlyGrouped">Icon surface</label>
+                      <select id="inLinkIconsOnlyGrouped" class="input">
+                        <option value="separate">Einzeln</option>
+                        <option value="grouped">Auf einem</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="inLinkIconsOnlyDirection">Direction</label>
+                      <select id="inLinkIconsOnlyDirection" class="input">
+                        <option value="row">Links nach rechts</option>
+                        <option value="column">Oben nach unten</option>
+                      </select>
                     </div>
                   </div>
                 </details>
@@ -2830,6 +2866,12 @@
       const DEFAULT_CURSOR_FX_ALPHA = 70;
       const LINK_COLUMNS_MIN = 1;
       const LINK_COLUMNS_MAX = 8;
+      const LINK_ICONS_ONLY_SIZE_MIN = 16;
+      const LINK_ICONS_ONLY_SIZE_MAX = 128;
+      const LINK_ICONS_ONLY_SIZE_DEFAULT = 36;
+      const LINK_ICONS_ONLY_GAP_MIN = 0;
+      const LINK_ICONS_ONLY_GAP_MAX = 64;
+      const LINK_ICONS_ONLY_GAP_DEFAULT = 12;
       const PRIVATE_TEMPLATE_DESC =
         "Private snapshot created from Linktree Config.";
       const PRIVATE_TEMPLATE_MARKER = PRIVATE_TEMPLATE_DESC.toLowerCase();
@@ -2893,6 +2935,22 @@
         const n = parseInt(val, 10);
         if (Number.isNaN(n)) return fallback;
         return Math.min(LINK_COLUMNS_MAX, Math.max(LINK_COLUMNS_MIN, n));
+      }
+
+      function normalizeLinkIconsOnlySize(val, fallback = LINK_ICONS_ONLY_SIZE_DEFAULT) {
+        const n = parseInt(val, 10);
+        if (Number.isNaN(n)) return fallback;
+        return Math.min(LINK_ICONS_ONLY_SIZE_MAX, Math.max(LINK_ICONS_ONLY_SIZE_MIN, n));
+      }
+
+      function normalizeLinkIconsOnlyGap(val, fallback = LINK_ICONS_ONLY_GAP_DEFAULT) {
+        const n = parseInt(val, 10);
+        if (Number.isNaN(n)) return fallback;
+        return Math.min(LINK_ICONS_ONLY_GAP_MAX, Math.max(LINK_ICONS_ONLY_GAP_MIN, n));
+      }
+
+      function normalizeLinkIconsOnlyDirection(val) {
+        return String(val || "row").toLowerCase() === "column" ? "column" : "row";
       }
 
       function normalizeSectionOrder(raw) {
@@ -4106,6 +4164,18 @@
             ? lt.link_columns
             : "";
         $("inLinkIconsOnly").checked = !!lt.link_icons_only;
+        $("inLinkIconsOnlySize").value = normalizeLinkIconsOnlySize(
+          lt.link_icons_only_size,
+        );
+        $("inLinkIconsOnlyGap").value = normalizeLinkIconsOnlyGap(
+          lt.link_icons_only_gap,
+        );
+        $("inLinkIconsOnlyGrouped").value = lt.link_icons_only_grouped
+          ? "grouped"
+          : "separate";
+        $("inLinkIconsOnlyDirection").value = normalizeLinkIconsOnlyDirection(
+          lt.link_icons_only_direction,
+        );
         $("inCursor").value = lt.cursor_url || "";
         $("inCursorFx").value = lt.cursor_effect || "none";
         $("inCursorFxColor").value =
@@ -4309,6 +4379,12 @@
           link_bg_alpha: clampPercent(lt.link_bg_alpha ?? 100, 100),
           link_columns: normalizeLinkColumns(lt.link_columns, null),
           link_icons_only: !!lt.link_icons_only,
+          link_icons_only_size: normalizeLinkIconsOnlySize(lt.link_icons_only_size),
+          link_icons_only_gap: normalizeLinkIconsOnlyGap(lt.link_icons_only_gap),
+          link_icons_only_grouped: !!lt.link_icons_only_grouped,
+          link_icons_only_direction: normalizeLinkIconsOnlyDirection(
+            lt.link_icons_only_direction,
+          ),
           card_color: hexOrNull(lt.card_color),
           text_color: hexOrNull(lt.text_color),
           name_color: hexOrNull(lt.name_color),
@@ -4469,6 +4545,17 @@
           link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
           link_columns: normalizeLinkColumns($("inLinkColumns").value, null),
           link_icons_only: $("inLinkIconsOnly").checked,
+          link_icons_only_size: normalizeLinkIconsOnlySize(
+            $("inLinkIconsOnlySize").value,
+          ),
+          link_icons_only_gap: normalizeLinkIconsOnlyGap(
+            $("inLinkIconsOnlyGap").value,
+          ),
+          link_icons_only_grouped:
+            $("inLinkIconsOnlyGrouped").value === "grouped",
+          link_icons_only_direction: normalizeLinkIconsOnlyDirection(
+            $("inLinkIconsOnlyDirection").value,
+          ),
           card_color: hexOrNull($("inCardColor").value),
           text_color: hexOrNull($("inTextColor").value),
           name_color: hexOrNull($("inNameColor").value),
@@ -5315,11 +5402,21 @@
           }
           return await r.json();
         } else {
+          const activeDevice = currentDevice || "pc";
+          const loadedDevice =
+            (currentTree && currentTree.device_type) || null;
+          if (!linktreeId || !currentTree || loadedDevice !== activeDevice) {
+            throw new Error(
+              "Device variant is still loading. Wait a moment and save again."
+            );
+          }
+          const patchBody = { ...body };
+          delete patchBody.device_type;
           const r = await fetch(`/api/linktrees/${linktreeId}`, {
             method: "PATCH",
             headers: headers(),
             credentials: "include",
-            body: JSON.stringify(body),
+            body: JSON.stringify(patchBody),
           });
           if (!r.ok) {
             throw new Error(await r.text());
@@ -5561,6 +5658,7 @@
 
         if (!slugInput) {
           currentTree = null;
+          linktreeId = null;
           if (!canvasLayout) {
             canvasLayout = buildDefaultCanvasLayout(sectionOrder);
           }
@@ -5585,6 +5683,7 @@
 
         if (!lt) {
           currentTree = null;
+          linktreeId = null;
           if (!canvasLayout) {
             canvasLayout = buildDefaultCanvasLayout(sectionOrder);
           }
