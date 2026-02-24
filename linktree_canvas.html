@@ -3398,6 +3398,44 @@
           return list;
         }
 
+        const CANVAS_TOGGLE_PREFS_STORAGE_KEY = "taoma.canvas.toggle-prefs.v1";
+
+        function loadCanvasTogglePrefs() {
+          try {
+            const raw = localStorage.getItem(CANVAS_TOGGLE_PREFS_STORAGE_KEY);
+            if (!raw) return {};
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === "object" ? parsed : {};
+          } catch (_) {
+            return {};
+          }
+        }
+
+        function applyStoredCanvasTogglePrefs(layout) {
+          if (!layout || typeof layout !== "object") return layout;
+          const prefs = loadCanvasTogglePrefs();
+          if (typeof prefs.auto_fit_canvas_to_objects === "boolean") {
+            layout.auto_fit_canvas_to_objects = prefs.auto_fit_canvas_to_objects;
+          }
+          if (typeof prefs.auto_fit_element_backgrounds === "boolean") {
+            layout.auto_fit_element_backgrounds = prefs.auto_fit_element_backgrounds;
+          }
+          return layout;
+        }
+
+        function persistCanvasTogglePrefsFromLayout(layout) {
+          if (!layout) return;
+          try {
+            localStorage.setItem(
+              CANVAS_TOGGLE_PREFS_STORAGE_KEY,
+              JSON.stringify({
+                auto_fit_canvas_to_objects: !!layout.auto_fit_canvas_to_objects,
+                auto_fit_element_backgrounds: !!layout.auto_fit_element_backgrounds,
+              }),
+            );
+          } catch (_) {}
+        }
+
         function buildDefaultCanvasLayout(order) {
           const plates = {};
           let y = 24;
@@ -3410,7 +3448,7 @@
             plates,
             groups: {},
           });
-          return {
+          return applyStoredCanvasTogglePrefs({
             enabled: true,
             grid: 1,
             auto_fit_canvas_to_objects: false,
@@ -3418,7 +3456,7 @@
             size: { w: bounds.w, h: bounds.h },
             plates,
             groups: {},
-          };
+          });
         }
 
         function buildCanvasLayoutFromDom(order) {
@@ -3540,7 +3578,7 @@
           const bounds = computeCanvasContentBounds({ plates, groups });
           size = { w: bounds.w, h: bounds.h };
         }
-        return {
+        return applyStoredCanvasTogglePrefs({
           enabled: true,
           grid: 1,
           auto_fit_canvas_to_objects: !!data.auto_fit_canvas_to_objects,
@@ -3548,7 +3586,7 @@
           size,
           plates,
           groups,
-        };
+        });
       }
 
         function ensureCanvasLayoutSize(layout) {
@@ -3611,6 +3649,74 @@
           if (key === "links" && Number.isFinite(plate?.h)) {
             el.style.alignContent = "center";
           }
+        }
+
+        function autoFitLinksPlateToContent() {
+          if (!canvasLayout?.auto_fit_element_backgrounds) return;
+          const plate = canvasLayout.plates?.links;
+          const linksEl = document.getElementById("links");
+          if (!plate || !linksEl) return;
+          if (!linksEl.classList.contains("icons-only")) return;
+          if (linksEl.classList.contains("hidden")) return;
+          const items = Array.from(linksEl.querySelectorAll(":scope > .link"));
+          if (!items.length) return;
+
+          const styles = getComputedStyle(linksEl);
+          const gap =
+            parseFloat(styles.columnGap || styles.gap || "0") ||
+            parseFloat(styles.gap || "0") ||
+            0;
+          const padX =
+            (parseFloat(styles.paddingLeft || "0") || 0) +
+            (parseFloat(styles.paddingRight || "0") || 0);
+          const padY =
+            (parseFloat(styles.paddingTop || "0") || 0) +
+            (parseFloat(styles.paddingBottom || "0") || 0);
+          const borderX =
+            (parseFloat(styles.borderLeftWidth || "0") || 0) +
+            (parseFloat(styles.borderRightWidth || "0") || 0);
+          const borderY =
+            (parseFloat(styles.borderTopWidth || "0") || 0) +
+            (parseFloat(styles.borderBottomWidth || "0") || 0);
+
+          const widths = items.map((n) => Math.ceil(n.getBoundingClientRect().width || 0));
+          const heights = items.map((n) => Math.ceil(n.getBoundingClientRect().height || 0));
+          const direction = normalizeLinkIconsOnlyDirection(
+            lastData?.link_icons_only_direction,
+          );
+
+          let nextW = plate.w;
+          let nextH = plate.h;
+          if (direction === "column") {
+            nextW = Math.max(...widths, defaultPlatePixels("links").w) + padX + borderX;
+            nextH =
+              heights.reduce((sum, h) => sum + h, 0) +
+              Math.max(0, items.length - 1) * gap +
+              padY +
+              borderY;
+          } else {
+            nextW =
+              widths.reduce((sum, w) => sum + w, 0) +
+              Math.max(0, items.length - 1) * gap +
+              padX +
+              borderX;
+            nextH = Math.max(...heights, defaultPlatePixels("links").h) + padY + borderY;
+          }
+
+          plate.w = Math.min(CANVAS_PLATE_MAX_W, Math.max(CANVAS_PLATE_MIN_W, Math.ceil(nextW)));
+          plate.h = Math.min(CANVAS_PLATE_MAX_H, Math.max(CANVAS_PLATE_MIN_H, Math.ceil(nextH)));
+          canvasDirty = true;
+          applyPlateStyles("links", plate);
+          if (plate.group) {
+            const groupEl = document.querySelector(
+              `.plate-group[data-group-id="${plate.group}"]`,
+            );
+            updateGroupBounds(groupEl, plate.group, canvasLayout);
+          }
+          ensureCanvasLayoutSize(canvasLayout);
+          updateCanvasCardSize(canvasLayout);
+          syncCanvasControls();
+          syncSelectionPanel();
         }
 
         function applyPlateStyles(key, plate) {
@@ -7113,6 +7219,7 @@
               if (!canvasLayout) return;
               canvasLayout.auto_fit_canvas_to_objects = !!e.target.checked;
               canvasDirty = true;
+              persistCanvasTogglePrefsFromLayout(canvasLayout);
               if (canvasLayout.auto_fit_canvas_to_objects) {
                 ensureCanvasLayoutSize(canvasLayout);
                 updateCanvasCardSize(canvasLayout);
@@ -7125,11 +7232,13 @@
               if (!canvasLayout) return;
               canvasLayout.auto_fit_element_backgrounds = !!e.target.checked;
               canvasDirty = true;
+              persistCanvasTogglePrefsFromLayout(canvasLayout);
               SECTION_ORDER_DEFAULT.forEach((key) => {
                 const plate = canvasLayout.plates?.[key];
                 if (!plate) return;
                 applyPlateBackgroundFitMode(key, plate);
               });
+              autoFitLinksPlateToContent();
               syncCanvasControls();
             });
           }
@@ -7430,6 +7539,9 @@
               wantsWide: document.getElementById("card")?.classList.contains("wide"),
             });
             renderLinksDisplay(lastData);
+            if (lastData.link_icons_only) {
+              autoFitLinksPlateToContent();
+            }
           };
           const updateCounterAttributes = () => {
             if (
