@@ -2944,6 +2944,18 @@
         return cloneSectionOrder(SECTION_ORDER_DEFAULT);
       }
 
+      function applyLayoutModePreset(modeRaw) {
+        const mode = normalizeLayoutMode(modeRaw);
+        const select = $("inLayoutMode");
+        if (select) select.value = mode;
+        sectionOrder = defaultSectionOrderForMode(mode);
+        canvasLayout = buildDefaultCanvasLayout(sectionOrder);
+        renderSectionOrder();
+        syncCanvasInputs();
+        renderCanvasEditor();
+        return mode;
+      }
+
       function hexOrNull(val) {
         const t = (val || "").trim();
         if (!t) return null;
@@ -5603,8 +5615,14 @@
       $("inDisplayName").addEventListener("change", toggleCustomNameField);
       $("inQuoteTyping").addEventListener("change", toggleQuoteTypingFields);
       $("inLayoutMode").addEventListener("change", (e) => {
-        const mode = normalizeLayoutMode(e.target.value);
-        e.target.value = mode;
+        const mode = applyLayoutModePreset(e.target.value);
+        showMsg(
+          msgMeta,
+          mode === "wide"
+            ? "Wide default layout selected"
+            : "Top-down default layout selected",
+          true,
+        );
       });
       if ($("inCanvasEnabled")) {
         $("inCanvasEnabled").addEventListener("change", (e) => {
@@ -6034,12 +6052,7 @@
       });
 
       $("btnResetSectionOrder")?.addEventListener("click", () => {
-        const mode = normalizeLayoutMode($("inLayoutMode")?.value);
-        sectionOrder = defaultSectionOrderForMode(mode);
-        canvasLayout = buildDefaultCanvasLayout(sectionOrder);
-        renderSectionOrder();
-        syncCanvasInputs();
-        renderCanvasEditor();
+        const mode = applyLayoutModePreset($("inLayoutMode")?.value);
         showMsg(
           msgMeta,
           mode === "wide"
