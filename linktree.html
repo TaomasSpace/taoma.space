@@ -2180,13 +2180,14 @@
           };
         }
 
-        function computeCanvasContentBounds(layout) {
+        function computeCanvasContentBounds(layout, isKeyVisible = null) {
           const plates = layout?.plates || {};
           const groups = layout?.groups || {};
           let maxX = 0;
           let maxY = 0;
           Object.entries(plates).forEach(([key, plate]) => {
             if (!plate) return;
+            if (typeof isKeyVisible === "function" && !isKeyVisible(key)) return;
             const w = Number.isFinite(plate.w)
               ? plate.w
               : defaultPlatePixels(key).w;
@@ -2472,7 +2473,11 @@
           };
         }
 
-        function applyCanvasLayout(rawLayout, rawOrder, { isMobile } = {}) {
+        function applyCanvasLayout(
+          rawLayout,
+          rawOrder,
+          { isMobile, isKeyVisible } = {},
+        ) {
           const card = document.getElementById("card");
           if (!card) return false;
           const layout = normalizeCanvasLayout(rawLayout, rawOrder);
@@ -2492,6 +2497,7 @@
           });
 
           SECTION_ORDER_DEFAULT.forEach((key) => {
+            if (typeof isKeyVisible === "function" && !isKeyVisible(key)) return;
             const el = getSectionElement(key);
             if (!el) return;
             const plate = layout.plates[key];
@@ -2529,32 +2535,14 @@
             parent.appendChild(el);
           });
 
-          if (layout.size && Number.isFinite(layout.size.w) && Number.isFinite(layout.size.h)) {
-            card.style.width = `${layout.size.w}px`;
-            card.style.height = `${layout.size.h}px`;
-            card.style.minHeight = "";
-          } else {
-            const cardRect = card.getBoundingClientRect();
-            let maxBottom = 0;
-            let maxRight = 0;
-            SECTION_ORDER_DEFAULT.forEach((key) => {
-              const el = getSectionElement(key);
-              if (!el) return;
-              const rect = el.getBoundingClientRect();
-              maxBottom = Math.max(maxBottom, rect.bottom - cardRect.top);
-              maxRight = Math.max(maxRight, rect.right - cardRect.left);
-            });
-            if (maxBottom > 0) {
-              card.style.minHeight = `${Math.ceil(maxBottom + 24)}px`;
-            }
-            if (maxRight > 0) {
-              card.style.minWidth = "";
-            }
-          }
+          const bounds = computeCanvasContentBounds(layout, isKeyVisible);
+          card.style.width = `${bounds.w}px`;
+          card.style.height = `${bounds.h}px`;
+          card.style.minHeight = "";
           return true;
         }
 
-        function applySectionOrder(rawOrder) {
+        function applySectionOrder(rawOrder, { isKeyVisible } = {}) {
           const card = document.getElementById("card");
           if (!card) return false;
           resetCanvasLayout(card);
@@ -2565,6 +2553,9 @@
               const row = document.createElement("div");
               row.className = "section-row";
               entry.forEach((key) => {
+                if (typeof isKeyVisible === "function" && !isKeyVisible(key)) {
+                  return;
+                }
                 const el = getSectionElement(key);
                 if (el) row.appendChild(el);
               });
@@ -2575,6 +2566,9 @@
                 card.appendChild(row.firstElementChild);
               }
             } else {
+              if (typeof isKeyVisible === "function" && !isKeyVisible(entry)) {
+                return;
+              }
               const el = getSectionElement(entry);
               if (el) card.appendChild(el);
             }
@@ -2582,12 +2576,19 @@
           return hasSideBySide;
         }
 
-        function applySectionLayout(rawOrder, rawCanvas, { isMobile } = {}) {
-          const usedCanvas = applyCanvasLayout(rawCanvas, rawOrder, { isMobile });
+        function applySectionLayout(
+          rawOrder,
+          rawCanvas,
+          { isMobile, isKeyVisible } = {},
+        ) {
+          const usedCanvas = applyCanvasLayout(rawCanvas, rawOrder, {
+            isMobile,
+            isKeyVisible,
+          });
           if (usedCanvas) {
             return { usedCanvas: true, hasSideBySide: false };
           }
-          const hasSideBySide = applySectionOrder(rawOrder);
+          const hasSideBySide = applySectionOrder(rawOrder, { isKeyVisible });
           return { usedCanvas: false, hasSideBySide };
         }
 
@@ -2703,6 +2704,74 @@
             "dir-column",
             iconsOnly && direction === "column",
           );
+        }
+
+        function buildRenderableLinkItems(data) {
+          const rawLinks = Array.isArray(data?.links) ? data.links : [];
+          if (data?.is_template_demo && data?.demo_show_links) {
+            const label = (data.demo_link_label || "").trim() || "Example Link";
+            let url = (data.demo_link_url || "").trim();
+            if (!url) url = "https://example.com";
+            const iconUrl = (data.demo_link_icon_url || "").trim() || null;
+            const demoLink = { label, url, icon_url: iconUrl, is_active: true };
+            return rawLinks.length ? rawLinks : [demoLink];
+          }
+          return rawLinks;
+        }
+
+        function buildSectionVisibilityFromData(data) {
+          const quoteTexts = Array.isArray(data?.quote_typing_texts)
+            ? data.quote_typing_texts
+            : [];
+          const cleanedQuoteTexts = quoteTexts
+            .map((t) => String(t || "").trim())
+            .filter(Boolean)
+            .slice(0, 3);
+          const hasQuote =
+            cleanedQuoteTexts.length > 0 || !!String(data?.quote || "").trim();
+          const hasLocation = !!String(data?.location || "").trim();
+          const showStatus = !!data?.discord_linked && !!data?.discord_status_enabled;
+          const showAudio = !!data?.show_audio_player && !!safeMediaUrl(data?.song_url);
+
+          const hasLinks = buildRenderableLinkItems(data).some((link) => {
+            if (!link || !link.is_active) return false;
+            return !!safeLinkUrl(link.url);
+          });
+
+          let badgeCount = 0;
+          (Array.isArray(data?.icons) ? data.icons : []).forEach((ic) => {
+            if (!ic || !ic.displayed) return;
+            if (safeMediaUrl(ic.image_url)) badgeCount += 1;
+          });
+          if (data?.discord_linked && data?.discord_badges_enabled) {
+            const filterCodes = Array.isArray(data?.discord_badge_codes)
+              ? data.discord_badge_codes
+              : null;
+            let discordList = Array.isArray(data?.discord_badges)
+              ? data.discord_badges
+              : [];
+            if (filterCodes) {
+              discordList = discordList.filter((b) =>
+                filterCodes.includes(b && b.code),
+              );
+            }
+            discordList.forEach((badge) => {
+              if (!badge) return;
+              if (safeMediaUrl(badge.icon_url)) badgeCount += 1;
+            });
+          }
+
+          return {
+            pfp: true,
+            name: true,
+            discord_status: showStatus,
+            quote: hasQuote,
+            location: hasLocation,
+            badges: badgeCount > 0,
+            audio: showAudio,
+            links: hasLinks,
+            visit_counter: !!data?.show_visit_counter,
+          };
         }
 
         function applyTextColors(data) {
@@ -4018,10 +4087,14 @@
           lastDevice = device;
           updateEditorLink(data);
           const isMobile = device === "mobile";
+          const sectionVisibility = buildSectionVisibilityFromData(data);
           const layoutResult = applySectionLayout(
             data.section_order,
             data.canvas_layout,
-            { isMobile },
+            {
+              isMobile,
+              isKeyVisible: (key) => sectionVisibility[key] !== false,
+            },
           );
           const hasSideBySide = layoutResult.hasSideBySide;
           const usedCanvas = layoutResult.usedCanvas;

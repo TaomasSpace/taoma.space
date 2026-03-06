@@ -1561,7 +1561,7 @@
                 <div class="preview-note muted">
                   Move sections up or down to change their order on your linktree.
                   Use the side-by-side button to place two sections in one row.
-                  Layout switches to Wide automatically when a row is paired.
+                  Use the layout mode below to choose between vertical and wide defaults.
                 </div>
                 <div id="sectionOrderList" class="section-order-list"></div>
                 <input type="hidden" id="inSectionOrder" />
@@ -1571,7 +1571,7 @@
                     type="button"
                     id="btnResetSectionOrder"
                   >
-                    Reset to default
+                    Reset to selected default
                   </button>
                 </div>
               </div>
@@ -1611,8 +1611,7 @@
                     <option value="wide">Wide</option>
                   </select>
                   <div class="preview-note muted">
-                    Applies to desktop layout only. Auto-switches to Wide when
-                    sections are paired side-by-side.
+                    Applies to desktop layout only (vertical or wide).
                   </div>
                 </div>
                 <div class="field" style="grid-column: 1 / -1">
@@ -2888,6 +2887,14 @@
         "links",
         "visit_counter",
       ];
+      const SECTION_ORDER_WIDE_DEFAULT = [
+        ["pfp", "name"],
+        ["discord_status", "badges"],
+        ["quote", "location"],
+        "audio",
+        "links",
+        "visit_counter",
+      ];
       const SECTION_KEY_ALIASES = {
         discord_badges: "badges",
       };
@@ -2918,6 +2925,24 @@
       let canvasPreviewState = null;
       let currentLinks = [];
       let currentBadges = [];
+
+      function normalizeLayoutMode(raw) {
+        return String(raw || DEFAULT_LAYOUT_MODE).toLowerCase() === "wide"
+          ? "wide"
+          : "center";
+      }
+
+      function cloneSectionOrder(order) {
+        return (order || []).map((entry) =>
+          Array.isArray(entry) ? entry.slice(0, 2) : entry
+        );
+      }
+
+      function defaultSectionOrderForMode(modeRaw) {
+        const mode = normalizeLayoutMode(modeRaw);
+        if (mode === "wide") return cloneSectionOrder(SECTION_ORDER_WIDE_DEFAULT);
+        return cloneSectionOrder(SECTION_ORDER_DEFAULT);
+      }
 
       function hexOrNull(val) {
         const t = (val || "").trim();
@@ -3896,13 +3921,12 @@
       function syncLayoutModeFromOrder() {
         const select = $("inLayoutMode");
         if (!select) return;
-        select.value = layoutModeFromOrder(sectionOrder);
+        select.value = normalizeLayoutMode(select.value || DEFAULT_LAYOUT_MODE);
       }
 
       function updateSectionOrderInput() {
         const input = $("inSectionOrder");
         if (input) input.value = JSON.stringify(sectionOrder);
-        syncLayoutModeFromOrder();
       }
 
       function moveSectionOrder(index, direction) {
@@ -4160,7 +4184,9 @@
           lt.quote_effect_strength !== undefined && lt.quote_effect_strength !== null
             ? lt.quote_effect_strength
             : DEFAULT_QUOTE_EFFECT_STRENGTH;
-        $("inLayoutMode").value = lt.layout_mode || DEFAULT_LAYOUT_MODE;
+        $("inLayoutMode").value = normalizeLayoutMode(
+          lt.layout_mode || DEFAULT_LAYOUT_MODE,
+        );
         $("inLinkColor").value = lt.link_color || DEFAULT_LINK_COLOR;
         $("inLinkBgColor").value = lt.link_bg_color || DEFAULT_LINK_BG_COLOR;
         $("inCardColor").value = lt.card_color || DEFAULT_CARD_COLOR;
@@ -4377,7 +4403,7 @@
           name_font_family: lt.name_font_family || "default",
           background_effect: lt.background_effect || "none",
           display_name_mode: disp,
-          layout_mode: layoutModeFromOrder(normalizedOrder),
+          layout_mode: normalizeLayoutMode(lt.layout_mode || DEFAULT_LAYOUT_MODE),
           canvas_layout: normalizedCanvas,
           custom_display_name:
             disp === "custom" ? lt.custom_display_name || "" : null,
@@ -4544,7 +4570,7 @@
           name_font_family: $("inNameFont").value || "default",
           background_effect: $("inBgFx").value || "none",
           display_name_mode: displayMode,
-          layout_mode: layoutModeFromOrder(sectionOrder),
+          layout_mode: normalizeLayoutMode($("inLayoutMode").value),
           canvas_layout: serializeCanvasLayout(),
           custom_display_name: displayMode === "custom" ? customName : null,
           linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
@@ -5365,7 +5391,7 @@
           name_font_family: $("inNameFont").value || "default",
           background_effect: $("inBgFx").value || "none",
           display_name_mode: $("inDisplayName").value,
-          layout_mode: layoutModeFromOrder(sectionOrder),
+          layout_mode: normalizeLayoutMode($("inLayoutMode").value),
           canvas_layout: serializeCanvasLayout(),
           custom_display_name: $("inCustomName").value.trim() || null,
           linktree_profile_picture: $("inLinktreePfp").value.trim() || null,
@@ -5377,6 +5403,19 @@
           link_color: $("inLinkColor").value || null,
           link_bg_color: $("inLinkBgColor").value || null,
           link_bg_alpha: Number.isFinite(linkBgAlpha) ? linkBgAlpha : 100,
+          link_columns: normalizeLinkColumns($("inLinkColumns").value, null),
+          link_icons_only: $("inLinkIconsOnly").checked,
+          link_icons_only_size: normalizeLinkIconsOnlySize(
+            $("inLinkIconsOnlySize").value,
+          ),
+          link_icons_only_gap: normalizeLinkIconsOnlyGap(
+            $("inLinkIconsOnlyGap").value,
+          ),
+          link_icons_only_grouped:
+            $("inLinkIconsOnlyGrouped").value === "grouped",
+          link_icons_only_direction: normalizeLinkIconsOnlyDirection(
+            $("inLinkIconsOnlyDirection").value,
+          ),
           card_color: $("inCardColor").value || null,
           cursor_url: $("inCursor").value.trim() || null,
           cursor_effect: $("inCursorFx").value || "none",
@@ -5563,8 +5602,9 @@
       });
       $("inDisplayName").addEventListener("change", toggleCustomNameField);
       $("inQuoteTyping").addEventListener("change", toggleQuoteTypingFields);
-      $("inLayoutMode").addEventListener("change", () => {
-        syncLayoutModeFromOrder();
+      $("inLayoutMode").addEventListener("change", (e) => {
+        const mode = normalizeLayoutMode(e.target.value);
+        e.target.value = mode;
       });
       if ($("inCanvasEnabled")) {
         $("inCanvasEnabled").addEventListener("change", (e) => {
@@ -5994,9 +6034,19 @@
       });
 
       $("btnResetSectionOrder")?.addEventListener("click", () => {
-        sectionOrder = SECTION_ORDER_DEFAULT.slice();
+        const mode = normalizeLayoutMode($("inLayoutMode")?.value);
+        sectionOrder = defaultSectionOrderForMode(mode);
+        canvasLayout = buildDefaultCanvasLayout(sectionOrder);
         renderSectionOrder();
-        showMsg(msgMeta, "Section order reset", true);
+        syncCanvasInputs();
+        renderCanvasEditor();
+        showMsg(
+          msgMeta,
+          mode === "wide"
+            ? "Wide default layout applied"
+            : "Top-down default layout applied",
+          true,
+        );
       });
 
       $("fileBg").addEventListener("change", async () => {
